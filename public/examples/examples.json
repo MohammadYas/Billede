@@ -1,0 +1,52 @@
+[
+  {
+    "id": "soldier-girl",
+    "before": "/examples/soldier-girl-before.jpg",
+    "after": "/examples/soldier-girl-after.jpg",
+    "width": 1030,
+    "height": 1400,
+    "caption": "Soldat og ung kvinde, ca. 1916. Arkivfoto, Wikimedia Commons.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "olesen",
+    "before": "/examples/olesen-before.jpg",
+    "after": "/examples/olesen-after.jpg",
+    "width": 1015,
+    "height": 1400,
+    "caption": "Andreas Martinus Olesen, glasplade, ca. 1870. Arkivfoto, Wikimedia Commons.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "cooper",
+    "before": "/examples/cooper-before.jpg",
+    "after": "/examples/cooper-after.jpg",
+    "width": 1010,
+    "height": 1400,
+    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "strunk",
+    "before": "/examples/strunk-before.jpg",
+    "after": "/examples/strunk-after.jpg",
+    "width": 1400,
+    "height": 1002,
+    "caption": "Amos Strunk, 1913. Arkivfoto, Library of Congress.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "mcrae",
+    "before": "/examples/mcrae-before.jpg",
+    "after": "/examples/mcrae-after.jpg",
+    "width": 1012,
+    "height": 1400,
+    "caption": "Dandridge McRae, ca. 1850. Arkivfoto, Wikimedia Commons.",
+    "consent": true,
+    "placeholder": true
+  }
+]

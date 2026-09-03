@@ -1,0 +1,157 @@
+# QA — Genfundet
+
+Environment: headless Chromium (Playwright) against `next dev` with live OpenAI and Supabase; Stripe and Resend keys
+were not available (see HANDOFF.md §3–4). Screenshots in `checkpoints/`. Date 2026-09-03.
+
+## Journeys
+
+Results are appended from `work/journeys.json` (script: `scripts/journeys.ts`) in the section "Journey results" below.
+
+| # | Journey | Result |
+|---|---|---|
+| A | iPhone 390: landing → upload → preview → checkout → /tak | Landing → upload → **real preview** with slider, mockup and colour toggle: passed (see results). Checkout: `POST /api/checkout` returns 503 "Betaling er ikke sat op endnu." without `STRIPE_SECRET_KEY`; the button shows the calm error and the preview stays. Stripe hosted Checkout, webhook and `/tak` are implemented against the SDK and exercised only at type/build level. Test-card run and the live 599 kr. run belong to HANDOFF.md §3. |
+| B | Bad file / no face → fallback | Group photograph (150 faces) → pipeline flags face-count mismatch + invented details → status `MANUAL_REVIEW` → fallback copy → e-mail form → lead stored, `PreviewFallback` logged. Wrong file type (`.txt`) → inline message "Vi kan læse JPEG, PNG, HEIC og WebP…". Oversize (>25 MB) → "Filen er over 25 MB…" (client) and `too_large` fallback (server). |
+| C | Payment cancel | `/?cancelled=1&order=<id>` reopens the same preview with "Betalingen blev ikke gennemført. Dit preview er gemt…"; order stays `PREVIEW_READY`. |
+| D | Admin → upload final → approval mail → approve → fulfillment checklist → tracking → shipped mail | Admin login (env password, HMAC cookie, 5 tries/15 min). Order page: images with 15-min signed URLs, upload final (re-encoded), "Generér final i høj kvalitet", "Send godkendelsesmail" (sets `AWAITING_APPROVAL`, token link), `/godkend/<token>` → Godkend → `APPROVED`; checklist rendered from `ManualProvider`; reference + tracking fields; status `SHIPPED` sends the shipping mail. Mail sending itself needs `RESEND_API_KEY` (logged as "would send" without it). |
+| E | Change request | `/godkend/<token>/aendring` → textarea → `CHANGE_REQUESTED` with text shown on the admin order page; reminder after 48 h from the cron. |
+| F | Desktop | 1024 and 1440: hero 4:3 inside 1120 px, examples as an offset two-column grid, sheet becomes a centred modal (`checkpoints/breakpoints/landing-1440.png`). |
+| G | Throttled 3G | Not run as a network profile in this environment. Budget: HTML ≈ 20 kB, CSS ≈ 12 kB, two woff2 (159 kB + 27 kB, `font-display: swap`, preloaded), hero before/after JPEGs 238 kB + 121 kB (1400 px) — the hero `<img>` is `fetchpriority="high"`; WebP variants exist in `public/examples` for a future `<picture>` swap. No third-party script before consent. |
+
+## Responsive / touch (spec §11)
+
+`scripts/screenshots.ts` output (`checkpoints/breakpoints/report.txt`):
+
+```
+375px: horizontal overflow 0px; tap targets <44px: none
+390px: horizontal overflow 0px; tap targets <44px: none
+430px: horizontal overflow 0px; tap targets <44px: none
+768px: horizontal overflow 0px; tap targets <44px: none
+1024px: horizontal overflow 0px; tap targets <44px: none
+1440px: horizontal overflow 0px; tap targets <44px: none
+```
+
+- No hero layout shift: the slider has an explicit `aspect-ratio` (1/1 mobile, 4/3 desktop) before images load.
+- Sticky CTA: `env(safe-area-inset-bottom)` padding, body bottom padding equal to the bar so content is never covered, hidden while the sheet/preview is open (`body[data-flow-open]`).
+- Sheet: `92dvh` max, `overscroll-behavior: contain`, grab handle, 1:1 drag-to-dismiss with pointer capture, rubber-band upward, velocity projection, critically damped spring back (apple-design §2, 5, 6, 9). `prefers-reduced-motion` skips the reveal and the dismiss animation.
+- Lighthouse was not available offline; see HANDOFF.md §12.
+
+## Skill checklists
+
+**apple-design (phases 4 and 11):** respond on pointer-down (button `:active` colour), 1:1 tracking with `setPointerCapture` (slider and sheet), interruptible reveal (any pointer-down cancels the rAF), velocity hand-off and momentum projection on sheet release, rubber-band at the top boundary, `prefers-reduced-motion` and `prefers-reduced-transparency` handled, tracking −0.02em only on display sizes, body 0. No translucent materials (paper is opaque by design).
+
+**ui-ux-pro-max:** `search.py "family photo restoration framed print editorial warm Nordic" --design-system` proposed
+"Hero + Features + CTA", Minimalism/Swiss, a blue/green/amber SaaS palette and Libre Bodoni + Public Sans. The palette
+and the "Key features (3–5)" section were rejected per the spec's anti-slop list (§3); Public Sans was adopted as the
+UI face. Its pre-delivery checklist: no emoji icons ✓ (no icons at all); cursor-pointer on clickables ✓; hover states
+✓ (colour only, no motion); light-mode contrast ≥4.5:1 ✓ (ink on paper 14.6:1, ink-2 on paper 7.1:1, paper on ink
+14.6:1, accent on paper 8.9:1); focus visible ✓ (2 px accent ring); reduced-motion ✓; 375/768/1024/1440 ✓.
+UX rules applied: visible labels on every field, error text next to the field with `role=alert`, disabled state on the
+order button while the checkout opens, keyboard alternative to the drag slider (`<input type=range>` + arrow keys),
+`<details>`/`<summary>` accordion is keyboard native.
+
+**impeccable:** `context.mjs` run; direction pinned by the brief (no concept roll). `detect.mjs --scope all app components`
+initially reported: overused fonts (Fraunces, Instrument Sans), a "side-tab border" (the slider knob chevron) and a
+`transition: width`. All three fixed (Newsreader + Public Sans; chevron drawn with two pseudo-elements; progress bar uses
+`transform: scaleX`). Re-run: `[]`. Craft-floor checks: contrast ✓, no decorative shadows (only the frame's) ✓,
+spacing rhythm deliberately uneven ✓, body measure ≤34em ✓, one authored motion ✓, states (hover/disabled/loading/error/empty)
+✓, browser surfaces themed (`::selection`, caret, focus ring, underline offset) ✓, copy in the product's language ✓.
+
+## Anti-slop audit (every line of ANTI_SLOP.md)
+
+Screens: `checkpoints/01-hero-390.png`, `01-hero-1440.png`, `breakpoints/landing-390.png`, `breakpoints/landing-1440.png`,
+`02-upload-sheet-390.png`, `02-preview-390.png`, `03-tak-390.png`, `04-privatliv-390.png`, `05-admin-order-1440.png`.
+
+| # | Check | Pass | Evidence |
+|---|---|---|---|
+| A1 | No Inter/Roboto/…/Fraunces/Instrument Sans | ✓ | `globals.css` @font-face: Newsreader, Public Sans only; detector clean |
+| A2 | No default type scale | ✓ | hand-set 34/26/18/16/14/13 → 56/36/20/17 |
+| A3 | No gradient text / italic accent word | ✓ | grep `background-clip` = 0; no `<em>` in headings |
+| A4 | No eyebrow/kicker/badge above H1 | ✓ | 01-hero-390: caption *below* the photo, H1 directly |
+| A5 | Copy: no weightless headline, no triads, no `!` | ✓ | `lib/copy.ts`: locked spec copy; grep `!` in copy = 0 (only in code) |
+| A6 | Tracking ≥ −0.02em, body 0 | ✓ | `h1 letter-spacing:-0.02em`, body none |
+| B1 | No purple/indigo/violet | ✓ | tokens: paper, ink, green `#2F4A3A`, red for errors |
+| B2 | No gradients/glows/neon | ✓ | one `radialGradient` exists only inside the *mockup wall fallback* (server-rendered image, replaced by a real wall photo) — not UI |
+| B3 | No glass/blur | ✓ | grep `backdrop-filter` = 0 |
+| B4 | No #FFF/#000 surfaces | ✓ | grep in globals.css: none (only rgba shadows on the slider knob/handle) |
+| B5 | Light by default, body ≥4.5:1 | ✓ | `color-scheme: light`; ink-2 7.1:1 |
+| B6 | No grey borders everywhere / ghost cards | ✓ | hairlines: tryghedslinje rules, accordion rules, input border, image edge only |
+| C1 | No centred hero with two buttons | ✓ | left-set H1 under full-bleed slider, one button (01-hero-390) |
+| C2 | No icon grid / bento / trusted-by / stats | ✓ | "Sådan fungerer det" = three sentences + three 72 px photographs, ragged left margins |
+| C3 | No numbered circles | ✓ | `<ol>` without markers |
+| C4 | No cards; FAQ hairline accordion | ✓ | landing-390: accordion rows with `+`, offer is a paper-2 block with no border |
+| C5 | Radius ≤4px | ✓ | buttons 2px, sheet top corners 12px on mobile only (a physical sheet), knob circle |
+| C6 | Asymmetric, unequal padding | ✓ | offer block vs. founder vs. questions have different paddings; step 2 indented |
+| C7 | No fake proof/urgency | ✓ | no testimonials, counts, timers, logos anywhere |
+| C8 | No nav header | ✓ | wordmark + price line only |
+| D1 | No icons/emoji | ✓ | none in `app/` or `components/` (the `+`/`–` accordion marks are text, the `×` close is text) |
+| D2 | Real photographs only | ✓ (placeholder) | archive photos restored by the pipeline with provenance captions; **must be replaced by consented family photos** (HANDOFF.md §1) |
+| D3 | No checkmark lists | ✓ | prose only |
+| D4 | Frame mockup composed by code | ✓ | `lib/restoration/mockup.ts`, 02-preview-390 |
+| E1 | No "Unlock/Seamless/…/AI-powered" | ✓ | AI mentioned once: "Hvis AI'en har ændret noget i et ansigt…" inside the FAQ; technology in the process line as "Mohammad finjusterer" |
+| E2 | Never "gratis"; CTA "Se dit billede nu" | ✓ | grep -i gratis = 0 |
+| E3 | No placeholder text | ✓ | founder fields hide when empty; legal pages show "[Udfyld …]" only in the draft marked for the lawyer |
+| E4 | Danish number formatting | ✓ | `formatDkk` → "599 kr.", "1.500 kr."; delivery days from config |
+| F1–F2 | No scroll animation / hover-lift | ✓ | grep `IntersectionObserver`: only the one-time reveal and ViewContent timer; no transforms on hover |
+| F3 | Real progress stages | ✓ | NDJSON stages from the server; journey A recorded the stage names actually shown |
+| F4 | One motion, reduced-motion respected | ✓ | `BeforeAfter.tsx` |
+| G1 | Favicon/OG/title | ✓ | `favicon.svg` wordmark G, `og.jpg` before/after, title "Genfundet – gamle billeder, restaureret og indrammet" |
+| G2 | Phone, mail, CVR | ✓/TODO | phone and mail live; CVR and address render when `founder.md` is completed |
+| G3–G4 | No builder fingerprints, no UI kit | ✓ | hand-written CSS, seven components, no Tailwind/shadcn/Radix/lucide |
+
+Fails found and fixed during the audit: Fraunces/Instrument Sans (A1), slider knob chevron drawn with side borders,
+`transition: width`, "Efter" label clipped by the after-image clip-path (selector tightened to `img.after`).
+
+## Conversion red team (answered without adding sections)
+
+- **Why would I not upload?** "It will look fake" and "I don't have the photo here". Both answered above the fold:
+  the hero *is* the proof (a real, dramatic restoration), and step 1 says a phone photo in daylight is enough.
+  Fix applied: the sheet's first line is "Vis os billedet." with camera first, library second; the privacy line sits
+  under the buttons, not above them.
+- **Why not trust this?** No company name until the founder fills `founder.md`. Fix: the footer and "Hvem står bag"
+  render whatever is real (name, phone, mail today), and the tryghedslinje gives the three concrete promises in one row.
+  The rest is the owner's job (HANDOFF §2).
+- **Why not a free AI tool?** Because the free tool gives a file on a phone; we give the object on the wall and a
+  human who checks the face. The offer line and the preview's mockup say exactly that. We never argue with the free tool.
+- **Why not my local photographer (145–600 kr.)?** They need the print brought in and back; we need a phone photo,
+  and the price includes frame and shipping. Copy: "inkl. ramme og fri fragt" is in the sub-line and the offer.
+- **Why abandon checkout?** Unknown until Stripe runs. Structural answers: MobilePay first (HANDOFF §3), address
+  collected by Stripe, no account, one required checkbox, preview kept on cancel (journey C).
+- **What if the photo is at my mother's?** FAQ 2 answers it; the sticky CTA keeps the entry point when they come back.
+- **Does the preview make me want the object?** The mockup is composed from *their* photo in a real 30×40 frame with a
+  natural shadow, directly under the slider. Improvement possible: a real wall photograph (HANDOFF §11).
+- **Would I still buy at 10 business days?** The "inden jul" promise switches automatically at the cutoff; after
+  that the copy says "inden 10 hverdage" everywhere it matters. Honest and configurable.
+
+## Security checklist (spec §10)
+
+Server-side magic-byte sniffing and re-encode on ingest (`normaliseToJpeg`), size limit 25 MB (client + server +
+bucket `file_size_limit`), private bucket with signed URLs ≤15 min, unguessable object paths (`orders/<uuid>/<kind>-<24 hex>`),
+preview access tied to the session cookie (`ownsOrder`), customer images streamed same-origin (no storage host in the browser), admin HMAC cookie + rate limit, webhook signature verified,
+CSP/`X-Frame-Options`/`nosniff`/Referrer-Policy headers, no client secrets (`NEXT_PUBLIC_` only for URL, anon key, pixel id),
+RLS on all tables with no policies (service role only), `.env.local` git-ignored, approval token 192-bit, `/godkend/*/billede`
+served `noindex`.
+
+## Go-live (spec §13)
+
+Not executed — requires live Stripe keys, MobilePay activation and the owner's card. Steps and verification list in HANDOFF.md §3.
+
+## Journey results (`work/journeys.json`, iPhone 14 profile, live OpenAI + Supabase)
+
+| Measure | Value |
+|---|---|
+| A: upload → preview shown | 38.5 s end to end on the final run (41.6 s on the first; upload 1.3 MB, restoration ≈30–35 s, vision check ≈6 s, storage + mockup ≈2 s) |
+| A: stages actually displayed | "Uploader · 100 %", "Sender billedet…", "Restaurerer…", "Gør preview klar…" (all real, from the NDJSON stream) |
+| A: colour toggle | arrived ≈35 s after the preview ("farver er på vej…" until then); "Vis i sort-hvid" after toggling |
+| A: order button | `POST /api/checkout` → 503 "Betaling er ikke sat op endnu." (no Stripe key); calm inline error, preview kept |
+| C: cancel return | preview resumed with the message; order still `PREVIEW_READY` |
+| Direct API | `curl -F file=@strunk.jpg /api/preview` streamed `sending` → `restoring` (35 s) → `preparing` → `done` in 38.4 s |
+| Edge observed | An in-flight preview interrupted by a dev-server config reload left an order in `NEW` with no files; the retention job removes such orders after 30 days. |
+| B: group photo | fallback shown after 47.7 s. In this run the 45 s hard limit fired first (restoration of the 150-face plate took ≈38 s plus the vision check), so the reason recorded was `timeout`; in the quality runs the same photo was refused by `face_count_mismatch` + `invented_details`. Either way the customer sees the manual-review copy and the lead e-mail lands on the `MANUAL_REVIEW` order. |
+| B2: wrong file type | inline message, no upload |
+| Console | clean on the final run. Earlier runs showed (a) React's dev-mode `eval` under the CSP — now allowed only when `NODE_ENV !== 'production'` — and (b) connection resets for Supabase signed URLs, because the sandbox's headless browser cannot reach external hosts. (b) led to serving customer preview images same-origin through `/api/preview/[id]/image` (session-gated), which is also the better privacy posture. |
+
+Target vs. reality: the spec targets ≤25 s for the preview; measured 41.6 s with `gpt-image-2` at `medium`. Options
+recorded in DECISIONS.md: `PREVIEW_IMAGE_QUALITY=low` (≈18 s, visibly softer), or one candidate instead of two
+(saves little — the two are generated in parallel server-side). The copy says "på 20 sekunder"; the processing line
+says "normalt 20–40 sekunder" so the wait is honest inside the sheet. **Owner decision:** keep `medium` and change
+the hero sub-line to "på under et minut", or accept `low` for the preview. The code supports both via env.

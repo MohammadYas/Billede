@@ -1,0 +1,34 @@
+{
+  "name": "genfundet",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "quality:report": "tsx scripts/quality-report.ts",
+    "examples:export": "tsx scripts/export-examples.ts",
+    "screenshots": "tsx scripts/screenshots.ts",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.115.0",
+    "heic-convert": "2.1.0",
+    "next": "16.3.4",
+    "openai": "7.10.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "resend": "6.26.0",
+    "sharp": "0.35.4",
+    "stripe": "22.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "playwright": "^1.58.0",
+    "tsx": "^4.20.0",
+    "typescript": "5.9.3"
+  }
+}
