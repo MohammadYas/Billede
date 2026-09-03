@@ -6,6 +6,9 @@ export type Example = {
   before: string;   // /examples/<id>-before.jpg
   after: string;    // /examples/<id>-after.jpg
   mockup?: string;  // /examples/<id>-mockup.jpg (framed, composed by code)
+  colour?: string;  // /examples/<id>-colour.jpg (colourised, when the sidecar asks for it)
+  mode?: 'wipe' | 'lens' | 'hold' | 'fade';
+  detail?: { before: string; after: string; label: string };
   width: number;
   height: number;
   widths?: number[]; // available long-edge sizes: <id>-<side>-<w>.jpg|webp

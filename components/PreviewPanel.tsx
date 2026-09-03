@@ -74,6 +74,9 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid }: { c:
           <img className="pv-mock" src={data.mockup} alt={`Dit billede indrammet i ${c.formatLabel}`} width={1200} height={960} />
           <p className="caption">{c.preview.mockupCaption}</p>
           <p className="measure">{c.preview.p}</p>
+          <dl className="label small">
+            {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+          </dl>
         </div>
         <div className="pv-desktop-cta">{cta}</div>
         <p className="small"><a className="tap" href="/">{c.preview.again}</a></p>

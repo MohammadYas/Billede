@@ -41,3 +41,12 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **Performance.** Responsive `<picture>` sets (480/800/1400, WebP + JPEG) with `sizes`; metric-compatible fallback fonts (`size-adjust`, `ascent-override`) to remove swap CLS; the slider handle moves with `transform`.
 - **Tap targets.** Inline links carry a `.tap` class (10 px vertical padding, negative margin) so every link is ≥ 44 px tall without changing the text rhythm.
 - **Legal draft stamp** is shown unless `LEGAL_DRAFT=false`; the owner flips it after the lawyer's review.
+
+## Third pass (premium presentation, richer comparisons)
+
+- **More originals.** Four Library of Congress tintypes (1860s–1880s, public domain, LOC "no known restrictions") were pulled from the master TIFFs through the same pipeline: a mother with two children, a boy beside a chair, a three-person group, a woman in a hat on a corroded plate. They add children, groups, ovals/arches and sepia to the set. Still placeholders until the owner's family photos arrive (HANDOFF §1).
+- **Four ways to compare, one per example.** Wipe (hero and one example), lens (the damaged original in a round window under the finger), hold (press to see the original, 220 ms crossfade), fade (slow dissolve every 4 s, paused off-screen and while touched; behaves like hold under reduced motion). The motion rule in ANTI_SLOP F4 is amended: comparison is the product's argument, so each example may carry its own comparison motion; nothing else on the page moves.
+- **"Tæt på".** 2× detail crops (before | after) around a point named in each sidecar (`detail: x,y`, `detailLabel:`). Faces, freckles, buttons, handwriting: where a customer judges quality. Exported at 700 px by `scripts/export-examples.ts`.
+- **Colour example.** One example carries the pipeline's colourised version behind the same "Vis i farver" toggle the customer gets (`colour: yes` in the sidecar).
+- **"Det får du".** The framed mockup at full column width and a gallery-label list (print, ramme, fil, hænder, godkendelse, fragt, garanti) plus the photographer comparison from the brief (145–600 kr. for restoration alone). Claims stay within what the manual CEWE fulfilment delivers: matte photo paper, black frame with mount, high-resolution file, hand adjustment, approval, free shipping, money back.
+- **Premium details.** Photographs in the examples grid carry a hairline outline like mounted prints; the preview page repeats the product label under the offer paragraph so the price is justified at the decision point.

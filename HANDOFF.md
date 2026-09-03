@@ -5,9 +5,9 @@ unverified. Items in **bold** block the test.
 
 ## 1. Replace the placeholder examples (blocks the test)
 
-**`assets/originals/` was empty, so the site currently shows six public-domain archive photographs
-(Wikimedia Commons / Library of Congress) restored by the pipeline, with honest provenance captions
-("Arkivfoto, Library of Congress").** They prove the pipeline and the design, but they are not Danish family photos
+**`assets/originals/` was empty, so the site currently shows nine public-domain archive photographs
+(Wikimedia Commons / Library of Congress, incl. four 1870s tintypes) restored by the pipeline, with honest provenance
+captions and one line under the examples saying so.** They prove the pipeline and the design, but they are not Danish family photos
 and the ad copy ("Det gamle billede af hendes forældre") deserves real ones.
 
 1. Put at least 5 damaged family photographs you have written permission to use in `assets/originals/`,
@@ -15,6 +15,9 @@ and the ad copy ("Det gamle billede af hendes forældre") deserves real ones.
 2. `npm run quality:report` → open `QUALITY_REPORT.md`, look at `work/quality/<name>/restored.jpg`, fill in your own
    ratings. Gate: ≥70 % pass.
 3. `npm run examples:export -- --source assets/originals` → replaces `public/examples/` (only `consent: yes`).
+   Sidecar extras per photo: `order:` (1 = hero), `mode: wipe|lens|hold|fade`, `detail: x,y` + `detailLabel:` for the
+   "Tæt på" crop, `colour: yes` to expose the colourised version. Aim for variety: portraits, children, a group,
+   a colour print from the 1970s, one really damaged one.
 4. Commit. The hero is the first example by `order:`; pick the most dramatic pair.
 
 Consent for showing a customer's photo as an example must be a separate, explicit, revocable yes (a mail), never a

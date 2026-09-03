@@ -141,6 +141,7 @@ p + p { margin-top: var(--s4); }
 .swipe { display: flex; gap: var(--s4); overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 var(--gutter); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .swipe::-webkit-scrollbar { display: none; }
 .swipe > * { scroll-snap-align: start; flex: 0 0 82%; }
+.swipe .ba, .swipe .cmp { outline: 1px solid var(--hairline); outline-offset: -1px; }
 @media (min-width: 768px) { .swipe { display: grid; grid-template-columns: 1.25fr 1fr; gap: var(--s7) var(--s6); overflow: visible; padding: 0; } .swipe > * { flex: none; } .swipe > :nth-child(2) { margin-top: var(--s8); } .swipe > :nth-child(4) { margin-top: var(--s8); } }
 
 /* Offer — the price is an object */
@@ -252,3 +253,40 @@ body.has-pv-bar { padding-bottom: calc(var(--cta-height) + var(--s3) * 2 + var(-
 .admin th, .admin td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--hairline); vertical-align: top; }
 .admin th { font-weight: 600; color: var(--ink-2); }
 @media (max-width: 1023px) { .pv-desktop-cta { display: none; } }
+
+/* Compare — lens / hold / fade (see components/Compare.tsx) */
+.cmp { position: relative; overflow: hidden; background: var(--paper-2); width: 100%; user-select: none; -webkit-user-select: none; touch-action: pan-y; outline-offset: 2px; cursor: pointer; }
+.cmp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cmp .lbl { position: absolute; bottom: var(--s3); font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; padding: 4px 9px; background: rgba(246,241,232,0.92); color: var(--ink); border-radius: 2px; pointer-events: none; }
+.cmp .lbl.before { left: var(--s3); } .cmp .lbl.after { right: var(--s3); }
+.cmp .hint { position: absolute; top: var(--s3); left: var(--s3); font-size: 12px; letter-spacing: 0.02em; padding: 4px 9px; background: rgba(28,26,23,0.72); color: var(--paper); border-radius: 2px; pointer-events: none; }
+.cmp-lens img.before { clip-path: circle(var(--r, 120px) at var(--lx, 50%) var(--ly, 42%)); }
+.cmp-lens .lens-ring { position: absolute; left: var(--lx, 50%); top: var(--ly, 42%); width: calc(var(--r, 120px) * 2); height: calc(var(--r, 120px) * 2); transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px rgba(28,26,23,0.35), 0 6px 18px rgba(28,26,23,0.22); pointer-events: none; }
+.cmp-lens .lbl.before { display: none; }
+.cmp-hold img.before, .cmp-fade img.before { opacity: 0; transition: opacity 220ms ease-out; }
+.cmp-hold.show-before img.before { opacity: 1; }
+.cmp-fade img.before { transition: opacity 1400ms ease-in-out; }
+.cmp-fade.show-before img.before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .cmp-fade img.before { transition: opacity 200ms ease-out; } }
+.cmp-hold .lbl.before, .cmp-fade .lbl.before { opacity: 0; transition: opacity 220ms; }
+.cmp-hold.show-before .lbl.before, .cmp-fade.show-before .lbl.before { opacity: 1; }
+.cmp-hold.show-before .lbl.after, .cmp-fade.show-before .lbl.after { opacity: 0.4; }
+
+/* Detail pairs — "Tæt på" */
+.details { display: grid; gap: var(--s6); }
+.detail { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--hairline); border: 1px solid var(--hairline); margin: 0; }
+.detail img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.detail figcaption { grid-column: 1 / -1; background: var(--paper); padding: var(--s2) 0 0; }
+@media (min-width: 768px) { .details { grid-template-columns: repeat(2, 1fr); gap: var(--s6) var(--s5); } }
+@media (min-width: 1024px) { .details { grid-template-columns: repeat(3, 1fr); } }
+
+/* Product — "Det får du": the object, a gallery label */
+.product { display: grid; gap: var(--s6); }
+.product .mock { width: 100%; }
+.label { display: grid; margin: 0; }
+.label > div { display: grid; grid-template-columns: 9em 1fr; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--hairline); }
+.label > div:last-child { border-bottom: 1px solid var(--hairline); }
+.label dt { color: var(--ink-2); font-size: var(--fs-small); padding-top: 3px; }
+.label dd { margin: 0; }
+@media (min-width: 1024px) { .product { grid-template-columns: 7fr 5fr; gap: var(--s8); align-items: start; } }
+.compare-note { font-family: var(--display); font-style: italic; font-size: var(--fs-lead); color: var(--ink-2); max-width: 26em; }

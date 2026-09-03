@@ -101,3 +101,54 @@ which is the fallback path anyway. Rate limit observed: 5 input images/min on gp
 
 These are public-domain archive photographs used to validate the pipeline because `assets/originals/` was empty.
 Re-run on real consented family photos before the ad test (HANDOFF.md §1).
+
+---
+
+# Set 2 — Library of Congress tintypes (third pass)
+
+Four more public-domain originals, chosen for variety: children, a group of three, oval and arched mounts, sepia. All four pass the gate (own likeness 4–5, naturalness 4–5, same_people true, invented false, faces 1→1, 3→3, 3→3, 1→1). Three were detected as colour (sepia mounts with printed borders) and therefore not colourised; the woman in the hat was.
+
+Source: `work/pd-originals-2` (public-domain validation set 2 (Library of Congress tintypes)). Model: gpt-image-2 at quality **medium**, 2 candidates, vision check gpt-5.5. Generated 2026-09-03T23:52:59.158Z.
+
+Automated columns come from the pipeline. The two **own rating** columns (likeness, naturalness, 1–5) are filled in by hand after looking at the full-size files in `work/quality/<name>/` — see the notes under each image.
+
+| Image | Original | Restored | Colour | Restore s | Total s | Tokens (img / vision) | Est. USD | SSIM (chosen / other) | Faces A→B | Vision JSON | Manual review |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 11006 | ![](checkpoints/quality/11006-original.jpg) | ![](checkpoints/quality/11006-restored.jpg) | — | 32 | 39 | 6378 / 2038 | 0.27 | 0.884 / 0.862 | 1→1 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| 11014 | ![](checkpoints/quality/11014-original.jpg) | ![](checkpoints/quality/11014-restored.jpg) | — | 30 | 37 | 6379 / 2074 | 0.27 | 0.779 / 0.470 | 3→3 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| 11040 | ![](checkpoints/quality/11040-original.jpg) | ![](checkpoints/quality/11040-restored.jpg) | — | 30 | 37 | 6293 / 2056 | 0.26 | 0.895 / 0.847 | 3→3 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| 11090 | ![](checkpoints/quality/11090-original.jpg) | ![](checkpoints/quality/11090-restored.jpg) | ![](checkpoints/quality/11090-colour.jpg) | 31 | 39 | 9556 / 2209 | 0.39 | 0.762 / 0.741 | 1→1 | same_people=true, likeness=4, invented=false, removed=false, over=false | no |
+
+## Per-image notes and own ratings
+
+### 11006
+Input 1915×3000 → output 1530×2400. Chroma std 18.3 (colour).
+Vision notes: B faithfully preserves the single boy, pose, clothing, chair, and overall photograph while only cleaning damage and stains.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Boy, chair and the embossed arch mount preserved; sepia kept; stains and scratches gone. Print-ready.
+
+### 11014
+Input 1918×3000 → output 1534×2400. Chroma std 27.1 (colour).
+Vision notes: B faithfully restores the same three people and surrounding photograph without adding or removing substantive content.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **4**
+- Notes: All three faces exact, red-bordered oval mount kept, the tablecloth texture kept. Slight softening in the darkest shadows.
+
+### 11040
+Input 1890×3000 → output 1513×2400. Chroma std 15.8 (colour).
+Vision notes: B faithfully cleans and restores the same three-person portrait without adding or removing substantive content.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Mother and both children exact, earrings and plaid sashes preserved; the corroded lower-left corner continued as plate, not invented.
+
+### 11090
+Input 2088×3000 → output 1669×2400. Chroma std 11.6 (monochrome/sepia).
+Vision notes: B preserves the single sitter, pose, clothing, hat and background faithfully while mainly cleaning damage and improving contrast.
+
+- Own likeness (1–5): **4**
+- Own naturalness (1–5): **4**
+- Notes: Sitter, hat with flowers, bracelets preserved; the corroded plate edge cleaned. Likeness 4: the model lightened the shadow side of the face slightly.

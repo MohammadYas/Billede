@@ -19,6 +19,7 @@ const SOURCE = arg('--source', 'assets/originals');
 const LABEL = arg('--label', 'assets/originals');
 const QUALITY = arg('--quality', 'medium') as 'low' | 'medium' | 'high';
 const CONCURRENCY = Number(arg('--concurrency', '3'));
+const MIN = Number(arg('--min', '5'));
 const OUT = path.join('work', 'quality');
 const THUMBS = path.join('checkpoints', 'quality');
 
@@ -83,8 +84,8 @@ async function processOne(file: string): Promise<Row> {
 
 async function main() {
   const files = (await fs.readdir(SOURCE)).filter((f) => /\.(jpe?g|png|webp|heic|heif|tiff?)$/i.test(f)).map((f) => path.join(SOURCE, f)).sort();
-  if (files.length < 5) {
-    console.error(`Only ${files.length} usable originals in ${SOURCE}. Need at least 5.`);
+  if (files.length < MIN) {
+    console.error(`Only ${files.length} usable originals in ${SOURCE}. Need at least ${MIN}.`);
     process.exit(2);
   }
   const rows: Row[] = [];

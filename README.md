@@ -77,7 +77,7 @@ unpaid orders after 30 days and completed orders after 90 days, logging to `dele
 ```bash
 # put ≥5 damaged originals (+ optional <name>.md sidecars) in assets/originals/
 npm run quality:report                                  # → QUALITY_REPORT.md, checkpoints/quality/, work/quality/
-npm run examples:export -- --source assets/originals    # → public/examples/ (consent: yes only)
+npm run examples:export -- --source assets/originals    # → public/examples/ (consent: yes only; several folders: a,b)
 ```
 
 Options: `--quality high`, `--concurrency 1` (the OpenAI org is limited to 5 input images/min on gpt-image-2).

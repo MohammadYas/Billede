@@ -40,6 +40,20 @@ export function copy(season: Season = currentSeason()) {
         `Bestil. ${cap(navn)} finjusterer, du godkender på mail, vi printer og sender. Leveret ${levering}.`,
       ],
     },
+    taetPaa: { h2: 'Tæt på', p: 'Det er i detaljerne, man kan se, om det er gjort ordentligt. Øjne, hænder, skrift og stof – ikke udglattet, bare rene.' },
+    produkt: {
+      h2: 'Det får du',
+      rows: [
+        ['Print', `${formatLabel(format)} på mat fotopapir, farveægte`],
+        ['Ramme', 'Sort ramme med passepartout, klar til at hænge op'],
+        ['Fil', 'Den restaurerede fil i høj opløsning, din for altid'],
+        ['Hænder', `${cap(navn)} finjusterer hvert billede og tjekker ansigterne`],
+        ['Godkendelse', 'Du ser det færdige billede og siger ja, før vi printer'],
+        ['Fragt', 'Fri fragt i Danmark, pakket så glasset holder'],
+        ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
+      ] as [string, string][],
+      note: 'Til sammenligning tager en fotograf typisk 145–600 kr. for restaureringen alene – uden ramme, uden fragt, og du skal selv aflevere og hente billedet.',
+    },
     eksempler: { h2: 'Eksempler', placeholderNote: 'Eksemplerne er arkivfotos fra Wikimedia Commons og Library of Congress, restaureret med præcis samme proces som dit billede.' },
     offer: {
       line: `Restaureret + indrammet ${formatLabel(format)}. Digital fil inkluderet. Fri fragt. Leveret ${levering}.`,
@@ -109,7 +123,7 @@ export function copy(season: Season = currentSeason()) {
       before: 'Før',
       after: 'Efter',
       cancelled: 'Betalingen blev ikke gennemført. Dit preview er gemt – du kan bestille, når du er klar.',
-      mockupCaption: `Sådan hænger det. ${formatLabel(format)}, sort ramme, passepartout.`,
+      mockupCaption: `Sådan hænger det. ${formatLabel(format)}, sort ramme med passepartout, klar til væggen.`,
       again: 'Vis et andet billede',
     },
     fallback: {

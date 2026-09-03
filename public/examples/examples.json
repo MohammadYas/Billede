@@ -1,6 +1,11 @@
 [
   {
     "id": "soldier-girl",
+    "detail": {
+      "before": "/examples/soldier-girl-detail-before.jpg",
+      "after": "/examples/soldier-girl-detail-after.jpg",
+      "label": "Hendes ansigt"
+    },
     "mockup": "/examples/soldier-girl-mockup.jpg",
     "before": "/examples/soldier-girl-before.jpg",
     "after": "/examples/soldier-girl-after.jpg",
@@ -17,7 +22,36 @@
     "placeholder": true
   },
   {
+    "id": "11040",
+    "mode": "hold",
+    "detail": {
+      "before": "/examples/11040-detail-before.jpg",
+      "after": "/examples/11040-detail-after.jpg",
+      "label": "Moderens ansigt"
+    },
+    "mockup": "/examples/11040-mockup.jpg",
+    "before": "/examples/11040-before.jpg",
+    "after": "/examples/11040-after.jpg",
+    "width": 883,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Kvinde med to børn, ferrotypi, ca. 1870. Arkivfoto, Library of Congress.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
     "id": "olesen",
+    "mode": "lens",
+    "detail": {
+      "before": "/examples/olesen-detail-before.jpg",
+      "after": "/examples/olesen-detail-after.jpg",
+      "label": "Øjne og fregner"
+    },
     "mockup": "/examples/olesen-mockup.jpg",
     "before": "/examples/olesen-before.jpg",
     "after": "/examples/olesen-after.jpg",
@@ -34,7 +68,37 @@
     "placeholder": true
   },
   {
+    "id": "11090",
+    "mode": "wipe",
+    "colour": "/examples/11090-colour.jpg",
+    "detail": {
+      "before": "/examples/11090-detail-before.jpg",
+      "after": "/examples/11090-detail-after.jpg",
+      "label": "Hat og ansigt"
+    },
+    "mockup": "/examples/11090-mockup.jpg",
+    "before": "/examples/11090-before.jpg",
+    "after": "/examples/11090-after.jpg",
+    "width": 974,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Kvinde med hat, ferrotypi, ca. 1880. Arkivfoto, Library of Congress.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
     "id": "cooper",
+    "mode": "hold",
+    "detail": {
+      "before": "/examples/cooper-detail-before.jpg",
+      "after": "/examples/cooper-detail-after.jpg",
+      "label": "Ansigt og krave"
+    },
     "mockup": "/examples/cooper-mockup.jpg",
     "before": "/examples/cooper-before.jpg",
     "after": "/examples/cooper-after.jpg",
@@ -51,7 +115,36 @@
     "placeholder": true
   },
   {
+    "id": "11006",
+    "mode": "lens",
+    "detail": {
+      "before": "/examples/11006-detail-before.jpg",
+      "after": "/examples/11006-detail-after.jpg",
+      "label": "Drengens ansigt"
+    },
+    "mockup": "/examples/11006-mockup.jpg",
+    "before": "/examples/11006-before.jpg",
+    "after": "/examples/11006-after.jpg",
+    "width": 893,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Dreng ved en stol, ferrotypi, ca. 1870. Arkivfoto, Library of Congress.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
     "id": "strunk",
+    "mode": "wipe",
+    "detail": {
+      "before": "/examples/strunk-detail-before.jpg",
+      "after": "/examples/strunk-detail-after.jpg",
+      "label": "Ansigt"
+    },
     "mockup": "/examples/strunk-mockup.jpg",
     "before": "/examples/strunk-before.jpg",
     "after": "/examples/strunk-after.jpg",
@@ -68,7 +161,36 @@
     "placeholder": true
   },
   {
+    "id": "11014",
+    "mode": "fade",
+    "detail": {
+      "before": "/examples/11014-detail-before.jpg",
+      "after": "/examples/11014-detail-after.jpg",
+      "label": "Tre ansigter"
+    },
+    "mockup": "/examples/11014-mockup.jpg",
+    "before": "/examples/11014-before.jpg",
+    "after": "/examples/11014-after.jpg",
+    "width": 895,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Tre i familien, ferrotypi, ca. 1870. Arkivfoto, Library of Congress.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
     "id": "mcrae",
+    "mode": "fade",
+    "detail": {
+      "before": "/examples/mcrae-detail-before.jpg",
+      "after": "/examples/mcrae-detail-after.jpg",
+      "label": "Knapper og epauletter"
+    },
     "mockup": "/examples/mcrae-mockup.jpg",
     "before": "/examples/mcrae-before.jpg",
     "after": "/examples/mcrae-after.jpg",

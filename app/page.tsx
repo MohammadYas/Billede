@@ -3,6 +3,8 @@ import { getExamples, type Example } from '@/lib/examples';
 import { getFounder } from '@/lib/founder';
 import { exampleSrcSet, GRID_SIZES, HERO_SIZES } from '@/lib/images';
 import BeforeAfter, { type Source } from '@/components/BeforeAfter';
+import Compare from '@/components/Compare';
+import ColourExample from '@/components/ColourExample';
 import UploadFlow from '@/components/UploadFlow';
 import OpenFlowButton from '@/components/OpenFlowButton';
 import StickyCtaMount from '@/components/StickyCtaMount';
@@ -33,10 +35,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const examples = getExamples();
   const hero = examples[0] ?? null;
   const stepEx = examples[1] ?? examples[0] ?? null;
-  const gridExamples = examples.slice(1, 5);
+  const gridExamples = examples.slice(1, 7);
   const f = getFounder();
   const showFounder = Boolean(f.portrait && f.why.length > 0);
   const placeholders = examples.some((e) => e.placeholder);
+  const details = examples.filter((e) => e.detail).slice(0, 6);
+  const productMock = (examples.find((e) => e.mockup && e.id !== hero?.id) ?? hero)?.mockup ?? null;
   const resumeOrder = typeof sp.order === 'string' && /^[0-9a-f-]{36}$/.test(sp.order) ? sp.order : null;
 
   return (
@@ -96,23 +100,71 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
           </div>
         </section>
 
-        {/* Eksempler — never the hero photograph again */}
+        {/* Eksempler — each pair compared a different way; never the hero photograph again */}
         {gridExamples.length > 0 && (
           <section className="section" aria-labelledby="eksempler" style={{ paddingTop: 0 }}>
             <div className="wrap"><div className="container"><h2 id="eksempler" style={{ marginBottom: 'var(--s5)' }}>{c.eksempler.h2}</h2></div></div>
             <div className="container">
               <div className="swipe">
-                {gridExamples.map((e) => (
-                  <figure key={e.id} style={{ margin: 0 }}>
-                    <BeforeAfter before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={`Før og efter: ${e.caption}`} aspect={`${e.width} / ${e.height}`} />
-                    <figcaption style={{ paddingTop: 'var(--s2)' }}><Caption text={e.caption} /></figcaption>
-                  </figure>
-                ))}
+                {gridExamples.map((e, i) => {
+                  const mode = e.mode ?? (['wipe', 'lens', 'hold', 'fade', 'wipe', 'lens'] as const)[i % 6];
+                  const aspect = `${e.width} / ${e.height}`;
+                  const alt = `Før og efter: ${e.caption}`;
+                  return (
+                    <figure key={e.id} style={{ margin: 0 }}>
+                      {e.colour ? (
+                        <ColourExample before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} colour={e.colour} alt={alt} aspect={aspect} />
+                      ) : mode === 'wipe' ? (
+                        <BeforeAfter before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />
+                      ) : (
+                        <Compare mode={mode} before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />
+                      )}
+                      <figcaption style={{ paddingTop: 'var(--s2)' }}><Caption text={e.caption} /></figcaption>
+                    </figure>
+                  );
+                })}
               </div>
               {placeholders && <p className="wrap caption" style={{ paddingTop: 'var(--s5)', maxWidth: '44em' }}>{c.eksempler.placeholderNote}</p>}
             </div>
           </section>
         )}
+
+        {/* Tæt på — 2× detail crops: where restoration is judged */}
+        {details.length > 0 && (
+          <section className="wrap section" aria-labelledby="taetpaa" style={{ paddingTop: 0 }}>
+            <div className="container" style={{ display: 'grid', gap: 'var(--s6)' }}>
+              <div className="ed">
+                <h2 id="taetpaa">{c.taetPaa.h2}</h2>
+                <p className="lead" style={{ maxWidth: '26em' }}>{c.taetPaa.p}</p>
+              </div>
+              <div className="details">
+                {details.map((e) => (
+                  <figure key={e.id} className="detail">
+                    <img src={e.detail!.before} alt={`Før, udsnit: ${e.caption}`} width={700} height={700} loading="lazy" />
+                    <img src={e.detail!.after} alt={`Efter, udsnit: ${e.caption}`} width={700} height={700} loading="lazy" />
+                    <figcaption><Caption text={e.detail!.label ? `${e.detail!.label} – ${e.caption}` : e.caption} /></figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Det får du — the object and a gallery label */}
+        <section className="wrap section" aria-labelledby="produkt" style={{ paddingTop: 0 }}>
+          <div className="container product">
+            <div>
+              {productMock ? <img className="mock" src={productMock} alt={`Indrammet ${c.formatLabel} på en væg`} width={1200} height={960} loading="lazy" /> : null}
+            </div>
+            <div style={{ display: 'grid', gap: 'var(--s5)' }}>
+              <h2 id="produkt">{c.produkt.h2}</h2>
+              <dl className="label">
+                {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+              </dl>
+              <p className="compare-note">{c.produkt.note}</p>
+            </div>
+          </div>
+        </section>
 
         {/* Offer — one price, set like an object */}
         <section className="wrap section section-quiet" aria-labelledby="tilbud">

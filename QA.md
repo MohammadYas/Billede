@@ -219,3 +219,30 @@ warmed, the frame enlarged to 70 % of the wall height, and a floor line added (`
 - Journey A on the rebuilt flow: landing → sheet → processing (photo + progress + Afbryd) → `/p/<id>` in 37.9 s → colour
   toggle → checkout call (503 without Stripe keys, calm inline error) → cancel URL `/p/<id>?cancelled=1` resumes.
   Console clean. Journey B and B2 unchanged (fallback copy and lead, wrong-type message).
+
+---
+
+# Third pass — premium presentation and richer comparisons
+
+Owner's brief: 599 kr. must feel worth it, and before/after must convince with more forms and more examples.
+
+## What changed
+- **Nine examples instead of five.** Four Library of Congress tintypes (mother with two children, boy beside a chair,
+  three-person group, woman in a hat on a corroded plate) went through the same pipeline; all four pass the gate
+  (QUALITY_REPORT.md, set 2). Ovals, arches, sepia, children and groups are now represented.
+- **Four comparison forms**, one per example: wipe (hero + one), lens (`clip-path: circle()` under the finger, radius
+  from the rendered width so clip and ring share one geometry, arrow keys move it), hold (press to see the original,
+  220 ms crossfade, space toggles), fade (1.4 s dissolve every 4 s, paused off-screen, on touch and under reduced motion).
+  `checkpoints/06-examples-390.png`, `06-lens-drag-390.png`.
+- **"Tæt på"**: six 2× detail pairs (before | after) around faces, freckles, buttons. `06-details-390.png`.
+- **Colour example** with the customer's own toggle (woman in the hat).
+- **"Det får du"**: the framed mockup and a gallery-label list of exactly what the price buys, plus the photographer
+  comparison from the brief. Repeated on the preview page under the offer paragraph. `06-product-390.png`.
+- Photographs in the grid carry a hairline outline like mounted prints; mockup frame enlarged, floor line added.
+
+## Evidence
+- Detector: `[]`. Breakpoints 375–1440: no overflow, no tap target < 44 px.
+- Lighthouse, production build, mobile emulation: performance **95–97**, accessibility 100, best practices 100, SEO 100,
+  LCP 2.4–2.9 s (simulated), CLS 0, TBT 70–80 ms. Desktop 99.
+- Anti-slop: the motion rule (F4) was amended and re-audited — motion exists only where comparison is the content; no
+  scroll reveals, no hover lifts, no decorative loops. The fade example stops off-screen and under reduced motion.

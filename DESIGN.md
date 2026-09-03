@@ -51,8 +51,10 @@ No pure white, no pure black, no gradients. Photographs supply all other colour.
   bottom edge and a sentence per real stage.
 
 ## Motion
-Exactly one: the hero before/after slider auto-reveals once from 12 % to 62 % over 1.6 s (ease-out expo),
-then is pointer-driven 1:1 with `setPointerCapture`. Under `prefers-reduced-motion` the slider starts at 50 %
+Motion exists only where comparison is the content. The hero before/after slider auto-reveals once from 12 % to 62 %
+over 1.6 s (ease-out expo), then is pointer-driven 1:1 with `setPointerCapture`. Each example in the grid uses one
+comparison form: wipe, lens (round window, `clip-path: circle()`), hold (220 ms crossfade while pressed) or fade
+(1.4 s dissolve every 4 s, paused off-screen and while touched; hold-like under reduced motion). Under `prefers-reduced-motion` the slider starts at 50 %
 and does not animate. The bottom sheet uses a critically damped spring (no bounce) for open/close and 1:1
 drag-to-dismiss with velocity projection (apple-design §5–6). Everything else is instant.
 

@@ -65,7 +65,7 @@ Every line below is audited pass/fail in QA.md §Anti-slop audit with a screensh
 | F1 | Fade-up on scroll for every section, staggered reveals, parallax, typewriter, counters | Zero scroll animation |
 | F2 | Hover-lift on cards, scale-on-hover, animated gradient borders | Instant state changes; press feedback via colour only |
 | F3 | Skeleton shimmer as decoration, fake progress bars, fake "processing steps" | Real stage names from the real pipeline; a plain line of progress |
-| F4 | Autoplaying carousels | Exactly one motion: the hero slider reveals once (1.6 s ease-out), then touch-driven. `prefers-reduced-motion` = no reveal |
+| F4 | Autoplaying carousels, decorative loops | Motion only where comparison is the content: the hero slider reveals once (1.6 s ease-out), then touch-driven; each example carries one comparison form (wipe, lens, hold, or a slow dissolve that pauses off-screen, on touch and under `prefers-reduced-motion`). Nothing else on the page moves |
 
 ## G. Structure and meta
 | # | Forbidden | Opposite |
