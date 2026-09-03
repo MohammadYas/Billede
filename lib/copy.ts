@@ -23,7 +23,7 @@ export function copy(season: Season = currentSeason()) {
       h1: jul
         ? 'Det gamle billede af hendes forældre. Skarpt, indrammet og under juletræet.'
         : 'Det gamle billede af hendes forældre. Skarpt, indrammet og hjemme hos hende.',
-      sub: `Upload et foto af billedet – se resultatet på 20 sekunder. ${price} inkl. ramme og fri fragt.`,
+      sub: `Upload et foto af billedet – se resultatet på under et minut. ${price} inkl. ramme og fri fragt.`,
       cta: 'Se dit billede nu',
       small: 'Du godkender resultatet, før vi printer.',
     },
@@ -36,11 +36,11 @@ export function copy(season: Season = currentSeason()) {
       h2: 'Sådan fungerer det',
       steps: [
         'Tag et foto af billedet med telefonen. Dagslys, ingen blitz – det er nok.',
-        'Se resultatet på skærmen om 20 sekunder.',
+        'Se resultatet på skærmen. Det tager under et minut.',
         `Bestil. ${cap(navn)} finjusterer, du godkender på mail, vi printer og sender. Leveret ${levering}.`,
       ],
     },
-    eksempler: { h2: 'Eksempler' },
+    eksempler: { h2: 'Eksempler', placeholderNote: 'Eksemplerne er arkivfotos fra Wikimedia Commons og Library of Congress, restaureret med præcis samme proces som dit billede.' },
     offer: {
       line: `Restaureret + indrammet ${formatLabel(format)}. Digital fil inkluderet. Fri fragt. Leveret ${levering}.`,
       price,
@@ -76,6 +76,9 @@ export function copy(season: Season = currentSeason()) {
     upload: {
       camera: 'Tag et foto',
       library: 'Vælg fra kamerarulle',
+      pick: 'Vælg billede',
+      drop: '…eller træk det herind.',
+      tips: 'Læg billedet fladt i dagslys, uden blitz. Fyld skærmen med det.',
       note: 'Billedet bruges kun til dit preview og slettes efter 30 dage.',
       cta: 'Vis mig resultatet',
       remove: 'Fjern',
@@ -85,6 +88,16 @@ export function copy(season: Season = currentSeason()) {
     },
     processing: {
       stages: { uploading: 'Uploader', sending: 'Sender billedet', restoring: 'Restaurerer', preparing: 'Gør preview klar' } as Record<string, string>,
+      sentences: {
+        uploading: 'Billedet er på vej til os.',
+        sending: 'Vi kigger på skader, ridser og falmede toner.',
+        restoring: 'Vi retter ridserne og henter kontrasten tilbage. Ansigterne rører vi ikke ved.',
+        preparing: 'Gør dit preview klar.',
+      } as Record<string, string>,
+      wait: 'Det tager normalt 30–45 sekunder.',
+      cancel: 'Afbryd',
+      networkError: 'Forbindelsen røg undervejs. Billedet er stadig valgt – prøv igen.',
+      retry: 'Prøv igen',
     },
     preview: {
       h2: 'Sådan kan dit billede se ud.',
@@ -96,6 +109,8 @@ export function copy(season: Season = currentSeason()) {
       before: 'Før',
       after: 'Efter',
       cancelled: 'Betalingen blev ikke gennemført. Dit preview er gemt – du kan bestille, når du er klar.',
+      mockupCaption: `Sådan hænger det. ${formatLabel(format)}, sort ramme, passepartout.`,
+      again: 'Vis et andet billede',
     },
     fallback: {
       p: `Dette billede kræver manuelt arbejde – vi kan ikke lave et automatisk preview. Send det til os, så vurderer ${navn} det og vender tilbage inden 24 timer.`,
@@ -106,6 +121,12 @@ export function copy(season: Season = currentSeason()) {
     tak: {
       h1: `Tak. ${cap(navn)} kigger på dit billede i dag.`,
       p: 'Du får det færdige billede til godkendelse på mail inden 48 timer. Vi printer først, når du siger ja.',
+      timeline: [
+        ['I dag', `${cap(navn)} finjusterer billedet i hånden.`],
+        ['Inden 48 timer', 'Du får en mail med det færdige billede. Godkend, eller bed om en ændring.'],
+        ['Efter dit ja', `Print i ${formatLabel(format)}, ramme og fri fragt. Leveret ${levering}.`],
+      ] as [string, string][],
+      more: 'Vis et billede mere',
     },
     consent: 'Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres, og at printet fremstilles specielt til mig.',
     cookie: {

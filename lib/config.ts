@@ -4,7 +4,9 @@
 export const CONFIG = {
   /** Max business days from approval to delivery, shown as "inden X hverdage". */
   deliveryDaysMax: Number(process.env.DELIVERY_DAYS_MAX ?? 10),
-  /** Last order date that is still delivered before Christmas (ISO date). */
+  /** Christmas copy runs from this date … */
+  christmasStartDate: process.env.CHRISTMAS_START_DATE ?? '2026-11-01',
+  /** … until this last order date that is still delivered before Christmas (ISO dates). */
   christmasCutoffDate: process.env.CHRISTMAS_CUTOFF_DATE ?? '2026-12-10',
   /** Retention in days. */
   retentionUnpaidDays: 30,
@@ -21,10 +23,10 @@ export const CONFIG = {
 
 export type Season = 'jul' | 'default';
 
-/** Season is `jul` until the cutoff date (Europe/Copenhagen), then `default`. */
+/** Season is `jul` between the start and cutoff dates (Europe/Copenhagen), otherwise `default`. */
 export function currentSeason(now: Date = new Date()): Season {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now);
-  return today <= CONFIG.christmasCutoffDate ? 'jul' : 'default';
+  return today >= CONFIG.christmasStartDate && today <= CONFIG.christmasCutoffDate ? 'jul' : 'default';
 }
 
 /** "10. december" — Danish long date without year. */

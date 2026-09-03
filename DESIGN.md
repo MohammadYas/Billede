@@ -10,8 +10,8 @@ one decision, on a phone, usually in the evening.
   brief's second option won: Newsreader's bookish, slightly narrow old-style forms at large opsz read like a
   well-set photo book rather than a newspaper. Self-hosted latin woff2, `font-display: swap`.
 - **UI/body: Public Sans** (variable 400–700). Sturdy humanist grotesque; no AI-site saturation; Danish compounds fit at 390 px.
-- Scale (px at 390 / at ≥1024): display 34/56 · h2 26/36 · lead 18/20 · body 16/17 · small 14/14 · caption 13/13.
-- Display leading 1.04, tracking −0.02em, `text-wrap: balance`. Body leading 1.55, tracking 0.
+- Scale (px at 390 / at ≥1024): display 36/60 · h2 28/38 · lead 18/20 · body 16/17 · small 14/14 · caption 14/14 · price 88–168.
+- Display leading 1.02, tracking −0.025em, `text-wrap: balance`. Body leading 1.55, tracking 0. Metric-compatible fallback faces (`size-adjust`) so the swap does not reflow.
 - Danish hyphenation: `lang="da"`, `hyphens: auto` on display and body.
 - Numerals: `font-variant-numeric: tabular-nums` only in admin tables.
 
@@ -30,11 +30,25 @@ No pure white, no pure black, no gradients. Photographs supply all other colour.
 
 ## Layout
 - Primary canvas 390 px. Text measure max 34em (`--measure`). Gutters 20 px (390) → 32 px (768) → 48 px (1024+).
-- Hero image is square on mobile, 4:3 on desktop, full bleed. Section rhythm differs per section:
-  hero (tight) → tryghedslinje (one hairline row) → "Sådan fungerer det" (three sentences, 3 small photos, ragged)
-  → examples (horizontal swipe, no equal heights) → offer (paper-2 block, price large) → founder (portrait left, text right on desktop; stacked on mobile) → questions (hairline accordion) → slut → footer.
-- Radii: 0 on images, 2 px on buttons/inputs, 4 px on the frame mount. Shadows only where the frame casts one.
-- Spacing scale: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96.
+- **Hero = a photo-book spread.** Square, full bleed on mobile with a one-line caption (subject in ink, year in ink-2) and the
+  headline directly beneath; on desktop the 4:3 photograph is left-set inside the 1120 px container, the caption column sits at
+  its bottom edge, the headline and the CTA share one baseline below (`.hero-grid`, `.hero-text`).
+- **Editorial grid ≥ 1024:** every text section is 5/12 heading (sticky) + 7/12 content (`.ed`). Examples and the offer stay full width.
+- Rhythm: hero (tight) → one hairline trust row → "Sådan fungerer det" (three sentences with 112/160 px photographs of the object at
+  each stage) → examples (swipe on mobile, offset two-column grid on desktop) → offer (paper-2 band, the price set as an object at
+  88–168 px Newsreader 300, right-aligned on desktop) → founder (only when portrait and lines exist) → questions (hairline accordion)
+  → closing line → footer.
+- Radii: 0 on images, 2 px on buttons/inputs, 12 px only on the top corners of the mobile sheet (a physical sheet). Shadows only
+  where the frame casts one.
+- Spacing scale: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 · 128.
+
+## Surfaces
+- **/** landing. **/p/[id]** the preview as a product page: heading, slider at the photograph's own aspect (never cropped),
+  colour toggle, framed mockup with caption, the offer paragraph, price button; mobile gets a fixed price bar, desktop a sticky
+  right column. **/tak** shows the framed mockup and a three-row hairline timeline. **/godkend/[token]** approval.
+- **Sheet** (upload + processing + fallback only): enters with a critically damped spring, 10 px drag hysteresis, dismisses only
+  from the top of its content; the processing state keeps the customer's photograph on screen with the progress line along its
+  bottom edge and a sentence per real stage.
 
 ## Motion
 Exactly one: the hero before/after slider auto-reveals once from 12 % to 62 % over 1.6 s (ease-out expo),

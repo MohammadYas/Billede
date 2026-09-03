@@ -3,6 +3,7 @@ import { orderByToken } from '@/lib/approval';
 import { setStatus } from '@/lib/db/orders';
 import { copy } from '@/lib/copy';
 import Footer from '@/components/Footer';
+import Wordmark from '@/components/Wordmark';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export default async function Godkend({ params }: { params: Promise<{ token: str
     <>
       <main className="wrap" style={{ paddingTop: 'var(--s6)', paddingBottom: 'var(--s9)' }}>
         <div className="container" style={{ display: 'grid', gap: 'var(--s5)', maxWidth: 720 }}>
-          <span style={{ fontFamily: 'var(--display)', fontSize: 22 }}>Genfundet</span>
+          <Wordmark />
           {done ? (
             <>
               <h1>Tak. Vi printer og sender.</h1>

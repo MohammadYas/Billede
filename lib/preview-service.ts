@@ -11,6 +11,8 @@ import { customerFormat } from '@/lib/pricing';
 export type PreviewPayload = {
   orderId: string; original: string; preview: string; mockup: string; colour: string | null;
   isMonochrome: boolean; chosenColour: boolean; status: Order['status'];
+  /** the photograph's own proportions (restored output) so the slider never crops it */
+  width: number; height: number;
 };
 
 export type Progress = (stage: 'sending' | 'restoring' | 'preparing') => void;
@@ -27,6 +29,8 @@ export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
     original: imageUrl(order, 'original'), preview: imageUrl(order, 'preview'), mockup: imageUrl(order, 'mockup'),
     colour: order.colourised_path ? imageUrl(order, 'colour') : null,
     isMonochrome: Boolean(order.is_monochrome), chosenColour: order.chosen_colour, status: order.status,
+    width: Number((order.preview_meta as { output?: { width?: number } } | null)?.output?.width ?? 4),
+    height: Number((order.preview_meta as { output?: { height?: number } } | null)?.output?.height ?? 3),
   };
 }
 

@@ -82,8 +82,9 @@ function limit (Vercel Pro) or run finals locally.
 
 ## 7. Configuration to confirm
 
-- `CHRISTMAS_CUTOFF_DATE` (default `2026-12-10`) — after this date the site switches from "inden jul" to
-  "inden 10 hverdage" automatically.
+- `CHRISTMAS_START_DATE` / `CHRISTMAS_CUTOFF_DATE` (defaults 1 Nov / 10 Dec) — the Christmas copy runs only inside
+  this window; outside it the site says "inden 10 hverdage".
+- `LEGAL_DRAFT=false` once the lawyer has reviewed `/privatliv` and `/handelsbetingelser` (removes the "Udkast" line).
 - `DELIVERY_DAYS_MAX` (default 10) — CEWE's own promise is 6–11 business days; 10 is honest only if you approve
   finals within 48 h.
 - `ADMIN_PASSWORD` — long and random.
@@ -117,7 +118,6 @@ plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are com
 
 ## 12. Unverified
 
-- Playwright checkpoints were rendered in headless Chromium; test on a real iPhone (Safari toolbar + safe-area).
-- Lighthouse was not run in this environment; the page ships two woff2 files, one JS bundle and JPEG/WebP images,
-  no third-party script before consent.
+- Playwright checkpoints were rendered in headless Chromium; test on a real iPhone (Safari toolbar + safe-area), in particular the sheet's drag-to-dismiss and the fixed price bar on `/p/<id>`.
+- Lighthouse (production build, mobile emulation): performance 89–93, a11y/best-practices/SEO 100, CLS 0; desktop 100. Re-run after replacing the example photographs — the damaged "before" images decide LCP.
 - Stripe Checkout, webhook, confirmation mail and approval mail were exercised only at code level (no keys).

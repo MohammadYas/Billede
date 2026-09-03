@@ -23,3 +23,21 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **CSP in development.** React dev mode needs `'unsafe-eval'`; it is added to `script-src` only when `NODE_ENV !== 'production'`.
 - **Headless QA browser.** The sandbox's Chromium needed the HTTPS proxy to load signed Supabase images; the screenshot/journey scripts pass `HTTPS_PROXY` to Playwright when set. Production browsers are unaffected.
 - **Preview images are same-origin.** Customer preview/original/colour/mockup are streamed through `/api/preview/[id]/image` (session-gated, private cache 15 min) instead of exposing Supabase signed URLs to the browser. Fewer third-party hosts in the customer's browser, one CSP source. Admin keeps 15-min signed URLs.
+
+## Second pass (impeccable critique, dual-agent)
+
+- **Critique method.** Assessment A (design review, isolated agent) and Assessment B (detector + browser + Lighthouse, isolated agent) ran in parallel per the impeccable playbook; reports in `work/critique-a/report.md` and `work/critique-b/report.md`, synthesis in QA.md.
+- **Preview is a page, not a sheet.** `/p/<orderId>` (session-gated) replaces the preview state inside the bottom sheet. The buy button was below the fold of a 1 286 px sheet; a page gives the slider its own proportions, a sticky price bar on mobile, a two-column layout on desktop, survives an evening interruption and is where Stripe's cancel URL returns to.
+- **The customer's photo is never cropped.** The payload carries the restored image's width/height; the slider uses the photo's own aspect with `object-fit: contain`.
+- **Christmas window.** `CHRISTMAS_START_DATE` (default 1 Nov) added; before it the site says "inden 10 hverdage", not "under juletræet".
+- **"20 sekunder" was factually wrong** (measured 38–42 s). Sub-line and step 2 now say "under et minut"; the processing state says "normalt 30–45 sekunder". The spec allows changing locked copy when it is wrong for the repo.
+- **Steps show the object, not an icon and not the hero again.** Damaged print → restored screen → framed mockup, from the second example, 112/160 px.
+- **Price as an object.** Newsreader 300 at 88–168 px, ink not green (green is for links), right-aligned on desktop opposite the offer line.
+- **Founder section renders only when it is real** (portrait + at least one line). Contact stays in the footer.
+- **Processing state keeps the photograph** at 45 % with the progress line on its bottom edge, a sentence per real stage, a creeping bar during restoration (28 s linear, honest about the wait), and "Afbryd". A dropped connection is a retry state, never the manual-review copy.
+- **Sheet gestures.** Enter spring (critically damped, response 0.35 s) from the live transform; 10 px drag hysteresis; a downward drag dismisses only when content is scrolled to the top; horizontal intent and upward drags fall through to scrolling; `touch-action: pan-y`.
+- **Desktop composition.** Hero photo left-set in a photo-book spread with the caption column at its bottom edge; every text section uses a 5/12 + 7/12 editorial grid with a sticky heading.
+- **Captions.** Subject in ink, date in ink-2, archive credit moved to `title` and to one honest line under the examples ("Eksemplerne er arkivfotos …").
+- **Performance.** Responsive `<picture>` sets (480/800/1400, WebP + JPEG) with `sizes`; metric-compatible fallback fonts (`size-adjust`, `ascent-override`) to remove swap CLS; the slider handle moves with `transform`.
+- **Tap targets.** Inline links carry a `.tap` class (10 px vertical padding, negative margin) so every link is ≥ 44 px tall without changing the text rhythm.
+- **Legal draft stamp** is shown unless `LEGAL_DRAFT=false`; the owner flips it after the lawyer's review.

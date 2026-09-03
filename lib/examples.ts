@@ -5,6 +5,7 @@ export type Example = {
   id: string;
   before: string;   // /examples/<id>-before.jpg
   after: string;    // /examples/<id>-after.jpg
+  mockup?: string;  // /examples/<id>-mockup.jpg (framed, composed by code)
   width: number;
   height: number;
   widths?: number[]; // available long-edge sizes: <id>-<side>-<w>.jpg|webp

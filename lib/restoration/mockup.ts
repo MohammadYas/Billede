@@ -22,11 +22,13 @@ async function wallLayer(width: number, height: number): Promise<Buffer> {
   } catch {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <defs>
-        <radialGradient id="l" cx="38%" cy="28%" r="90%">
-          <stop offset="0" stop-color="#ECE6DB"/><stop offset="1" stop-color="#CFC7BA"/>
+        <radialGradient id="l" cx="34%" cy="22%" r="95%">
+          <stop offset="0" stop-color="#F1EBE0"/><stop offset="1" stop-color="#D6CEC0"/>
         </radialGradient>
       </defs>
       <rect width="100%" height="100%" fill="url(#l)"/>
+      <rect y="${Math.round(height * 0.86)}" width="100%" height="${Math.round(height * 0.14)}" fill="#C9C0B1"/>
+      <rect y="${Math.round(height * 0.86)}" width="100%" height="2" fill="#B8AE9E"/>
     </svg>`;
     return sharp(Buffer.from(svg)).png().toBuffer();
   }
@@ -42,7 +44,7 @@ export async function makeMockup(image: Buffer, opts: MockupOptions = {}): Promi
   // Physical proportions: the frame covers ~52 % of the wall height for 30×40.
   const meta = await sharp(image).metadata();
   const portrait = (meta.height ?? 1) >= (meta.width ?? 1);
-  const outerH = Math.round(H * (portrait ? 0.62 : 0.5) * Math.min(1.25, spec.heightCm / 40));
+  const outerH = Math.round(H * (portrait ? 0.70 : 0.56) * Math.min(1.25, spec.heightCm / 40));
   const outerW = Math.round(outerH * (portrait ? spec.widthCm / spec.heightCm : spec.heightCm / spec.widthCm));
   const moulding = Math.round(outerH * 0.02);
   const mount = Math.round(outerH * 0.07);
@@ -56,11 +58,11 @@ export async function makeMockup(image: Buffer, opts: MockupOptions = {}): Promi
   const py = Math.round((innerH - (pm.height ?? innerH)) / 2);
 
   const x0 = Math.round((W - outerW) / 2);
-  const y0 = Math.round(H * 0.16);
+  const y0 = Math.round(H * 0.11);
 
   const shadowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs><filter id="b" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${Math.round(outerH * 0.02)}"/></filter></defs>
-    <rect x="${x0 + Math.round(outerH * 0.012)}" y="${y0 + Math.round(outerH * 0.02)}" width="${outerW}" height="${outerH}" fill="#000" fill-opacity="0.32" filter="url(#b)"/>
+    <rect x="${x0 + Math.round(outerH * 0.01)}" y="${y0 + Math.round(outerH * 0.018)}" width="${outerW}" height="${outerH}" fill="#000" fill-opacity="0.28" filter="url(#b)"/>
   </svg>`;
   const frameSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${outerW}" height="${outerH}">
     <rect width="${outerW}" height="${outerH}" fill="${frameColour}"/>

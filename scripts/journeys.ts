@@ -28,10 +28,14 @@ async function main() {
   await page.waitForSelector('text=Fjern');
   await page.screenshot({ path: 'checkpoints/02-upload-picked-390.png' });
   await page.getByRole('button', { name: 'Vis mig resultatet' }).click();
+  await page.waitForTimeout(2500);
+  await page.screenshot({ path: 'checkpoints/02-processing-390.png' });
   const stages: string[] = [];
   const poll = setInterval(async () => { try { const t = await page.locator('.sheet p.lead').first().textContent(); if (t && !stages.includes(t)) stages.push(t); } catch { /* */ } }, 500);
   await page.waitForSelector('text=Sådan kan dit billede se ud.', { timeout: 120_000 });
   clearInterval(poll);
+  await page.waitForLoadState('networkidle');
+  await page.waitForFunction(() => Array.from(document.images).every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 30_000 }).catch(() => {});
   out.A_preview_ms = Date.now() - t0;
   out.A_stages = stages;
   await page.waitForTimeout(1900);
@@ -48,12 +52,19 @@ async function main() {
   await page.screenshot({ path: 'checkpoints/02-preview-order-390.png' });
   const previewUrl = page.url();
   out.A_url = previewUrl;
+  // desktop rendering of the same preview page (same session cookies)
+  const dctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'da-DK', storageState: await ctx.storageState() });
+  const dpage = await dctx.newPage();
+  await dpage.goto(previewUrl, { waitUntil: 'networkidle' }); await dpage.waitForFunction(() => Array.from(document.images).every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 30_000 }).catch(() => {}); await dpage.waitForTimeout(1900);
+  await dpage.screenshot({ path: 'checkpoints/02-preview-1440.png', fullPage: true });
+  await dctx.close();
 
   // C — cancel return: find order id via the API the page used
-  const orderIdMatch = (await page.evaluate(() => performance.getEntriesByType('resource').map((e) => e.name).find((n) => /\/api\/preview\/[0-9a-f-]{36}\/colour/.test(n)) ?? ''))?.match(/preview\/([0-9a-f-]{36})/);
+  const orderIdMatch = previewUrl.match(/\/p\/([0-9a-f-]{36})/);
   if (orderIdMatch) {
-    await page.goto(`${BASE}/?cancelled=1&order=${orderIdMatch[1]}`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE}/p/${orderIdMatch[1]}?cancelled=1`, { waitUntil: 'networkidle' });
     await page.waitForSelector('text=Sådan kan dit billede se ud.', { timeout: 30_000 });
+    await page.waitForFunction(() => Array.from(document.images).every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 30_000 }).catch(() => {});
     out.C_resumed = await page.locator('text=Betalingen blev ikke gennemført').count();
     await page.screenshot({ path: 'checkpoints/02-preview-cancelled-390.png' });
     await page.keyboard.press('Escape');

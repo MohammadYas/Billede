@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   try {
     const { url, sessionId } = await paymentProvider().createCheckout(updated, {
       successUrl: `${base}/tak?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${base}/?cancelled=1&order=${order.id}`,
+      cancelUrl: `${base}/p/${order.id}?cancelled=1`,
       previewImageUrl: process.env.STRIPE_PRODUCT_IMAGE === 'false' ? undefined : previewImageUrl,
     });
     await updateOrder(order.id, { payment_session_id: sessionId });

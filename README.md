@@ -35,14 +35,15 @@ project in `.env.local`; re-apply with the Supabase SQL editor or the Management
 | `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_FROM_LOCAL` | mails from `<fornavn>@genfundet.dk` |
 | `NEXT_PUBLIC_META_PIXEL_ID` | Pixel; the consent banner only renders when set |
 | `ADMIN_PASSWORD`, `CRON_SECRET` | admin login (rate-limited), retention cron auth |
-| `NEXT_PUBLIC_SITE_URL`, `DELIVERY_DAYS_MAX`, `CHRISTMAS_CUTOFF_DATE` | absolute URLs; delivery promises (never hard-coded in copy) |
+| `NEXT_PUBLIC_SITE_URL`, `DELIVERY_DAYS_MAX`, `CHRISTMAS_START_DATE`, `CHRISTMAS_CUTOFF_DATE`, `LEGAL_DRAFT` | absolute URLs; delivery promises and the Christmas window (never hard-coded in copy); legal draft stamp |
 
 ## How an order flows (as the founder)
 
 1. **Preview.** Customer uploads → `POST /api/preview` streams real stages (`sending`, `restoring`, `preparing`) →
    `lib/preview-service.ts` runs `lib/restoration/restore.ts` (two candidates, SSIM selection, vision likeness +
    face-count check). Any doubt → status `MANUAL_REVIEW` and the fallback copy with an e-mail field (`POST /api/lead`).
-   Otherwise `PREVIEW_READY`, watermarked preview + frame mockup shown. Colour version is fetched as a second request.
+   Otherwise `PREVIEW_READY` and the browser navigates to `/p/<orderId>` — the preview page (slider at the photo's own aspect,
+   framed mockup, price). Colour version is fetched as a second request; images are streamed same-origin and session-gated.
 2. **Checkout.** `POST /api/checkout` → Stripe Checkout (DKK, da, DK shipping, terms checkbox). Webhook
    `checkout.session.completed` and the `/tak` page both call `markPaid` (idempotent) → `PAID`, confirmation mail,
    `Purchase` fired once (`purchase_tracked_at`).

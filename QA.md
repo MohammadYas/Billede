@@ -155,3 +155,67 @@ recorded in DECISIONS.md: `PREVIEW_IMAGE_QUALITY=low` (≈18 s, visibly softer),
 (saves little — the two are generated in parallel server-side). The copy says "på 20 sekunder"; the processing line
 says "normalt 20–40 sekunder" so the wait is honest inside the sheet. **Owner decision:** keep `medium` and change
 the hero sub-line to "på under et minut", or accept `low` for the preview. The code supports both via env.
+
+---
+
+# Second pass — impeccable critique and rebuild (2026-09-03, later the same day)
+
+Method: dual-agent critique per the impeccable playbook. Assessment A (design review) and Assessment B (detector, computed
+styles, contrast, tap targets, reduced motion, Lighthouse) ran as two isolated agents in parallel against the dev server;
+reports in `work/critique-a/report.md` and `work/critique-b/report.md`. ui-ux-pro-max domain searches (landing, ux ×6,
+typography, color) and the apple-design gesture rules were applied during the rebuild.
+
+## What the critique found and what changed
+
+| Priority | Finding (A = design review, B = evidence) | Change |
+|---|---|---|
+| P0 | A: desktop hero self-centred on its own grid, text on another left edge | Photo-book spread: photo left-set in the container, caption column at its bottom edge, headline and CTA on one baseline below (`.hero-grid`, `.hero-text`) |
+| P0 | A: the customer's photo was cropped square in the preview slider | Payload carries the restored image's width/height; slider uses the photo's own aspect with `object-fit: contain` |
+| P0 | A: "under juletræet" and "inden jul" rendered in September | `CHRISTMAS_START_DATE` (1 Nov) added to the season window |
+| P0 | A: "20 sekunder" vs measured 38–42 s | "under et minut" (hero, step 2); processing state "normalt 30–45 sekunder" |
+| P1 | A: first mobile screen had no CTA | Tighter hero text block: photo, one-line caption, four-line headline, sub, button all inside 844 px (`01-hero-390.png`) |
+| P1 | A: same photograph three times; 72 px thumbnails illustrate nothing | Steps show the object at each stage (damaged print → restored screen → framed mockup) from the second example at 112/160 px; examples grid starts at the second example |
+| P1 | A: price is a paragraph, desktop band empty on the right | `.price` Newsreader 300, 88–168 px, ink, right-aligned opposite the offer line on desktop |
+| P1 | A: founder section = name + Gmail | Renders only when portrait and at least one line exist; contact lives in the footer |
+| P1 | A: forty seconds in an empty room, no cancel | Photograph stays at 45 % with the progress line on its bottom edge, a sentence per real stage, creeping bar during restoration, "Afbryd" (`02-processing-390.png`) |
+| P1 | A: buy button below the fold of a 1 286 px sheet; heading after two images | **Preview is now a page** `/p/[id]`: heading, slider, toggle, mockup, copy; fixed price bar on mobile, sticky right column on desktop (`02-preview-390.png`, `02-preview-1440.png`) |
+| P1 | A: a dropped connection showed the manual-review copy | New `error` state with "Forbindelsen røg…" and "Prøv igen"; fallback reserved for server doubt |
+| P2 | A: /tak showed nothing she bought | Framed mockup + three-row hairline timeline + "Vis et billede mere" |
+| P2 | A: wordmark sizes differed, captions carried the archive credit | `.wordmark` (24 px, always a link); captions = subject in ink, date in ink-2, credit to `title` and one honest line under the examples |
+| P2 | A: 1120 px container, 580 px of content | Editorial 5/12 + 7/12 grid with sticky headings on every text section (`landing-1440.png`) |
+| P2 | A: legal draft stamp visible to customers; readability | `LEGAL_DRAFT=false` hides it after review; Newsreader section headings, label-on-its-own-line lists |
+| P2 | A: "Tag et foto" as primary on a laptop | Camera button only on `pointer: coarse`; desktop gets "Vælg billede" and a drop zone |
+| Persona | A: reading swipe in the sheet could dismiss it | 10 px hysteresis, dismiss only from `scrollTop 0`, horizontal/upward intent falls through to scrolling, `touch-action: pan-y` |
+| Persona | A: 13 px captions, 16 px-tall inline links | Captions 14 px; `.tap` gives every inline link 44 px of hit height |
+| B | 6 inline links < 44 px | fixed as above; screenshot script reports none |
+| B | LCP 7.3 s (dev) from a 238 KB hero JPEG; font-swap CLS 0.009; handle animated with `left` | Responsive `<picture>` (480/800/1000/1400, WebP + JPEG, `sizes`), harder compression on damaged before-images, metric-compatible fallback fonts, display-font preload removed, handle on `transform`, reveal driven on the DOM node (no React render per frame) |
+
+Not changed, on purpose: the hero photograph stays (A's first provocative question) because the reveal is the argument the
+owner's Meta ad relies on; it becomes a Danish family photo the moment `assets/originals/` is filled (HANDOFF §1).
+The real wall photograph for the mockup (A's third question) still needs the owner's camera; the code-rendered wall was
+warmed, the frame enlarged to 70 % of the wall height, and a floor line added (`public/examples/*-mockup.jpg`).
+
+## Heuristics (Assessment A, before → my re-score after the rebuild)
+
+| # | Heuristic | Before | After | Why |
+|---|---|---|---|---|
+| 1 | Visibility of system status | 2 | 4 | photo stays, stage sentences, real progress, /tak shows the object and the timeline |
+| 2 | Match with real world | 3 | 4 | season window, honest timing |
+| 3 | User control and freedom | 2 | 4 | Afbryd during processing, retry on network loss, preview reopens from the URL |
+| 4 | Consistency | 2 | 4 | one wordmark, one timing claim, one grid |
+| 5 | Error prevention | 3 | 4 | photo tips in the sheet, no crop in the preview |
+| 6 | Recognition over recall | 3 | 4 | the preview page restates the offer beside the photo |
+| 8 | Aesthetic and minimalist | 3 | 4 | no repeated photograph, founder hidden until real, price as an object |
+| 9 | Error recovery | 2 | 4 | error vs fallback separated, "Prøv igen" keeps the file |
+| | **Total** | **20/32** | **32/32** | self-scored; the owner should re-run `impeccable critique` after replacing the placeholders |
+
+## Evidence after the rebuild
+
+- Detector: `detect.mjs --json app components` → `[]` (all scopes).
+- Breakpoints 375–1440: horizontal overflow 0, tap targets < 44 px: none (`checkpoints/breakpoints/report.txt`).
+- Lighthouse on the **production build** (`next build && next start`, mobile emulation, simulated throttling):
+  performance **89–93**, accessibility 100, best practices 100, SEO 100; LCP 3.2–3.8 s simulated (observed 0.18 s),
+  CLS **0**, TBT 60–70 ms, Speed Index 0.8 s. Desktop preset: performance **100**, LCP 0.8 s. Reports in `work/lh/`.
+- Journey A on the rebuilt flow: landing → sheet → processing (photo + progress + Afbryd) → `/p/<id>` in 37.9 s → colour
+  toggle → checkout call (503 without Stripe keys, calm inline error) → cancel URL `/p/<id>?cancelled=1` resumes.
+  Console clean. Journey B and B2 unchanged (fallback copy and lead, wrong-type message).

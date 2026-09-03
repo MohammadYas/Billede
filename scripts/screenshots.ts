@@ -20,6 +20,9 @@ async function main() {
     const page = await ctx.newPage();
     await page.goto(BASE, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1900); // the one motion
+    // walk the page so lazy images are requested before the full-page capture
+    await page.evaluate(async () => { const h = document.documentElement.scrollHeight; for (let y = 0; y < h; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); } window.scrollTo(0, 0); });
+    await page.waitForTimeout(800);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     const small = await page.evaluate(() => {
       const bad: string[] = [];
