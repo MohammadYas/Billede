@@ -16,3 +16,4 @@ assets/founder/*.heic
 __pycache__/
 *.pyc
 .impeccable/
+next-env.d.ts
