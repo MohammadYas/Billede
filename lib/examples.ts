@@ -7,6 +7,7 @@ export type Example = {
   after: string;    // /examples/<id>-after.jpg
   width: number;
   height: number;
+  widths?: number[]; // available long-edge sizes: <id>-<side>-<w>.jpg|webp
   caption: string;  // one line, book style
   consent: boolean;
   /** true for archive placeholders that must be replaced before launch */

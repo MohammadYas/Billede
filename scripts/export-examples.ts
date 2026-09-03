@@ -42,11 +42,21 @@ async function main() {
     const scale = target / Math.max(w, h);
     const W = Math.round(w * Math.min(1, scale)), H = Math.round(h * Math.min(1, scale));
     // The restored file defines the frame; the original is fitted to the same box so the slider lines up.
-    await sharp(orig).resize(W, H, { fit: 'fill' }).jpeg({ quality: 80, mozjpeg: true }).toFile(path.join(OUT, `${name}-before.jpg`));
-    await sharp(rest).resize(W, H).jpeg({ quality: 82, mozjpeg: true }).toFile(path.join(OUT, `${name}-after.jpg`));
-    await sharp(orig).resize(W, H, { fit: 'fill' }).webp({ quality: 74 }).toFile(path.join(OUT, `${name}-before.webp`));
-    await sharp(rest).resize(W, H).webp({ quality: 76 }).toFile(path.join(OUT, `${name}-after.webp`));
-    out.push({ id: name, before: `/examples/${name}-before.jpg`, after: `/examples/${name}-after.jpg`, width: W, height: H, caption: s.caption, consent: true, placeholder: PLACEHOLDER || undefined, order: s.order });
+    // Responsive set: 480 / 800 / 1400 on the long edge, JPEG + WebP. The <picture> in BeforeAfter picks by width.
+    const widths = [480, 800, 1400].filter((w) => w <= Math.max(W, H));
+    for (const side of ['before', 'after'] as const) {
+      const src = side === 'before' ? sharp(orig).resize(W, H, { fit: 'fill' }) : sharp(rest).resize(W, H);
+      const base = await src.toBuffer();
+      for (const lw of widths) {
+        const sc = lw / Math.max(W, H);
+        const w = Math.round(W * sc), h = Math.round(H * sc);
+        await sharp(base).resize(w, h, { kernel: sharp.kernel.lanczos3 }).jpeg({ quality: side === 'before' ? 76 : 80, mozjpeg: true, progressive: true }).toFile(path.join(OUT, `${name}-${side}-${lw}.jpg`));
+        await sharp(base).resize(w, h, { kernel: sharp.kernel.lanczos3 }).webp({ quality: side === 'before' ? 70 : 74, effort: 6 }).toFile(path.join(OUT, `${name}-${side}-${lw}.webp`));
+      }
+      // canonical unsuffixed file = largest (used by og.jpg and as a plain fallback)
+      await fs.copyFile(path.join(OUT, `${name}-${side}-${widths[widths.length - 1]}.jpg`), path.join(OUT, `${name}-${side}.jpg`));
+    }
+    out.push({ id: name, before: `/examples/${name}-before.jpg`, after: `/examples/${name}-after.jpg`, width: W, height: H, widths, caption: s.caption, consent: true, placeholder: PLACEHOLDER || undefined, order: s.order });
     console.log('exported', name, `${W}×${H}`);
   }
   (out as { order: number }[]).sort((a, b) => a.order - b.order);
