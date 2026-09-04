@@ -232,7 +232,7 @@ export function copy(season: Season = currentSeason()) {
       next: `Det her er det automatiske første udkast. Bestiller du, retter ${navn} det til i hånden, og du godkender det på mail, før vi printer.`,
       p: `Vi finjusterer billedet manuelt, printer det, indrammer det og sender det hjem til dig. Du godkender det færdige billede, før vi printer.`,
       specTitle: `Det får du for ${price}`,
-      headNote: 'Fri fragt · pengene tilbage, hvis det ikke ligner',
+      headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.',
       sizeTitle: 'Størrelse',

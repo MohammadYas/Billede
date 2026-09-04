@@ -108,7 +108,7 @@ p + p { margin-top: var(--s4); }
 @media (min-width: 1024px) { .ed { grid-template-columns: 5fr 7fr; gap: var(--s8); align-items: start; } .ed > h2, .ed > .ed-head { position: sticky; top: var(--s6); } }
 
 /* Header */
-.site-head { display: flex; justify-content: space-between; align-items: baseline; padding-top: var(--s4); padding-bottom: var(--s3); }
+.site-head { display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: space-between; align-items: baseline; padding-top: var(--s4); padding-bottom: var(--s3); }
 
 /* Hero — photo-book spread. 4:3 on every width so the first screen on a phone still holds the offer and the button; on desktop the photo is left-set and the caption column sits at its bottom edge. */
 .hero-grid { display: grid; gap: var(--s2); }
