@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import type { NextConfig } from 'next';
 
 const supabaseHost = (() => { try { return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://x.supabase.co').host; } catch { return '*.supabase.co'; } })();
@@ -21,6 +22,23 @@ const csp = [
 
 if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production' && !process.env.JOB_SECRET) {
   throw new Error('JOB_SECRET is not set: the background job runner would reject every restoration. Set it in Netlify → Environment variables.');
+}
+
+// The seller's identity on /handelsbetingelser and /privatliv falls back to "[Udfyld: CVR]" when
+// assets/founder/founder.md is incomplete. That is the right thing to show the owner and the worst
+// thing to show a customer checking whether we are a real company — so a production build refuses
+// to ship one. Nothing here invents a value: it fails, and names the file to fill in.
+if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production' && process.env.LEGAL_DRAFT !== 'true') {
+  const md = existsSync('assets/founder/founder.md') ? readFileSync('assets/founder/founder.md', 'utf8') : '';
+  const field = (k: string) => (md.match(new RegExp(`^${k}:\\s*(.+)$`, 'mi'))?.[1] ?? '').trim();
+  // lib/founder.ts reads a leading TODO as "not filled in yet"; so does this.
+  const missing = ['name', 'cvr', 'address', 'email'].filter((k) => !field(k) || /^todo\b/i.test(field(k)));
+  if (missing.length) {
+    throw new Error(
+      `assets/founder/founder.md is missing ${missing.join(', ')}, so /handelsbetingelser and /privatliv would publish "[Udfyld: …]" to customers. ` +
+      'Fill the fields in, or set LEGAL_DRAFT=true to publish a draft on purpose.',
+    );
+  }
 }
 
 const nextConfig: NextConfig = {

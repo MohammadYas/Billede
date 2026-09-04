@@ -218,3 +218,18 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   and last, where a taller neighbour is always beside them.
 - **Two more archive edges cropped:** the handwriting on Anna Cooper's plate margin, and the museum
   accession numbers. What is left is the photograph.
+- **The upsell stopped explaining its own price.** "Restaureringen er lavet én gang, et eksemplar mere
+  er kun billedet, rammen og forsendelsen" answered a question nobody asked and planted a worse one:
+  *hvorfor koster det første så meget?* The offer is now one line — same picture, same size, same parcel —
+  and the button carries the number.
+- **The guarantee stands once, under the button.** The bill repeated the refund three centimetres above
+  the CTA that repeats it again; it now states the payment fact instead (`Vi printer først, når du har set
+  det færdige billede og sagt ja`), and "Pengene tilbage, hvis det ikke ligner" is the last thing read
+  before the tap.
+- **Colourisation is a choice, not a correction.** The old line ("De fleste vælger sort-hvid: det er
+  sådan, billedet blev taget") told the customer which answer was right about their own family photograph.
+- **A production build refuses to publish `[Udfyld: CVR]`.** The seller's identity on the two legal pages
+  falls back to a placeholder when `assets/founder/founder.md` is unfinished — right for the owner, worst
+  possible for a customer checking whether we are a real company. `next.config.ts` now fails a Netlify
+  production build that would ship one, names the missing fields, and offers `LEGAL_DRAFT=true` for a
+  deliberate draft. It invents nothing.
