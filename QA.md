@@ -405,3 +405,5 @@ End-to-end after the changes: upload → restoration → preview landed in 77 s 
 | "front end … Apple / Claude design team" | Hairline configurator rows with gallery labels instead of cards; frame swatches that are the moulding itself; 44 px targets everywhere; radios are real radios (keyboard + VoiceOver); the total animates with an ease-out over 380 ms and tabular figures so nothing reflows; the wall crossfades between combinations; every animation has a reduced-motion path; the fieldset rule is an inset shadow so a legend never cuts a hole in it. | `c-04-config.png`, `t-01-tak.png` |
 
 The money path is arithmetic in one file: `quote()` draws the bill in the browser and builds the Stripe line items on the server. Hostile input (`format:'hack'`, `frame:'guld'`, `extraPrints:99`) resolves to 30×40, sort, 3 — never to a price the page invented.
+
+Desktop (1440): the photograph is sticky while the choices scroll, and the order button appears again directly under the total. The money sentence names the **total**, not the size price — it counts along with everything else (`work/pass9/paywhen.mjs`: 1.697 kr. → 2.097 kr. when the size changes).

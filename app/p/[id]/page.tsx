@@ -31,7 +31,8 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
       <main className="wrap">
         <div className="container site-head">
           <Wordmark />
-          <span className="caption">{c.price} · fri fragt</span>
+          {/* the price lives in the bill on this page; the header carries the promise instead */}
+          <span className="caption">{c.preview.headNote}</span>
         </div>
         <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} token={t} />
       </main>

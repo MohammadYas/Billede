@@ -191,7 +191,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       {errorLine}
       <p className="caption" style={{ textAlign: 'center' }}>{c.preview.payment}</p>
       {button}
-      <p className="caption" style={{ textAlign: 'center' }}>{c.preview.under} {v.payWhen}</p>
+      <p className="caption" style={{ textAlign: 'center' }}>{c.preview.under} {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>
     </div>
   );
 
@@ -290,7 +290,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         )}
         <p className="caption measure">{c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
-        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {v.payWhen}</p>
+        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>
         <p className="caption measure">{c.preview.gift}</p>
       </div>
       <div className="pv-right">
@@ -300,6 +300,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <p className="caption">{v.mockupCaption}</p>
           {config}
+          {/* desktop: the button again, right under the total it belongs to */}
+          <div className="pv-desktop-cta">{cta}</div>
           <p className="measure">{v.p}</p>
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <dl className="label small">

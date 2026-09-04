@@ -347,8 +347,9 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 .guarantee li::before { content: ''; position: absolute; left: 0.15em; top: 1.05em; width: 0.5em; height: 0.28em; border-left: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: rotate(-45deg); }
 @media (min-width: 1024px) {
   .pv { grid-template-columns: 7fr 5fr; gap: var(--s8); align-items: start; padding-top: var(--s6); }
-  .pv .pv-left { grid-column: 1; display: grid; gap: var(--s4); }
-  .pv .pv-right { grid-column: 2; display: grid; gap: var(--s5); position: sticky; top: var(--s6); }
+  /* the photograph stays while the choices scroll: the object is the argument, the column of decisions is the work */
+  .pv .pv-left { grid-column: 1; display: grid; gap: var(--s4); position: sticky; top: var(--s6); align-self: start; }
+  .pv .pv-right { grid-column: 2; display: grid; gap: var(--s5); }
 }
 /* Mobile order bar: how you pay above the button, when you pay under it, and the error where the button is */
 .pv-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; gap: var(--s2); padding: var(--s3) var(--gutter) calc(var(--s3) + var(--safe-bottom)); background: var(--paper); border-top: 1px solid var(--hairline); }

@@ -52,7 +52,6 @@ export function copy(season: Season = currentSeason()) {
       extraPrint: formatDkk(EXTRA_PRINT_DKK[fmt]),
       specTitle: `Det får du for ${pris}`,
       cta: `Bestil mit billede – ${pris}`,
-      payWhen: `Du betaler ${pris} nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.`,
       mockupCaption: `Sådan hænger det. ${lbl}, sort ramme med passepartout, klar til væggen.`,
       p: `Vi finjusterer billedet manuelt, printer det i ${lbl}, indrammer det og sender det hjem til dig. Du godkender det færdige billede, før vi printer.`,
       rows: rowsFor(fmt, lbl),
@@ -233,6 +232,9 @@ export function copy(season: Season = currentSeason()) {
       next: `Det her er det automatiske første udkast. Bestiller du, retter ${navn} det til i hånden, og du godkender det på mail, før vi printer.`,
       p: `Vi finjusterer billedet manuelt, printer det, indrammer det og sender det hjem til dig. Du godkender det færdige billede, før vi printer.`,
       specTitle: `Det får du for ${price}`,
+      headNote: 'Fri fragt · pengene tilbage, hvis det ikke ligner',
+      payWhenPre: 'Du betaler',
+      payWhenPost: 'nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.',
       sizeTitle: 'Størrelse',
       sizeNote: 'Ramme, glas, gavekort og fragt er med i alle størrelser.',
       frameTitle: 'Ramme',
@@ -262,7 +264,6 @@ export function copy(season: Season = currentSeason()) {
       under: 'Pengene tilbage, hvis det ikke ligner.',
       payment: `${pay} · Ingen oprettelse`,
       gift: 'Er det en gave? Ved betaling kan du skrive en hilsen, som vi lægger ved på et kort.',
-      payWhen: `Du betaler ${price} nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.`,
       checkoutError: email
         ? `Vi kunne ikke åbne betalingen lige nu. Prøv igen om et øjeblik – eller ${skrivTil} på ${email}, så sender vi et betalingslink. Dit preview er gemt.`
         : 'Vi kunne ikke åbne betalingen lige nu. Prøv igen om et øjeblik. Dit preview er gemt.',
