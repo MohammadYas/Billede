@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.mts",
     "test:order": "node tests/order-state.browser.mjs",
+    "test:viewport": "node tests/viewport.browser.mjs",
     "quality:report": "tsx scripts/quality-report.ts",
     "examples:export": "tsx scripts/export-examples.ts",
     "examples:sources": "node scripts/fetch-archive-sources.mjs",

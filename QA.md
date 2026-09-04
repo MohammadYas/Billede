@@ -519,3 +519,19 @@ No duplicate PageView, no duplicate ViewContent. `PRODUCT` no longer carries a h
 
 Lighthouse on the product page after the changes: accessibility 100, best practices 100. Nothing under
 13 px, nothing tappable under 44 px, no horizontal overflow at 320-430 px, CTA above the fold on both sizes.
+
+## Launch-hardening, 4. september 2026
+
+Kørt mod en produktionsbygning på 3111.
+
+| Kontrol | Kommando | Resultat |
+|---|---|---|
+| Standardordren og al prisregning | `npm test` | 7/7 · standard = 30×40 · sort · 0 ekstra · 599 kr. |
+| Stripe-beløb = det regningen viste | `npm test` | 48/48 kombinationer |
+| Priser og CTA'er i browseren | `npm run test:order` | 9/9 · ingen stale priser |
+| Ekstra eksemplar er opt-in ved indlæsning | `npm run test:order` | knap, ingen stepper, intet afkrydset ud over størrelse og ramme |
+| Vandret overløb, tryk under 44 px, dækket indhold | `npm run test:viewport` | 12/12 · 375 / 390 / 430 / 768 / 1024 / 1280 px, forside og bestillingsside |
+| Placeholders og testdata i kundeflader | `grep` over `app/ components/ lib/` | kun `[Udfyld: …]`, som produktionsbygningen nu afviser |
+
+Ikke kørt, og hvorfor: en rigtig betaling (ingen Stripe-nøgler) og et rigtigt upload-til-preview
+(ingen OpenAI-credits). Serverleddet i begge er dækket af `npm test`.
