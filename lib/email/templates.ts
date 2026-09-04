@@ -51,6 +51,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
   const meta = (o.preview_meta ?? {}) as { share_token?: string };
   const mockup = o.mockup_path && meta.share_token ? siteUrl(`/api/preview/${o.id}/image?kind=mockup&t=${encodeURIComponent(meta.share_token)}`) : null;
   const previewLink = meta.share_token ? siteUrl(`/p/${o.id}?t=${encodeURIComponent(meta.share_token)}`) : null;
+  const gift = (o.preview_meta as { gift_note?: string } | null)?.gift_note;
   const html = shell(subject, [
     h1('Tak for din bestilling.'),
     p(`${esc(navn)} kigger på dit billede inden 24 timer og finjusterer det i hånden.`),
@@ -60,7 +61,8 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
     p(`Restaureret og indrammet familiebillede, ${esc(formatLabel(o.format))}${o.chosen_colour ? ', i farver' : ''} · ${esc(amount)} inkl. moms og fragt<br>` +
       (address ? `Leveres til: ${esc(address)}<br>` : '') +
-      `Ordre ${esc(o.id.slice(0, 8))} · betalt ${esc(o.paid_at ? new Date(o.paid_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }) : 'i dag')}`),
+      `Ordre ${esc(o.id.slice(0, 8))} · betalt ${esc(o.paid_at ? new Date(o.paid_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }) : 'i dag')}` +
+      (gift ? `<br>Hilsen på kortet i pakken: “${esc(gift)}”` : '')),
     p(`Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. <a href="${siteUrl('/handelsbetingelser')}" style="color:#2F4A3A;">Handelsbetingelser</a>${previewLink ? ` · <a href="${previewLink}" style="color:#2F4A3A;">Dit preview</a>` : ''}`),
     f.phone ? p(`Spørgsmål? Ring eller skriv til ${esc(kontakt)} på <a href="tel:${esc(f.phone.replace(/\s/g, ''))}" style="color:#2F4A3A;">${esc(f.phone)}</a> – eller svar på denne mail.`) : '',
   ].join(''));

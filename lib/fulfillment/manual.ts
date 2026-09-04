@@ -20,6 +20,7 @@ export class ManualProvider implements FulfillmentProvider {
       `Bestil hos CEWE → "Billede i ramme", ${fmt}, sort eller eg ramme, mat papir. Alternativt et dansk fotolaboratorium med ramme i ${fmt}.`,
       `Leveringsadresse (kopiér præcis): ${address}`,
       order.customer_phone ? `Telefon til fragtfirma: ${order.customer_phone}` : 'Telefon til fragtfirma: (mangler)',
+      ...(((order.preview_meta ?? {}) as { gift_note?: string }).gift_note ? [`GAVEKORT – skriv på et kort og læg i pakken: “${((order.preview_meta ?? {}) as { gift_note?: string }).gift_note}”`] : []),
       'Indsæt ordrereference fra CEWE/laboratoriet i feltet "Fulfillment-reference" herunder.',
       'Når pakken er sendt: indsæt tracking-nummer og evt. link, og sæt status til SHIPPED (kunden får mail automatisk).',
     ];

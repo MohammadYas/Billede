@@ -41,6 +41,7 @@ export class StripeProvider implements PaymentProvider {
         },
       ],
       shipping_address_collection: { allowed_countries: ['DK'] },
+      custom_fields: [{ key: 'gavehilsen', label: { type: 'custom', custom: 'Hilsen på et kort i pakken (valgfri)' }, type: 'text', optional: true, text: { maximum_length: 200 } }],
       phone_number_collection: { enabled: true },
       consent_collection: { terms_of_service: 'required' },
       custom_text: {
@@ -72,6 +73,7 @@ export class StripeProvider implements PaymentProvider {
       name: addr?.name ?? s.customer_details?.name ?? null,
       shippingAddress: addr ? { name: addr.name, ...addr.address } : null,
       paymentIntent: pi,
+      giftNote: s.custom_fields?.find((f) => f.key === 'gavehilsen')?.text?.value ?? null,
     };
   }
 

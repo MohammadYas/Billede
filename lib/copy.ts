@@ -1,6 +1,6 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
-import { CONFIG, currentSeason, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
+import { CONFIG, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, mobilePayEnabled, type Season } from '@/lib/config';
 import { formatDkk, PRICING, customerFormat, formatLabel } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
 
@@ -18,6 +18,8 @@ export function copy(season: Season = currentSeason()) {
   const phone = f.phone ? f.phone : '';
   const phoneHref = f.phone ? `tel:${f.phone.replace(/\s/g, '')}` : '';
   const ringTil = personal ? `ring til ${cap(navn)}` : 'ring til os';
+  const days = daysToCutoff();
+  const pay = mobilePayEnabled() ? 'MobilePay, Apple Pay eller kort' : 'Apple Pay, Google Pay eller kort';
 
   return {
     season,
@@ -27,12 +29,26 @@ export function copy(season: Season = currentSeason()) {
     phone,
     phoneHref,
     hero: {
+      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Gaven, ingen andre kan give',
       h1: jul
         ? 'Mors gamle billede. Skarpt igen, i ramme, under juletræet.'
         : 'Mors gamle billede. Skarpt igen, i ramme, hjemme hos dig.',
-      sub: 'Tag et foto af billedet med telefonen – se det restaureret på under et minut.',
+      sub: jul
+        ? 'Tag et foto af billedet med telefonen – i smug, hvis det er en gave.'
+        : 'Tag et foto af billedet med telefonen – se det restaureret på under et minut.',
       cta: 'Se dit billede nu',
-      small: `${price} alt inkl. – print i ${formatLabel(format)}, ramme og fragt. Det koster ikke noget at se.`,
+      small: jul ? `Se det restaureret på under et minut. ${price} alt inkl. – print i ${formatLabel(format)}, ramme og fragt. Det koster ikke noget at se.` : `${price} alt inkl. – print i ${formatLabel(format)}, ramme og fragt. Det koster ikke noget at se.`,
+      countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
+    },
+    gave: {
+      h2: jul ? 'Den julegave, de ikke selv kan købe' : 'Den gave, de ikke selv kan købe',
+      lead: 'Et billede, de troede var gået tabt – skarpt, i ramme, klar til at hænge op. Det er den slags, der bliver stille ved bordet.',
+      points: [
+        ['Tag billedet i smug', 'Et foto af det gamle billede med telefonen er nok. Læg det tilbage i skuffen, inden nogen ser det.'],
+        ['Skriv en hilsen', 'Ved betaling kan du skrive et par linjer. Vi lægger et kort ved med din hilsen.'],
+        ['Send det direkte – eller hjem til dig', 'Skriv modtagerens adresse ved betaling, hvis det skal sendes direkte. Ellers kommer det hjem til dig, pakket så glasset holder.'],
+        [jul ? 'Under træet til tiden' : 'Til tiden', jul ? `Bestil senest ${dato}, så er det leveret inden jul. Du godkender billedet på mail, før vi printer.` : `Leveret ${levering}, efter du har godkendt billedet på mail.`],
+      ] as [string, string][],
     },
     tryghed: [
       `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
@@ -59,11 +75,12 @@ export function copy(season: Season = currentSeason()) {
         ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder`],
         ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
       ] as [string, string][],
-      note: `Restaurering, print i ${formatLabel(format)}, ramme, indpakning og fragt – ét beløb, ingen tillæg.`,
+      note: `Restaurering, print i ${formatLabel(format)}, ramme, gavekort med din hilsen, indpakning og fragt – ét beløb, ingen tillæg.`,
     },
     eksempler: { h2: 'Eksempler', placeholderNote: 'Eksemplerne er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress, restaureret med præcis samme proces som dit billede.' },
     offer: {
       line: `Restaureret + indrammet ${formatLabel(format)}. Digital fil inkluderet. Fri fragt. Leveret ${levering}.`,
+      deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
       priceNote: 'inkl. moms, ramme og fragt · pengene tilbage, hvis det ikke ligner',
       phone: phone ? `Spørgsmål? ${cap(ringTil)} på ${phone}.` : '',
       phoneHref,
@@ -101,11 +118,23 @@ export function copy(season: Season = currentSeason()) {
           a: `Du betaler ${price} ved bestilling. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. Selve printet er lavet til dig og kan ikke returneres, men er det beskadiget ved levering, sender vi et nyt.`,
         },
         jul
-          ? { q: 'Når det frem inden jul?', a: `Bestillinger inden ${dato} leveres inden jul. Efter ${dato} leverer vi inden ${X} hverdage.` }
+          ? { q: 'Når det frem inden jul?', a: `Ja, hvis du bestiller senest ${dato} og godkender billedet, når mailen kommer (inden 48 timer). Efter ${dato} leverer vi inden ${X} hverdage.` }
           : { q: 'Hvornår får jeg det?', a: `Vi leverer inden ${X} hverdage, efter du har godkendt det færdige billede.` },
+        {
+          q: 'Kan jeg sende det direkte til modtageren?',
+          a: 'Ja. Skriv modtagerens navn og adresse som leveringsadresse ved betaling. Godkendelsesmailen kommer stadig til dig, så du ser det færdige billede først.',
+        },
+        {
+          q: 'Kan jeg lægge en hilsen ved?',
+          a: 'Ja. Ved betaling er der et felt til en hilsen på op til 200 tegn. Vi skriver den på et kort og lægger det i pakken.',
+        },
+        {
+          q: 'Hvordan betaler jeg?',
+          a: `${pay}. Du betaler ${price} ved bestilling og kan fortryde med fuld refusion, indtil du har godkendt det færdige billede.`,
+        },
       ],
     },
-    slut: { line: 'Det tager to minutter at se. Bestil først, når du har set det.', cta: 'Se dit billede nu' },
+    slut: { line: jul ? 'Det tager to minutter at se. Julegaven er klaret i aften.' : 'Det tager to minutter at se. Bestil først, når du har set det.', cta: 'Se dit billede nu' },
     sticky: `Se dit billede nu · ${price}`,
     upload: {
       camera: 'Tag et foto',
@@ -160,7 +189,8 @@ export function copy(season: Season = currentSeason()) {
       colourLoading: 'Farveversion på vej – ca. ½ minut',
       cta: `Bestil mit billede – ${price}`,
       under: 'Pengene tilbage, hvis det ikke ligner.',
-      payment: 'MobilePay, Apple Pay eller kort · Ingen oprettelse',
+      payment: `${pay} · Ingen oprettelse`,
+      gift: 'Er det en gave? Ved betaling kan du skrive en hilsen, som vi lægger ved på et kort.',
       payWhen: `Du betaler ${price} nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.`,
       checkoutError: phone
         ? `Vi kunne ikke åbne betalingen lige nu. Prøv igen om et øjeblik – eller ${ringTil} på ${phone}, så klarer vi bestillingen over telefonen. Dit preview er gemt.`

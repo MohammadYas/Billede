@@ -65,6 +65,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           {likeness?.notes ? <p className="muted">{String(likeness.notes)}</p> : null}
           {Array.isArray(meta.reviewReasons) && (meta.reviewReasons as string[]).length > 0 && <p style={{ color: 'var(--error)' }}>Manuel vurdering: {(meta.reviewReasons as string[]).join(', ')}</p>}
           {order.change_request_text && <p style={{ background: 'var(--paper-2)', padding: 'var(--s3)' }}><strong>Kundens ændringsønske:</strong> {order.change_request_text}</p>}
+          {typeof meta.gift_note === 'string' && meta.gift_note && <p style={{ background: 'var(--paper-2)', padding: 'var(--s3)' }}><strong>Gavehilsen til kortet i pakken:</strong> “{String(meta.gift_note)}”</p>}
         </section>
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 'var(--s4)' }}>

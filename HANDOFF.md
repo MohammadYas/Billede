@@ -179,8 +179,15 @@ they are read with `fs` at runtime.
 
 ## 7. Configuration to confirm
 
-- `CHRISTMAS_START_DATE` / `CHRISTMAS_CUTOFF_DATE` (defaults 1 Nov / 10 Dec) — the Christmas copy runs only inside
-  this window; outside it the site says "inden 5 hverdage".
+- `CHRISTMAS_START_DATE` / `CHRISTMAS_CUTOFF_DATE` (defaults **1 Oct** / 10 Dec) — inside this window the site sells the
+  Christmas gift: eyebrow with the deadline, a day countdown, "under juletræet", the gift section's "til tiden" row and the
+  FAQ answer. Outside it the gift angle stays but without dates. Start the window earlier by setting the env var
+  (e.g. `2026-09-15`) if the campaign runs earlier; the cutoff must be a date your print partner can actually hold.
+- `STRIPE_MOBILEPAY_ENABLED` also drives the **copy**: until it is `true` the page says "Apple Pay, Google Pay eller kort",
+  never MobilePay. Flip it the day MobilePay is live on the account.
+- **Gavehilsen.** Checkout has an optional 200-character field; the text lands on the order (`preview_meta.gift_note`),
+  in the owner mail, the ordrebekræftelse, the admin page and the print checklist — you write it on a card and put it in
+  the parcel. It is promised on the page, so do it.
 - `LEGAL_DRAFT=false` once the lawyer has reviewed `/privatliv` and `/handelsbetingelser` (removes the "Udkast" line).
 - `DELIVERY_DAYS_MAX` (default **5**, your decision) — the promise "inden 5 hverdage" counts from the customer's approval.
   CEWE's own promise is 6–11 business days, so 5 needs a print partner that ships a framed 30×40 within 3–4 days

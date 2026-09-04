@@ -5,7 +5,7 @@ export const CONFIG = {
   /** Max business days from approval to delivery, shown as "inden X hverdage". */
   deliveryDaysMax: Number(process.env.DELIVERY_DAYS_MAX ?? 5),
   /** Christmas copy runs from this date … */
-  christmasStartDate: process.env.CHRISTMAS_START_DATE ?? '2026-11-01',
+  christmasStartDate: process.env.CHRISTMAS_START_DATE ?? '2026-10-01',
   /** … until this last order date that is still delivered before Christmas (ISO dates). */
   christmasCutoffDate: process.env.CHRISTMAS_CUTOFF_DATE ?? '2026-12-10',
   /** Retention in days. */
@@ -35,6 +35,19 @@ export function formatCutoffDate(iso: string = CONFIG.christmasCutoffDate): stri
   return new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
     new Date(Date.UTC(y, m - 1, d)),
   );
+}
+
+/** Whole days left until the last order date that still ships before Christmas (0 on the day, negative after). */
+export function daysToCutoff(now: Date = new Date()): number {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now);
+  const [y, m, d] = CONFIG.christmasCutoffDate.split('-').map(Number);
+  const [ty, tm, td] = today.split('-').map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 864e5);
+}
+
+/** MobilePay is named on the page only once it is live on the Stripe account (STRIPE_MOBILEPAY_ENABLED=true). */
+export function mobilePayEnabled(): boolean {
+  return process.env.STRIPE_MOBILEPAY_ENABLED === 'true';
 }
 
 /** "inden jul" or "inden 5 hverdage", depending on season. */

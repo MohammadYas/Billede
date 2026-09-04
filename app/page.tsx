@@ -66,9 +66,11 @@ export default async function Page() {
               )}
             </div>
             {hero && <p className="hero-caption"><Caption text={hero.caption} credit /></p>}
+            {hero && <span className="hero-credit" aria-hidden><Caption text={hero.caption} credit /></span>}
           </div>
           <div className="wrap">
             <div className="container hero-text">
+              <p className="eyebrow">{c.hero.eyebrow}</p>
               <h1>{c.hero.h1}</h1>
               <p className="lead">{c.hero.sub}</p>
               <div className="hero-cta">
@@ -101,9 +103,23 @@ export default async function Page() {
           </div>
         </section>
 
+        {/* Gaven — why this is the gift they cannot buy themselves (card with the buyer's greeting is a real Checkout field) */}
+        <section className="wrap section section-quiet" aria-labelledby="gave">
+          <div className="container gift">
+            <div className="gift-head">
+              <h2 id="gave">{c.gave.h2}</h2>
+              <p className="lead" style={{ maxWidth: '24em' }}>{c.gave.lead}</p>
+              <div><OpenFlowButton style={{ minWidth: 240 }}>{c.hero.cta}</OpenFlowButton></div>
+            </div>
+            <dl className="gift-points">
+              {c.gave.points.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+            </dl>
+          </div>
+        </section>
+
         {/* Eksempler — each pair compared a different way; never the hero photograph again */}
         {gridExamples.length > 0 && (
-          <section className="section" aria-labelledby="eksempler" style={{ paddingTop: 0 }}>
+          <section className="section" aria-labelledby="eksempler">
             <div className="wrap"><div className="container"><h2 id="eksempler" style={{ marginBottom: 'var(--s5)' }}>{c.eksempler.h2}</h2></div></div>
             <div className="container">
               <div className="swipe">
@@ -173,6 +189,7 @@ export default async function Page() {
             <h2 id="tilbud" className="visually-hidden">Pris</h2>
             <div className="offer-act" style={{ display: 'grid', gap: 'var(--s4)', alignContent: 'end' }}>
               <p className="lead" style={{ maxWidth: '22em' }}>{c.offer.line}</p>
+              {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}
               <div><OpenFlowButton style={{ minWidth: 240 }}>{c.offer.cta}</OpenFlowButton></div>
               <p className="caption" style={{ maxWidth: '26em' }}>{c.offer.under}</p>
             </div>

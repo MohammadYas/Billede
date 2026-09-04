@@ -12,6 +12,8 @@ export type VerifiedSession = {
   name: string | null;
   shippingAddress: Record<string, unknown> | null;
   paymentIntent: string | null;
+  /** the greeting the buyer typed at Checkout, for the card in the parcel */
+  giftNote: string | null;
 };
 export type WebhookOutcome = { handled: boolean; type: string; orderId?: string | null; session?: VerifiedSession };
 

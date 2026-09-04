@@ -20,6 +20,7 @@ export async function markPaid(orderId: string, s: VerifiedSession, ctx: { ip?: 
     payment_session_id: s.sessionId, payment_intent: s.paymentIntent, amount: s.amount ?? order.amount, currency: s.currency ?? 'dkk',
     customer_email: s.email ?? order.customer_email, customer_phone: s.phone ?? order.customer_phone, customer_name: s.name ?? order.customer_name,
     shipping_address: s.shippingAddress ?? order.shipping_address,
+    preview_meta: { ...(order.preview_meta ?? {}), ...(s.giftNote ? { gift_note: s.giftNote } : {}) },
   });
   if (!updated) {
     // already progressed: either the same payment seen twice (fine) or a second payment (refund it, tell the owner)
@@ -45,6 +46,7 @@ export async function markPaid(orderId: string, s: VerifiedSession, ctx: { ip?: 
     `${updated.customer_name ?? addr.name ?? ''} · ${updated.customer_email ?? ''} · ${updated.customer_phone ?? ''}`,
     `${[addr.line1, addr.postal_code, addr.city].filter(Boolean).join(', ')}`,
     `${updated.chosen_colour ? 'Farveversion' : 'Sort-hvid'} · ${updated.format}`,
+    ...(s.giftNote ? [`Gavehilsen: “${s.giftNote}”`] : []),
     'Næste skridt: generér eller upload final, send godkendelsesmail (inden 48 timer).',
   ], updated.id).catch(() => {});
   await logEvent('Purchase', { orderId: updated.id, utm: updated.utm, sessionId: (updated.preview_meta as { session_id?: string } | null)?.session_id ?? null, meta: { value: (updated.amount ?? 0) / 100, currency: 'DKK' } });

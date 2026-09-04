@@ -138,6 +138,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="caption measure">{c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
         <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhen}</p>
+        <p className="caption measure">{c.preview.gift}</p>
       </div>
       <div className="pv-right">
         {/* desktop: the decision first, the object and the label under it */}
