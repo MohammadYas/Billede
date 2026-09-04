@@ -83,14 +83,33 @@ server-verified on `/tak`). Conversions API was **not** built (would have exceed
 is already passed on Purchase so CAPI can be added later without double counting.
 Use `utm_content=<ad name>` in every ad link; the funnel view `v_funnel_daily` groups by it.
 
-## 6. Domain and hosting
+## 6. Hosting: Netlify from GitHub
 
-**Function time limit:** the preview route needs up to 120 s (`maxDuration = 120`; the restoration itself is capped at 90 s).
-Vercel Hobby caps functions at 60 s — use Vercel Pro (or a host without that cap), otherwise slow runs die mid-way.
+Connect the repo to Netlify (Import from GitHub). Build command `npm run build`, no publish directory (the Next.js runtime
+sets it). Nothing else to install: `netlify.toml` is in the repo and the two extra functions deploy with it.
 
-Deploy to Vercel (or any Node host) with the env vars in `.env.example`. `vercel.json` schedules the retention cron
-daily at 03:00 UTC; set `CRON_SECRET`. Node runtime with `sharp` — no edge. Route `/api/admin/final` needs a 300 s
-function limit (Vercel Pro) or run finals locally.
+**Why the app is shaped the way it is on Netlify.** A synchronous function may run 10 s (26 s on request), a streamed
+one 60 s, and a request body may be at most 6 MB. The restoration takes 30–45 s and a phone photo is 3–12 MB, so:
+
+- the browser uploads the photo **straight into the private Supabase bucket** with a one-time signed URL
+  (`POST /api/preview/start` → PUT → `POST /api/preview/<id>/run`); no photo ever passes through a function;
+- restoration, colour version and the print final run as **jobs in a Netlify Background Function**
+  (`netlify/functions/job-background.ts`, 15 min limit); the sheet polls `GET /api/preview/<id>` every 1.5 s;
+- retention and the 48 h approval reminders run as a **scheduled function** (`netlify/functions/retention.ts`, 03:00 UTC);
+- job state is on the order (`preview_meta.job`) and visible in admin.
+
+**Env vars to set in Netlify** (Site configuration → Environment variables), from `.env.example`: the OpenAI, Supabase,
+Stripe, Resend and Meta keys, `NEXT_PUBLIC_SITE_URL=https://genfundet.dk` (the job runner calls itself on this URL),
+`JOB_SECRET` (any long random string), `CRON_SECRET`, `ADMIN_PASSWORD`, `LEGAL_DRAFT`. `JOB_RUNNER` may stay empty
+(Netlify sets `NETLIFY=true`; on any other Node host set `JOB_RUNNER=inline`).
+
+**After the first deploy, check three things in the Netlify UI:** the deploy log lists `job-background` and `retention`
+under Functions; the Stripe webhook URL (`/api/webhooks/stripe`) is the Netlify one; one real upload from a phone lands
+on `/p/<id>?t=…` (Functions → job-background → logs shows the run).
+
+`sharp` and `heic-convert` are marked external in `netlify.toml` and are installed by the build; `assets/founder`,
+`public/mockup` and `public/examples/examples.json` are traced into the server function (`next.config.ts`) because
+they are read with `fs` at runtime.
 
 ## 7. Configuration to confirm
 

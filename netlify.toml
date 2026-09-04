@@ -1,0 +1,18 @@
+# Genfundet on Netlify: connect the GitHub repo, set the env vars from .env.example, deploy.
+# The Next.js runtime (OpenNext adapter) is picked up automatically; the two functions below are the
+# only things outside Next: the background job runner and the daily retention schedule.
+
+[build]
+  command = "npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["sharp", "heic-convert"]
+  included_files = ["assets/founder/**", "public/mockup/**", "public/examples/examples.json"]
+
+[functions."job-background"]
+  # background: true is set in the file; this keeps the bundle small
+  included_files = ["assets/founder/**", "public/mockup/**"]

@@ -5,7 +5,7 @@ import { supabaseAdmin } from './supabase';
 export const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'genfundet-private';
 
 /** Unguessable object path: orders/<orderId>/<kind>-<24 hex>.jpg */
-export function objectPath(orderId: string, kind: 'original' | 'restored' | 'preview' | 'colourised' | 'mockup' | 'final' | 'candidate'): string {
+export function objectPath(orderId: string, kind: 'upload' | 'original' | 'restored' | 'preview' | 'colourised' | 'mockup' | 'final' | 'candidate'): string {
   return `orders/${orderId}/${kind}-${randomBytes(12).toString('hex')}.jpg`;
 }
 
@@ -33,4 +33,19 @@ export async function removeObjects(paths: string[]): Promise<void> {
   if (!real.length) return;
   const { error } = await supabaseAdmin().storage.from(BUCKET).remove(real);
   if (error) throw new Error(`storage remove failed: ${error.message}`);
+}
+
+/** One-time signed URL the browser PUTs the raw photo to (bypasses any function body limit). */
+export async function createSignedUpload(path: string): Promise<{ signedUrl: string; token: string }> {
+  const { data, error } = await supabaseAdmin().storage.from(BUCKET).createSignedUploadUrl(path);
+  if (error || !data) throw new Error(`createSignedUpload: ${error?.message ?? 'no data'}`);
+  return { signedUrl: data.signedUrl, token: data.token };
+}
+
+export async function objectExists(path: string): Promise<boolean> {
+  const i = path.lastIndexOf('/');
+  const folder = path.slice(0, i), name = path.slice(i + 1);
+  const { data, error } = await supabaseAdmin().storage.from(BUCKET).list(folder, { search: name, limit: 5 });
+  if (error) return false;
+  return (data ?? []).some((f) => f.name === name);
 }

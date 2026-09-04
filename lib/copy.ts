@@ -121,6 +121,7 @@ export function copy(season: Season = currentSeason()) {
       remove: 'Fjern',
       reupload: 'Vælg et andet',
       tooBig: 'Filen er over 25 MB. Tag et nyt foto, eller vælg et mindre.',
+      tooBigNetwork: 'Forbindelsen her kan ikke sende så stor en fil. Prøv på et andet netværk, eller tag et nyt foto af billedet – det behøver ikke være i fuld størrelse.',
       wrongType: 'Vi kan læse JPEG, PNG, HEIC og WebP. Prøv et andet billede.',
       noPhoto: 'Jeg har ikke billedet lige nu',
       noPhotoH: 'Ligger billedet hos mor?',

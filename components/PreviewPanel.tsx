@@ -34,11 +34,28 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (!data.isMonochrome) return;
     let alive = true;
     if (data.colour) { preload(data.colour).then(() => { if (alive) setColourReady(true); }); return () => { alive = false; }; }
+    // the colour job runs on the server; poll the order until the colour version exists (give up after 3 min)
+    let timer: number | null = null;
+    const deadline = Date.now() + 180_000;
+    const arrive = async (colour: string) => { await preload(colour); if (alive) { setData((d) => ({ ...d, colour })); setColourReady(true); setColourLoading(false); } };
+    const check = async () => {
+      try {
+        const r = await fetch(`/api/preview/${data.orderId}${q}`, { cache: 'no-store' });
+        const st = (await r.json()) as { payload?: { colour?: string | null } | null; job?: { kind: string; state: string } | null };
+        if (st.payload?.colour) { await arrive(st.payload.colour); return; }
+        if ((st.job?.kind === 'colour' && st.job.state === 'failed') || Date.now() > deadline) { if (alive) setColourLoading(false); return; }
+      } catch { /* transient */ }
+      if (alive) timer = window.setTimeout(check, 2500);
+    };
     fetch(`/api/preview/${data.orderId}/colour${q}`, { method: 'POST' })
-      .then(async (r) => { if (!r.ok) throw new Error(); const { colour } = (await r.json()) as { colour: string | null }; if (colour) await preload(colour); if (alive) setData((d) => ({ ...d, colour })); })
-      .catch(() => {})
-      .finally(() => { if (alive) setColourLoading(false); });
-    return () => { alive = false; };
+      .then(async (r) => {
+        const j = (await r.json().catch(() => ({}))) as { colour?: string | null; queued?: boolean };
+        if (j.colour) { await arrive(j.colour); return; }
+        if (!r.ok || !j.queued) { if (alive) setColourLoading(false); return; }
+        timer = window.setTimeout(check, 2500);
+      })
+      .catch(() => { if (alive) setColourLoading(false); });
+    return () => { alive = false; if (timer) window.clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.isMonochrome, data.colour, data.orderId]);
 

@@ -34,7 +34,7 @@ project in `.env.local`; re-apply with the Supabase SQL editor or the Management
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_MOBILEPAY_ENABLED` | Checkout; MobilePay is added to the payment-method list only when the flag is `true` |
 | `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_FROM_LOCAL` | mails from `<fornavn>@genfundet.dk` |
 | `NEXT_PUBLIC_META_PIXEL_ID` | Pixel; the consent banner only renders when set |
-| `ADMIN_PASSWORD`, `CRON_SECRET` | admin login (rate-limited), retention cron auth |
+| `ADMIN_PASSWORD`, `CRON_SECRET`, `JOB_SECRET`, `JOB_RUNNER` | admin login (rate-limited), retention cron auth, background job runner secret, `netlify`/`inline` |
 | `NEXT_PUBLIC_SITE_URL`, `DELIVERY_DAYS_MAX`, `CHRISTMAS_START_DATE`, `CHRISTMAS_CUTOFF_DATE`, `LEGAL_DRAFT` | absolute URLs; delivery promises and the Christmas window (never hard-coded in copy); legal draft stamp |
 
 ## How an order flows (as the founder)
@@ -61,7 +61,7 @@ project in `.env.local`; re-apply with the Supabase SQL editor or the Management
    not for scale. A POD provider (Gelato / Printful / Prodigi) is the intended next `FulfillmentProvider` implementation.
 6. **Refund.** Set status `REFUNDED` on the order page → refund via the Stripe SDK on the payment intent.
 
-Retention: `GET /api/cron/retention` (Bearer `CRON_SECRET`, scheduled daily in `vercel.json`) deletes files for
+Retention: `netlify/functions/retention.ts` (scheduled, 03:00 UTC) or `GET /api/cron/retention` (Bearer `CRON_SECRET`) on other hosts; deletes files for
 unpaid orders after 30 days and completed orders after 90 days, logging to `deletion_log`, and sends approval reminders.
 
 ## Enable a second format

@@ -8,8 +8,8 @@ type Stage = 'uploading' | 'sending' | 'restoring' | 'preparing';
 type State =
   | { kind: 'closed' }
   | { kind: 'pick'; file?: File; thumb?: string; error?: string; over?: boolean }
-  | { kind: 'processing'; stage: Stage; percent: number; file: File; thumb: string }
-  | { kind: 'error'; file: File; thumb: string; message: string; title: string; orderId?: string | null }
+  | { kind: 'processing'; stage: Stage; percent: number; file: File; thumb: string; orderId?: string; token?: string }
+  | { kind: 'error'; file: File; thumb: string; message: string; title: string; orderId?: string | null; token?: string | null }
   | { kind: 'fallback'; orderId: string | null; email: string; sending: boolean; sent: boolean; error?: string }
   | { kind: 'nophoto'; email: string; sending: boolean; sent: boolean; error?: string };
 
@@ -30,7 +30,16 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
   const [phase, setPhase] = useState(0); // 0–2: the wait sentence rotates at 15 s and 30 s
 
   const open = useCallback(() => setState({ kind: 'pick' }), []);
-  const close = useCallback(() => { xhrRef.current?.abort(); setState({ kind: 'closed' }); }, []);
+  const pollRef = useRef<number | null>(null);
+  const stopPolling = () => { if (pollRef.current) window.clearTimeout(pollRef.current); pollRef.current = null; };
+  const close = useCallback(() => {
+    xhrRef.current?.abort(); stopPolling();
+    setState((st) => {
+      // "Afbryd (billedet slettes)": tell the server to drop the upload and the order
+      if (st.kind === 'processing' && st.orderId) fetch(`/api/preview/${st.orderId}/cancel${st.token ? `?t=${encodeURIComponent(st.token)}` : ''}`, { method: 'POST' }).catch(() => {});
+      return { kind: 'closed' };
+    });
+  }, []);
 
   useEffect(() => { setCoarse(window.matchMedia('(pointer: coarse)').matches); }, []);
   useEffect(() => {
@@ -38,6 +47,8 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
     window.addEventListener('gf:open', h); return () => window.removeEventListener('gf:open', h);
   }, [open]);
   useEffect(() => { if (resumeOrderId) router.replace(`/p/${resumeOrderId}${cancelled ? '?cancelled=1' : ''}`); }, [resumeOrderId, cancelled, router]);
+
+  useEffect(() => () => stopPolling(), []);
 
   useEffect(() => {
     const openNow = state.kind !== 'closed';
@@ -71,43 +82,124 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
     setState({ kind: 'pick', file, thumb: URL.createObjectURL(file) });
   };
 
-  const start = (file: File, thumb: string) => {
-    setState({ kind: 'processing', stage: 'uploading', percent: 0, file, thumb });
-    track('UploadStarted', { bytes: file.size, type: file.type });
-    const fd = new FormData(); fd.append('file', file, file.name || 'photo.jpg');
+  /** Fallback transport is capped at 4.5 MB (function body limit): downscale to ≤ 2200 px JPEG in the browser first. */
+  const shrink = async (file: File): Promise<Blob> => {
+    if (file.size <= 4_500_000) return file;
+    try {
+      const bmp = await createImageBitmap(file);
+      const s = Math.min(1, 2200 / Math.max(bmp.width, bmp.height));
+      const canvas = document.createElement('canvas'); canvas.width = Math.round(bmp.width * s); canvas.height = Math.round(bmp.height * s);
+      canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
+      if (blob && blob.size <= 4_500_000) return blob;
+    } catch { /* HEIC on a browser that cannot decode it, or canvas memory */ }
+    throw new Error('too_large');
+  };
+  /** XHR with progress, a hard timeout and a stall watchdog (no progress for 25 s = dead connection). */
+  const send = (method: string, url: string, body: FormData, headers: Record<string, string>, onProgress: (p: number) => void) => new Promise<number>((resolve, reject) => {
     const xhr = new XMLHttpRequest(); xhrRef.current = xhr;
-    xhr.open('POST', '/api/preview');
-    xhr.upload.onprogress = (e) => { if (e.lengthComputable) setState((s) => (s.kind === 'processing' ? { ...s, stage: 'uploading', percent: Math.round((e.loaded / e.total) * 100) } : s)); };
-    let seen = 0; let finished = false;
-    const consume = () => {
-      const text = xhr.responseText; const chunk = text.slice(seen); const lastNl = chunk.lastIndexOf('\n');
-      if (lastNl < 0) return; seen += lastNl + 1;
-      for (const line of chunk.slice(0, lastNl).split('\n')) {
-        if (!line.trim()) continue;
-        try {
-          const msg = JSON.parse(line) as { stage?: Stage; done?: boolean; fallback?: boolean; orderId?: string | null; reason?: string; preview?: string; isMonochrome?: boolean; token?: string | null };
-          if (msg.stage) setState((s) => (s.kind === 'processing' ? { ...s, stage: msg.stage!, percent: 100 } : s));
-          if (msg.done) {
-            finished = true;
-            if (msg.fallback || !msg.orderId || !msg.preview) {
-              track('PreviewFallback', { reason: msg.reason ?? 'unknown' });
-              // a slow minute at the provider is not "your photo needs hands": keep the file, offer retry
-              if (msg.reason === 'timeout' || msg.reason === 'provider_error') setState({ kind: 'error', file, thumb, message: c.processing.timeout, title: c.processing.timeoutTitle, orderId: msg.orderId ?? null });
-              else setState({ kind: 'fallback', orderId: msg.orderId ?? null, email: '', sending: false, sent: false });
-            } else {
-              track('UploadCompleted', {});
-              track('PreviewShown', { monochrome: msg.isMonochrome });
-              router.push(`/p/${msg.orderId}${msg.token ? `?t=${encodeURIComponent(msg.token)}` : ''}`);
-            }
-          }
-        } catch { /* partial line */ }
-      }
+    let watchdog = 0;
+    const kick = () => { window.clearTimeout(watchdog); watchdog = window.setTimeout(() => { xhr.abort(); reject(new Error('stall')); }, 25_000); };
+    xhr.open(method, url); xhr.timeout = 180_000;
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+    xhr.upload.onprogress = (e) => { kick(); if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
+    xhr.onload = () => { window.clearTimeout(watchdog); resolve(xhr.status); };
+    xhr.onerror = () => { window.clearTimeout(watchdog); reject(new Error('network')); };
+    xhr.ontimeout = () => { window.clearTimeout(watchdog); reject(new Error('timeout')); };
+    xhr.onabort = () => { window.clearTimeout(watchdog); reject(new Error(xhrRef.current === xhr ? 'stall' : 'abort')); };
+    kick();
+    xhr.send(body);
+  });
+
+  type Status = { status: string; token: string | null; job: { kind: string; state: string; stage?: string; reason?: string } | null; payload: { isMonochrome?: boolean } | null };
+  const fail = (file: File, thumb: string, message: string, title: string, orderId?: string | null, token?: string | null) => setState({ kind: 'error', file, thumb, message, title, orderId, token });
+
+  /** The job runs on the server (background function); the sheet polls the order every 1.5 s. */
+  const poll = (orderId: string, token: string, file: File, thumb: string) => {
+    stopPolling();
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/preview/${orderId}?t=${encodeURIComponent(token)}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error('status');
+        const st = (await r.json()) as Status;
+        if (st.status === 'PREVIEW_READY' && st.payload) {
+          track('UploadCompleted', {}); track('PreviewShown', { monochrome: st.payload.isMonochrome });
+          setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'preparing', percent: 100 } : cur));
+          router.push(`/p/${orderId}?t=${encodeURIComponent(token)}`);
+          return;
+        }
+        if (st.status === 'MANUAL_REVIEW') { track('PreviewFallback', { reason: st.job?.reason ?? 'manual' }); setState({ kind: 'fallback', orderId, email: '', sending: false, sent: false }); return; }
+        if (st.status === 'ABANDONED') return;
+        if (st.job?.state === 'failed') {
+          track('PreviewFallback', { reason: st.job.reason ?? 'failed' });
+          // a slow minute at the provider is not "your photo needs hands": the file is still on the server, retry runs it again
+          fail(file, thumb, c.processing.timeout, c.processing.timeoutTitle, orderId, token);
+          return;
+        }
+        if (st.job?.stage) setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: st.job?.stage === 'preparing' ? 'preparing' : 'sending', percent: 100 } : cur));
+      } catch { /* transient: keep polling */ }
+      pollRef.current = window.setTimeout(tick, 1500);
     };
-    xhr.onprogress = consume;
-    xhr.onload = () => { consume(); if (!finished) setState({ kind: 'error', file, thumb, message: c.processing.networkError, title: c.processing.networkTitle }); };
-    xhr.onerror = () => setState({ kind: 'error', file, thumb, message: c.processing.networkError, title: c.processing.networkTitle });
-    xhr.onabort = () => { /* user cancelled */ };
-    xhr.send(fd);
+    pollRef.current = window.setTimeout(tick, 1200);
+  };
+
+  /** Step 3: the file is in the bucket — start (or retry) the job. */
+  const run = async (orderId: string, token: string, file: File, thumb: string) => {
+    const r = await fetch(`/api/preview/${orderId}/run?t=${encodeURIComponent(token)}`, { method: 'POST' });
+    if (r.status === 409) throw new Error('no_file');
+    if (!r.ok) throw new Error('run');
+    setState({ kind: 'processing', stage: 'sending', percent: 100, file, thumb, orderId, token });
+    poll(orderId, token, file, thumb);
+  };
+
+  /**
+   * Upload: (1) create the order and get a one-time signed URL, (2) PUT the photo straight into the
+   * private bucket with real progress, (3) start the job, then poll. A retry after a server-side
+   * failure re-runs the job without uploading again.
+   */
+  const start = async (file: File, thumb: string, resume?: { orderId: string; token: string }) => {
+    setState({ kind: 'processing', stage: 'uploading', percent: resume ? 100 : 0, file, thumb, orderId: resume?.orderId, token: resume?.token });
+    if (resume) {
+      try { await run(resume.orderId, resume.token, file, thumb); return; }
+      catch (e) { if ((e as Error).message !== 'no_file') { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, resume.orderId, resume.token); return; } }
+      // the upload never landed: start over
+    }
+    track('UploadStarted', { bytes: file.size, type: file.type });
+    let started: { orderId: string; token: string; uploadUrl: string };
+    try {
+      const r = await fetch('/api/preview/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ size: file.size, type: file.type, name: file.name }) });
+      if (r.status === 413) { setState({ kind: 'pick', file, thumb, error: c.upload.tooBig }); return; }
+      if (r.status === 415) { setState({ kind: 'pick', error: c.upload.wrongType }); return; }
+      if (!r.ok) throw new Error('start');
+      started = (await r.json()) as typeof started;
+    } catch { fail(file, thumb, c.processing.networkError, c.processing.networkTitle); return; }
+    setState((cur) => (cur.kind === 'processing' ? { ...cur, orderId: started.orderId, token: started.token } : cur));
+    const progress = (p: number) => setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'uploading', percent: p } : cur));
+    let aborted = false;
+    try {
+      // 1st transport: straight into the bucket with the signed URL (no size limit, no double transfer)
+      const fd = new FormData(); fd.append('cacheControl', '3600'); fd.append('', file, file.name || 'photo.jpg');
+      const status = await send('PUT', started.uploadUrl, fd, { 'x-upsert': 'false' }, progress);
+      if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
+    } catch (e) {
+      if ((e as Error).message === 'abort') return;
+      // 2nd transport: through the app (≤ 4.5 MB, downscaled if needed) — for a proxy or an in-app browser that blocks the PUT
+      try {
+        const small = await shrink(file);
+        const fd2 = new FormData(); fd2.append('file', small, 'photo.jpg');
+        const status = await send('POST', `/api/preview/${started.orderId}/upload?t=${encodeURIComponent(started.token)}`, fd2, {}, progress);
+        if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
+      } catch (e2) {
+        const m = (e2 as Error).message;
+        if (m === 'abort') { aborted = true; }
+        else if (m === 'too_large') fail(file, thumb, c.upload.tooBigNetwork, c.processing.networkTitle, started.orderId, started.token);
+        else fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token);
+        return;
+      }
+    }
+    if (aborted) return;
+    try { await run(started.orderId, started.token, file, thumb); }
+    catch { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token); }
   };
 
   const sendLead = async (e: React.FormEvent) => {
@@ -189,7 +281,7 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
             <h2 style={{ maxWidth: '12em' }}>{state.title}</h2>
             <img src={state.thumb} alt="" style={{ maxHeight: '30dvh', width: 'auto', maxWidth: '100%', justifySelf: 'start' }} />
             <p className="measure" role="alert">{state.message}</p>
-            <button type="button" className="btn btn-block" onClick={() => start(state.file, state.thumb)}>{c.processing.retry}</button>
+            <button type="button" className="btn btn-block" onClick={() => start(state.file, state.thumb, state.orderId && state.token ? { orderId: state.orderId, token: state.token } : undefined)}>{c.processing.retry}</button>
             <div style={{ display: 'flex', gap: 'var(--s5)', flexWrap: 'wrap' }}>
               <button type="button" className="link-btn" onClick={() => setState({ kind: 'fallback', orderId: state.orderId ?? null, email: '', sending: false, sent: false })}>{c.processing.sendInstead}</button>
               <button type="button" className="link-btn" onClick={() => setState({ kind: 'pick' })}>{c.upload.reupload}</button>

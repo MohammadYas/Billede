@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ['sharp', 'heic-convert'],
+  // read with fs at runtime (founder.md, examples.json, mockup wall): trace them into the server function on Netlify
+  outputFileTracingIncludes: { '/*': ['./assets/founder/**', './public/examples/examples.json', './public/mockup/**'] },
   images: { unoptimized: true },
   async headers() {
     return [
