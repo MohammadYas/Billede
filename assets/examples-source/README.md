@@ -69,3 +69,12 @@ detail:       x,y (0-1) of the point the "Tæt på" crop centres on
 detailLabel:  what the visitor is being asked to look at
 colour:       yes to also export the colourised version
 ```
+
+### How the order is chosen
+
+`order:` is a ranking by evidence, not by date. The question for every pair is whether a visitor who
+reads nothing understands the repair from the two images alone. The pair that answers loudest is the
+hero; the ones whose difference needs explaining go last, behind what the page renders.
+
+Two shape rules ride along: the hero is cropped to 4/3 whatever it is, and the swipe row must open on a
+portrait card — a landscape card first leaves dead paper under it on a phone.

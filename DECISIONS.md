@@ -206,3 +206,15 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **A found photograph has no date, and we do not invent one.** The vernacular prints carry
   `årstal ukendt` where the archive photographs carry a year; the caption parser accepts it rather than
   forcing a plausible-looking decade into the line.
+- **The examples are ordered by what the pair proves, not by age.** Every restoration that exists was put
+  side by side and judged on one question: is the repair unmistakable at a glance? Soldat og ung kvinde
+  leads — the emulsion has rotted black down one edge of the print, and the "efter" is a clean photograph
+  of two people — because that is the only pair where a cold visitor understands the offer without reading
+  a word. Three pairs whose difference is real but subtle (Pauline og Ingeborg, Lars og Marit, Bryllup
+  1916) sit at the end, where the page never renders them; they stay exported as cover if a better pair
+  has to be pulled.
+- **Portrait cards first in the swipe row.** `.swipe` is a flex row, so one landscape card among portraits
+  left a column of dead paper under it. The row now aligns to the top and the landscape pairs sit mid-row
+  and last, where a taller neighbour is always beside them.
+- **Two more archive edges cropped:** the handwriting on Anna Cooper's plate margin, and the museum
+  accession numbers. What is left is the photograph.

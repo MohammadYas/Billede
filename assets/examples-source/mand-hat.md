@@ -3,7 +3,7 @@ source: https://commons.wikimedia.org/wiki/File:Well-dressed,_confused_man_(1087
 rights: CC BY 2.0 — Flickr/simpleinsomnia. Fundet familiefoto, fotograf ukendt.
 note: Ridser over hele fladen, gulnet, kontrasten næsten væk.
 consent: yes
-order: 13
+order: 43
 mode: lens
 detail: 0.50,0.22
 detailLabel: Ansigtet under hatten

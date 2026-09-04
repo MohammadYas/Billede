@@ -3,7 +3,7 @@ source: https://commons.wikimedia.org/wiki/File:Baby_in_a_stroller_with_a_creepy
 rights: CC BY 2.0 — Flickr/simpleinsomnia. Fundet familiefoto, fotograf ukendt.
 note: Album-snapshot med hvid kant, gulnet papir.
 consent: yes
-order: 9
+order: 39
 mode: hold
 detail: 0.45,0.45
 detailLabel: Barnets ansigt

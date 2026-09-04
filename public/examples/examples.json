@@ -1,24 +1,70 @@
 [
   {
-    "id": "gunhild-barn",
-    "mode": "fade",
+    "id": "soldier-girl",
+    "mode": "lens",
     "detail": {
-      "before": "/examples/gunhild-barn-detail-before.jpg",
-      "after": "/examples/gunhild-barn-detail-after.jpg",
-      "label": "Mor og søn"
+      "before": "/examples/soldier-girl-detail-before.jpg",
+      "after": "/examples/soldier-girl-detail-after.jpg",
+      "label": "Hendes ansigt"
     },
-    "mockup": "/examples/gunhild-barn-mockup.jpg",
-    "before": "/examples/gunhild-barn-before.jpg",
-    "after": "/examples/gunhild-barn-after.jpg",
-    "width": 1400,
-    "height": 953,
+    "mockup": "/examples/soldier-girl-mockup.jpg",
+    "before": "/examples/soldier-girl-before.jpg",
+    "after": "/examples/soldier-girl-after.jpg",
+    "width": 1030,
+    "height": 1400,
     "widths": [
       480,
       800,
       1000,
       1400
     ],
-    "caption": "Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden.",
+    "caption": "Soldat og ung kvinde, ca. 1916. Arkivfoto, Wikimedia Commons.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "cooper",
+    "mode": "hold",
+    "detail": {
+      "before": "/examples/cooper-detail-before.jpg",
+      "after": "/examples/cooper-detail-after.jpg",
+      "label": "Ansigt og krave"
+    },
+    "mockup": "/examples/cooper-mockup.jpg",
+    "before": "/examples/cooper-before.jpg",
+    "after": "/examples/cooper-after.jpg",
+    "width": 1092,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "mor-barn-a",
+    "mode": "wipe",
+    "detail": {
+      "before": "/examples/mor-barn-a-detail-before.jpg",
+      "after": "/examples/mor-barn-a-detail-after.jpg",
+      "label": "Barnets ansigt"
+    },
+    "mockup": "/examples/mor-barn-a-mockup.jpg",
+    "before": "/examples/mor-barn-a-before.jpg",
+    "after": "/examples/mor-barn-a-after.jpg",
+    "width": 1028,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen.",
     "consent": true,
     "placeholder": true
   },
@@ -42,6 +88,76 @@
       1400
     ],
     "caption": "Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "gunhild-barn",
+    "mode": "fade",
+    "detail": {
+      "before": "/examples/gunhild-barn-detail-before.jpg",
+      "after": "/examples/gunhild-barn-detail-after.jpg",
+      "label": "Mor og søn"
+    },
+    "mockup": "/examples/gunhild-barn-mockup.jpg",
+    "before": "/examples/gunhild-barn-before.jpg",
+    "after": "/examples/gunhild-barn-after.jpg",
+    "width": 1400,
+    "height": 953,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "asplund",
+    "mode": "hold",
+    "detail": {
+      "before": "/examples/asplund-detail-before.jpg",
+      "after": "/examples/asplund-detail-after.jpg",
+      "label": "Bedsteforældrene"
+    },
+    "mockup": "/examples/asplund-mockup.jpg",
+    "before": "/examples/asplund-before.jpg",
+    "after": "/examples/asplund-after.jpg",
+    "width": 942,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "feather-hat",
+    "mode": "wipe",
+    "colour": "/examples/feather-hat-colour.jpg",
+    "detail": {
+      "before": "/examples/feather-hat-detail-before.jpg",
+      "after": "/examples/feather-hat-detail-after.jpg",
+      "label": "Hat og ansigt"
+    },
+    "mockup": "/examples/feather-hat-mockup.jpg",
+    "before": "/examples/feather-hat-before.jpg",
+    "after": "/examples/feather-hat-after.jpg",
+    "width": 1073,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Ung kvinde med fjerhat, ca. 1905. Arkivfoto, Grenna Museum.",
     "consent": true,
     "placeholder": true
   },
@@ -74,7 +190,7 @@
     "detail": {
       "before": "/examples/lars-marit-detail-before.jpg",
       "after": "/examples/lars-marit-detail-after.jpg",
-      "label": "To ansigter"
+      "label": "Marits ansigt"
     },
     "mockup": "/examples/lars-marit-mockup.jpg",
     "before": "/examples/lars-marit-before.jpg",
@@ -88,122 +204,6 @@
       1400
     ],
     "caption": "Lars og Marit, ca. 1900. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "soldier-girl",
-    "mode": "lens",
-    "detail": {
-      "before": "/examples/soldier-girl-detail-before.jpg",
-      "after": "/examples/soldier-girl-detail-after.jpg",
-      "label": "Hendes ansigt"
-    },
-    "mockup": "/examples/soldier-girl-mockup.jpg",
-    "before": "/examples/soldier-girl-before.jpg",
-    "after": "/examples/soldier-girl-after.jpg",
-    "width": 1030,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Soldat og ung kvinde, ca. 1916. Arkivfoto, Wikimedia Commons.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "feather-hat",
-    "mode": "wipe",
-    "colour": "/examples/feather-hat-colour.jpg",
-    "detail": {
-      "before": "/examples/feather-hat-detail-before.jpg",
-      "after": "/examples/feather-hat-detail-after.jpg",
-      "label": "Hat og ansigt"
-    },
-    "mockup": "/examples/feather-hat-mockup.jpg",
-    "before": "/examples/feather-hat-before.jpg",
-    "after": "/examples/feather-hat-after.jpg",
-    "width": 1073,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Ung kvinde med fjerhat, ca. 1905. Arkivfoto, Grenna Museum.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "cooper",
-    "mode": "hold",
-    "detail": {
-      "before": "/examples/cooper-detail-before.jpg",
-      "after": "/examples/cooper-detail-after.jpg",
-      "label": "Ansigt og krave"
-    },
-    "mockup": "/examples/cooper-mockup.jpg",
-    "before": "/examples/cooper-before.jpg",
-    "after": "/examples/cooper-after.jpg",
-    "width": 1010,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "asplund",
-    "mode": "hold",
-    "detail": {
-      "before": "/examples/asplund-detail-before.jpg",
-      "after": "/examples/asplund-detail-after.jpg",
-      "label": "Bedsteforældrene"
-    },
-    "mockup": "/examples/asplund-mockup.jpg",
-    "before": "/examples/asplund-before.jpg",
-    "after": "/examples/asplund-after.jpg",
-    "width": 942,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "mor-barn-a",
-    "mode": "wipe",
-    "detail": {
-      "before": "/examples/mor-barn-a-detail-before.jpg",
-      "after": "/examples/mor-barn-a-detail-after.jpg",
-      "label": "Mor og barn"
-    },
-    "mockup": "/examples/mor-barn-a-mockup.jpg",
-    "before": "/examples/mor-barn-a-before.jpg",
-    "after": "/examples/mor-barn-a-after.jpg",
-    "width": 1028,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen.",
     "consent": true,
     "placeholder": true
   },

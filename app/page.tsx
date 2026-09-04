@@ -65,7 +65,7 @@ export default async function Page() {
           <div className="hero-grid">
             <div className="hero-media">
               {hero ? (
-                <BeforeAfter before={src(hero, 'before', HERO_BEFORE_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption}`} aspect="4 / 3" reveal rest={30} priority />
+                <BeforeAfter before={src(hero, 'before', HERO_BEFORE_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} aspect="4 / 3" reveal rest={30} priority />
               ) : (
                 <div className="ba" style={{ aspectRatio: '4 / 3' }} />
               )}
@@ -132,7 +132,8 @@ export default async function Page() {
                 {gridExamples.map((e, i) => {
                   const mode = e.mode ?? (['wipe', 'lens', 'hold', 'fade', 'wipe', 'lens'] as const)[i % 6];
                   const aspect = `${e.width} / ${e.height}`;
-                  const alt = `Før og efter: ${e.caption}`;
+                  // the caption ends in a full stop and BeforeAfter appends its own hint sentence
+                  const alt = `Før og efter: ${e.caption.replace(/\.$/, '')}`;
                   return (
                     <figure key={e.id} style={{ margin: 0 }}>
                       {e.colour ? (

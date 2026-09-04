@@ -165,7 +165,7 @@ p + p { margin-top: var(--s4); }
 @media (min-width: 768px) { .step { grid-template-columns: 160px 1fr; gap: var(--s5); } .step img, .step .ph { width: 160px; } }
 
 /* Examples — horizontal swipe on mobile, offset editorial grid on desktop */
-.swipe { display: flex; gap: var(--s4); overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 var(--gutter); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.swipe { display: flex; align-items: flex-start; gap: var(--s4); overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 var(--gutter); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .swipe::-webkit-scrollbar { display: none; }
 .swipe > * { scroll-snap-align: start; flex: 0 0 82%; }
 .swipe .ba, .swipe .cmp { outline: 1px solid var(--hairline); outline-offset: -1px; }
