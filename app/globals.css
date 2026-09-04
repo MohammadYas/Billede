@@ -84,6 +84,8 @@ p + p { margin-top: var(--s4); }
 .btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
 .btn-quiet:hover { background: var(--paper-2); }
 .btn-quiet:active { background: var(--hairline); }
+.btn-quiet[disabled], .btn-quiet[aria-disabled="true"] { background: transparent; color: var(--ink-2); border-color: var(--hairline); }
+.pv-toggle .btn { white-space: nowrap; }
 .link-btn { background: none; border: 0; padding: 10px 0; margin: -10px 0; color: var(--accent); text-decoration: underline; text-underline-offset: 0.16em; cursor: pointer; min-height: 44px; font-size: var(--fs-body); }
 .link-btn[disabled] { color: var(--ink-2); cursor: default; }
 

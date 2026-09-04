@@ -96,7 +96,7 @@ export async function processRestore(orderId: string): Promise<void> {
     if (metaOf((await getOrder(orderId))!).cancelled) { await abandon(orderId); return; }
 
     // the "before" the customer sees: normalised, ≤ 1600 px, well under any function response limit
-    const display = await ensureLongEdge(result.original, 1600, 88);
+    const display = await ensureLongEdge(result.original, 1400, 82);
     const originalPath = objectPath(order.id, 'original');
     await putObject(originalPath, display);
 
