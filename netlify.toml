@@ -1,9 +1,14 @@
 # Genfundet on Netlify: connect the GitHub repo, set the env vars from .env.example, deploy.
-# The Next.js runtime (OpenNext adapter) is picked up automatically; the two functions below are the
-# only things outside Next: the background job runner and the daily retention schedule.
+# The Next.js runtime (OpenNext adapter) is picked up automatically; the two functions in netlify/functions are the
+# only things outside Next: the background job runner and the hourly housekeeping schedule.
 
 [build]
-  command = "npm run build"
+  # Netlify builds on Ubuntu and runs functions on AWS Lambda (Amazon Linux). If the lockfile was last written on a
+  # Windows or macOS machine and lost the Linux entries for sharp, this line puts the linux-x64 binaries back before the build.
+  command = "npm install --os=linux --cpu=x64 --no-save sharp && npm run build"
+
+[build.environment]
+  NODE_VERSION = "22"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

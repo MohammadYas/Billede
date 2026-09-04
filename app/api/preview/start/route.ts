@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readSessionId, readUtm } from '@/lib/session';
+import { ensureSessionId, readUtm, sessionCookie } from '@/lib/session';
 import { beginUpload } from '@/lib/preview-service';
 import { CONFIG } from '@/lib/config';
 
@@ -15,10 +15,12 @@ export async function POST(req: NextRequest) {
   const type = String(body.type ?? '');
   if (!size || size > CONFIG.maxUploadBytes) return NextResponse.json({ error: 'too_large' }, { status: 413 });
   if (!TYPES.test(type)) return NextResponse.json({ error: 'type' }, { status: 415 });
-  const [sessionId, utm] = await Promise.all([readSessionId(), readUtm()]);
+  const [{ sid, fresh }, utm] = await Promise.all([ensureSessionId(), readUtm()]);
   try {
-    const started = await beginUpload({ sessionId, utm, size, type });
-    return NextResponse.json(started, { headers: { 'cache-control': 'no-store' } });
+    const started = await beginUpload({ sessionId: sid, utm, size, type });
+    const res = NextResponse.json(started, { headers: { 'cache-control': 'no-store' } });
+    if (fresh) res.headers.append('set-cookie', sessionCookie(sid, req.nextUrl.protocol === 'https:'));
+    return res;
   } catch (e) {
     console.error('begin upload failed', e);
     return NextResponse.json({ error: 'start' }, { status: 502 });

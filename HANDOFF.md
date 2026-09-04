@@ -104,8 +104,16 @@ one 60 s, and a request body may be at most 6 MB. The restoration takes 30–45 
   (`POST /api/preview/start` → PUT → `POST /api/preview/<id>/run`); no photo ever passes through a function;
 - restoration, colour version and the print final run as **jobs in a Netlify Background Function**
   (`netlify/functions/job-background.ts`, 15 min limit); the sheet polls `GET /api/preview/<id>` every 1.5 s;
-- retention and the 48 h approval reminders run as a **scheduled function** (`netlify/functions/retention.ts`, 03:00 UTC);
+- housekeeping runs **hourly** as a scheduled function (`netlify/functions/retention.ts`) that hands the work to the background
+  function: Stripe reconciliation of open Checkout sessions, deletion past retention, approval reminders (48 h, 7 d),
+  owner nudge at 10 d, shipped → completed after 14 d;
 - job state is on the order (`preview_meta.job`) and visible in admin.
+
+**Linux, Windows and sharp.** Netlify builds on Ubuntu and runs functions on Amazon Linux — it is Linux, even if you
+develop on Windows. The one thing that bites Windows-developed repos is the image library `sharp`: if `npm install` on
+Windows rewrites `package-lock.json` without the Linux binaries, the Netlify build has no `sharp` for Linux and every
+restoration fails. `netlify.toml` therefore runs `npm install --os=linux --cpu=x64 --no-save sharp` before the build,
+and `NODE_VERSION=22` is pinned. Commit `package-lock.json` as it is in the repo; do not delete it.
 
 **Env vars to set in Netlify** — set `JOB_RUNNER=netlify` explicitly, and the build fails on purpose if `JOB_SECRET` is missing in production; set the **functions region to an EU region** (Site configuration → Functions), otherwise every request hops Ohio → Ireland for the database (Site configuration → Environment variables), from `.env.example`: the OpenAI, Supabase,
 Stripe, Resend and Meta keys, `NEXT_PUBLIC_SITE_URL=https://genfundet.dk` (the job runner calls itself on this URL),

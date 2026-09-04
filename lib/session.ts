@@ -10,6 +10,20 @@ export async function readSessionId(): Promise<string | null> {
   return c.get(SESSION_COOKIE)?.value ?? null;
 }
 
+/**
+ * Session id for a route handler: the cookie if the proxy set it, otherwise a fresh id the route must
+ * set on its response (`setSessionCookie`). Keeps the flow working on a host that never runs proxy.ts.
+ */
+export async function ensureSessionId(): Promise<{ sid: string; fresh: boolean }> {
+  const existing = await readSessionId();
+  if (existing) return { sid: existing, fresh: false };
+  return { sid: crypto.randomUUID(), fresh: true };
+}
+
+export function sessionCookie(sid: string, secure: boolean): string {
+  return `${SESSION_COOKIE}=${sid}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}`;
+}
+
 export async function readUtm(): Promise<Utm | null> {
   const c = await cookies();
   const raw = c.get(UTM_COOKIE)?.value;

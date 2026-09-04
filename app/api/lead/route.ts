@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrder, setStatus, createOrder } from '@/lib/db/orders';
-import { readSessionId, readUtm } from '@/lib/session';
+import { ensureSessionId, readUtm, sessionCookie } from '@/lib/session';
 import { ownsOrder } from '@/lib/preview-service';
 import { customerFormat } from '@/lib/pricing';
 import { sendMail } from '@/lib/email/send';
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as { orderId?: string | null; email?: string; kind?: 'nophoto' };
   const email = String(body.email ?? '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return NextResponse.json({ error: 'email' }, { status: 400 });
-  const [sid, utm] = await Promise.all([readSessionId(), readUtm()]);
+  const [{ sid, fresh }, utm] = await Promise.all([ensureSessionId(), readUtm()]);
   let order = body.orderId && /^[0-9a-f-]{36}$/.test(body.orderId) ? await getOrder(body.orderId) : null;
   if (order && !ownsOrder(order, sid)) order = null;
   const nophoto = body.kind === 'nophoto';
@@ -39,5 +39,7 @@ export async function POST(req: NextRequest) {
       await sendMail({ to: email, subject: 'Dit link til Genfundet', html, text: `Til når du står med billedet: ${link}\n\nLæg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager under et minut.` });
     } catch (e) { console.error('nophoto mail failed', e); }
   }
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+  if (fresh) res.headers.append('set-cookie', sessionCookie(sid, req.nextUrl.protocol === 'https:'));
+  return res;
 }
