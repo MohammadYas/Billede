@@ -233,3 +233,13 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   possible for a customer checking whether we are a real company. `next.config.ts` now fails a Netlify
   production build that would ship one, names the missing fields, and offers `LEGAL_DRAFT=true` for a
   deliberate draft. It invents nothing.
+- **The default order is now asserted, not assumed.** `npm test` (node:test, no new dependency) proves the
+  untouched order is 30×40 / sort / 0 ekstra / 599 kr. from three directions: the pricing module, the
+  add-on shape a freshly created order actually has, and the arithmetic Stripe is handed across all 48
+  combinations. It also proves that nothing a client can send — `null`, `''`, `'abc'`, `NaN`, `-1`, `0.4`,
+  a missing key — turns an extra copy on. `npm run test:order` does the same in a real browser: it reads
+  *every* price rendered anywhere on the page after each change, so a sticky bar that quietly keeps an old
+  number cannot pass, and it asserts the extra-copy control is opt-in on load.
+- **`npm run lint` is gone.** It ran `next lint`, which Next 16 removed; the repo has no ESLint installed
+  or configured, so the script only ever produced "Invalid project directory provided, no such directory:
+  lint". A command that always fails teaches everyone to ignore it.

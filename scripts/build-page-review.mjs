@@ -55,13 +55,13 @@ const PAGES = [
     act: async (p) => { await openSheet(p); await clickText(p, 'Jeg har ikke billedet lige nu'); } },
 
   ...(P ? [
-    { g: 'Bestillingssiden', n: '07', t: 'Bestilling — telefon', p: P, w: 390, shown: '/p/<ordre-id>', fresh: true, act: async (p) => { await clearCopies(p); await toColour(p); }, note: 'Produktsiden: resultatet, størrelse, ramme, regning, bestil. Vist her i den farvelagte udgave.' },
+    { g: 'Bestillingssiden', n: '07', t: 'Bestilling — telefon', p: P, w: 390, shown: '/p/<ordre-id>', fresh: true, act: async (p) => { await clearCopies(p); await toColour(p); }, note: 'STANDARD — det en ny kunde ser: 30×40, sort ramme, 0 ekstra, 599 kr. Vist her i den farvelagte udgave.' },
     { g: 'Bestillingssiden', n: '08', t: 'Bestilling — desktop', p: P, w: 1280, shown: '/p/<ordre-id>', note: '' },
     { g: 'Bestillingssiden', n: '09', t: 'Set tæt på', p: P, w: 390, shown: '/p/<ordre-id>', note: 'Begge sider skaleres 2,2× fra samme punkt, så sammenligningen bliver ved med at være ærlig.',
       fresh: true, act: async (p) => clickText(p, 'Se tæt på') },
     { g: 'Bestillingssiden', n: '10', t: 'Vist i sort-hvid', p: P, w: 390, shown: '/p/<ordre-id>', note: 'Den anden halvdel af knappen. Farvelægningen er lavet på forhånd, så skiftet ikke koster ventetid — og valget gemmes på ordren.',
       fresh: true, act: toMono },
-    { g: 'Bestillingssiden', n: '11', t: 'Et eksemplar mere', p: P, w: 390, shown: '/p/<ordre-id>', note: 'Mersalget: intet er sat til på forhånd, og regningen ovenfor opdaterer sig.',
+    { g: 'Bestillingssiden', n: '11', t: 'Et eksemplar mere', p: P, w: 390, shown: '/p/<ordre-id>', note: 'EFTER ET TRYK på "Tilføj et eksemplar" — ikke en standardtilstand. Sådan ser regningen ud, når kunden selv har valgt et eksemplar mere: 599 + 349 = 948 kr. Standarden er nr. 07.',
       fresh: true, act: addCopy, after: clearCopies },
   ] : []),
 

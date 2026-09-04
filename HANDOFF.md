@@ -31,6 +31,13 @@ Nothing in this list is code. The code is done and verified; each line below is 
    leak this audience notices first, and since there is no phone number anywhere, that address is now the only way a
    customer can reach you. It is printed on the price block, in the footer, on the 404, on `/tak`, on both approval
    pages and in every mail. The site promises an answer within 24 hours, so the mailbox must be one you read daily.
+5b. **Juridisk gennemgang af to sætninger i handelsbetingelserne.** (a) Klageafsnittet henviser til
+   EU-Kommissionens ODR-portal, `ec.europa.eu/odr`. Den blev lukket i juli 2025, da ODR-forordningen blev
+   ophævet — henvisningen peger altså formentlig på en portal, der ikke længere tager imod klager.
+   Henvisningen til Center for Klageløsning er stadig rigtig. Jeg har markeret stedet i koden og bevidst
+   *ikke* skrevet en erstatning: det er en oplysningspligt, ikke en formulering, og den skal skrives af
+   nogen med juridisk ansvar. (b) Få hele siden læst igennem af en, der kender forbrugeraftaleloven, før
+   den første rigtige kunde betaler. `LEGAL_DRAFT=true` holder udkastmærket på siden indtil da.
 6. Stripe Dashboard: Public details → Terms of service URL `https://genfundet.dk/handelsbetingelser` and Privacy URL
    (Checkout refuses to open without the Terms URL); webhook on `https://genfundet.dk/api/webhooks/stripe` for
    `checkout.session.completed` + `checkout.session.async_payment_succeeded` → copy the signing secret to

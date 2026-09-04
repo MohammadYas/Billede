@@ -57,6 +57,14 @@ export default function Handelsbetingelser() {
       <p>Du bekræfter, at du må lade os behandle det billede, du uploader. Vi bruger det kun til din bestilling. Se <a href="/privatliv">Privatliv</a>.</p>
 
       <h2>Klager</h2>
+      {/*
+        JURIDISK REVIEW — ikke ændret på eget initiativ. Sidste sætning henviser til EU-Kommissionens
+        ODR-klageportal (ec.europa.eu/odr). Den platform blev lukket i juli 2025, da ODR-forordningen
+        blev ophævet, så henvisningen sender formentlig kunden et sted hen, der ikke længere tager imod
+        klager. Henvisningen til Center for Klageløsning står ved magt. Teksten er bevidst ladt urørt:
+        det er en oplysningspligt, ikke en formulering, og erstatningsteksten skal skrives af nogen med
+        juridisk ansvar. Se HANDOFF.md, punkt B.
+      */}
       <p>Skriv først til os. Kan vi ikke løse det, kan du klage til Center for Klageløsning, Nævnenes Hus, Toldboden 2, 8800 Viborg, www.naevneneshus.dk, eller via EU-Kommissionens klageportal ec.europa.eu/odr.</p>
     </LegalPage>
   );
