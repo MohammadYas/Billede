@@ -51,7 +51,7 @@ export default async function Page() {
         <header className="wrap">
           <div className="container site-head">
             <Wordmark />
-            <span className="caption">{c.price} · fri fragt</span>
+            <span className="caption">{c.priceFrom} · fri fragt</span>
           </div>
         </header>
 
