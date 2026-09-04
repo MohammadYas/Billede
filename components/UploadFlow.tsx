@@ -75,7 +75,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
   // ?order=<id> (a resume link) goes straight to the preview; read client-side so the landing page can stay static
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    // ?igen=<orderId>.<token> from a paid order's receipt: the next photograph is priced as a repeat
+    // ?igen=<orderId>.<token> from a paid order's receipt: records which order sent this one
     const again = sp.get('igen');
     if (again && again.includes('.')) {
       setIgen(again);

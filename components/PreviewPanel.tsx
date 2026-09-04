@@ -81,7 +81,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const [format, setFormat] = useState<Format>(data.format);
   const [frame, setFrame] = useState<Frame>(data.addons.frame);
   const [extraPrints, setExtraPrints] = useState(data.addons.extraPrints);
-  const bill = quote({ format, frame, extraPrints, repeat: data.repeat });
+  const bill = quote({ format, frame, extraPrints });
 
   // landscape photographs are printed landscape: "40×30 cm (liggende)"
   const landscape = data.width > data.height;
@@ -105,7 +105,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     document.body.classList.add('has-pv-bar');
     if (!viewed.current) { // one view per visit, whatever the runtime does with effects
       viewed.current = true;
-      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints, repeat: data.repeat }).totalOere / 100 });
+      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints }).totalOere / 100 });
     }
     return () => document.body.classList.remove('has-pv-bar');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,7 +119,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (next === format) return;
     setFormat(next); persist({ format: next });
     // the size is the price ladder: this is the real AddToCart, and it was the one step nobody measured
-    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints, repeat: data.repeat }).totalOere / 100 }, { serverLog: true });
+    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints }).totalOere / 100 }, { serverLog: true });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   const setExtras = (next: number) => {
@@ -127,7 +127,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (n === extraPrints) return;
     const up = n > extraPrints;
     setExtraPrints(n); persist({ extraPrints: n });
-    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n, repeat: data.repeat }).totalOere / 100 }, { serverLog: true });
+    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n }).totalOere / 100 }, { serverLog: true });
   };
 
   // Colour version: requested once, preloaded before the toggle is enabled, so the swap is instant and never shows the damaged original.
@@ -265,7 +265,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
         </dl>
         <p className="bill-total"><span>{c.preview.total}</span> <b><Total oere={bill.totalOere} /></b></p>
-        <p className="caption">{c.preview.vat}{data.repeat ? ` · ${c.preview.repeatNote}` : ''}</p>
+        <p className="caption">{c.preview.vat}</p>
       </div>
 
       <div className="cfg extra">

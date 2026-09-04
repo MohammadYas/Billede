@@ -1,6 +1,6 @@
 import { CONFIG } from '@/lib/config';
 import type { Order } from '@/lib/db/orders';
-import { formatLabel, formatOere, quote, readAddOns, REPEAT_DISCOUNT_DKK, formatDkk, type Quote, type QuoteLine } from '@/lib/pricing';
+import { formatLabel, formatOere, quote, readAddOns, type Quote, type QuoteLine } from '@/lib/pricing';
 
 type Meta = { addons?: unknown; repeat_of?: string; share_token?: string; gift_note?: string; quote?: { lines?: QuoteLine[]; totalOere?: number } };
 const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
@@ -13,7 +13,7 @@ const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
 export function orderQuote(o: Order): Quote {
   const m = metaOf(o);
   const a = readAddOns(m.addons);
-  const live = quote({ format: o.format, frame: a.frame, extraPrints: a.extraPrints, repeat: Boolean(m.repeat_of) });
+  const live = quote({ format: o.format, frame: a.frame, extraPrints: a.extraPrints });
   const snap = m.quote;
   if (snap?.lines?.length && typeof snap.totalOere === 'number') return { ...live, lines: snap.lines, totalOere: snap.totalOere };
   return live;
@@ -38,7 +38,7 @@ export function orderLines(o: Order): string[] {
 
 /**
  * "Endnu et billede": the link a paid order carries, on /tak and in the ordrebekræftelse. It is the
- * order's own share token, so only whoever holds the receipt can spend the repeat price.
+ * order's own share token, so the link cannot be guessed from an order id alone.
  */
 export function repeatLink(o: Order): string | null {
   const token = metaOf(o).share_token;
@@ -46,4 +46,3 @@ export function repeatLink(o: Order): string | null {
   return `${CONFIG.siteUrl.replace(/\/$/, '')}/?igen=${encodeURIComponent(`${o.id}.${token}`)}`;
 }
 
-export const repeatDiscount = () => formatDkk(REPEAT_DISCOUNT_DKK);

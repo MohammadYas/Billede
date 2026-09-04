@@ -88,20 +88,34 @@ function stripeSum(q: ReturnType<typeof quote>): number {
   }, 0);
 }
 
-test('what Stripe is charged equals what the bill showed, in all 48 combinations', () => {
+test('what Stripe is charged equals what the bill showed, in every combination', () => {
   let checked = 0;
   for (const format of customerFormats()) {
     for (const frame of FRAMES as Frame[]) {
       for (let extraPrints = 0; extraPrints <= MAX_EXTRA_PRINTS; extraPrints++) {
-        for (const repeat of [false, true]) {
-          const q = quote({ format, frame, extraPrints, repeat });
-          assert.equal(stripeSum(q), q.totalOere, `${format} ${frame} +${extraPrints} repeat=${repeat}`);
-          assert.equal(q.lines.reduce((s, l) => s + l.amountOere, 0), q.totalOere, 'lines must add up to the total');
-          assert.ok(q.totalOere > 0);
-          checked++;
+        const q = quote({ format, frame, extraPrints });
+        assert.equal(stripeSum(q), q.totalOere, `${format} ${frame} +${extraPrints}`);
+        assert.equal(q.lines.reduce((s, l) => s + l.amountOere, 0), q.totalOere, 'lines must add up to the total');
+        assert.ok(q.totalOere > 0);
+        checked++;
+      }
+    }
+  }
+  assert.equal(checked, 24);
+});
+
+test('no quote ever contains a negative line', () => {
+  // Every price on this site is a price. A conditional discount is where a surprise at checkout starts,
+  // and Stripe has no negative line item to represent one honestly.
+  for (const format of customerFormats()) {
+    for (const frame of FRAMES as Frame[]) {
+      for (let extraPrints = 0; extraPrints <= MAX_EXTRA_PRINTS; extraPrints++) {
+        for (const line of quote({ format, frame, extraPrints }).lines) {
+          assert.ok(line.amountOere > 0, `${format} ${frame} +${extraPrints}: ${line.key} is ${line.amountOere}`);
         }
       }
     }
   }
-  assert.equal(checked, 48);
+  // and a caller that still passes the old flag cannot conjure one
+  assert.equal(quote({ format: '30x40', repeat: true } as never).totalOere, 59900);
 });

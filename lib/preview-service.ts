@@ -18,7 +18,7 @@ import { getJob, setJob, type JobState } from '@/lib/jobs';
 export type PreviewPayload = {
   orderId: string; original: string; preview: string; mockup: string; colour: string | null;
   /** what the order is currently configured as, and one wall mockup per size and frame */
-  format: Format; addons: AddOns; mockups: Record<string, string>; repeat: boolean;
+  format: Format; addons: AddOns; mockups: Record<string, string>;
   isMonochrome: boolean; chosenColour: boolean; status: Order['status'];
   /** share token, so the URL the customer sees (and copies to a sister) opens on any phone */
   token: string | null;
@@ -67,7 +67,6 @@ export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
     orderId: order.id,
     original: imageUrl(order, 'original'), preview: imageUrl(order, 'preview'), mockup: imageUrl(order, 'mockup'),
     format: isFormat(order.format) ? order.format : customerFormat(), addons: readAddOns(meta.addons), mockups: mockupUrls(order),
-    repeat: Boolean(meta.repeat_of),
     colour: order.colourised_path ? imageUrl(order, 'colour') : null,
     isMonochrome: Boolean(order.is_monochrome), chosenColour: order.chosen_colour, status: order.status,
     token: meta.share_token ?? null,
@@ -87,7 +86,8 @@ export async function statusFor(order: Order): Promise<PreviewStatus> {
 /**
  * "Endnu et billede" from a paid order (the link on /tak and in the order mail): the new order is a
  * normal order that remembers which paid order sent it, which is the only thing that unlocks the
- * repeat price. The reference is checked here — an id and its share token must match a real, paid order.
+ * link. It buys nothing — the next photograph costs what a photograph costs — but it records where the
+ * order came from. The reference is checked here: an id and its share token must match a real, paid order.
  */
 export const REPEAT_MAX_USES = 3;
 

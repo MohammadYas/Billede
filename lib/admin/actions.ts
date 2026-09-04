@@ -40,7 +40,7 @@ export async function actionSetFormat(id: string, formData: FormData) {
   // format was changed after payment so nobody has to work out why the numbers differ
   const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
   const a = readAddOns(meta.addons);
-  const q = quote({ format: f, frame: a.frame, extraPrints: a.extraPrints, repeat: Boolean(meta.repeat_of) });
+  const q = quote({ format: f, frame: a.frame, extraPrints: a.extraPrints });
   const paid = Boolean(order.paid_at);
   await updateOrder(id, paid
     ? { format: f, internal_notes: `${order.internal_notes ?? ''}\nFormat ændret til ${f} efter betaling; beløbet står uændret.`.trim() }

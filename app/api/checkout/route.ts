@@ -25,9 +25,8 @@ export async function POST(req: NextRequest) {
   const shareToken = (order.preview_meta as { share_token?: string } | null)?.share_token;
   const chosen = Boolean(body.colour) && Boolean(order.colourised_path);
   // The page sends a configuration, never a price. The quote is built here from PRICING, and the
-  // repeat discount is only real if this order remembers a paid order that sent it (checked at upload).
   const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
-  const q = quote({ format: body.format ?? order.format, frame: body.frame, extraPrints: body.extraPrints, repeat: Boolean(meta.repeat_of) });
+  const q = quote({ format: body.format ?? order.format, frame: body.frame, extraPrints: body.extraPrints });
   // the lines are stored as they were agreed: /tak, the mails and admin render this snapshot, so a later
   // price change cannot make an old receipt contradict its own total
   const updated = await updateOrder(order.id, { format: q.format, chosen_colour: chosen, amount: q.totalOere, currency: 'dkk', payment_provider: paymentProvider().name, preview_meta: { ...meta, addons: q.addons, quote: { lines: q.lines, totalOere: q.totalOere, at: new Date().toISOString() } } });

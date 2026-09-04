@@ -1,7 +1,7 @@
 import LegalPage from '@/components/LegalPage';
 import { getFounder } from '@/lib/founder';
 import { CONFIG, formatCutoffDate } from '@/lib/config';
-import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK, REPEAT_DISCOUNT_DKK } from '@/lib/pricing';
+import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK } from '@/lib/pricing';
 
 export const metadata = { title: 'Handelsbetingelser – Genfundet' };
 
@@ -29,7 +29,6 @@ export default function Handelsbetingelser() {
           <li key={f2}>{formatLabel(f2)}: {formatDkk(PRICING[f2].priceDkk)}.</li>
         ))}
         <li>Ekstra eksemplar af samme billede i samme størrelse og ramme: {formatDkk(EXTRA_PRINT_DKK[customerFormat()])} pr. stk., op til tre.</li>
-        <li>Bestiller du et nyt billede fra linket i din kvittering, trækkes {formatDkk(REPEAT_DISCOUNT_DKK)} fra.</li>
       </ul>
       <p>Restaureringen laves af en automatisk billedmodel og finjusteres manuelt. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p>
 

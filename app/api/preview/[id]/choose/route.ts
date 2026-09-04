@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (typeof body.colour === 'boolean') patch.chosen_colour = body.colour && Boolean(order.colourised_path);
   const format = isFormat(body.format) && PRICING[body.format].enabled ? body.format : order.format;
   const addons = readAddOns({ frame: body.frame ?? current.frame, extraPrints: body.extraPrints ?? current.extraPrints });
-  const q = quote({ format, ...addons, repeat: Boolean(meta.repeat_of) });
+  const q = quote({ format, ...addons });
   patch.format = q.format;
   patch.amount = q.totalOere;
   patch.preview_meta = { ...meta, addons: q.addons };

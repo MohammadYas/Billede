@@ -535,3 +535,9 @@ Kørt mod en produktionsbygning på 3111.
 
 Ikke kørt, og hvorfor: en rigtig betaling (ingen Stripe-nøgler) og et rigtigt upload-til-preview
 (ingen OpenAI-credits). Serverleddet i begge er dækket af `npm test`.
+
+### Efter fjernelsen af gentagelsesrabatten
+
+`npm test` 8/8 (24 kombinationer nu, ikke 48 — gentagelsesaksen findes ikke længere), `npm run test:order`
+9/9, `npm run test:viewport` 12/12. Produktionsbygningen indeholder ordet "rabat" ét sted: admin-noten
+"Ingen rabat: et nyt billede koster normal pris."

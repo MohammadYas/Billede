@@ -259,3 +259,11 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   90 days after delivery for one with — so the promise was wrong by two months for the only customer who
   pays. The lines now read the numbers from `CONFIG` and name the case: *bestiller du ikke, slettes
   billedet efter 30 dage*. It cannot drift from the retention job again.
+- **The 100-kr. discount on a new photograph is gone.** A customer should have to hold two prices in
+  their head, not three: another copy of the same picture is 349 kr., and a new picture costs what a
+  picture costs. A conditional third price that only exists if you came through a particular link is
+  where a surprise at checkout begins. The receipt link stays — it still records which order sent the
+  next one, and it still saves the customer from starting over — it just no longer buys anything.
+  `REPEAT_DISCOUNT_DKK`, the `repeat` flag on the quote, the discount line, its Stripe line-item note and
+  four pieces of copy that advertised it are all removed, and a test now asserts that no quote can
+  contain a negative line at all.

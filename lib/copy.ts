@@ -1,7 +1,7 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
 import { CONFIG, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
-import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, REPEAT_DISCOUNT_DKK, type Format } from '@/lib/pricing';
+import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, type Format } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
 
 export function copy(season: Season = currentSeason()) {
@@ -173,7 +173,7 @@ export function copy(season: Season = currentSeason()) {
           : { q: 'Hvornår får jeg det?', a: `Vi leverer inden ${X} hverdage, efter du har godkendt det færdige billede.` },
         {
           q: 'Kan jeg få flere eksemplarer af det samme billede?',
-          a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling – minus ${formatDkk(REPEAT_DISCOUNT_DKK)}, hvis du bestiller det fra kvitteringen.`,
+          a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling.`,
         },
         {
           q: 'Kan jeg sende det direkte til modtageren?',
@@ -214,7 +214,7 @@ export function copy(season: Season = currentSeason()) {
       noPhotoCta: 'Send mig linket',
       noPhotoDone: 'Linket er sendt. Tag et foto af billedet i dagslys, når du har det – resten tager halvandet minut.',
       back: 'Tilbage',
-      repeat: `Billede nummer to: ${formatDkk(REPEAT_DISCOUNT_DKK)} er trukket fra, når du bestiller.`,
+      repeat: 'Billede nummer to fra din forrige ordre. Prisen er den samme som første gang.',
     },
     processing: {
       stages: { uploading: 'Uploader', sending: 'Restaurerer', restoring: 'Restaurerer', preparing: 'Gør preview klar' } as Record<string, string>,
@@ -269,7 +269,6 @@ export function copy(season: Season = currentSeason()) {
       shippingFree: 'Inkluderet',
       total: 'I alt',
       vat: 'inkl. moms',
-      repeatNote: `Billede nummer to: ${formatDkk(REPEAT_DISCOUNT_DKK)} er trukket fra, fordi du bestilte fra din forrige ordre.`,
       steps: ['Dit billede', 'Størrelse og ramme', 'Betaling'] as string[],
       zoomIn: 'Se tæt på',
       zoomOut: 'Se hele billedet',
@@ -318,7 +317,7 @@ export function copy(season: Season = currentSeason()) {
       ] as [string, string][],
       more: 'Vis et billede mere',
       againH2: 'Har I flere billeder?',
-      againP: `De ligger sjældent alene i skuffen. Bestiller du et mere fra linket her, trækker vi ${formatDkk(REPEAT_DISCOUNT_DKK)} fra – samme arbejde, samme godkendelse, fri fragt.`,
+      againP: 'De ligger sjældent alene i skuffen. Har du et mere, kan du sende det ind herfra – samme arbejde, samme godkendelse, fri fragt.',
       againCta: 'Se billede nummer to',
       unverifiedH1: 'Vi kunne ikke bekræfte betalingen med det samme.',
       unverifiedP: 'Er pengene trukket, er din bestilling hos os, og du får en mail inden for få minutter. Ellers kan du gå tilbage til dit billede og prøve igen.',

@@ -82,8 +82,11 @@ export function frameColour(frame: Frame): 'black' | 'oak' {
  */
 export const EXTRA_PRINT_DKK: Record<Format, number> = { '20x30': 349, '30x40': 349, '40x50': 349, '50x70': 349 };
 export const MAX_EXTRA_PRINTS = 3;
-/** Off the next photograph when it is ordered from a paid order's link (see /tak). */
-export const REPEAT_DISCOUNT_DKK = 100;
+/*
+ * There is deliberately no discount on a *new* photograph ordered from a receipt link. Two prices are
+ * all a customer should have to hold in their head: another copy of the same picture is 349 kr., and a
+ * new picture costs what a picture costs. A third, conditional price is where surprises come from.
+ */
 
 export type AddOns = { frame: Frame; extraPrints: number };
 export const DEFAULT_ADDONS: AddOns = { frame: 'sort', extraPrints: 0 };
@@ -99,10 +102,10 @@ export function readAddOns(value: unknown): AddOns {
 
 /** `name` is what Stripe and the receipt print; `short` is what the bill on the page shows. */
 export type QuoteLine = { key: string; name: string; short: string; note?: string; quantity: number; unitOere: number; amountOere: number };
-export type Quote = { format: Format; addons: AddOns; repeat: boolean; lines: QuoteLine[]; totalOere: number };
+export type Quote = { format: Format; addons: AddOns; lines: QuoteLine[]; totalOere: number };
 
 /** The one place an order's amount is decided. Input is untrusted; output is always sellable. */
-export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown; repeat?: boolean } = {}): Quote {
+export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown } = {}): Quote {
   const format = sellableFormat(input.format);
   const addons = readAddOns({ frame: input.frame, extraPrints: input.extraPrints });
   const label = formatLabel(format);
@@ -129,11 +132,8 @@ export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: 
       amountOere: unit * addons.extraPrints,
     });
   }
-  if (input.repeat) {
-    lines.push({ key: 'repeat', name: 'Rabat, billede nummer to', short: 'Rabat, billede nummer to', note: 'Fordi restaureringen er bestilt fra din forrige ordre', quantity: 1, unitOere: -REPEAT_DISCOUNT_DKK * 100, amountOere: -REPEAT_DISCOUNT_DKK * 100 });
-  }
   const totalOere = lines.reduce((sum, l) => sum + l.amountOere, 0);
-  return { format, addons, repeat: Boolean(input.repeat), lines, totalOere };
+  return { format, addons, lines, totalOere };
 }
 
 export function formatOere(oere: number): string {

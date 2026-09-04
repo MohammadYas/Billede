@@ -19,8 +19,10 @@ export class StripeProvider implements PaymentProvider {
   }
 
   /**
-   * Stripe has no negative line items, so a discount (the repeat price) comes off the first line.
-   * The lines are still the ones the customer saw; only the arithmetic moves.
+   * A quote has no negative lines: every price on this site is a price, not a price minus something.
+   * The fold below stays anyway — it is a no-op on the quotes we build, and it is the guard that would
+   * keep a future discount from being multiplied by a line quantity. The assertion after it is the one
+   * that matters: what Stripe is asked for must equal what the bill showed.
    */
   private lineItems(q: Quote, previewImageUrl?: string): Stripe.Checkout.SessionCreateParams.LineItem[] {
     const positive = q.lines.filter((l) => l.amountOere > 0);
@@ -39,7 +41,7 @@ export class StripeProvider implements PaymentProvider {
           product_data: {
             name: l.name,
             description: i === 0
-              ? `${l.note ?? ''}${discount ? ` · inkl. ${Math.abs(discount) / 100} kr. rabat på billede nummer to` : ''}. Du godkender det færdige billede, før vi printer.`
+              ? `${l.note ?? ''}. Du godkender det færdige billede, før vi printer.`
               : l.note,
             images: i === 0 && previewImageUrl ? [previewImageUrl] : undefined,
           },
@@ -76,7 +78,6 @@ export class StripeProvider implements PaymentProvider {
         size: formatLabel(opts.quote.format),
         frame: opts.quote.addons.frame,
         extra_prints: String(opts.quote.addons.extraPrints),
-        repeat: String(opts.quote.repeat),
         chosen_colour: String(order.chosen_colour),
       },
       payment_intent_data: { description: `Genfundet ordre ${order.id.slice(0, 8)}`, metadata: { order_id: order.id } },
