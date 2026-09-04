@@ -1,15 +1,22 @@
 import { CONFIG } from '@/lib/config';
 import type { Order } from '@/lib/db/orders';
-import { formatLabel, formatOere, quote, readAddOns, REPEAT_DISCOUNT_DKK, formatDkk, type Quote } from '@/lib/pricing';
+import { formatLabel, formatOere, quote, readAddOns, REPEAT_DISCOUNT_DKK, formatDkk, type Quote, type QuoteLine } from '@/lib/pricing';
 
-type Meta = { addons?: unknown; repeat_of?: string; share_token?: string; gift_note?: string };
+type Meta = { addons?: unknown; repeat_of?: string; share_token?: string; gift_note?: string; quote?: { lines?: QuoteLine[]; totalOere?: number } };
 const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
 
-/** The order's own quote, rebuilt from what is stored on the row. One arithmetic, everywhere. */
+/**
+ * The order's own quote. Once checkout has run, the lines are whatever the customer agreed to — read
+ * from the snapshot, never re-priced from today's PRICING, or an old receipt starts disagreeing with
+ * its own total the first time a price changes.
+ */
 export function orderQuote(o: Order): Quote {
   const m = metaOf(o);
   const a = readAddOns(m.addons);
-  return quote({ format: o.format, frame: a.frame, extraPrints: a.extraPrints, repeat: Boolean(m.repeat_of) });
+  const live = quote({ format: o.format, frame: a.frame, extraPrints: a.extraPrints, repeat: Boolean(m.repeat_of) });
+  const snap = m.quote;
+  if (snap?.lines?.length && typeof snap.totalOere === 'number') return { ...live, lines: snap.lines, totalOere: snap.totalOere };
+  return live;
 }
 
 /** "30×40 cm · sort ramme · i farver · 2 ekstra eksemplarer" — for mails, admin and the print checklist. */

@@ -18,9 +18,16 @@ export const CONFIG = {
   maxUploadBytes: 25 * 1024 * 1024,
   /** Preview pipeline hard limit. */
   previewTimeoutMs: 90_000, // a normal run is ~40 s; 45 s turned every slow minute at OpenAI into a lead form (attack #2, H1)
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  /** Every customer-facing link is built from this: mails, the repeat link, Stripe's success and cancel
+   *  URLs. Netlify sets URL and DEPLOY_PRIME_URL itself, so a forgotten variable still cannot put
+   *  localhost into somebody's inbox. */
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? process.env.DEPLOY_PRIME_URL ?? 'http://localhost:3000',
   siteName: 'Genfundet',
 } as const;
+
+if (process.env.NODE_ENV === 'production' && CONFIG.siteUrl.includes('localhost')) {
+  console.error('NEXT_PUBLIC_SITE_URL is not set: customer links would point at localhost.');
+}
 
 export type Season = 'jul' | 'default';
 
@@ -44,11 +51,6 @@ export function daysToCutoff(now: Date = new Date()): number {
   const [y, m, d] = CONFIG.christmasCutoffDate.split('-').map(Number);
   const [ty, tm, td] = today.split('-').map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 864e5);
-}
-
-/** MobilePay is named on the page only once it is live on the Stripe account (STRIPE_MOBILEPAY_ENABLED=true). */
-export function mobilePayEnabled(): boolean {
-  return process.env.STRIPE_MOBILEPAY_ENABLED === 'true';
 }
 
 /** "inden jul" or "inden 5 hverdage", depending on season. */

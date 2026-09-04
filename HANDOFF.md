@@ -27,8 +27,8 @@ Nothing in this list is code. The code is done and verified; each line below is 
 6. Stripe Dashboard: Public details → Terms of service URL `https://genfundet.dk/handelsbetingelser` and Privacy URL
    (Checkout refuses to open without the Terms URL); webhook on `https://genfundet.dk/api/webhooks/stripe` for
    `checkout.session.completed` + `checkout.session.async_payment_succeeded` → copy the signing secret to
-   `STRIPE_WEBHOOK_SECRET` → "Send test event" → a 200 in Netlify → Functions log; MobilePay activated, then
-   `STRIPE_MOBILEPAY_ENABLED=true`; live keys when you go live.
+   `STRIPE_WEBHOOK_SECRET` → "Send test event" → a 200 in Netlify → Functions log; live keys when you go live.
+   Payment methods are chosen in the Stripe Dashboard, not in the code.
 7. Resend: domain genfundet.dk verified (SPF, DKIM, DMARC `p=none`), `RESEND_API_KEY`.
 8. Meta: domain verified in Business Manager; pixel id; Conversions API token (`META_CAPI_TOKEN`); Aggregated Event
    Measurement priorities Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent; first campaign
@@ -129,10 +129,11 @@ Read via Composio on 2026-09-03 from account `acct_1UBgmTJNJnc6lpkL` (genfundet.
 charges and payouts enabled, statement descriptor GENFUNDET.DK, payout schedule manual (7 days), no products,
 no prices, no webhooks yet.
 
-**MobilePay is not activated on the account** (capabilities list has card, Klarna, Link, Revolut Pay, Amazon Pay …
-but no `mobilepay_payments`). **The test must not start without it** — 60 %+ of Danish mobile checkouts use it.
-Activate: Stripe Dashboard → Settings → Payment methods → MobilePay → Turn on (needs the Danish business
-verification to be complete). Then set `STRIPE_MOBILEPAY_ENABLED=true`.
+**Payment methods are Stripe's to choose.** The Checkout session no longer names a method list, so Stripe shows
+whatever is enabled on the account and supported by the customer's browser — cards, and Apple Pay or Google Pay
+where the device offers them. Turn methods on and off in Stripe Dashboard → Settings → Payment methods; nothing
+in the code has to change. The page says "Apple Pay, Google Pay eller kort", which is what Checkout offers on a
+phone.
 
 Then, in order (§13 of the spec):
 1. `STRIPE_SECRET_KEY` (live) and `NEXT_PUBLIC_SITE_URL=https://genfundet.dk` in the hosting env.
@@ -170,7 +171,7 @@ Send yourself a test order confirmation from `/admin` by completing a test purch
 ## 5. Meta Pixel and Conversions API
 
 - `NEXT_PUBLIC_META_PIXEL_ID` loads the pixel after consent, on every page. Events: PageView, ViewContent (hero and preview), UploadStarted, UploadCompleted, PreviewShown, PreviewFallback (custom), InitiateCheckout, Purchase — all with the same product parameters. Events that happen before the visitor answers the banner are kept in the tab and replayed on "Ok".
-- `META_CAPI_TOKEN` (Events Manager → Conversions API → Generate access token) sends **Purchase and InitiateCheckout from the server** too, with the same event ids as the browser (deduplicated) and hashed e-mail/phone/name/postcode + the click id. That is the copy Meta gets when the buyer paid in another browser (MobilePay app-switch out of the Facebook browser) or never consented. `META_TEST_EVENT_CODE` shows them in the Test events tab while you check.
+- `META_CAPI_TOKEN` (Events Manager → Conversions API → Generate access token) sends **Purchase and InitiateCheckout from the server** too, with the same event ids as the browser (deduplicated) and hashed e-mail/phone/name/postcode + the click id. That is the copy Meta gets when the buyer paid in another browser (a wallet app-switch out of the Facebook browser) or never consented. `META_TEST_EVENT_CODE` shows them in the Test events tab while you check.
 - In Business Manager: verify genfundet.dk, prioritise Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent for iOS, create the custom conversion on `PreviewShown`, and run the first campaign optimised for that (1.500 kr. will not produce enough purchases to leave learning).
 
 Create the pixel in Events Manager, set `NEXT_PUBLIC_META_PIXEL_ID`. Events fired: PageView, ViewContent (hero ≥3 s),
@@ -223,8 +224,6 @@ they are read with `fs` at runtime.
   Christmas gift: eyebrow with the deadline, a day countdown, "under juletræet", the gift section's "til tiden" row and the
   FAQ answer. Outside it the gift angle stays but without dates. Start the window earlier by setting the env var
   (e.g. `2026-09-15`) if the campaign runs earlier; the cutoff must be a date your print partner can actually hold.
-- `STRIPE_MOBILEPAY_ENABLED` also drives the **copy**: until it is `true` the page says "Apple Pay, Google Pay eller kort",
-  never MobilePay. Flip it the day MobilePay is live on the account.
 - **Gavehilsen.** Checkout has an optional 200-character field; the text lands on the order (`preview_meta.gift_note`),
   in the owner mail, the ordrebekræftelse, the admin page and the print checklist — you write it on a card and put it in
   the parcel. It is promised on the page, so do it.

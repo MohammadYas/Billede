@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
 import Consent from '@/components/Consent';
 
-export const metadata = { robots: { index: false, follow: false } };
+export const metadata = { robots: { index: false, follow: false }, alternates: { canonical: '/' } };
 
 export const dynamic = 'force-dynamic';
 

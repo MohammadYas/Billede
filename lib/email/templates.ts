@@ -48,7 +48,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
   const subject = 'Tak for din bestilling';
   const addr = (o.shipping_address ?? {}) as Record<string, string | null | undefined>;
   const address = [o.customer_name ?? addr.name, addr.line1, addr.line2, [addr.postal_code, addr.city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-  const amount = formatDkk((o.amount ?? 59900) / 100);
+  const amount = typeof o.amount === 'number' ? formatDkk(o.amount / 100) : '';
   const meta = (o.preview_meta ?? {}) as { share_token?: string };
   const mockup = o.mockup_path && meta.share_token ? siteUrl(`/api/preview/${o.id}/image?kind=mockup&t=${encodeURIComponent(meta.share_token)}`) : null;
   const previewLink = meta.share_token ? siteUrl(`/p/${o.id}?t=${encodeURIComponent(meta.share_token)}`) : null;
@@ -60,7 +60,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja.`),
     mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">` : '',
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
-    p(orderLines(o).map((l) => esc(l)).join('<br>') + `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt`),
+    p(orderLines(o).map((l) => esc(l)).join('<br>') + (amount ? `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt` : '')),
     p(`${esc(orderDescription(o))}<br>` +
       (address ? `Leveres til: ${esc(address)}<br>` : '') +
       `Ordre ${esc(o.id.slice(0, 8))} · betalt ${esc(o.paid_at ? new Date(o.paid_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }) : 'i dag')}` +
@@ -89,7 +89,7 @@ export function refundNotice(opts: { amount: number }): { subject: string; html:
   const a = formatDkk(opts.amount);
   const html = shell(subject, [
     h1('Vi har refunderet din betaling.'),
-    p(`${esc(a)} er sendt retur til det kort eller den MobilePay, du betalte med. Pengene står på din konto inden 5–10 hverdage.`),
+    p(`${esc(a)} er sendt retur til det kort, du betalte med. Pengene står på din konto inden 5–10 hverdage.`),
     p('Er der noget, vi kunne have gjort bedre, så svar gerne på denne mail.'),
   ].join(''));
   const text = `Vi har refunderet din betaling.\n\n${a} er sendt retur. Pengene står på din konto inden 5–10 hverdage.`;
@@ -104,7 +104,7 @@ export function approvalRequest(opts: { imageUrl: string; approveUrl: string; ch
     h1(opts.second ? 'Dit færdige billede venter stadig.' : opts.reminder ? 'Dit færdige billede venter på dit ja.' : 'Dit færdige billede er klar.'),
     p(opts.second
       ? `Vi har ikke hørt fra dig. Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a>` : ''}.`
-      : 'Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du vil have ændret, så skriv det – det koster ikke ekstra.'),
+      : 'Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen.'),
     buttons,
     `<img src="${opts.imageUrl}" alt="Dit restaurerede billede" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">`,
     buttons,

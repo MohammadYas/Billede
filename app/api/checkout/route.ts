@@ -28,7 +28,9 @@ export async function POST(req: NextRequest) {
   // repeat discount is only real if this order remembers a paid order that sent it (checked at upload).
   const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
   const q = quote({ format: body.format ?? order.format, frame: body.frame, extraPrints: body.extraPrints, repeat: Boolean(meta.repeat_of) });
-  const updated = await updateOrder(order.id, { format: q.format, chosen_colour: chosen, amount: q.totalOere, currency: 'dkk', payment_provider: paymentProvider().name, preview_meta: { ...meta, addons: q.addons } });
+  // the lines are stored as they were agreed: /tak, the mails and admin render this snapshot, so a later
+  // price change cannot make an old receipt contradict its own total
+  const updated = await updateOrder(order.id, { format: q.format, chosen_colour: chosen, amount: q.totalOere, currency: 'dkk', payment_provider: paymentProvider().name, preview_meta: { ...meta, addons: q.addons, quote: { lines: q.lines, totalOere: q.totalOere, at: new Date().toISOString() } } });
   const base = CONFIG.siteUrl.replace(/\/$/, '');
   // Stripe fetches product images itself; a 15-min signed URL is enough for that fetch.
   const previewImageUrl = order.preview_path ? await signedUrl(order.preview_path) : undefined;

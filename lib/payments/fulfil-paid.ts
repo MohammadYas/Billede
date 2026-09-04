@@ -58,7 +58,7 @@ export async function markPaid(orderId: string, s: VerifiedSession, ctx: { ip?: 
     sendMail({ to: updated.customer_email, ...mail }).catch((e) => console.error('confirmation mail failed', e));
   }
   const addr = (updated.shipping_address ?? {}) as Record<string, string | null | undefined>;
-  notifyOwner(`Ny betaling ${formatDkk((updated.amount ?? 59900) / 100)} · ordre ${updated.id.slice(0, 8)}`, [
+  notifyOwner(`Ny betaling ${typeof updated.amount === 'number' ? formatDkk(updated.amount / 100) : '(beløb ukendt)'} · ordre ${updated.id.slice(0, 8)}`, [
     `${updated.customer_name ?? addr.name ?? ''} · ${updated.customer_email ?? ''} · ${updated.customer_phone ?? ''}`,
     `${[addr.line1, addr.postal_code, addr.city].filter(Boolean).join(', ')}`,
     orderDescription(updated),

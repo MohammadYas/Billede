@@ -51,7 +51,7 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
       if (bySession?.preview_path && token) backTo = `/p/${bySession.id}?t=${encodeURIComponent(token)}`;
     }
   }
-  const value = ((order?.amount ?? 59900) / 100);
+  const value = (order?.amount ?? 0) / 100;
   return (
     <>
       <main className="wrap" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>

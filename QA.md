@@ -456,3 +456,25 @@ buys the SSIM pick). The ~45-65 s restoration is a floor; only the upload leg an
 **After the fixes, measured end to end with a real 2.83 MB phone photograph: 79.8 s** (upload 8.6 s on
 localhost, restoration 64.5 s, preparation 4.6 s — down from 9-11 s), the wait-state e-mail capture
 delivers, no console errors, landing page accessibility 100 / SEO 100, CLS 0.
+
+### Pass 10b — everything else the code could fix
+
+Verified after the changes (dev server, iPhone 14 profile unless noted):
+
+| Check | Result |
+|---|---|
+| Full upload → preview with a real 2.83 MB phone photograph | **75.9 s**, "Gør preview klar" under a second, colour ready at 78.5 s, no console errors |
+| Hero CTA above the fold | mobile 594→646 of 664 ✓ · desktop 732→784 of 900 ✓ |
+| Product page at rest: picture, Før/Efter, image controls clear of the fixed bar | 173→465, 415→459, 481→525 (bar at 561) ✓ |
+| Horizontal overflow at 320 / 360 / 390 / 430 px | none ✓ |
+| Text under 13 px on the product page | none ✓ |
+| Tap targets under 44 px | none ✓ |
+| "Se tæt på" | `matrix(1,…)` → `matrix(2.2,…)` on both sides ✓ |
+| Save-your-preview form | collapsed by default ✓ |
+| Legal pages | no draft banner; missing CVR and address name themselves ✓ |
+| Terms | all three sizes, extra-copy prices and the repeat discount ✓ |
+| Stripe line items | refused unless they sum to the quoted total (new assertion) |
+| Repeat link | capped at 3 redemptions per receipt |
+
+MobilePay was removed on the owner's instruction: the Checkout session sends no payment-method list, so
+Stripe offers what the account has enabled and the browser supports (cards, Apple Pay, Google Pay).

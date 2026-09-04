@@ -36,7 +36,7 @@ export async function sendServerEvent(name: ServerEventName, opts: { eventId: st
     client_user_agent: opts.ua ?? undefined,
   };
   for (const k of Object.keys(user_data)) if (user_data[k] === undefined) delete user_data[k];
-  const value = (o.amount ?? 59900) / 100;
+  const value = (o.amount ?? 0) / 100; // an order without an amount reports 0 rather than a made-up 599
   const body = {
     data: [{
       event_name: name,

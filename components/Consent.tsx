@@ -14,10 +14,14 @@ export default function Consent({ text, accept, decline }: { text: string; accep
     // only the banner, so a visitor is never counted twice for arriving once.
     if (consent() !== null || !process.env.NEXT_PUBLIC_META_PIXEL_ID) return;
     // only after the first scroll: the visitor who taps the button straight away is never interrupted (nothing is tracked before consent anyway)
-    const onScroll = () => { if (window.scrollY > 120) { setShow(true); window.removeEventListener('scroll', onScroll); } };
+    const reveal = () => { setShow(true); window.removeEventListener('scroll', onScroll); window.clearTimeout(timer); };
+    const onScroll = () => { if (window.scrollY > 120) reveal(); };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    // a visitor who taps the button straight from the first screen never scrolls — and would never be
+    // asked, so nothing they do could ever be measured
+    const timer = window.setTimeout(reveal, 6000);
+    return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(timer); };
   }, []);
   if (!show) return null;
   return (

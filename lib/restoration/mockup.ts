@@ -37,7 +37,7 @@ async function wallLayer(width: number, height: number): Promise<Buffer> {
 export async function makeMockup(image: Buffer, opts: MockupOptions = {}): Promise<Buffer> {
   const format = opts.format ?? DEFAULT_FORMAT;
   const spec = PRICING[format];
-  const W = opts.width ?? 1200;
+  const W = opts.width ?? 1040; // shown at 440-520 px CSS; 2× is plenty and halves the bytes
   const H = Math.round(W * 0.8);
   const frameColour = opts.frame === 'oak' ? '#8A6A46' : '#181614';
 

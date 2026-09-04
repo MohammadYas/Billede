@@ -32,7 +32,7 @@ project in `.env.local`; re-apply with the Supabase SQL editor or the Management
 | `OPENAI_IMAGE_MODEL` / `OPENAI_VISION_MODEL` | defaults `gpt-image-2` / `gpt-5.5` |
 | `PREVIEW_IMAGE_QUALITY` | `medium` (≈33 s for two candidates). `high` is ≈90 s and only used for the print final |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` | database and private bucket (server only uses the service role) |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_MOBILEPAY_ENABLED` | Checkout; MobilePay is added to the payment-method list only when the flag is `true` |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Checkout. Payment methods come from the Stripe account, so Apple Pay and Google Pay appear wherever the browser supports them |
 | `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_FROM_LOCAL` | mails from `<fornavn>@genfundet.dk` |
 | `NEXT_PUBLIC_META_PIXEL_ID` | Pixel; the consent banner only renders when set |
 | `ADMIN_PASSWORD`, `CRON_SECRET`, `JOB_SECRET`, `JOB_RUNNER` | admin login (rate-limited), retention cron auth, background job runner secret, `netlify`/`inline` |

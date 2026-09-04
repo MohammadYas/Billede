@@ -6,8 +6,8 @@ import type { CheckoutResult, PaymentProvider, VerifiedSession, WebhookOutcome }
 
 /**
  * StripeProvider — hosted Checkout, locale da, DKK, DK shipping only.
- * Payment method order: MobilePay → Apple Pay/Google Pay (wallets ride on "card") → cards.
- * Test mode until §13 wires live keys and confirms MobilePay is activated on the account.
+ * Payment methods: cards, with Apple Pay and Google Pay riding on "card" — Stripe shows whichever
+ * wallet the customer's browser actually supports, so nothing here has to guess.
  */
 export class StripeProvider implements PaymentProvider {
   readonly name = 'stripe';
@@ -24,9 +24,13 @@ export class StripeProvider implements PaymentProvider {
    */
   private lineItems(q: Quote, previewImageUrl?: string): Stripe.Checkout.SessionCreateParams.LineItem[] {
     const positive = q.lines.filter((l) => l.amountOere > 0);
+    if (positive.length === 0) throw new Error('quote has no billable line');
     const discount = q.lines.filter((l) => l.amountOere < 0).reduce((sum, l) => sum + l.amountOere, 0);
-    return positive.map((l, i) => {
-      const unit = i === 0 ? Math.max(0, l.unitOere + discount) : l.unitOere;
+    const items = positive.map((l, i) => {
+      // the discount reduces the first line's *amount*, then the unit price is derived — so a line with
+      // quantity > 1 cannot multiply the discount, and a discount larger than the line cannot go negative
+      const amount = i === 0 ? Math.max(0, l.amountOere + discount) : l.amountOere;
+      const unit = Math.max(0, Math.round(amount / Math.max(1, l.quantity)));
       return {
         quantity: l.quantity,
         price_data: {
@@ -42,17 +46,17 @@ export class StripeProvider implements PaymentProvider {
         },
       };
     });
+    const sum = items.reduce((t, it) => t + (it.price_data!.unit_amount ?? 0) * (it.quantity ?? 1), 0);
+    if (sum !== q.totalOere) throw new Error(`line items ${sum} do not add up to the quoted total ${q.totalOere}`);
+    return items;
   }
 
   async createCheckout(order: Order, opts: { quote: Quote; successUrl: string; cancelUrl: string; previewImageUrl?: string }): Promise<CheckoutResult> {
-    const mobilePay = process.env.STRIPE_MOBILEPAY_ENABLED === 'true';
-    const methods: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = mobilePay ? ['mobilepay', 'card'] : ['card'];
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       locale: 'da',
       currency: 'dkk',
       client_reference_id: order.id,
-      payment_method_types: methods,
       line_items: this.lineItems(opts.quote, opts.previewImageUrl),
       shipping_address_collection: { allowed_countries: ['DK'] },
       custom_fields: [{ key: 'gavehilsen', label: { type: 'custom', custom: 'Hilsen på et kort i pakken (valgfri)' }, type: 'text', optional: true, text: { maximum_length: 200 } }],

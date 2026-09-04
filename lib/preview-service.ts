@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { CONFIG } from '@/lib/config';
 import { createOrder, getOrder, setStatus, updateOrder, type Order } from '@/lib/db/orders';
 import { objectPath, putObject, getObject, removeOrderObjects, createSignedUpload } from '@/lib/db/storage';
+import { supabaseAdmin } from '@/lib/db/supabase';
 import { RestoreError } from '@/lib/restoration/errors';
 import { notifyOwner } from '@/lib/email/owner';
 
@@ -88,6 +89,8 @@ export async function statusFor(order: Order): Promise<PreviewStatus> {
  * normal order that remembers which paid order sent it, which is the only thing that unlocks the
  * repeat price. The reference is checked here — an id and its share token must match a real, paid order.
  */
+export const REPEAT_MAX_USES = 3;
+
 export async function repeatSource(ref: string | null | undefined): Promise<string | null> {
   if (!ref) return null;
   const [id, token] = String(ref).split('.');
@@ -95,7 +98,10 @@ export async function repeatSource(ref: string | null | undefined): Promise<stri
   const parent = await getOrder(id);
   if (!parent || metaOf(parent).share_token !== token) return null;
   const paid: Order['status'][] = ['PAID', 'IN_RETOUCH', 'AWAITING_APPROVAL', 'CHANGE_REQUESTED', 'APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'];
-  return paid.includes(parent.status) ? parent.id : null;
+  if (!paid.includes(parent.status)) return null;
+  // a receipt can be forwarded; without a cap a leaked link is a permanent public 100-kr. coupon
+  const { count } = await supabaseAdmin().from('orders').select('id', { count: 'exact', head: true }).contains('preview_meta', { repeat_of: parent.id });
+  return (count ?? 0) < REPEAT_MAX_USES ? parent.id : null;
 }
 
 export async function beginUpload(ctx: { sessionId: string | null; utm: Utm | null; size: number; type: string; repeatOf?: string | null }): Promise<{ orderId: string; token: string; uploadUrl: string; path: string }> {
@@ -130,7 +136,8 @@ export async function processRestore(orderId: string): Promise<void> {
     if (metaOf((await getOrder(orderId))!).cancelled) { await abandon(orderId); return; }
 
     // the "before" the customer sees: normalised, ≤ 1600 px, well under any function response limit
-    const display = await ensureLongEdge(result.original, 1400, 82);
+    // the customer's "before", shown at most 390-616 px wide; 1400 px at q82 was a megabyte on a phone
+    const display = await ensureLongEdge(result.original, 1200, 78);
     const originalPath = objectPath(order.id, 'original');
     await putObject(originalPath, display);
 

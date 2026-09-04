@@ -1,6 +1,6 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
-import { CONFIG, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, mobilePayEnabled, type Season } from '@/lib/config';
+import { CONFIG, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
 import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, REPEAT_DISCOUNT_DKK, type Format } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
 
@@ -19,7 +19,7 @@ export function copy(season: Season = currentSeason()) {
   const emailHref = email ? `mailto:${email}` : '';
   const skrivTil = personal ? `skriv til ${cap(navn)}` : 'skriv til os';
   const days = daysToCutoff();
-  const pay = mobilePayEnabled() ? 'MobilePay, Apple Pay eller kort' : 'Apple Pay, Google Pay eller kort';
+  const pay = 'Apple Pay, Google Pay eller kort';
 
   // Sizes. The landing page quotes the cheapest ("fra 599 kr."); the customer picks on the preview page,
   // and every price-bearing line exists once per size so nothing has to be patched together in the browser.
@@ -71,7 +71,7 @@ export function copy(season: Season = currentSeason()) {
     variants: { portrait: sizes.map((fmt) => variant(fmt, false)), landscape: sizes.map((fmt) => variant(fmt, true)) },
     sizes: sizes.map((fmt) => [formatLabel(fmt), formatDkk(PRICING[fmt].priceDkk)] as [string, string]),
     hero: {
-      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Gaven, ingen andre kan give',
+      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Gaven, de ikke selv kan købe',
       h1: 'Mors gamle billede. Skarpt igen, i ramme, hjemme hos dig.',
       sub: 'Tag et foto af billedet med telefonen. Halvandet minut efter ser du det restaureret.',
       cta: 'Se dit billede nu',
@@ -80,7 +80,7 @@ export function copy(season: Season = currentSeason()) {
     },
     gave: {
       h2: jul ? 'Den julegave, de ikke selv kan købe' : 'Den gave, de ikke selv kan købe',
-      lead: 'Et billede, de troede var gået tabt – skarpt, i ramme, klar til at hænge op. Det er den slags, der bliver stille ved bordet.',
+      lead: 'Til den runde fødselsdag, jubilæet, guldbrylluppet eller julen: et billede, de troede var gået tabt – skarpt, i ramme, klar til at hænge op. Det er den slags, der bliver stille ved bordet.',
       points: [
         ['Tag billedet i smug', 'Et foto af det gamle billede med telefonen er nok. Læg det tilbage i skuffen, inden nogen ser det.'],
         ['Skriv en hilsen', 'Ved betaling kan du skrive et par linjer. Vi lægger et kort ved med din hilsen.'],
@@ -97,7 +97,7 @@ export function copy(season: Season = currentSeason()) {
       h2: 'Sådan fungerer det',
       steps: [
         'Tag et foto af billedet med telefonen. Dagslys, ingen blitz – det er nok.',
-        'Se resultatet på skærmen. Det tager omkring halvandet minut og koster ikke noget.',
+        'Se resultatet på skærmen. Det tager omkring halvandet minut.',
         `Bestil. ${cap(navn)} finjusterer, du godkender på mail, vi printer og sender. Leveret ${levering}.`,
       ],
       note: 'Papir falmer, og folder bliver ikke glattere med årene. Et foto af billedet, som det er nu, er nok til at redde det.',
@@ -125,7 +125,7 @@ export function copy(season: Season = currentSeason()) {
       price,
       priceFrom: sizes.length > 1 ? `for ${formatLabel(format)} · større: ${sizes.filter((x) => x !== format).map((x) => `${formatLabel(x)} ${formatDkk(PRICING[x].priceDkk)}`).join(' · ')}` : '',
       cta: 'Se dit billede nu',
-      under: 'Det koster ikke noget at se. Du bestiller først, når du har set resultatet.',
+      under: 'Du bestiller først, når du har set resultatet.',
     },
     hvem: { h2: 'Hvem står bag' },
     spoergsmaal: {
@@ -189,7 +189,7 @@ export function copy(season: Season = currentSeason()) {
         },
       ],
     },
-    slut: { line: jul ? 'To minutter, så har du set det. Julegaven er klaret i aften.' : 'To minutter, så har du set det. Du bestiller først bagefter.', cta: 'Se dit billede nu' },
+    slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : 'Halvandet minut, så har du set det. Du bestiller først bagefter.', cta: 'Se dit billede nu' },
     sticky: `Se dit billede nu · ${priceFrom}`,
     upload: {
       camera: 'Tag et foto',
@@ -269,7 +269,11 @@ export function copy(season: Season = currentSeason()) {
       vat: 'inkl. moms',
       repeatNote: `Billede nummer to: ${formatDkk(REPEAT_DISCOUNT_DKK)} er trukket fra, fordi du bestilte fra din forrige ordre.`,
       steps: ['Dit billede', 'Størrelse og ramme', 'Betaling'] as string[],
+      zoomIn: 'Se tæt på',
+      zoomOut: 'Se hele billedet',
+      zoomHint: 'Restaurering afgøres i ansigterne — se dem tæt på.',
       colourToggle: 'Vis i farver',
+      colourHint: 'De fleste vælger sort-hvid: det er sådan, billedet blev taget. Farver gør det til noget nyt – prøv begge dele.',
       monoToggle: 'Vis i sort-hvid',
       colourLoading: 'Farveversion på vej – ca. ½ minut',
       cta: `Bestil mit billede – ${price}`,

@@ -72,6 +72,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const [showColour, setShowColour] = useState(Boolean(initial.chosenColour && initial.colour));
   const [colourReady, setColourReady] = useState(Boolean(initial.colour));
   const [colourLoading, setColourLoading] = useState(Boolean(initial.isMonochrome && !initial.colour));
+  const [zoom, setZoom] = useState(false);
   const [ordering, setOrdering] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,8 +92,13 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   // every combination is fetched up front, so picking a size or a frame swaps the wall with no wait
   useEffect(() => {
-    Object.values(data.mockups).forEach((u) => { if (u) void preload(u); });
-  }, [data.mockups]);
+    // the one on screen is already loading; the rest wait for an idle moment so they do not compete
+    // with the customer's own photograph on a phone connection
+    const others = Object.entries(data.mockups).filter(([k]) => k !== `${data.format}:${data.addons.frame}`).map(([, u]) => u);
+    const run = () => others.forEach((u) => { if (u) void preload(u); });
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(run, { timeout: 4000 }); else window.setTimeout(run, 2500);
+  }, [data.mockups, data.format, data.addons.frame]);
 
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
@@ -272,8 +278,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   );
 
   const save = (
-    <form onSubmit={saveLink} noValidate style={{ display: 'grid', gap: 'var(--s3)', paddingTop: 'var(--s4)', borderTop: '1px solid var(--hairline)' }}>
-      <p className="small"><b style={{ fontWeight: 600 }}>{c.preview.saveTitle}</b><br /><span className="muted">{c.preview.saveP}</span></p>
+    <details className="pv-save">
+      <summary className="small">{c.preview.saveTitle}</summary>
+      <form onSubmit={saveLink} noValidate style={{ display: 'grid', gap: 'var(--s3)', paddingTop: 'var(--s3)' }}>
+      <p className="small muted">{c.preview.saveP}</p>
       {saveState === 'done' ? <p className="small" role="status">{c.preview.saveDone}</p> : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 'var(--s2)' }}>
           <div className="field"><label htmlFor="save-email" className="visually-hidden">{c.preview.saveEmail}</label><input id="save-email" type="email" inputMode="email" autoComplete="email" placeholder={c.preview.saveEmail} value={saveEmail} onChange={(e) => setSaveEmail(e.target.value)} aria-invalid={saveState === 'invalid'} /></div>
@@ -282,7 +290,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       )}
       {saveState === 'invalid' && <p className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveInvalid}</p>}
       {saveState === 'failed' && <p className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveFailed}</p>}
-    </form>
+      </form>
+    </details>
   );
 
   return (
@@ -293,13 +302,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           {c.preview.steps.map((s, i) => <li key={s} className={i === 0 ? 'done' : i === 1 ? 'now' : ''} aria-current={i === 1 ? 'step' : undefined}>{s}</li>)}
         </ol>
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
-        <BeforeAfter before={data.original} after={showColour && data.colour ? data.colour : data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal />
-        {data.isMonochrome && (
-          <div className="pv-toggle">
-            <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>
-            {(colourLoading || (data.colour && !colourReady)) && <span className="caption">{c.preview.colourLoading}</span>}
-          </div>
-        )}
+        <BeforeAfter before={data.original} after={showColour && data.colour ? data.colour : data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal zoom={zoom ? 2.2 : 1} />
+        {/* both controls belong to the picture, so they share one row */}
+        <div className="pv-toggle">
+          <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
+          {data.isMonochrome && <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>}
+          {(colourLoading || (data.colour && !colourReady)) && <span className="caption">{c.preview.colourLoading}</span>}
+        </div>
+        <p className="caption measure">{data.isMonochrome && colourReady ? c.preview.colourHint : c.preview.zoomHint}</p>
         <p className="caption measure">{c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
         <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>

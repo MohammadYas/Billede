@@ -152,3 +152,37 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   print, you get the money back. That is where the doubt is, so that is where the answer belongs.
 - **No dark patterns.** No fake stock, no countdown that is not a real delivery deadline, no pre-selected add-ons, no
   invented "mest valgt" badge — the size hints are opinions ("Det store, man ser fra døren"), which is what they are.
+
+## Tenth pass (the audit, and everything code could fix)
+
+- **Payment methods belong to Stripe, not to us.** The Checkout session no longer sends a
+  `payment_method_types` list, so Stripe offers whatever the account has enabled and the browser can
+  show — cards, and Apple Pay or Google Pay where the device supports them. The `STRIPE_MOBILEPAY_ENABLED`
+  flag, its config helper, its copy branch and its documentation are gone: one fewer thing that has to be
+  true in two places at once.
+- **The quote is frozen onto the order at checkout.** Receipts were rebuilt from *today's* PRICING against
+  a *frozen* amount, so any future price change would make every old receipt contradict its own total.
+  `preview_meta.quote` now holds the lines the customer agreed to, and `/tak`, both mails and admin read
+  that snapshot.
+- **Stripe line items are asserted.** The repeat discount comes off the first line's *amount* and the unit
+  price is derived from it, so a line with a quantity above 1 can no longer multiply the discount, and the
+  session is refused outright if the items do not add up to the quoted total.
+- **The repeat link is capped at three redemptions.** A receipt can be forwarded; without a cap a leaked
+  link is a permanent public 100-kr. coupon.
+- **A wrong amount in a mail is worse than no amount:** the `?? 59900` fallbacks are gone from the
+  confirmation, the refund notice, the owner mail and the CAPI payload.
+- **Admin's format change keeps the money honest:** an unpaid order is re-quoted, a paid one keeps what was
+  charged and gets a note saying why the two differ.
+- **`CONFIG.siteUrl` falls back to Netlify's own `URL`/`DEPLOY_PRIME_URL`**, so a forgotten
+  `NEXT_PUBLIC_SITE_URL` cannot put localhost into a customer's inbox or a Stripe redirect.
+- **"Se tæt på".** Restoration is judged in the eyes, and a whole-frame slider can hide the work on a
+  photograph whose damage is subtle. One button scales both sides 2.2× from the same origin, so the
+  comparison stays honest; the caption says what to look at.
+- **The image controls share one row**, the save-your-preview form collapsed behind a summary (it was an
+  alternative to buying, sitting between the button and the footer), and the bill sits above the extra-copy
+  offer so the last number before the total is the total.
+- **Smaller by measurement:** the customer's "before" is 1200 px q78 instead of 1400 px q82, the wall
+  mockups are 1040 px instead of 1200 px, and the five combinations nobody is looking at yet are preloaded
+  on an idle callback instead of at mount.
+- **Nothing under 13 px on the product page**, every tappable thing at least 44 px tall, the consent banner
+  appears after six seconds for a visitor who never scrolls, and `/p/[id]` carries a canonical.

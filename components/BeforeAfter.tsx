@@ -10,6 +10,8 @@ type Props = {
   aspect?: string;
   /** letterbox instead of crop (customer previews) */
   contain?: boolean;
+  /** 1 = whole picture. Above 1 both sides scale from the same point, so the comparison stays honest. */
+  zoom?: number;
   /** auto-reveal once on first view (the site's single motion) */
   reveal?: boolean;
   priority?: boolean;
@@ -62,7 +64,7 @@ const rubber = (over: number, dim = 100, c = 0.55) => (over * dim * c) / (dim + 
  * All per-frame work touches CSS custom properties on the node; React state only mirrors the
  * settled value for the range input.
  */
-export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', afterLabel = 'Efter', aspect = '1 / 1', contain = false, reveal = false, priority = false, className = '', rest = REST }: Props) {
+export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', afterLabel = 'Efter', aspect = '1 / 1', contain = false, zoom = 1, reveal = false, priority = false, className = '', rest = REST }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [x, setX] = useState(reveal ? START : 50);
   const b = toSource(before), a = toSource(after);
@@ -178,7 +180,7 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
   const showSide = (side: 'before' | 'after') => { revealed.current = true; springTo(side === 'before' ? 100 : 0, 0.5, vel.current); };
 
   return (
-    <div ref={ref} className={`ba${contain ? ' contain' : ''} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, aspectRatio: aspect }}
+    <div ref={ref} className={`ba${contain ? ' contain' : ''} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, ['--zoom' as string]: zoom, aspectRatio: aspect }}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}>
       <Picture s={b} className="before" alt={alt} priority={priority} />
       <Picture s={a} className="after" alt="" priority={priority} ariaHidden />
