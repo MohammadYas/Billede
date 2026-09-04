@@ -1,28 +1,5 @@
 [
   {
-    "id": "gunhild-barn",
-    "mode": "wipe",
-    "detail": {
-      "before": "/examples/gunhild-barn-detail-before.jpg",
-      "after": "/examples/gunhild-barn-detail-after.jpg",
-      "label": "Mor og søn"
-    },
-    "mockup": "/examples/gunhild-barn-mockup.jpg",
-    "before": "/examples/gunhild-barn-before.jpg",
-    "after": "/examples/gunhild-barn-after.jpg",
-    "width": 1400,
-    "height": 953,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
     "id": "soldier-girl",
     "detail": {
       "before": "/examples/soldier-girl-detail-before.jpg",
@@ -46,31 +23,8 @@
     "mode": "wipe"
   },
   {
-    "id": "pauline-ingeborg",
-    "mode": "lens",
-    "detail": {
-      "before": "/examples/pauline-ingeborg-detail-before.jpg",
-      "after": "/examples/pauline-ingeborg-detail-after.jpg",
-      "label": "To søstre"
-    },
-    "mockup": "/examples/pauline-ingeborg-mockup.jpg",
-    "before": "/examples/pauline-ingeborg-before.jpg",
-    "after": "/examples/pauline-ingeborg-after.jpg",
-    "width": 850,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Pauline og Ingeborg, ca. 1915. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
     "id": "olesen",
-    "mode": "fade",
+    "mode": "lens",
     "detail": {
       "before": "/examples/olesen-detail-before.jpg",
       "after": "/examples/olesen-detail-after.jpg",
@@ -88,6 +42,52 @@
       1400
     ],
     "caption": "Andreas Martinus Olesen, glasplade, ca. 1870. Arkivfoto, Wikimedia Commons.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "gunhild-barn",
+    "mode": "wipe",
+    "detail": {
+      "before": "/examples/gunhild-barn-detail-before.jpg",
+      "after": "/examples/gunhild-barn-detail-after.jpg",
+      "label": "Mor og søn"
+    },
+    "mockup": "/examples/gunhild-barn-mockup.jpg",
+    "before": "/examples/gunhild-barn-before.jpg",
+    "after": "/examples/gunhild-barn-after.jpg",
+    "width": 1400,
+    "height": 953,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "pauline-ingeborg",
+    "mode": "fade",
+    "detail": {
+      "before": "/examples/pauline-ingeborg-detail-before.jpg",
+      "after": "/examples/pauline-ingeborg-detail-after.jpg",
+      "label": "To søstre"
+    },
+    "mockup": "/examples/pauline-ingeborg-mockup.jpg",
+    "before": "/examples/pauline-ingeborg-before.jpg",
+    "after": "/examples/pauline-ingeborg-after.jpg",
+    "width": 850,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Pauline og Ingeborg, ca. 1915. Arkivfoto, Domkirkeodden.",
     "consent": true,
     "placeholder": true
   },

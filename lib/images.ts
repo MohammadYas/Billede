@@ -9,4 +9,6 @@ export function exampleSrcSet(e: Example, side: 'before' | 'after', format: 'jpg
 
 /** sizes attribute for the hero (full width on mobile, 1120 px container on desktop) and the examples grid. */
 export const HERO_SIZES = '(min-width: 1024px) 1120px, 100vw';
+/** the damaged original carries the page's LCP; on a phone it may be softer than the restoration it sits under */
+export const HERO_BEFORE_SIZES = '(min-width: 1024px) 1120px, 70vw';
 export const GRID_SIZES = '(min-width: 768px) 45vw, 82vw';

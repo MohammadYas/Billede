@@ -111,6 +111,7 @@ p + p { margin-top: var(--s4); }
 /* Hero — photo-book spread. 4:3 on every width so the first screen on a phone still holds the offer and the button; on desktop the photo is left-set and the caption column sits at its bottom edge. */
 .hero-grid { display: grid; gap: var(--s2); }
 .hero-media .ba { aspect-ratio: 4 / 3; }
+.hero-media .ba img { object-position: 50% 16%; } /* portrait originals: keep the faces in a 4:3 crop */
 .hero-caption { padding: var(--s2) var(--gutter) 0; }
 @media (min-width: 1024px) {
   .hero-grid { grid-template-columns: minmax(0, min(calc(var(--container) - 240px), calc(80vh * 4 / 3))) 1fr; gap: var(--s5); align-items: end; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
@@ -195,16 +196,20 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 .ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ba.contain img { object-fit: contain; }
 .ba img.after { clip-path: inset(0 0 0 var(--x, 50%)); }
-.ba .handle { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; pointer-events: none; transform: translateX(var(--x, 50%)); will-change: transform; }
+.ba .handle { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; pointer-events: none; transform: translateX(var(--x, 50%)) translateX(var(--kx, 0px)); will-change: transform; }
 .ba .handle::before { content: ''; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--paper); box-shadow: 0 0 0 1px rgba(28,26,23,0.25); }
-.ba .knob { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 2px rgba(28,26,23,0.3); }
+.ba .knob { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 2px rgba(28,26,23,0.3); transition: transform 100ms ease-out, box-shadow 100ms ease-out; }
+.ba.pressed .knob { transform: translate(-50%, -50%) scale(1.12); box-shadow: 0 2px 6px rgba(28,26,23,0.35); } /* feedback on pointer-down */
 .ba .knob::before, .ba .knob::after { content: ''; position: absolute; top: 17px; width: 2px; height: 10px; background: var(--ink); }
 .ba .knob::before { left: 15px; }
 .ba .knob::after { right: 15px; }
-.ba .lbl { position: absolute; bottom: var(--s3); font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; padding: 4px 9px; background: rgba(246,241,232,0.92); color: var(--ink); border-radius: 2px; pointer-events: none; }
-.ba .lbl.before { left: var(--s3); }
-.ba .lbl.after { right: var(--s3); }
-.ba input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: ew-resize; }
+/* Labels are buttons: a 44 px target with the 32 px chip inside it */
+.ba .lbl { position: absolute; bottom: calc(var(--s3) - 6px); z-index: 2; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 6px; border: 0; background: none; color: var(--ink); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.ba .lbl > span { display: inline-block; font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; line-height: 24px; padding: 4px 10px; background: rgba(246,241,232,0.92); border-radius: 2px; transition: background-color 100ms ease-out; }
+.ba .lbl:active > span { background: var(--paper-2); }
+.ba .lbl.before { left: calc(var(--s3) - 6px); }
+.ba .lbl.after { right: calc(var(--s3) - 6px); }
+.ba input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: ew-resize; pointer-events: none; }
 .ba input[type=range]:focus-visible + .focus-ring { outline: 2px solid var(--accent); outline-offset: -2px; position: absolute; inset: 0; pointer-events: none; }
 
 /* Bottom sheet / modal */
@@ -277,10 +282,11 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .cmp .lbl.before { left: var(--s3); } .cmp .lbl.after { right: var(--s3); }
 .cmp .hint { position: absolute; top: var(--s3); left: var(--s3); font-size: 12px; letter-spacing: 0.02em; padding: 4px 9px; background: rgba(28,26,23,0.72); color: var(--paper); border-radius: 2px; pointer-events: none; }
 .cmp-lens img.before { clip-path: circle(var(--r, 120px) at var(--lx, 50%) var(--ly, 42%)); }
-.cmp-lens .lens-ring { position: absolute; left: var(--lx, 50%); top: var(--ly, 42%); width: calc(var(--r, 120px) * 2); height: calc(var(--r, 120px) * 2); transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px rgba(28,26,23,0.35), 0 6px 18px rgba(28,26,23,0.22); pointer-events: none; }
+.cmp-lens .lens-ring { position: absolute; left: var(--lx, 50%); top: var(--ly, 42%); width: calc(var(--r, 120px) * 2); height: calc(var(--r, 120px) * 2); transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px rgba(28,26,23,0.35), 0 6px 18px rgba(28,26,23,0.22); pointer-events: none; transition: box-shadow 100ms ease-out; }
+.cmp-lens.pressed .lens-ring { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px rgba(28,26,23,0.5), 0 10px 26px rgba(28,26,23,0.3); }
 .cmp-lens .lbl.before { display: none; }
-.cmp-hold img.before, .cmp-fade img.before { opacity: 0; transition: opacity 220ms ease-out; }
-.cmp-hold.show-before img.before { opacity: 1; }
+.cmp-hold img.before, .cmp-fade img.before { opacity: 0; transition: opacity 260ms ease-out; } /* back out gently */
+.cmp-hold.show-before img.before { opacity: 1; transition-duration: 120ms; } /* in fast: feedback lands on the press */
 .cmp-fade img.before { transition: opacity 1400ms ease-in-out; }
 .cmp-fade.show-before img.before { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .cmp-fade img.before { transition: opacity 200ms ease-out; } }
@@ -305,4 +311,4 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .label dt { color: var(--ink-2); font-size: var(--fs-small); padding-top: 3px; }
 .label dd { margin: 0; }
 @media (min-width: 1024px) { .product { grid-template-columns: 7fr 5fr; gap: var(--s8); align-items: start; } }
-.compare-note { font-family: var(--display); font-style: italic; font-size: var(--fs-lead); color: var(--ink-2); max-width: 26em; }
+.compare-note { font-family: var(--display); font-size: var(--fs-lead); color: var(--ink-2); max-width: 26em; }

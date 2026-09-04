@@ -1,7 +1,7 @@
 import { copy } from '@/lib/copy';
 import { getExamples, type Example } from '@/lib/examples';
 import { getFounder } from '@/lib/founder';
-import { exampleSrcSet, GRID_SIZES, HERO_SIZES } from '@/lib/images';
+import { exampleSrcSet, GRID_SIZES, HERO_SIZES, HERO_BEFORE_SIZES } from '@/lib/images';
 import BeforeAfter, { type Source } from '@/components/BeforeAfter';
 import Compare from '@/components/Compare';
 import ColourExample from '@/components/ColourExample';
@@ -61,7 +61,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
           <div className="hero-grid">
             <div className="hero-media">
               {hero ? (
-                <BeforeAfter before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption}`} aspect="4 / 3" reveal rest={50} priority />
+                <BeforeAfter before={src(hero, 'before', HERO_BEFORE_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption}`} aspect="4 / 3" reveal rest={30} priority />
               ) : (
                 <div className="ba" style={{ aspectRatio: '4 / 3' }} />
               )}

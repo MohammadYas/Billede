@@ -51,13 +51,29 @@ No pure white, no pure black, no gradients. Photographs supply all other colour.
   bottom edge and a sentence per real stage.
 
 ## Motion
-Motion exists only where comparison is the content. The hero before/after slider auto-reveals once from 88 % to 35 %
-(damaged → restored, so the still image the reader is left with is two-thirds restoration) over 1.6 s (ease-out expo),
-then is pointer-driven 1:1 with `setPointerCapture`; the round knob rides the seam (handle is full-width, translated by `--x`). Each example in the grid uses one
-comparison form: wipe, lens (round window, `clip-path: circle()`), hold (220 ms crossfade while pressed) or fade
-(1.4 s dissolve every 4 s, paused off-screen and while touched; hold-like under reduced motion). Under `prefers-reduced-motion` the slider sits at 35 %
-and does not animate. The bottom sheet uses a critically damped spring (no bounce) for open/close and 1:1
-drag-to-dismiss with velocity projection (apple-design §5–6). Everything else is instant.
+Motion exists only where comparison is the content, and there it behaves like a physical object (apple-design §1–§10):
+
+- **One spring, every input.** The wipe seam is driven by a single critically damped spring (damping 1, no overshoot).
+  The first-view reveal (88 % → rest, response 0.9 s), a tap on the picture (response 0.22 s), a keyboard step, a label
+  button (0.5 s) and a release (0.4 s) all just re-target that spring from the live value, so any motion can be grabbed
+  mid-flight and carries its velocity — no CSS transition or keyframe on anything a finger can touch.
+- **Direct manipulation.** Grabbing the knob keeps the grab offset and tracks 1:1 (`setPointerCapture`, hysteresis 8 px
+  around the knob). Pressing elsewhere springs the seam to the finger and hands over to 1:1 once it has caught up.
+- **Velocity handoff and momentum.** On release the last 100 ms of pointer history give a velocity; the landing point
+  is projected with Apple's deceleration form (`(v/1000)·d/(1−d)`, d = 0.99) and the spring starts with that velocity.
+- **Soft edges.** Past 0 % or 100 % the seam stays on the picture while the knob rubber-bands a few px
+  (`over·dim·0.55/(dim+0.55·|over|)`) and springs back on release.
+- **Feedback on pointer-down.** The knob grows 12 % and its shadow deepens the instant it is pressed; the lens ring does
+  the same. Hold-to-compare fades the original in over 120 ms on press and back out over 260 ms.
+- **Labels are controls.** "Før" and "Efter" are buttons that show the whole side; both stay visible so there is always a
+  way back. Range input for the keyboard (steps of 5).
+- **Lens** uses the same machinery in two independent springs (x and y): grab the ring with offset, press elsewhere to
+  spring to the finger, release with momentum, clamped inside the picture.
+- **Reduced motion.** No reveal, no springs, direct set; hold-like behaviour replaces the fade.
+- The bottom sheet uses a critically damped spring for open/close and 1:1 drag-to-dismiss with velocity projection
+  (apple-design §5–§6). Everything else is instant.
+
+The hero rests at 30 %: the burnt left edge of the 1916 print stays on the damaged side, both faces on the restored side.
 
 ## Components (seven)
 1. **Button** — one primary style: ink on paper, 52 px tall on mobile, 2 px radius, full width in sheets.

@@ -317,3 +317,7 @@ Evidence after round 2: `work/attack-1-fix/m-first-664.png` (knob at 50 %, CTA b
 - Detector/breakpoints (`scripts/screenshots.ts`, 375–1440): horizontal overflow 0, tap targets < 44 px: none. Checkpoints refreshed.
 - Lighthouse, production build, mobile emulation: performance **98**, accessibility 100, best practices 100, SEO 100, LCP 2.5 s, CLS 0, TBT 60 ms (a first run straight after `next start` scored 74 with FCP 2.7 s — cold server, not the page). Desktop 99, LCP 1.0 s.
 - Test orders, events and storage objects from both attack rounds were deleted with the new `scripts/purge-orders.ts` (dry run by default, `--yes` to delete; only never-paid orders unless `--all`). Run it once more before launch.
+
+# Fifth pass — before/after physics (apple-design)
+See DECISIONS.md "Fifth pass". Measured with `work/attack-1-fix/physics.mjs` on the iPhone 14 profile (390×664): reveal samples at 150 ms `88 87 66 47 38 34 32 31 30 30`, knob on the seam; drag from the knob 1:1 (seam 55.6 = finger 55.6); flick 40 → 17; tap 80 → 80; rubber-band past the edge (seam 100, knob 104.7, `--kx` 18 px) and back; labels 100 / 0; lens press springs to the finger. Screenshots `p-01…p-05`.
+Evidence after the fifth pass: breakpoints 375–1440 no overflow, no tap target < 44 px (labels are 44 px buttons with the chip inside). Lighthouse production, mobile: 97 / 96 (a cold first run 87), LCP 2.6 s, CLS 0, TBT 70–80 ms; desktop 99, LCP 0.9 s. The damaged hero original is served at 70vw on phones (54 kB) and the italic display face is no longer requested on the landing page.
