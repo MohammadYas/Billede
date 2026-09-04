@@ -3,6 +3,53 @@
 Everything below was either impossible for the agent to do (needs your identity, your money, your DNS) or is
 unverified. Items in **bold** block the test.
 
+## 0. Launch checklist — everything that is still yours (in order)
+
+Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
+
+**A. Before the first Netlify build**
+1. Netlify → Import from GitHub → this repo, branch `main`. Build command and functions come from `netlify.toml`.
+2. Netlify → Environment variables (copy names from `.env.example`): `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, `STRIPE_SECRET_KEY`,
+   `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_REPLY_TO`, `OWNER_EMAIL`, `NEXT_PUBLIC_META_PIXEL_ID`,
+   `META_CAPI_TOKEN`, `ADMIN_PASSWORD` (long, random), `JOB_SECRET` (long, random), `CRON_SECRET`, `JOB_RUNNER=netlify`,
+   `NEXT_PUBLIC_SITE_URL=https://genfundet.dk`, `DELIVERY_DAYS_MAX=5`, `LEGAL_DRAFT` (true until the lawyer has read).
+   The build refuses to run without `JOB_SECRET`.
+3. Netlify → Site configuration → Functions → Region: an EU region (Frankfurt/Ireland). Supabase is in Ireland.
+4. Domain: genfundet.dk on Netlify, HTTPS on.
+
+**B. Accounts and identity**
+5. `assets/founder/founder.md`: `city`, `cvr`, `address`, three `why` lines, `portrait.jpg`. A mailbox on the domain
+   (kontakt@genfundet.dk) as `email`, `EMAIL_REPLY_TO` and `OWNER_EMAIL` — a Gmail address next to 599 kr. is the trust
+   leak this audience notices first.
+6. Stripe Dashboard: Public details → Terms of service URL `https://genfundet.dk/handelsbetingelser` and Privacy URL
+   (Checkout refuses to open without the Terms URL); webhook on `https://genfundet.dk/api/webhooks/stripe` for
+   `checkout.session.completed` + `checkout.session.async_payment_succeeded` → copy the signing secret to
+   `STRIPE_WEBHOOK_SECRET` → "Send test event" → a 200 in Netlify → Functions log; MobilePay activated, then
+   `STRIPE_MOBILEPAY_ENABLED=true`; live keys when you go live.
+7. Resend: domain genfundet.dk verified (SPF, DKIM, DMARC `p=none`), `RESEND_API_KEY`.
+8. Meta: domain verified in Business Manager; pixel id; Conversions API token (`META_CAPI_TOKEN`); Aggregated Event
+   Measurement priorities Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent; first campaign
+   optimised for the PreviewShown custom conversion, not Purchase.
+9. Supabase: the HEIC bucket update is already applied; keep the project in Ireland; nothing else.
+10. Print partner that ships a framed 30×40 within 3–4 business days (the site promises "inden 5 hverdage" from the
+    customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold.
+11. Lawyer reads `/privatliv` and `/handelsbetingelser`, then `LEGAL_DRAFT=false`.
+12. `public/mockup/wall.jpg` (a photo of your own wall, optional) and, over time, consented customer before/afters to
+    replace the archive examples (§1).
+
+**C. After the first deploy, on a real iPhone**
+13. Meta Sharing Debugger → re-scrape `https://genfundet.dk/` (link card with the before/after image).
+14. One upload from "Vælg fra kamerarulle" (a HEIC) and one from "Tag et foto"; both must land on `/p/<id>?t=…`.
+    Netlify → Functions → `job-background` → logs shows the run.
+15. One test purchase in Stripe test mode from the Facebook in-app browser: `/tak`, the ordrebekræftelse, the owner mail,
+    the order under "Til handling", the CAPI event in Meta Events Manager (test event code).
+16. Send yourself a godkendelsesmail from admin and tap Godkend on the phone.
+
+**D. Every day while the test runs**
+17. Read the owner mails; open `/admin` once a day anyway. Reply to manual-review leads within 24 h, send finals within
+    48 h, order prints the day of approval.
+
 ## 1. Replace the placeholder examples (blocks the test)
 
 **`assets/originals/` was empty, so the site currently shows nine public-domain archive photographs

@@ -1,0 +1,6 @@
+# Line endings stay LF whatever the developer's OS (Windows checkouts included); the Netlify build is Linux.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary

@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/db/supabase';
-import { removeObjects } from '@/lib/db/storage';
+import { removeOrderObjects } from '@/lib/db/storage';
 import { CONFIG } from '@/lib/config';
 import { transition, updateOrder, type Order } from '@/lib/db/orders';
 import { sendApprovalMail } from '@/lib/approval';
@@ -34,9 +34,8 @@ export async function runRetention(): Promise<{ deleted: number; reminded: numbe
     .or(`and(status.in.(${UNPAID.join(',')}),updated_at.lt.${unpaidBefore}),and(status.in.(${DONE.join(',')}),updated_at.lt.${doneBefore})`).limit(200);
   let deleted = 0;
   for (const o of (stale ?? []) as Order[]) {
-    const paths = pathsOf(o);
     try {
-      await removeObjects(paths);
+      const paths = [...new Set([...(await removeOrderObjects(o.id)), ...pathsOf(o)])];
       await db.from('orders').update({ original_path: null, preview_path: null, restored_path: null, colourised_path: null, mockup_path: null, final_path: null, deleted_at: new Date().toISOString(), status: UNPAID.includes(o.status) ? 'ABANDONED' : o.status === 'SHIPPED' ? 'COMPLETED' : o.status }).eq('id', o.id);
       await db.from('deletion_log').insert({ order_id: o.id, reason: UNPAID.includes(o.status) ? `unpaid>${CONFIG.retentionUnpaidDays}d` : `completed>${CONFIG.retentionCompletedDays}d`, paths });
       deleted++;

@@ -54,7 +54,8 @@ export function usesBackgroundFunction(): boolean {
 }
 
 export function jobRunnerUrl(): string {
-  return `${(process.env.URL ?? CONFIG.siteUrl).replace(/\/$/, '')}/.netlify/functions/job-background`;
+  // DEPLOY_PRIME_URL is the URL of the deploy that is running (a deploy preview calls its own functions), URL the production site
+  return `${(process.env.DEPLOY_PRIME_URL ?? process.env.URL ?? CONFIG.siteUrl).replace(/\/$/, '')}/.netlify/functions/job-background`;
 }
 
 export async function enqueue(kind: JobKind, orderId: string): Promise<void> {

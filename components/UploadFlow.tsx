@@ -30,9 +30,11 @@ export default function UploadFlow({ c }: { c: Copy }) {
   const [phase, setPhase] = useState(0); // 0–2: the wait sentence rotates at 15 s and 30 s
 
   const open = useCallback(() => setState({ kind: 'pick' }), []);
+  const runRef = useRef(0); // bumped on every close: an in-flight start() sees it and stops
   const pollRef = useRef<number | null>(null);
   const stopPolling = () => { if (pollRef.current) window.clearTimeout(pollRef.current); pollRef.current = null; };
   const close = useCallback(() => {
+    runRef.current += 1;
     xhrRef.current?.abort(); stopPolling();
     setState((st) => {
       // "Afbryd (billedet slettes)": tell the server to drop the upload and the order
@@ -154,9 +156,11 @@ export default function UploadFlow({ c }: { c: Copy }) {
 
   /** Step 3: the file is in the bucket — start (or retry) the job. */
   const run = async (orderId: string, token: string, file: File, thumb: string) => {
+    const runAtCall = runRef.current; // a close between the fetch and the state update bumps runRef: never re-open the sheet
     const r = await fetch(`/api/preview/${orderId}/run?t=${encodeURIComponent(token)}`, { method: 'POST' });
     if (r.status === 409) throw new Error('no_file');
     if (!r.ok) throw new Error('run');
+    if (runAtCall !== runRef.current) return;
     setState({ kind: 'processing', stage: 'sending', percent: 100, file, thumb, orderId, token });
     poll(orderId, token, file, thumb);
   };
@@ -167,9 +171,11 @@ export default function UploadFlow({ c }: { c: Copy }) {
    * failure re-runs the job without uploading again.
    */
   const start = async (file: File, thumb: string, resume?: { orderId: string; token: string }) => {
+    const myRun = ++runRef.current;
+    const cancelled = () => myRun !== runRef.current;
     setState({ kind: 'processing', stage: 'uploading', percent: resume ? 100 : 0, file, thumb, orderId: resume?.orderId, token: resume?.token });
     if (resume) {
-      try { await run(resume.orderId, resume.token, file, thumb); return; }
+      try { if (cancelled()) return; await run(resume.orderId, resume.token, file, thumb); return; }
       catch (e) { if ((e as Error).message !== 'no_file') { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, resume.orderId, resume.token); return; } }
       // the upload never landed: start over
     }
@@ -181,7 +187,8 @@ export default function UploadFlow({ c }: { c: Copy }) {
       if (r.status === 415) { setState({ kind: 'pick', error: c.upload.wrongType }); return; }
       if (!r.ok) throw new Error('start');
       started = (await r.json()) as typeof started;
-    } catch { fail(file, thumb, c.processing.networkError, c.processing.networkTitle); return; }
+    } catch { if (!cancelled()) fail(file, thumb, c.processing.networkError, c.processing.networkTitle); return; }
+    if (cancelled()) { fetch(`/api/preview/${started.orderId}/cancel?t=${encodeURIComponent(started.token)}`, { method: 'POST' }).catch(() => {}); return; }
     setState((cur) => (cur.kind === 'processing' ? { ...cur, orderId: started.orderId, token: started.token } : cur));
     const progress = (p: number) => setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'uploading', percent: p } : cur));
     let aborted = false;
@@ -193,7 +200,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
       if (status === 400 || status === 415) status = await put(new Blob([file], { type: 'image/jpeg' }));
       if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
     } catch (e) {
-      if ((e as Error).message === 'abort') return;
+      if ((e as Error).message === 'abort' || cancelled()) return;
       // 2nd transport: through the app (≤ 4.5 MB, downscaled if needed) — for a proxy or an in-app browser that blocks the PUT
       try {
         const small = await shrink(file);
@@ -202,13 +209,13 @@ export default function UploadFlow({ c }: { c: Copy }) {
         if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
       } catch (e2) {
         const m = (e2 as Error).message;
-        if (m === 'abort') { aborted = true; }
+        if (m === 'abort' || cancelled()) { aborted = true; }
         else if (m === 'too_large') fail(file, thumb, c.upload.tooBigNetwork, c.processing.networkTitle, started.orderId, started.token);
         else fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token);
         return;
       }
     }
-    if (aborted) return;
+    if (aborted || cancelled()) return;
     try { await run(started.orderId, started.token, file, thumb); }
     catch { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token); }
   };

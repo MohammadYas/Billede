@@ -368,3 +368,17 @@ Method: adversarial agent on the Netlify architecture; one real restoration (68.
 | 8 | Wait copy, preview images | "omkring et minut", slow line at 75 s, preload of both slider images |
 
 Evidence after round 3: approval flow on the iPhone profile — first Godkend button at y 281 (above the picture), change request → "Tak, vi retter det." with no Godkend button, a re-send rotates the token (old link: "Der findes en nyere version."), Godkend → "Tak. Vi printer og sender." with "Dit ja er registreret", `/aendring` after approval → "Billedet er godkendt og på vej i produktion."; admin "Til handling" lists the order with the customer's change text; order page shows the next step. Upload flow end to end after the changes: landed in 76 s (a slow provider minute: 60 s of restoration), first-byte watchdog moved the bar to 1 % at 1.5 s, fallback transport took over, colour arrived by polling; no console errors. Emails re-rendered (`checkpoints/04-email-*.png`): ordrebekræftelse with amount, address, order id, terms and preview links; approval mail with the buttons above and below the picture. Netlify bundles rebuilt with the housekeeping job. Production build: the landing page is static (ISR 1 h); robots.txt and sitemap.xml serve. Test orders purged (`--all`).
+
+## Attack round 4 (Netlify reality, Windows-developed repo, fresh eyes)
+The fourth agent was cut off by the session limit before writing its report; its logs (`work/attack-4/*.log`) and my own audit give:
+
+| Finding | Fix |
+|---|---|
+| HIGH — "Afbryd" during the upload closed the sheet but the chain continued (PUT → fallback → run) and re-opened the sheet 12 s later with "Restaurerer" (`cancel.log`) | run token in `UploadFlow`: every `await` in `start()`/`run()` checks it; a cancel after the order exists calls `/cancel`. Verified: after Afbryd at 5.3 s only `start` and `cancel` fire, the sheet stays closed |
+| MEDIUM — two colourised objects survived `abandon()` (paths recorded on the row did not cover every object) | `removeOrderObjects()` deletes everything under `orders/<id>/`; used by abandon and retention |
+| MEDIUM — deploy previews would enqueue jobs on the production URL | `DEPLOY_PRIME_URL` first, then `URL`, then `NEXT_PUBLIC_SITE_URL` |
+| MEDIUM — Windows checkouts: CRLF, a lockfile without Linux sharp binaries | `.gitattributes` (LF), `.nvmrc` 22, `netlify.toml` installs `sharp` for linux-x64 before the build |
+| MEDIUM — `proxy.ts` (Next 16) on the Netlify adapter is not documented | routes mint `gf_sid` themselves when no proxy ran (`ensureSessionId`); tokens carry every customer link; verify in the first deploy log |
+| Verified by the agent's logs | Godkend → `?r=approved` + "Tak. Vi printer og sender.", DB APPROVED; old token → "nyere version"; change → "Tak. Vi retter det." with the text, no Godkend button; admin "Til handling" with the customer's text; order page next-step line; preview page: images 1.8–2.8 s, consent banner absent without pixel id, bar 103 px, checkout error with `tel:`, save link, cancel-return notice, colour by polling at 2.7 s cadence in 46 s; landing 390×664: CTA bottom 640, trust row, sheet copy; desktop CTA at y 112 |
+
+Facts for the owner: Netlify builds on Ubuntu and runs functions on Amazon Linux — it is Linux. The only Windows-specific risk is the lockfile/sharp one above, now insured against.

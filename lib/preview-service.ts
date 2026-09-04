@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { CONFIG } from '@/lib/config';
 import { createOrder, getOrder, setStatus, updateOrder, type Order } from '@/lib/db/orders';
-import { objectPath, putObject, getObject, removeObjects, createSignedUpload } from '@/lib/db/storage';
+import { objectPath, putObject, getObject, removeOrderObjects, createSignedUpload } from '@/lib/db/storage';
 import { RestoreError } from '@/lib/restoration/errors';
 import { notifyOwner } from '@/lib/email/owner';
 
@@ -190,8 +190,7 @@ export async function abandon(orderId: string): Promise<void> {
   const order = await getOrder(orderId);
   if (!order) return;
   const meta = metaOf(order);
-  const paths = [meta.upload_path, order.original_path, order.restored_path, order.preview_path, order.mockup_path, order.colourised_path, meta.colourised_full_path].filter((p): p is string => Boolean(p));
-  await removeObjects(paths).catch(() => {});
+  await removeOrderObjects(orderId).catch((e) => console.error('abandon: remove failed', orderId, e));
   await setStatus(orderId, 'ABANDONED', { original_path: null, restored_path: null, preview_path: null, mockup_path: null, colourised_path: null, preview_meta: { session_id: meta.session_id, share_token: meta.share_token, cancelled: true } });
 }
 

@@ -49,3 +49,12 @@ export async function objectExists(path: string): Promise<boolean> {
   if (error) return false;
   return (data ?? []).some((f) => f.name === name);
 }
+
+/** Every object under orders/<id>/ — deletion must not depend on the paths recorded on the row. */
+export async function removeOrderObjects(orderId: string): Promise<string[]> {
+  const folder = `orders/${orderId}`;
+  const { data } = await supabaseAdmin().storage.from(BUCKET).list(folder, { limit: 200 });
+  const paths = (data ?? []).map((f) => `${folder}/${f.name}`);
+  if (paths.length) await supabaseAdmin().storage.from(BUCKET).remove(paths);
+  return paths;
+}
