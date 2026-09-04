@@ -51,6 +51,10 @@ export default async function Aendring({ params, searchParams }: { params: Promi
                 </div>
                 <SubmitButton label="Send ændring" pending="Sender…" />
                 <a href={`/godkend/${token}`}>Tilbage til billedet</a>
+                {/* the guarantee, where it actually applies: the customer must be able to say no and get the money back */}
+                <p className="small muted measure" style={{ paddingTop: 'var(--s3)', borderTop: '1px solid var(--hairline)' }}>
+                  Vil du hellere fortryde? Skriv <b>“jeg vil have pengene tilbage”</b> i feltet, så refunderer vi hele beløbet – vi har ikke printet noget endnu.
+                </p>
               </form>
             </>
           )}

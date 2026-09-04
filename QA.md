@@ -478,3 +478,44 @@ Verified after the changes (dev server, iPhone 14 profile unless noted):
 
 MobilePay was removed on the owner's instruction: the Checkout session sends no payment-method list, so
 Stripe offers what the account has enabled and the browser supports (cards, Apple Pay, Google Pay).
+
+## Pass 11 — the fix list, implemented and tested
+
+Verification of the owner's 20-point list. Only what was not already true was changed.
+
+**The one real conflict, resolved in the owner's favour:** the spec says an extra copy is **+349 kr. at any
+size** (FIX 2, FIX 12, scenario E = 40×50 + 1 = 1.148 kr.). The code priced it per size (349/449/549), so
+scenario E produced 1.248 kr. `EXTRA_PRINT_DKK` is now a flat 349 and every scenario passes.
+
+### Scenario matrix (`work/audit/qa-scenarios.mjs`, iPhone 14 profile, live server)
+
+| # | Configuration | Expected | Bill | Mobile CTA | Desktop CTA | "du betaler" | Server (`/choose`) |
+|---|---|---|---|---|---|---|---|
+| A | 30×40 + 0 | 599 kr. | ✓ | ✓ | ✓ | ✓ | ✓ |
+| B | 40×50 + 0 | 799 kr. | ✓ | ✓ | ✓ | ✓ | ✓ |
+| C | 50×70 + 0 | 999 kr. | ✓ | ✓ | ✓ | ✓ | ✓ |
+| D | 30×40 + 1 | 948 kr. | ✓ | ✓ | ✓ | ✓ | ✓ |
+| E | 40×50 + 1 | 1.148 kr. | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+`work/audit/pricing-matrix.mts` checks all 48 combinations (3 sizes × 2 frames × 0-3 extras × repeat
+on/off): `quote()`, the sum of its lines, and the Stripe line-item arithmetic all agree, every total is
+positive, and the session is refused if they ever disagree.
+
+### Edge cases (`work/audit/edge-cases.mjs`)
+
+| Case | Result |
+|---|---|
+| Checkout answers 502 | calm Danish line with the address, order button re-enabled ✓ |
+| Refresh on the preview | configuration and total survive (50×70, 2.046 kr.) ✓ |
+| Browser back from the landing page | returns to the preview with its state ✓ |
+| Preview link without the share token | Danish 404 explaining why, with a way home ✓ |
+| Cancel during processing | sheet closes, upload deleted, back on the landing page ✓ |
+
+### Funnel events (`work/audit/events-check.mjs`)
+`PageView` (once per route) → `FlowOpened` → `UploadStarted` → `ProcessingStarted` → `UploadCompleted` →
+`PreviewShown` → `ViewContent` (with the order's real value) → `ColourViewed` → `AddToCart` (size and
+extra copies, real value) → `InitiateCheckout` → `Purchase` (once per order, `purchase_tracked_at`).
+No duplicate PageView, no duplicate ViewContent. `PRODUCT` no longer carries a hardcoded 599/30×40.
+
+Lighthouse on the product page after the changes: accessibility 100, best practices 100. Nothing under
+13 px, nothing tappable under 44 px, no horizontal overflow at 320-430 px, CTA above the fold on both sizes.

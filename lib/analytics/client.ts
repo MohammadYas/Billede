@@ -1,6 +1,6 @@
 'use client';
 
-export type ClientEvent = 'PageView' | 'ViewContent' | 'FlowOpened' | 'UploadStarted' | 'UploadCompleted' | 'PreviewShown' | 'PreviewFallback' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
+export type ClientEvent = 'PageView' | 'ViewContent' | 'FlowOpened' | 'UploadStarted' | 'UploadCompleted' | 'ProcessingStarted' | 'PreviewShown' | 'PreviewFallback' | 'ColourViewed' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
 
 declare global {
   interface Window { fbq?: (...args: unknown[]) => void; _fbq?: unknown; __gfConsent?: 'yes' | 'no' | null; }
@@ -9,7 +9,9 @@ declare global {
 const STANDARD = new Set(['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'Purchase']);
 const QUEUE_KEY = 'gf_pre_consent';
 /** The one product, on every event, so Events Manager lines them up. */
-export const PRODUCT = { content_ids: ['30x40'], content_type: 'product', content_name: 'Restaureret og indrammet familiebillede', num_items: 1, currency: 'DKK', value: 599 };
+/** The one product, on every event. No price and no size here: the caller passes the ones this order
+ *  actually has, or Meta learns to bid against a number nobody was charged. */
+export const PRODUCT = { content_type: 'product', content_name: 'Restaureret og indrammet familiebillede', num_items: 1, currency: 'DKK' };
 
 export function consent(): 'yes' | 'no' | null {
   if (typeof document === 'undefined') return null;

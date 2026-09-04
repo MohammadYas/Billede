@@ -209,6 +209,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
     const r = await fetch(`/api/preview/${orderId}/run?t=${encodeURIComponent(token)}`, { method: 'POST' });
     if (r.status === 409) throw new Error('no_file');
     if (!r.ok) throw new Error('run');
+    track('ProcessingStarted', {}, { serverLog: true }); // the file is in the bucket and the restoration was accepted
     if (runAtCall !== runRef.current) return;
     setState({ kind: 'processing', stage: 'sending', percent: 100, file, thumb, orderId, token });
     poll(orderId, token, file, thumb);

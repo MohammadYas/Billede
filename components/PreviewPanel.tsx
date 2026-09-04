@@ -100,9 +100,13 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (w.requestIdleCallback) w.requestIdleCallback(run, { timeout: 4000 }); else window.setTimeout(run, 2500);
   }, [data.mockups, data.format, data.addons.frame]);
 
+  const viewed = useRef(false);
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
-    track('ViewContent', { ...PRODUCT, content_name: 'preview' });
+    if (!viewed.current) { // one view per visit, whatever the runtime does with effects
+      viewed.current = true;
+      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints, repeat: data.repeat }).totalOere / 100 });
+    }
     return () => document.body.classList.remove('has-pv-bar');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -160,6 +164,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (!data.colour || !colourReady) return;
     const next = !showColour;
     setShowColour(next);
+    if (next) track('ColourViewed', { ...PRODUCT, content_ids: [format] }, { serverLog: true });
     fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ colour: next }) }).catch(() => {});
   };
 
@@ -170,7 +175,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
-      track('InitiateCheckout', { ...PRODUCT, value: bill.totalOere / 100 }, { eventId: j.sessionId });
+      track('InitiateCheckout', { ...PRODUCT, content_ids: [format], value: bill.totalOere / 100 }, { eventId: j.sessionId });
       window.location.assign(j.url);
     } catch {
       // never a server string: one calm message with a second door (e-mail)
@@ -215,6 +220,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   const config = (
     <div className="config">
+      <div className="cfg ready">
+        <p className="cfg-title">{c.preview.readyTitle}</p>
+        <p className="caption measure">{c.preview.readyNote}</p>
+      </div>
       <fieldset className="cfg">
         <legend className="cfg-label">{c.preview.sizeTitle}</legend>
         <div className="sizes-row">
@@ -319,16 +328,17 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         {/* desktop: the decision first, the object and the label under it */}
         <div className="pv-desktop-cta">{cta}</div>
         <div className="pv-grid">
+          {/* the object first, then what it is, then the price — the decisions come after the value */}
           <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <p className="caption">{v.mockupCaption}</p>
-          {config}
-          {/* desktop: the button again, right under the total it belongs to */}
-          <div className="pv-desktop-cta">{cta}</div>
           <p className="measure">{v.p}</p>
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <dl className="label small">
             {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
           </dl>
+          {config}
+          {/* desktop: the button again, right under the total it belongs to */}
+          <div className="pv-desktop-cta">{cta}</div>
         </div>
         {!paid && save}
         <p className="small" style={{ display: 'flex', gap: 'var(--s5)', flexWrap: 'wrap' }}>

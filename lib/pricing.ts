@@ -75,8 +75,12 @@ export function frameColour(frame: Frame): 'black' | 'oak' {
   return frame === 'eg' ? 'oak' : 'black';
 }
 
-/** A second framed copy of the same photograph — the restoration is already paid for, so only the object repeats. */
-export const EXTRA_PRINT_DKK: Record<Format, number> = { '20x30': 279, '30x40': 349, '40x50': 449, '50x70': 549 };
+/**
+ * A second framed copy of the same photograph — the restoration is already paid for, so only the object
+ * repeats. One price at every size, so the offer is a single sentence the customer can hold in their head.
+ * (Per-size prices would go here if the margin on a big frame ever demands it.)
+ */
+export const EXTRA_PRINT_DKK: Record<Format, number> = { '20x30': 349, '30x40': 349, '40x50': 349, '50x70': 349 };
 export const MAX_EXTRA_PRINTS = 3;
 /** Off the next photograph when it is ordered from a paid order's link (see /tak). */
 export const REPEAT_DISCOUNT_DKK = 100;
@@ -107,7 +111,7 @@ export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: 
       key: 'print',
       name: lineItemName(format),
       short: `Restaureret billede, ${label}`,
-      note: `${label} · ${addons.frame === 'eg' ? 'egetræsramme' : 'sort ramme'} med passepartout · digital fil inkluderet`,
+      note: `${label} · ${addons.frame === 'eg' ? 'egetræsramme' : 'sort ramme'} med passepartout og glas · digital fil i høj opløsning inkluderet · fri fragt`,
       quantity: 1,
       unitOere: priceOere(format),
       amountOere: priceOere(format),

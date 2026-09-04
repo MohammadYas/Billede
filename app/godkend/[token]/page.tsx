@@ -58,7 +58,7 @@ export default async function Godkend({ params, searchParams }: { params: Promis
   }
   return shell(<>
     <h1 style={{ maxWidth: '14em' }}>Ligner det?</h1>
-    <p className="measure">Det her er det billede, vi printer: {orderDescription(order)}. Tryk Godkend, og vi printer, indrammer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, og vi printer ikke, før du siger ja.</p>
+    <p className="measure">Det her er det billede, vi printer: {orderDescription(order)}. Tryk Godkend, og vi printer, indrammer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, vi printer ikke, før du siger ja – og vil du slet ikke have det, får du hele beløbet tilbage.</p>
     <form action={approveWithToken} style={{ display: 'grid', gap: 'var(--s3)' }}>
       <SubmitButton label="Godkend" pending="Sender dit ja…" />
       <a href={`/godkend/${token}/aendring`} className="btn btn-block btn-quiet">Jeg vil have en ændring</a>

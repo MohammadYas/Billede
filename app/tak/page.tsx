@@ -63,7 +63,7 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
                 <h1 style={{ maxWidth: '12em' }}>{c.tak.h1}</h1>
                 <p className="lead" style={{ maxWidth: '24em' }}>{c.tak.p}</p>
                 <p className="caption tabular">Ordre {order.id.slice(0, 8)}</p>
-                {firePurchase && <PurchaseEvent value={value} eventId={order.id} email={order.customer_email} phone={order.customer_phone} />}
+                {firePurchase && <PurchaseEvent value={value} eventId={order.id} email={order.customer_email} phone={order.customer_phone} format={order.format} />}
               </div>
               <div style={{ display: 'grid', gap: 'var(--s5)' }}>
                 {order.mockup_path && <img src={imageUrl(order, 'mockup', order.format, readAddOns((order.preview_meta as { addons?: unknown } | null)?.addons).frame)} alt={`Dit billede indrammet: ${orderDescription(order)}`} width={1200} height={960} style={{ maxWidth: 520 }} />}

@@ -37,7 +37,7 @@ export function copy(season: Season = currentSeason()) {
     ['Manuelt tjek', `${cap(navn)} finjusterer hvert billede og tjekker ansigterne`],
     ['Godkendelse', 'Du ser det færdige billede og siger ja, før vi printer'],
     ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder`],
-    ['Flere eksemplarer', `Et mere af samme billede fra ${formatDkk(EXTRA_PRINT_DKK[fmt])}, i samme pakke`],
+    ['Flere eksemplarer', `Et mere af samme billede for ${formatDkk(EXTRA_PRINT_DKK[fmt])}, uanset størrelse, i samme pakke`],
     ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
   ];
   const variant = (fmt: Format, landscape = false) => {
@@ -53,7 +53,7 @@ export function copy(season: Season = currentSeason()) {
       specTitle: `Det får du for ${pris}`,
       cta: `Bestil mit billede – ${pris}`,
       mockupCaption: `Sådan hænger det. ${lbl}, med passepartout og glas, klar til væggen.`,
-      p: `Vi finjusterer billedet manuelt, printer det i ${lbl}, indrammer det og sender det hjem til dig. Du godkender det færdige billede, før vi printer.`,
+      p: `Du får billedet printet i ${lbl} på mat fotopapir, i ramme med passepartout og glas, klar til at hænge op – og den restaurerede fil i høj opløsning. Fri fragt, og du godkender det færdige billede, før vi printer.`,
       rows: rowsFor(fmt, lbl),
     };
   };
@@ -173,7 +173,7 @@ export function copy(season: Season = currentSeason()) {
           : { q: 'Hvornår får jeg det?', a: `Vi leverer inden ${X} hverdage, efter du har godkendt det færdige billede.` },
         {
           q: 'Kan jeg få flere eksemplarer af det samme billede?',
-          a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et ${formatLabel(format)} mere, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling – minus ${formatDkk(REPEAT_DISCOUNT_DKK)}, hvis du bestiller det fra kvitteringen.`,
+          a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling – minus ${formatDkk(REPEAT_DISCOUNT_DKK)}, hvis du bestiller det fra kvitteringen.`,
         },
         {
           q: 'Kan jeg sende det direkte til modtageren?',
@@ -242,12 +242,14 @@ export function copy(season: Season = currentSeason()) {
     },
     preview: {
       h2: 'Her er dit billede.',
-      next: `Det her er maskinens første udkast, lavet på halvandet minut. Det, du betaler for, er resten: ${navn} retter ansigterne til i hånden, du siger ja på mail, før noget bliver printet – og så kommer det hjem til dig i ramme og glas.`,
-      p: `Vi finjusterer billedet manuelt, printer det, indrammer det og sender det hjem til dig. Du godkender det færdige billede, før vi printer.`,
+      next: `Det her er den hurtige første restaurering. Derfra går det i hånden: ${navn} finpudser billedet og går især ansigterne efter. Du får det færdige billede på mail og siger ja, før vi printer noget – og så kommer det hjem til dig, printet og indrammet.`,
+      p: `Du får billedet printet på mat fotopapir, i ramme med passepartout og glas, klar til at hænge op – og den restaurerede fil i høj opløsning. Fri fragt, og du godkender det færdige billede, før vi printer.`,
       specTitle: `Det får du for ${price}`,
       headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.',
+      readyTitle: 'Din bestilling er klar',
+      readyNote: `Du behøver ikke vælge noget: ${formatLabel(format)} i sort ramme er sat op for dig. Vil du have den større, en anden ramme eller et eksemplar mere, så ret det her.`,
       sizeTitle: 'Størrelse',
       sizeNote: 'Ramme, glas, kort med din hilsen og fri fragt er med i alle størrelser.',
       frameTitle: 'Ramme',
