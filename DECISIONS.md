@@ -186,3 +186,12 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   on an idle callback instead of at mount.
 - **Nothing under 13 px on the product page**, every tappable thing at least 44 px tall, the consent banner
   appears after six seconds for a visitor who never scrolls, and `/p/[id]` carries a canonical.
+- **The example set gets a colour half — sourced, not invented.** Every one of the seventeen examples is a
+  black-and-white archive photograph from 1850–1935, so a visitor holding a yellowed 1970s snapshot sees no
+  evidence that we can do *her* photograph. Seven U.S. Farm Security Administration colour transparencies
+  from 1940–42 are now committed under `assets/examples-source/`: real families, real Kodachrome fading,
+  public domain, and — since the buyer's own eye is the argument — mostly the same kind of faces the ads
+  will be shown to. The alternative, generating a plausible "before" with the image model and calling it a
+  damaged family photo, was refused: an invented before is a fake result, whatever the after looks like.
+  The restoration itself has not run — the OpenAI account is out of credit (HANDOFF item A0) — so the
+  originals, the sidecars and a one-command rebuild are committed and `examples.json` is untouched.

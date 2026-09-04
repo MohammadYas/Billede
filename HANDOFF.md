@@ -8,6 +8,13 @@ unverified. Items in **bold** block the test.
 Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
 
 **A. Before the first Netlify build**
+0. **OpenAI: put money on the account.** Checked 2026-09-04: the key in `.env.local` authenticates, but
+   every call comes back `429 credit_balance_exhausted` — "You have no credits remaining." Nothing on the
+   site works without it: the upload succeeds and then every single preview fails, which is the one failure
+   that costs you the click you paid Meta for. Add credits at
+   platform.openai.com → Settings → Billing, then run `npm run examples:colour` to confirm the pipeline
+   answers. Budget: a preview is roughly 0,15–0,30 USD at `medium`, the print re-run about twice that, so
+   1.000 previews is on the order of 300–500 USD — set a monthly limit above your ad budget, not below it.
 1. Netlify → Import from GitHub → this repo, branch `main`. Build command and functions come from `netlify.toml`.
 2. Netlify → Environment variables (copy names from `.env.example`): `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`,
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, `STRIPE_SECRET_KEY`,

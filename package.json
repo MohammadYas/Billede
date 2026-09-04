@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit",
     "quality:report": "tsx scripts/quality-report.ts",
     "examples:export": "tsx scripts/export-examples.ts",
+    "examples:sources": "node scripts/fetch-archive-sources.mjs",
+    "examples:colour": "tsx scripts/quality-report.ts --source assets/examples-source --label \"FSA farvedias 1940-42\" --quality high --concurrency 3",
     "screenshots": "tsx scripts/screenshots.ts",
     "lint": "next lint"
   },
