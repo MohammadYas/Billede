@@ -117,7 +117,7 @@ p + p { margin-top: var(--s4); }
   .hero-media .ba { max-height: 80vh; }
   .hero-caption { padding: 0 0 var(--s2); max-width: 16em; }
 }
-.hero-text { display: grid; gap: var(--s3); padding-top: var(--s3); padding-bottom: var(--s6); }
+.hero-text { display: grid; gap: var(--s3); padding-top: var(--s2); padding-bottom: var(--s6); }
 .hero-text h1 { max-width: 10em; }
 .hero-text .lead { max-width: 24em; }
 .hero-cta { display: grid; gap: var(--s2); justify-items: start; padding-top: var(--s2); }
@@ -183,7 +183,11 @@ body.sticky-on { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--safe-bo
 @media (min-width: 768px) { body.has-sticky { padding-bottom: 0; } body.sticky-on { --bar-h: 0px; } }
 
 /* Consent banner — stacks above whichever bottom bar is showing (--bar-h) */
-.consent { position: fixed; left: 0; right: 0; bottom: var(--bar-h, 0px); z-index: 50; background: var(--paper-2); border-top: 1px solid var(--hairline); padding: var(--s4) var(--gutter) var(--s4); transition: bottom 180ms ease-out; }
+.consent { position: fixed; left: 0; right: 0; bottom: var(--bar-h, 0px); z-index: 50; background: var(--paper-2); border-top: 1px solid var(--hairline); padding: var(--s3) var(--gutter); transition: bottom 180ms ease-out; }
+.consent .container { flex-wrap: nowrap; }
+.consent p { flex: 1 1 auto; min-width: 0; font-size: 13px; line-height: 1.35; }
+.consent .btn { min-height: 40px; padding: 0 var(--s4); }
+body[data-flow-open] .consent { display: none; }
 body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) + var(--safe-bottom)); }
 
 /* Before/after slider. The handle moves with transform (no layout), the after image is clipped. */
@@ -226,6 +230,7 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 
 /* Preview page (/p/[id]) */
 .pv { display: grid; gap: var(--s5); padding-top: var(--s4); padding-bottom: var(--s9); }
+.pv-left { display: grid; gap: var(--s4); }
 .pv .ba { max-height: 70dvh; margin-inline: auto; }
 .pv-toggle { display: flex; align-items: center; gap: var(--s4); min-height: 44px; }
 .pv-grid { display: grid; gap: var(--s5); }

@@ -85,6 +85,9 @@ Use `utm_content=<ad name>` in every ad link; the funnel view `v_funnel_daily` g
 
 ## 6. Domain and hosting
 
+**Function time limit:** the preview route needs up to 120 s (`maxDuration = 120`; the restoration itself is capped at 90 s).
+Vercel Hobby caps functions at 60 s — use Vercel Pro (or a host without that cap), otherwise slow runs die mid-way.
+
 Deploy to Vercel (or any Node host) with the env vars in `.env.example`. `vercel.json` schedules the retention cron
 daily at 03:00 UTC; set `CRON_SECRET`. Node runtime with `sharp` — no edge. Route `/api/admin/final` needs a 300 s
 function limit (Vercel Pro) or run finals locally.

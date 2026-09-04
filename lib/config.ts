@@ -16,7 +16,7 @@ export const CONFIG = {
   /** Upload limits. */
   maxUploadBytes: 25 * 1024 * 1024,
   /** Preview pipeline hard limit. */
-  previewTimeoutMs: 45_000,
+  previewTimeoutMs: 90_000, // a normal run is ~40 s; 45 s turned every slow minute at OpenAI into a lead form (attack #2, H1)
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
   siteName: 'Genfundet',
 } as const;

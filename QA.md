@@ -288,3 +288,32 @@ Method: adversarial CRO agent, read-only, Playwright iPhone 14 at 390×844 and 3
 | 11.2 LOW | Privacy not reachable from the sheet | linked |
 
 Evidence: `work/attack-1-fix/*.png` (first screen 390×664, sheet, no-photo path, offer, examples, 404, /tak unverified, preview first screen and failed order, desktop preview), `preview-watermark.jpg`.
+
+## Attack round 2 (`work/attack-2/report.md`)
+Method: a second adversarial agent verified every round-1 fix on the live page (13 items: 10 VERIFIED, 3 PARTIAL, 0 FAILED) and hunted again. Its one real restoration run hit the 45 s server limit, which became the top finding.
+
+| # | Finding | Fix |
+|---|---|---|
+| H1 HIGH | 45 s hard limit turns a slow minute at OpenAI into "Det her kræver et par hænder" (untrue for a timeout, no retry) | `previewTimeoutMs` 90 s, route `maxDuration` 120; bar creeps 60 s to 92 %; slow line at 35 s; `reason: timeout/provider_error` → retry state ("Det tog for lang tid." + "Prøv igen" + "Send det til os i stedet"); manual-review copy no longer blames the photo |
+| H2 HIGH | Hero pair too subtle at 35 % (bucket vs. face); "Tæt på" opened with the soft pair | hero rests at 50 % (`rest` prop) so the seam runs between the two faces; "Tæt på" opens with the soldier pair, hero pair last |
+| H3 HIGH | Consent banner (with pixel id) would cover the first-screen button and float above the sheet | banner appears only after the first scroll, hidden while the sheet is open (`body[data-flow-open]`), one row on phones |
+| H4 HIGH | `save` route ignored the share token → 404 for anyone on the mailed link; server errors shown as validation copy | token accepted; `invalid` vs `failed` states with their own copy |
+| M1 | Phone in the checkout error not tappable | rendered as `tel:` link |
+| M2 | Link-card description said "20 sekunder" | "under et minut" in both descriptions |
+| M3 | Hero caption read like a customer | "Gunhild og Ole Christian, ca. 1935 · arkivfoto" |
+| M4 | Desktop preview: order button at y 1201 | CTA first in the right column |
+| M6 | FAQ "ligger hos min mor" had no way to the link path | "Send mig linket" button opens the sheet in the no-photo state (`gf:open` detail) |
+| M7 | Nothing to read during a 60 s wait | two more true sentences rotate at 15 s and 30 s |
+| M8 | Price line 12 px under the fold at 390×664 | hero padding s2, shorter caption and price line; CTA bottom 640, price line 648 |
+| L1 | "maskinens første bud" | "det automatiske første udkast" |
+| L2 | Colour toggle buried | quiet button directly under the slider |
+| L6 | /tak unverified without cookie | falls back to `/p/<id>?t=<token>` via the Checkout session's order |
+
+Not done (owner): CVR/address/portrait/why, draft label, domain mailbox, env for the test (HANDOFF §2, §3, §4, §5, §8). Kept: four comparison forms, no "gratis".
+
+Evidence after round 2: `work/attack-1-fix/m-first-664.png` (knob at 50 %, CTA bottom 640), `m-faq-nophoto.png`, `m-preview-first.png`, `d-preview.png` (CTA at top of the right column), `work/attack-2/*` (agent's own captures).
+
+## Evidence after the fourth pass
+- Detector/breakpoints (`scripts/screenshots.ts`, 375–1440): horizontal overflow 0, tap targets < 44 px: none. Checkpoints refreshed.
+- Lighthouse, production build, mobile emulation: performance **98**, accessibility 100, best practices 100, SEO 100, LCP 2.5 s, CLS 0, TBT 60 ms (a first run straight after `next start` scored 74 with FCP 2.7 s — cold server, not the page). Desktop 99, LCP 1.0 s.
+- Test orders, events and storage objects from both attack rounds were deleted with the new `scripts/purge-orders.ts` (dry run by default, `--yes` to delete; only never-paid orders unless `--all`). Run it once more before launch.

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const email = String(body.email ?? '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return NextResponse.json({ error: 'email' }, { status: 400 });
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
-  if (!order || !ownsOrder(order, sid)) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  if (!order || !ownsOrder(order, sid, req.nextUrl.searchParams.get('t'))) return NextResponse.json({ error: 'not found' }, { status: 404 });
   const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
   const token = (meta.share_token as string | undefined) ?? randomBytes(18).toString('base64url');
   await updateOrder(order.id, { customer_email: order.customer_email ?? email, preview_meta: { ...meta, share_token: token, share_email: email, share_sent_at: new Date().toISOString() } });

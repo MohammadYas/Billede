@@ -37,6 +37,12 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
     const sid = await readSessionId();
     const last = sid ? await latestOrderForSession(sid).catch(() => null) : null;
     if (last && last.preview_path) backTo = `/p/${last.id}`;
+    // cookie gone (in-app browser → Safari hand-off): the Checkout session still names the order, and the share token opens it anywhere
+    if (!backTo && session_id) {
+      const bySession = await getOrderByField('payment_session_id', session_id).catch(() => null);
+      const token = (bySession?.preview_meta as { share_token?: string } | null)?.share_token;
+      if (bySession?.preview_path && token) backTo = `/p/${bySession.id}?t=${encodeURIComponent(token)}`;
+    }
   }
   const value = ((order?.amount ?? 59900) / 100);
   return (

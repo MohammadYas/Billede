@@ -5,10 +5,10 @@ import { CONFIG } from '@/lib/config';
 export const metadata: Metadata = {
   metadataBase: new URL(CONFIG.siteUrl),
   title: 'Genfundet – gamle billeder, restaureret og indrammet',
-  description: 'Upload et foto af det gamle billede fra telefonen, se resultatet på 20 sekunder, og få det leveret restaureret og indrammet i 30×40 cm. 599 kr. inkl. fri fragt.',
+  description: 'Tag et foto af det gamle billede med telefonen, se det restaureret på under et minut, og få det leveret indrammet i 30×40 cm. 599 kr. inkl. fri fragt.',
   openGraph: {
     title: 'Genfundet – gamle billeder, restaureret og indrammet',
-    description: 'Se dit gamle familiebillede restaureret på 20 sekunder. Indrammet 30×40 cm, 599 kr., fri fragt.',
+    description: 'Se dit gamle familiebillede restaureret på under et minut. Indrammet 30×40 cm, 599 kr., fri fragt.',
     locale: 'da_DK',
     type: 'website',
     images: ['/og.jpg'],

@@ -11,7 +11,7 @@ const preload = (src: string) => new Promise<void>((resolve) => { const i = new 
 export default function PreviewPanel({ c, data: initial, cancelled, paid, token }: { c: Copy; data: PreviewPayload; cancelled: boolean; paid: boolean; token?: string }) {
   const q = token ? `?t=${encodeURIComponent(token)}` : '';
   const [saveEmail, setSaveEmail] = useState('');
-  const [saveState, setSaveState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+  const [saveState, setSaveState] = useState<'idle' | 'sending' | 'done' | 'invalid' | 'failed'>('idle');
   const [data, setData] = useState(initial);
   const [showColour, setShowColour] = useState(Boolean(initial.chosenColour && initial.colour));
   const [colourReady, setColourReady] = useState(Boolean(initial.colour));
@@ -66,15 +66,18 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   const saveLink = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(saveEmail.trim())) { setSaveState('error'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(saveEmail.trim())) { setSaveState('invalid'); return; }
     setSaveState('sending');
     try {
       const r = await fetch(`/api/preview/${data.orderId}/save${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: saveEmail.trim() }) });
-      setSaveState(r.ok ? 'done' : 'error');
-    } catch { setSaveState('error'); }
+      setSaveState(r.ok ? 'done' : 'failed');
+    } catch { setSaveState('failed'); }
   };
 
-  const errorLine = error && <p className="alert" role="alert">{error}</p>;
+  // the phone number in the error is a tel: link (in-app browsers do not auto-link numbers)
+  const errorLine = error && (
+    <p className="alert" role="alert">{c.phone && error.includes(c.phone) ? error.split(c.phone).map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <a href={c.phoneHref} style={{ color: 'inherit', fontWeight: 600 }}>{c.phone}</a>}</span>) : error}</p>
+  );
   const button = <button type="button" className="btn btn-block" onClick={order} disabled={ordering || paid}>{paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : c.preview.cta}</button>;
 
   const cta = (
@@ -91,11 +94,12 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       <p className="small"><b style={{ fontWeight: 600 }}>{c.preview.saveTitle}</b><br /><span className="muted">{c.preview.saveP}</span></p>
       {saveState === 'done' ? <p className="small" role="status">{c.preview.saveDone}</p> : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 'var(--s2)' }}>
-          <div className="field"><label htmlFor="save-email" className="visually-hidden">{c.preview.saveEmail}</label><input id="save-email" type="email" inputMode="email" autoComplete="email" placeholder={c.preview.saveEmail} value={saveEmail} onChange={(e) => setSaveEmail(e.target.value)} aria-invalid={saveState === 'error'} /></div>
+          <div className="field"><label htmlFor="save-email" className="visually-hidden">{c.preview.saveEmail}</label><input id="save-email" type="email" inputMode="email" autoComplete="email" placeholder={c.preview.saveEmail} value={saveEmail} onChange={(e) => setSaveEmail(e.target.value)} aria-invalid={saveState === 'invalid'} /></div>
           <button type="submit" className="btn btn-quiet" disabled={saveState === 'sending'}>{c.preview.saveCta}</button>
         </div>
       )}
-      {saveState === 'error' && <p className="small" style={{ color: 'var(--error)' }} role="alert">Skriv en e-mail, vi kan sende til.</p>}
+      {saveState === 'invalid' && <p className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveInvalid}</p>}
+      {saveState === 'failed' && <p className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveFailed}</p>}
     </form>
   );
 
@@ -105,17 +109,19 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         {cancelled && <p className="small notice" role="status">{c.preview.cancelled}</p>}
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
         <BeforeAfter before={data.original} after={showColour && data.colour ? data.colour : data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal />
-        <p className="caption measure">{c.preview.next}</p>
-        {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
-        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhen}</p>
         {data.isMonochrome && (
           <div className="pv-toggle">
-            <button type="button" className="link-btn" onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>
+            <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>
             {(colourLoading || (data.colour && !colourReady)) && <span className="caption">{c.preview.colourLoading}</span>}
           </div>
         )}
+        <p className="caption measure">{c.preview.next}</p>
+        {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
+        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhen}</p>
       </div>
       <div className="pv-right">
+        {/* desktop: the decision first, the object and the label under it */}
+        <div className="pv-desktop-cta">{cta}</div>
         <div className="pv-grid">
           <img className="pv-mock" src={data.mockup} alt={`Dit billede indrammet i ${label}`} width={1200} height={960} />
           <p className="caption">{withLabel(c.preview.mockupCaption)}</p>
@@ -125,7 +131,6 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
             {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{withLabel(v)}</dd></div>)}
           </dl>
         </div>
-        <div className="pv-desktop-cta">{cta}</div>
         {!paid && save}
         <p className="small"><a className="tap" href="/">{c.preview.again}</a></p>
       </div>

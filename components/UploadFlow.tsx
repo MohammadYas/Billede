@@ -9,7 +9,7 @@ type State =
   | { kind: 'closed' }
   | { kind: 'pick'; file?: File; thumb?: string; error?: string; over?: boolean }
   | { kind: 'processing'; stage: Stage; percent: number; file: File; thumb: string }
-  | { kind: 'error'; file: File; thumb: string; message: string }
+  | { kind: 'error'; file: File; thumb: string; message: string; title: string; orderId?: string | null }
   | { kind: 'fallback'; orderId: string | null; email: string; sending: boolean; sent: boolean; error?: string }
   | { kind: 'nophoto'; email: string; sending: boolean; sent: boolean; error?: string };
 
@@ -27,12 +27,16 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const [coarse, setCoarse] = useState(true);
   const [slow, setSlow] = useState(false);
+  const [phase, setPhase] = useState(0); // 0–2: the wait sentence rotates at 15 s and 30 s
 
   const open = useCallback(() => setState({ kind: 'pick' }), []);
   const close = useCallback(() => { xhrRef.current?.abort(); setState({ kind: 'closed' }); }, []);
 
   useEffect(() => { setCoarse(window.matchMedia('(pointer: coarse)').matches); }, []);
-  useEffect(() => { const h = () => open(); window.addEventListener('gf:open', h); return () => window.removeEventListener('gf:open', h); }, [open]);
+  useEffect(() => {
+    const h = (e: Event) => { if ((e as CustomEvent).detail === 'nophoto') setState({ kind: 'nophoto', email: '', sending: false, sent: false }); else open(); };
+    window.addEventListener('gf:open', h); return () => window.removeEventListener('gf:open', h);
+  }, [open]);
   useEffect(() => { if (resumeOrderId) router.replace(`/p/${resumeOrderId}${cancelled ? '?cancelled=1' : ''}`); }, [resumeOrderId, cancelled, router]);
 
   useEffect(() => {
@@ -44,9 +48,11 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
 
   // after 45 s the wait copy admits it is taking longer today (the bar keeps creeping)
   useEffect(() => {
-    if (state.kind !== 'processing') { setSlow(false); return; }
-    const t = setTimeout(() => setSlow(true), 45_000);
-    return () => clearTimeout(t);
+    if (state.kind !== 'processing') { setSlow(false); setPhase(0); return; }
+    const t = setTimeout(() => setSlow(true), 35_000);
+    const p1 = setTimeout(() => setPhase(1), 15_000);
+    const p2 = setTimeout(() => setPhase(2), 30_000);
+    return () => { clearTimeout(t); clearTimeout(p1); clearTimeout(p2); };
   }, [state.kind]);
 
   useEffect(() => {
@@ -85,7 +91,9 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
             finished = true;
             if (msg.fallback || !msg.orderId || !msg.preview) {
               track('PreviewFallback', { reason: msg.reason ?? 'unknown' });
-              setState({ kind: 'fallback', orderId: msg.orderId ?? null, email: '', sending: false, sent: false });
+              // a slow minute at the provider is not "your photo needs hands": keep the file, offer retry
+              if (msg.reason === 'timeout' || msg.reason === 'provider_error') setState({ kind: 'error', file, thumb, message: c.processing.timeout, title: c.processing.timeoutTitle, orderId: msg.orderId ?? null });
+              else setState({ kind: 'fallback', orderId: msg.orderId ?? null, email: '', sending: false, sent: false });
             } else {
               track('UploadCompleted', {});
               track('PreviewShown', { monochrome: msg.isMonochrome });
@@ -96,8 +104,8 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
       }
     };
     xhr.onprogress = consume;
-    xhr.onload = () => { consume(); if (!finished) setState({ kind: 'error', file, thumb, message: c.processing.networkError }); };
-    xhr.onerror = () => setState({ kind: 'error', file, thumb, message: c.processing.networkError });
+    xhr.onload = () => { consume(); if (!finished) setState({ kind: 'error', file, thumb, message: c.processing.networkError, title: c.processing.networkTitle }); };
+    xhr.onerror = () => setState({ kind: 'error', file, thumb, message: c.processing.networkError, title: c.processing.networkTitle });
     xhr.onabort = () => { /* user cancelled */ };
     xhr.send(fd);
   };
@@ -118,8 +126,9 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
   if (state.kind === 'closed') return null;
   const processing = state.kind === 'processing';
   // upload 0–30 %, then a 28 s creep to 85 % while the model works (the request is in flight = 'sending'), 92 % once stored, 100 % when the preview is ready
-  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? 85 : state.stage === 'restoring' ? 92 : 100) : 0;
-  const creep = processing && state.stage === 'sending' ? '28s' : '300ms';
+  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? 92 : state.stage === 'restoring' ? 96 : 100) : 0;
+  const creep = processing && state.stage === 'sending' ? '60s' : '300ms'; // never stalls before the 90 s server limit
+  const sentence = processing ? (state.stage === 'sending' && phase > 0 ? c.processing.more[phase - 1] : c.processing.sentences[state.stage]) : '';
 
   return (
     <>
@@ -169,7 +178,7 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
                 <span style={{ ['--p' as string]: pct / 100, ['--pt' as string]: creep }} />
               </div>
             </div>
-            <p className="lead" style={{ fontFamily: 'var(--display)' }}>{c.processing.sentences[state.stage]}</p>
+            <p className="lead" style={{ fontFamily: 'var(--display)' }}>{sentence}</p>
             <p className="caption">{c.processing.stages[state.stage]}{state.stage === 'uploading' ? ` · ${state.percent} %` : ''} · {slow ? c.processing.slow : c.processing.wait}</p>
             <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={close}>{c.processing.cancel}</button>
           </div>
@@ -177,11 +186,14 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
 
         {state.kind === 'error' && (
           <div style={{ display: 'grid', gap: 'var(--s4)' }}>
-            <h2 style={{ maxWidth: '12em' }}>Forbindelsen røg.</h2>
+            <h2 style={{ maxWidth: '12em' }}>{state.title}</h2>
             <img src={state.thumb} alt="" style={{ maxHeight: '30dvh', width: 'auto', maxWidth: '100%', justifySelf: 'start' }} />
             <p className="measure" role="alert">{state.message}</p>
             <button type="button" className="btn btn-block" onClick={() => start(state.file, state.thumb)}>{c.processing.retry}</button>
-            <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={() => setState({ kind: 'pick' })}>{c.upload.reupload}</button>
+            <div style={{ display: 'flex', gap: 'var(--s5)', flexWrap: 'wrap' }}>
+              <button type="button" className="link-btn" onClick={() => setState({ kind: 'fallback', orderId: state.orderId ?? null, email: '', sending: false, sent: false })}>{c.processing.sendInstead}</button>
+              <button type="button" className="link-btn" onClick={() => setState({ kind: 'pick' })}>{c.upload.reupload}</button>
+            </div>
           </div>
         )}
 

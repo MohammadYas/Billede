@@ -4,7 +4,7 @@ import { readSessionId } from '@/lib/session';
 import { ensureColour, ownsOrder } from '@/lib/preview-service';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

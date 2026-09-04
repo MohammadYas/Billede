@@ -4,7 +4,7 @@ import { runPreview } from '@/lib/preview-service';
 import { CONFIG } from '@/lib/config';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
 /** NDJSON stream: {"stage":…} lines from real pipeline stages, then one {"done":true,…} line. */

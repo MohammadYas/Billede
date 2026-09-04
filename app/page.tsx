@@ -23,10 +23,11 @@ const src = (e: Example, side: 'before' | 'after', sizes: string): Source => ({
 });
 
 /** "Soldat og ung kvinde, ca. 1916. Arkivfoto, …" → subject in ink, date in ink-2, credit to title. */
-function Caption({ text }: { text: string }) {
+function Caption({ text, credit = false }: { text: string; credit?: boolean }) {
   const m = text.match(/^(.+?),\s*(ca\.\s*\d{4}|\d{4})\.\s*(.*)$/);
   if (!m) return <span className="caption">{text}</span>;
-  return <span className="caption" title={m[3] || undefined}><b>{m[1]}</b>, {m[2]}.</span>;
+  // the hero says "arkivfoto" out loud so nobody reads Gunhild as a customer; the grid keeps the credit in the title
+  return <span className="caption" title={m[3] || undefined}><b>{m[1]}</b>, {m[2]}{credit && m[3] ? ' · arkivfoto' : '.'}</span>;
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -39,7 +40,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const f = getFounder();
   const showFounder = Boolean(f.portrait && f.why.length > 0);
   const placeholders = examples.some((e) => e.placeholder);
-  const details = examples.filter((e) => e.detail).slice(0, 6);
+  // "Tæt på" must open with a pair where the difference is unmistakable, so the (soft) hero pair goes last
+  const details = [...examples.filter((e) => e.detail && e.id !== hero?.id), ...examples.filter((e) => e.detail && e.id === hero?.id)].slice(0, 6);
   const productMock = (examples.find((e) => e.mockup && e.id !== hero?.id) ?? hero)?.mockup ?? null;
   const resumeOrder = typeof sp.order === 'string' && /^[0-9a-f-]{36}$/.test(sp.order) ? sp.order : null;
 
@@ -59,12 +61,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
           <div className="hero-grid">
             <div className="hero-media">
               {hero ? (
-                <BeforeAfter before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption}`} aspect="4 / 3" reveal priority />
+                <BeforeAfter before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption}`} aspect="4 / 3" reveal rest={50} priority />
               ) : (
                 <div className="ba" style={{ aspectRatio: '4 / 3' }} />
               )}
             </div>
-            {hero && <p className="hero-caption"><Caption text={hero.caption} /></p>}
+            {hero && <p className="hero-caption"><Caption text={hero.caption} credit /></p>}
           </div>
           <div className="wrap">
             <div className="container hero-text">
@@ -209,7 +211,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
               {c.spoergsmaal.items.map((it, i) => (
                 <details className="q" key={i}>
                   <summary>{it.q}</summary>
-                  <div className="a"><p>{it.a}</p></div>
+                  <div className="a"><p>{it.a}</p>{it.nophoto && <p><OpenFlowButton className="link-btn" detail="nophoto">{c.upload.noPhotoCta}</OpenFlowButton></p>}</div>
                 </details>
               ))}
             </div>

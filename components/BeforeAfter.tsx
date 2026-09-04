@@ -14,6 +14,8 @@ type Props = {
   reveal?: boolean;
   priority?: boolean;
   className?: string;
+  /** where the reveal settles (percent of width shown as "before"); the hero uses 50 so the seam runs between the two faces */
+  rest?: number;
 };
 
 /** The wipe starts almost fully damaged and settles here: the restoration dominates the still image. */
@@ -47,7 +49,7 @@ function Picture({ s, className, alt, priority, ariaHidden }: { s: Source; class
  * the reveal is interruptible (any pointer-down cancels it), keyboard via the range input.
  * The handle moves with transform, the after image with clip-path — no layout work per frame.
  */
-export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', afterLabel = 'Efter', aspect = '1 / 1', contain = false, reveal = false, priority = false, className = '' }: Props) {
+export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', afterLabel = 'Efter', aspect = '1 / 1', contain = false, reveal = false, priority = false, className = '', rest = REST }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [x, setX] = useState(reveal ? START : 50);
   const revealed = useRef(!reveal);
@@ -57,7 +59,7 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
   useEffect(() => {
     if (revealed.current) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { revealed.current = true; setX(REST); return; }
+    if (reduce) { revealed.current = true; setX(rest); return; }
     const el = ref.current; if (!el) return;
     const io = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting || revealed.current) return;
@@ -67,14 +69,15 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
       const step = (t: number) => {
         const p = Math.min(1, (t - t0) / 1600);
         const ease = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
-        const v = START - (START - REST) * ease;
+        const v = START - (START - rest) * ease;
         el.style.setProperty('--x', `${v}%`);
-        if (p < 1) raf.current = requestAnimationFrame(step); else { raf.current = null; setX(REST); }
+        if (p < 1) raf.current = requestAnimationFrame(step); else { raf.current = null; setX(rest); }
       };
       raf.current = requestAnimationFrame(step);
     }, { threshold: 0.5 });
     io.observe(el);
     return () => { io.disconnect(); if (raf.current) cancelAnimationFrame(raf.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setFromClientX = (clientX: number, commit = false) => {

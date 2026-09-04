@@ -12,17 +12,22 @@ export default function Consent({ text, accept, decline }: { text: string; accep
   useEffect(() => {
     const c = consent();
     if (c === 'yes') loadPixel();
-    if (c === null && process.env.NEXT_PUBLIC_META_PIXEL_ID) setShow(true);
     track('PageView', {}, { serverLog: true });
+    if (c !== null || !process.env.NEXT_PUBLIC_META_PIXEL_ID) return;
+    // only after the first scroll: the visitor who taps the button straight away is never interrupted (nothing is tracked before consent anyway)
+    const onScroll = () => { if (window.scrollY > 120) { setShow(true); window.removeEventListener('scroll', onScroll); } };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
   if (!show) return null;
   return (
     <div role="dialog" aria-label="Cookies" className="consent">
-      <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s3) var(--s5)', alignItems: 'center', justifyContent: 'space-between' }}>
-        <p className="small" style={{ maxWidth: '40em' }}>{text} <a href="/privatliv">Privatliv</a></p>
+      <div className="container" style={{ display: 'flex', gap: 'var(--s3) var(--s5)', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ maxWidth: '40em' }}>{text} <a href="/privatliv">Privatliv</a></p>
         <div style={{ display: 'flex', gap: 'var(--s3)' }}>
-          <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={() => { setConsent('no'); setShow(false); }}>{decline}</button>
-          <button type="button" className="btn" style={{ minHeight: 44 }} onClick={() => { setConsent('yes'); setShow(false); }}>{accept}</button>
+          <button type="button" className="btn btn-quiet" onClick={() => { setConsent('no'); setShow(false); }}>{decline}</button>
+          <button type="button" className="btn" onClick={() => { setConsent('yes'); setShow(false); }}>{accept}</button>
         </div>
       </div>
     </div>
