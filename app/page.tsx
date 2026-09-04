@@ -64,9 +64,9 @@ export default async function Page() {
               ) : (
                 <div className="ba" style={{ aspectRatio: '4 / 3' }} />
               )}
+              {hero && <span className="hero-credit" aria-hidden><Caption text={hero.caption} credit /></span>}
             </div>
             {hero && <p className="hero-caption"><Caption text={hero.caption} credit /></p>}
-            {hero && <span className="hero-credit" aria-hidden><Caption text={hero.caption} credit /></span>}
           </div>
           <div className="wrap">
             <div className="container hero-text">
