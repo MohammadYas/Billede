@@ -32,7 +32,7 @@ export default async function Aendring({ params, searchParams }: { params: Promi
           {approved ? (
             <>
               <h1 style={{ maxWidth: '14em' }}>Billedet er godkendt og på vej i produktion.</h1>
-              <p className="lead measure">Skal noget alligevel ændres, så ring til os med det samme{c.phone ? <> på <a href={c.phoneHref}>{c.phone}</a></> : null}.</p>
+              <p className="lead measure">Skal noget alligevel ændres, så skriv til os med det samme{c.email ? <> på <a href={c.emailHref}>{c.email}</a></> : null} – vi svarer inden 24 timer.</p>
             </>
           ) : r === 'ok' || order.status === 'CHANGE_REQUESTED' ? (
             <>
@@ -54,7 +54,7 @@ export default async function Aendring({ params, searchParams }: { params: Promi
               </form>
             </>
           )}
-          {c.phone && <p className="small muted">Spørgsmål? Ring på <a href={c.phoneHref}>{c.phone}</a>.</p>}
+          {c.email && <p className="small muted">Spørgsmål? Skriv til <a href={c.emailHref}>{c.email}</a> – vi svarer inden 24 timer.</p>}
         </div>
       </main>
       <Footer />

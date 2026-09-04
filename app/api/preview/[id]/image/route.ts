@@ -3,6 +3,7 @@ import { getOrder } from '@/lib/db/orders';
 import { readSessionId } from '@/lib/session';
 import { ownsOrder } from '@/lib/preview-service';
 import { getObject } from '@/lib/db/storage';
+import { isFormat } from '@/lib/pricing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!kind || !(kind in KINDS) || !/^[0-9a-f-]{36}$/.test(id)) return new NextResponse('Not found', { status: 404 });
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
   if (!order || !ownsOrder(order, sid, req.nextUrl.searchParams.get('t'))) return new NextResponse('Not found', { status: 404 });
-  const path = order[KINDS[kind]];
+  const f = req.nextUrl.searchParams.get('f');
+  const rendered = (order.preview_meta as { mockups?: Record<string, string> } | null)?.mockups ?? {};
+  // ?f=40x50 picks that size's wall mockup; anything else falls back to the order's own
+  const path = kind === 'mockup' && isFormat(f) && rendered[f] ? rendered[f] : order[KINDS[kind]];
   if (!path) return new NextResponse('Not found', { status: 404 });
   const buf = await getObject(path);
   return new NextResponse(new Uint8Array(buf), { headers: { 'content-type': 'image/jpeg', 'cache-control': 'private, max-age=900', 'x-robots-tag': 'noindex' } });

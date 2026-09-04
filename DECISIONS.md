@@ -91,3 +91,35 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **The greeting is real, not copy.** Stripe Checkout has an optional 200-character field; the text lands on the order, in the owner mail, the ordrebekræftelse, the admin page and the print checklist. A promise on the page must be a thing the owner does.
 - **No MobilePay until it exists.** The payment line reads "Apple Pay, Google Pay eller kort" until `STRIPE_MOBILEPAY_ENABLED=true`; the same flag already controls Checkout.
 - **The first screen still holds the button** at 390×664 (CTA bottom 652 px): the archive credit moved into the photograph on phones so the eyebrow could take its row.
+
+## Eighth pass (no phone number, three sizes, the lens, and Christmas back in its box)
+
+- **No telephone number anywhere.** The owner does not want to sell over the phone, so the number is gone from
+  `founder.md` upward: there is no `phone` field to render. Every place that used to end in "ring til os" now ends in a
+  mailto link — the checkout error ("skriv til os, så sender vi et betalingslink"), the 404, `/tak` when a payment could
+  not be verified on the spot, both approval pages, the footer, the order mail, the reminder mail and the owner's
+  10-day nudge. `MailLine` renders those sentences with the address as a real link, because in-app browsers auto-link
+  nothing. The legal pages name the trader with name, CVR, address and e-mail; e-mail is the contact channel Danish
+  distance-selling rules require us to publish, and we publish the one we actually answer. Stripe still collects the
+  *customer's* phone: that is for the carrier's delivery SMS, not for us to call.
+- **Three sizes, chosen after the customer has seen the restoration.** 30×40 cm 599 kr., 40×50 cm 799 kr., 50×70 cm
+  999 kr. (20×30 stays disabled: a 449 kr. anchor under the price the ads quote costs more than it adds). The landing
+  page quotes "fra 599 kr." and lists the three as a price list, not a card. The choice itself lives on `/p/[id]`, under
+  the wall mockup, where the customer has already seen what they are buying — three real radio inputs, so keyboard and
+  VoiceOver get the semantics for free. Picking a size swaps the mockup, the price on the button, the spec list and the
+  refund line at once.
+- **A mockup per size, rendered up front.** `processRestore` composes one wall mockup for every size on sale (sharp, no
+  model) and stores the paths in `preview_meta.mockups`; the preview page preloads all three, so switching size is
+  instant and the frame really has that size's proportions. `?f=40x50` on the image route serves them.
+- **The price is never taken from the browser.** The page sends a size; `/api/checkout` looks the amount up in
+  `PRICING` for a size that is actually on sale (`sellableFormat`) and writes both onto the order before Stripe sees it.
+- **The lens is fixed.** Two real bugs: the container is `touch-action: pan-y`, so on a phone every vertical drag was
+  handed to the page scroller and the gesture died; and a press outside the ring could stall, because the catch-up
+  branch wrote a new target without restarting the spring. Now the ring is the handle — its own element with
+  `touch-action: none`, hit-tested as a circle, owning the pointer for the whole drag in both axes — a tap anywhere else
+  springs the lens to that point, and a swipe on the photograph still scrolls the page. The centre is clamped by the
+  radius, so the circle can never hang half outside the frame. Verified on an iPhone 13 profile
+  (`work/lens-test.mjs`): drag lands where the finger is, tap lands at the tap, the circle stays inside on all four edges.
+- **Christmas is a layer, not the site.** The headline, the lead, the product and the promise are the same in July and
+  in December. The season only adds an eyebrow with the last order date, the deadline line with a day countdown, the
+  delivery answer in the FAQ and the closing line. The window starts 14 November (`CHRISTMAS_START_DATE`), not 1 October.

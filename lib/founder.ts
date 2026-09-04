@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export type Founder = {
-  name: string; firstName: string; city: string; cvr: string; phone: string; email: string; address: string;
+  name: string; firstName: string; city: string; cvr: string; email: string; address: string;
   portrait: string | null; why: string[];
   /** true when every legally required field is filled (no TODO). */
   complete: boolean;
@@ -30,12 +30,17 @@ export function getFounder(): Founder {
   const name = get('name');
   const firstName = get('firstName') || name.split(' ')[0] || '';
   cache = {
-    name, firstName, city: get('city'), cvr: get('cvr'), phone: get('phone'), email: get('email'), address: get('address'),
+    name, firstName, city: get('city'), cvr: get('cvr'), email: get('email'), address: get('address'),
     portrait, why,
-    complete: Boolean(name && get('city') && get('cvr') && get('phone') && get('email') && get('address')),
+    complete: Boolean(name && get('city') && get('cvr') && get('email') && get('address')),
   };
   return cache;
 }
+
+/**
+ * No telephone number anywhere: support is e-mail only (see DECISIONS.md), so founder.md
+ * carries no phone field and no surface can print one.
+ */
 
 /**
  * "[fornavn]" in copy → the first name, but only once the person is actually on the page

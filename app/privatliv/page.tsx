@@ -6,7 +6,7 @@ export const metadata = { title: 'Privatliv – Genfundet' };
 
 export default function Privatliv() {
   const f = getFounder();
-  const ansvarlig = [f.name, f.cvr ? `CVR ${f.cvr}` : '', f.address, f.email, f.phone].filter(Boolean).join(', ') || '[Udfyld: navn, CVR, adresse, e-mail, telefon]';
+  const ansvarlig = [f.name, f.cvr ? `CVR ${f.cvr}` : '', f.address, f.email].filter(Boolean).join(', ') || '[Udfyld: navn, CVR, adresse og e-mail]';
   return (
     <LegalPage title="Sådan behandler vi dine oplysninger" updated="3. september 2026">
       <p>Genfundet restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p>

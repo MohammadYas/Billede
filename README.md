@@ -1,7 +1,8 @@
 # Genfundet
 
 Danish direct-to-consumer service: upload a phone photo of a damaged family photograph, see it restored in about
-20 seconds, order it restored, printed and framed (30×40 cm, 599 kr., free shipping). One product, one price.
+20 seconds, order it restored, printed and framed (30×40 cm 599 kr., 40×50 cm 799 kr., 50×70 cm 999 kr., free shipping).
+One product, three sizes, chosen after the preview. Support is e-mail only — there is no phone number on the site.
 The customer approves the finished image by mail before anything is printed.
 
 Read in this order: `HANDOFF.md` (what the owner must do before the test) → `DECISIONS.md` → `QUALITY_REPORT.md` → `QA.md`.

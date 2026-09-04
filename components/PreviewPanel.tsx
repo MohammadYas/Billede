@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import BeforeAfter from './BeforeAfter';
 import { PRODUCT, track } from '@/lib/analytics/client';
+import MailLine from './MailLine';
 import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
 
@@ -21,8 +22,24 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   // landscape photographs are printed landscape: "40×30 cm (liggende)"
   const landscape = data.width > data.height;
-  const label = landscape ? `${c.formatLabel.replace(/(\d+)\s*×\s*(\d+)/, '$2×$1')} ${c.preview.landscape}` : c.formatLabel;
-  const withLabel = (s: string) => (landscape ? s.replace(c.formatLabel, label) : s);
+  const variants = landscape ? c.variants.landscape : c.variants.portrait;
+  const [format, setFormat] = useState(data.format);
+  const v = variants.find((x) => x.format === format) ?? variants[0];
+  const label = landscape ? `${v.label} ${c.preview.landscape}` : v.label;
+  const [mockup, setMockup] = useState(data.mockups[data.format] ?? data.mockup);
+
+  // every size's wall mockup is fetched up front, so picking a size swaps the frame with no flash and no wait
+  useEffect(() => {
+    Object.values(data.mockups).forEach((u) => { if (u) void preload(u); });
+  }, [data.mockups]);
+
+  const pickFormat = (next: typeof format) => {
+    if (next === format) return;
+    setFormat(next);
+    const url = data.mockups[next];
+    if (url) preload(url).then(() => setMockup(url));
+    fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ format: next }) }).catch(() => {});
+  };
 
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
@@ -71,14 +88,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const order = async () => {
     setOrdering(true); setError(null);
     try {
-      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: showColour, t: token }) });
+      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: showColour, format, t: token }) });
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
       track('InitiateCheckout', { ...PRODUCT }, { eventId: j.sessionId });
       window.location.assign(j.url);
     } catch {
-      // never a server string: one calm message with a second door (the phone)
+      // never a server string: one calm message with a second door (e-mail)
       setOrdering(false);
       setError(c.preview.checkoutError);
     }
@@ -94,18 +111,16 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     } catch { setSaveState('failed'); }
   };
 
-  // the phone number in the error is a tel: link (in-app browsers do not auto-link numbers)
-  const errorLine = error && (
-    <p className="alert" role="alert">{c.phone && error.includes(c.phone) ? error.split(c.phone).map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <a href={c.phoneHref} style={{ color: 'inherit', fontWeight: 600 }}>{c.phone}</a>}</span>) : error}</p>
-  );
-  const button = <button type="button" className="btn btn-block" onClick={order} disabled={ordering || paid}>{paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : c.preview.cta}</button>;
+  // the address in the error is a mailto link (in-app browsers do not auto-link anything)
+  const errorLine = error && <MailLine className="alert" role="alert" text={error} email={c.email} href={c.emailHref} />;
+  const button = <button type="button" className="btn btn-block" onClick={order} disabled={ordering || paid}>{paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : v.cta}</button>;
 
   const cta = (
     <div className="pv-cta">
       {errorLine}
       <p className="caption" style={{ textAlign: 'center' }}>{c.preview.payment}</p>
       {button}
-      <p className="caption" style={{ textAlign: 'center' }}>{c.preview.under} {c.preview.payWhen}</p>
+      <p className="caption" style={{ textAlign: 'center' }}>{c.preview.under} {v.payWhen}</p>
     </div>
   );
 
@@ -137,19 +152,33 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         )}
         <p className="caption measure">{c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
-        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhen}</p>
+        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {v.payWhen}</p>
         <p className="caption measure">{c.preview.gift}</p>
       </div>
       <div className="pv-right">
         {/* desktop: the decision first, the object and the label under it */}
         <div className="pv-desktop-cta">{cta}</div>
         <div className="pv-grid">
-          <img className="pv-mock" src={data.mockup} alt={`Dit billede indrammet i ${label}`} width={1200} height={960} />
-          <p className="caption">{withLabel(c.preview.mockupCaption)}</p>
-          <p className="measure">{withLabel(c.preview.p)}</p>
-          <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{c.preview.specTitle}</h2>
+          <img className="pv-mock" src={mockup} alt={`Dit billede indrammet i ${label}`} width={1200} height={960} />
+          <p className="caption">{v.mockupCaption}</p>
+          <fieldset className="sizes">
+            <legend className="label small">{c.preview.sizeTitle}</legend>
+            <div className="sizes-row">
+              {variants.map((x) => (
+                <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}`}>
+                  <input type="radio" name="stoerrelse" value={x.format} checked={x.format === format} onChange={() => pickFormat(x.format)} />
+                  <b>{x.label}</b>
+                  <span className="size-price">{x.price}</span>
+                  <span className="caption">{x.hint}</span>
+                </label>
+              ))}
+            </div>
+            <p className="caption">{c.preview.sizeNote}</p>
+          </fieldset>
+          <p className="measure">{v.p}</p>
+          <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <dl className="label small">
-            {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{withLabel(v)}</dd></div>)}
+            {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
           </dl>
         </div>
         {!paid && save}

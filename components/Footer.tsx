@@ -12,13 +12,8 @@ export default function Footer() {
         </div>
         <div style={{ display: 'grid', gap: 'var(--s2)', alignContent: 'start' }}>
           <p><a className="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a className="tap" href="/privatliv">Privatliv</a></p>
-          {(f.email || f.phone) && (
-            <p>
-              {f.email && <a className="tap" href={`mailto:${f.email}`}>{f.email}</a>}
-              {f.email && f.phone && ' · '}
-              {f.phone && <a className="tap" href={`tel:${f.phone.replace(/\s/g, '')}`}>{f.phone}</a>}
-            </p>
-          )}
+          {f.email && <p><a className="tap" href={`mailto:${f.email}`}>{f.email}</a></p>}
+          {f.email && <p className="caption">Vi svarer på mail inden 24 timer – som regel meget hurtigere.</p>}
         </div>
       </div>
     </footer>

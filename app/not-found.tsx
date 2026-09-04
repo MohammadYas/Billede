@@ -13,7 +13,7 @@ export default function NotFound() {
           <div style={{ display: 'grid', gap: 'var(--s4)' }}>
             <h1 style={{ maxWidth: '12em' }}>{c.notFound.h1}</h1>
             <p className="lead" style={{ maxWidth: '26em' }}>{c.notFound.p}</p>
-            {c.phone && <p className="measure">Er du i tvivl, så ring på <a href={c.phoneHref}>{c.phone}</a>.</p>}
+            {c.email && <p className="measure">Er du i tvivl, så skriv til <a href={c.emailHref}>{c.email}</a> – vi svarer inden 24 timer.</p>}
             <p><a className="btn" href="/">{c.notFound.cta}</a></p>
           </div>
         </div>

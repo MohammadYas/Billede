@@ -8,7 +8,7 @@ export const metadata = { title: 'Handelsbetingelser – Genfundet' };
 export default function Handelsbetingelser() {
   const f = getFounder();
   const fmt = customerFormat();
-  const saelger = [f.name, f.cvr ? `CVR ${f.cvr}` : '', f.address, f.email, f.phone].filter(Boolean).join(', ') || '[Udfyld: navn, CVR, adresse, e-mail, telefon]';
+  const saelger = [f.name, f.cvr ? `CVR ${f.cvr}` : '', f.address, f.email].filter(Boolean).join(', ') || '[Udfyld: navn, CVR, adresse og e-mail]';
   return (
     <LegalPage title="Handelsbetingelser" updated="3. september 2026">
       <h2>Sælger</h2>

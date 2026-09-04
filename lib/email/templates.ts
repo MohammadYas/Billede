@@ -7,7 +7,7 @@ const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 /** Plain, typographic, one image max. Inline CSS only. */
 function shell(title: string, body: string): string {
   const f = getFounder();
-  const sig = [f.name || 'Genfundet', f.phone ? `Tlf. ${f.phone}` : '', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
+  const sig = [f.name || 'Genfundet', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
   return `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(title)}</title></head>
 <body style="margin:0;background:#F6F1E8;color:#1C1A17;font-family:'Instrument Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;">
 <div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
@@ -64,9 +64,9 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
       `Ordre ${esc(o.id.slice(0, 8))} · betalt ${esc(o.paid_at ? new Date(o.paid_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }) : 'i dag')}` +
       (gift ? `<br>Hilsen på kortet i pakken: “${esc(gift)}”` : '')),
     p(`Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. <a href="${siteUrl('/handelsbetingelser')}" style="color:#2F4A3A;">Handelsbetingelser</a>${previewLink ? ` · <a href="${previewLink}" style="color:#2F4A3A;">Dit preview</a>` : ''}`),
-    f.phone ? p(`Spørgsmål? Ring eller skriv til ${esc(kontakt)} på <a href="tel:${esc(f.phone.replace(/\s/g, ''))}" style="color:#2F4A3A;">${esc(f.phone)}</a> – eller svar på denne mail.`) : '',
+    f.email ? p(`Spørgsmål? Skriv til ${esc(kontakt)} på <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a> – eller svar på denne mail. Vi svarer inden 24 timer.`) : '',
   ].join(''));
-  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret inden ${CONFIG.deliveryDaysMax} hverdage efter dit ja.\n\nDin bestilling: Restaureret og indrammet familiebillede, ${formatLabel(o.format)}${o.chosen_colour ? ', i farver' : ''} · ${amount} inkl. moms og fragt${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.phone ? `\nTlf. ${f.phone}` : ''}`;
+  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret inden ${CONFIG.deliveryDaysMax} hverdage efter dit ja.\n\nDin bestilling: Restaureret og indrammet familiebillede, ${formatLabel(o.format)}${o.chosen_colour ? ', i farver' : ''} · ${amount} inkl. moms og fragt${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}`;
   return { subject, html, text };
 }
 
@@ -100,7 +100,7 @@ export function approvalRequest(opts: { imageUrl: string; approveUrl: string; ch
   const html = shell(subject, [
     h1(opts.second ? 'Dit færdige billede venter stadig.' : opts.reminder ? 'Dit færdige billede venter på dit ja.' : 'Dit færdige billede er klar.'),
     p(opts.second
-      ? `Vi har ikke hørt fra dig. Ligner det? Så tryk Godkend, og vi printer og sender det. Vil du hellere tale om det, så ring${f.phone ? ` på <a href="tel:${esc(f.phone.replace(/\s/g, ''))}" style="color:#2F4A3A;">${esc(f.phone)}</a>` : ''}.`
+      ? `Vi har ikke hørt fra dig. Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a>` : ''}.`
       : 'Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du vil have ændret, så skriv det – det koster ikke ekstra.'),
     buttons,
     `<img src="${opts.imageUrl}" alt="Dit restaurerede billede" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">`,

@@ -11,6 +11,7 @@ import StickyCtaMount from '@/components/StickyCtaMount';
 import HeroViewContent from '@/components/HeroViewContent';
 import Consent from '@/components/Consent';
 import Footer from '@/components/Footer';
+import MailLine from '@/components/MailLine';
 import Wordmark from '@/components/Wordmark';
 
 // Static, regenerated hourly: an ad click hits the CDN, not a cold function. The ?order= resume lives in UploadFlow.
@@ -178,6 +179,13 @@ export default async function Page() {
               <dl className="label">
                 {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
               </dl>
+              <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <p className="label small">{c.produkt.sizesTitle}</p>
+                <ul className="size-list">
+                  {c.sizes.map(([l, p]) => <li key={l}><span>{l}</span><span>{p}</span></li>)}
+                </ul>
+                <p className="caption">{c.produkt.sizesNote}</p>
+              </div>
               <p className="compare-note">{c.produkt.note}</p>
             </div>
           </div>
@@ -194,9 +202,11 @@ export default async function Page() {
               <p className="caption" style={{ maxWidth: '26em' }}>{c.offer.under}</p>
             </div>
             <div style={{ display: 'grid', gap: 'var(--s2)' }}>
+              {c.sizes.length > 1 && <p className="price-from">fra</p>}
               <p className="price" aria-label={c.offer.price}>{c.offer.price.replace(' kr.', '')}<small>kr.</small></p>
               <p className="caption price-note">{c.offer.priceNote}</p>
-              {c.offer.phone && <p className="caption price-note"><a href={c.offer.phoneHref}>{c.offer.phone}</a></p>}
+              {c.offer.priceFrom && <p className="caption price-note">{c.offer.priceFrom}</p>}
+              {c.offer.kontakt && <MailLine className="caption price-note" text={c.offer.kontakt} email={c.email} href={c.emailHref} />}
             </div>
           </div>
         </section>
@@ -210,11 +220,7 @@ export default async function Page() {
                 <p className="lead italic" style={{ maxWidth: '24em' }}>{f.why[0]}</p>
                 {f.why.slice(1).map((w, i) => <p key={i} className="measure">{w}</p>)}
                 <p className="caption"><b>{f.name}</b>{f.city ? `, ${f.city}` : ''}{f.cvr ? ` · CVR ${f.cvr}` : ''}</p>
-                <p className="small">
-                  {f.phone && <a className="tap" href={`tel:${f.phone.replace(/\s/g, '')}`}>{f.phone}</a>}
-                  {f.phone && f.email && ' · '}
-                  {f.email && <a className="tap" href={`mailto:${f.email}`}>{f.email}</a>}
-                </p>
+                {f.email && <p className="small"><a className="tap" href={`mailto:${f.email}`}>{f.email}</a></p>}
               </div>
             </div>
           </section>

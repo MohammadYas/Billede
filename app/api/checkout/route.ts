@@ -6,14 +6,14 @@ import { paymentProvider } from '@/lib/payments/stripe';
 import { signedUrl } from '@/lib/db/storage';
 import { logEvent } from '@/lib/analytics/events';
 import { CONFIG } from '@/lib/config';
-import { priceOere } from '@/lib/pricing';
+import { priceOere, sellableFormat } from '@/lib/pricing';
 import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => ({}))) as { orderId?: string; colour?: boolean; t?: string };
+  const body = (await req.json().catch(() => ({}))) as { orderId?: string; colour?: boolean; format?: string; t?: string };
   if (!body.orderId || !/^[0-9a-f-]{36}$/.test(body.orderId)) return NextResponse.json({ error: 'order' }, { status: 400 });
   const [order, sid, utm] = await Promise.all([getOrder(body.orderId), readSessionId(), readUtm()]);
   if (!order || !ownsOrder(order, sid, body.t ?? null)) return NextResponse.json({ error: 'not found' }, { status: 404 });
@@ -24,7 +24,10 @@ export async function POST(req: NextRequest) {
   if (order.payment_session_id) await paymentProvider().expireSession(order.payment_session_id);
   const shareToken = (order.preview_meta as { share_token?: string } | null)?.share_token;
   const chosen = Boolean(body.colour) && Boolean(order.colourised_path);
-  const updated = await updateOrder(order.id, { chosen_colour: chosen, amount: priceOere(order.format), currency: 'dkk', payment_provider: paymentProvider().name });
+  // the size comes from the page, but the price never does: it is looked up here, so the line item
+  // always matches PRICING for a size that is actually on sale
+  const format = sellableFormat(body.format ?? order.format);
+  const updated = await updateOrder(order.id, { format, chosen_colour: chosen, amount: priceOere(format), currency: 'dkk', payment_provider: paymentProvider().name });
   const base = CONFIG.siteUrl.replace(/\/$/, '');
   // Stripe fetches product images itself; a 15-min signed URL is enough for that fetch.
   const previewImageUrl = order.preview_path ? await signedUrl(order.preview_path) : undefined;

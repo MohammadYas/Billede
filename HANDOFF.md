@@ -19,9 +19,11 @@ Nothing in this list is code. The code is done and verified; each line below is 
 4. Domain: genfundet.dk on Netlify, HTTPS on.
 
 **B. Accounts and identity**
-5. `assets/founder/founder.md`: `city`, `cvr`, `address`, three `why` lines, `portrait.jpg`. A mailbox on the domain
-   (kontakt@genfundet.dk) as `email`, `EMAIL_REPLY_TO` and `OWNER_EMAIL` — a Gmail address next to 599 kr. is the trust
-   leak this audience notices first.
+5. `assets/founder/founder.md`: `city`, `cvr`, `address`, three `why` lines, `portrait.jpg`. **A mailbox on the domain
+   (kontakt@genfundet.dk) as `email`, `EMAIL_REPLY_TO` and `OWNER_EMAIL`** — a Gmail address next to 999 kr. is the trust
+   leak this audience notices first, and since there is no phone number anywhere, that address is now the only way a
+   customer can reach you. It is printed on the price block, in the footer, on the 404, on `/tak`, on both approval
+   pages and in every mail. The site promises an answer within 24 hours, so the mailbox must be one you read daily.
 6. Stripe Dashboard: Public details → Terms of service URL `https://genfundet.dk/handelsbetingelser` and Privacy URL
    (Checkout refuses to open without the Terms URL); webhook on `https://genfundet.dk/api/webhooks/stripe` for
    `checkout.session.completed` + `checkout.session.async_payment_succeeded` → copy the signing secret to
@@ -32,8 +34,11 @@ Nothing in this list is code. The code is done and verified; each line below is 
    Measurement priorities Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent; first campaign
    optimised for the PreviewShown custom conversion, not Purchase.
 9. Supabase: the HEIC bucket update is already applied; keep the project in Ireland; nothing else.
-10. Print partner that ships a framed 30×40 within 3–4 business days (the site promises "inden 5 hverdage" from the
-    customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold.
+10. Print partner that ships **framed 30×40, 40×50 and 50×70** within 3–4 business days (the site promises "inden
+    5 hverdage" from the customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold. Confirm your
+    cost for all three sizes before the ads run: the prices on the page are 599 / 799 / 999 kr. including frame, glass,
+    gift card, packaging and shipping. A size the partner cannot deliver profitably is one line in `lib/pricing.ts`
+    (`enabled: false`) and disappears everywhere.
 11. Lawyer reads `/privatliv` and `/handelsbetingelser`, then `LEGAL_DRAFT=false`.
 12. `public/mockup/wall.jpg` (a photo of your own wall, optional) and, over time, consented customer before/afters to
     replace the archive examples (§1).
@@ -49,6 +54,29 @@ Nothing in this list is code. The code is done and verified; each line below is 
 **D. Every day while the test runs**
 17. Read the owner mails; open `/admin` once a day anyway. Reply to manual-review leads within 24 h, send finals within
     48 h, order prints the day of approval.
+
+## 0b. The week before the ads (Meta live in seven days)
+
+One order per day. Nothing here is code; every line is a login, a form or a decision. If a day slips, the ads slip —
+do not start paid traffic before day 5 is green, because a broken checkout costs more than a week of waiting.
+
+| Day | What must be true when the day ends |
+| --- | --- |
+| 1 | The site is on Netlify at genfundet.dk with HTTPS, every environment variable from §0 A2 set, functions in an EU region. Open the front page on your own phone. |
+| 2 | kontakt@genfundet.dk exists and is on your phone; `founder.md` filled in (city, CVR, address, three lines, portrait); Resend domain verified; a test mail from `/admin` arrives and is not in spam. |
+| 3 | Print partner confirmed for all three sizes with a price per size, and one test print of your own photo ordered so you have seen the paper, the frame and the packaging before a customer does. |
+| 4 | Stripe live: Terms URL and Privacy URL filled in, webhook created and its secret in Netlify, one 1 kr. live purchase made and refunded by you. The lawyer has read the two legal pages, or you accept `LEGAL_DRAFT=true` while they read. |
+| 5 | On a real iPhone, from the Facebook in-app browser: upload → preview → pick a size → pay → `/tak` → the order mail → the order in `/admin` → the approval mail → Godkend. Meta Events Manager shows ViewContent, InitiateCheckout and Purchase once each, not twice. |
+| 6 | Ad account: domain verified, pixel connected, Aggregated Event Measurement priorities set (Purchase > InitiateCheckout > PreviewShown > ViewContent). Creatives cut from your own examples — the before/after pairs on the page, not stock. |
+| 7 | Campaign live, small daily budget, optimised for the **PreviewShown** custom conversion until there are ~30 purchases a week. Owner mails on your phone with sound on. |
+
+Three things about the copy in the ads:
+
+- The price is **"fra 599 kr."** now. Three sizes are on sale (599 / 799 / 999 kr.), and the customer picks after the
+  preview, so an ad that says "599 kr." flat will be read as the price of the big one by whoever buys the big one.
+- Never write "gratis". The page says "det koster ikke noget at se", and the ad should say the same thing the same way.
+- The Christmas layer only appears from **14 November** (`CHRISTMAS_START_DATE`). Ads before that must not promise
+  delivery before Christmas, because the page they land on does not.
 
 ## 1. Replace the placeholder examples (blocks the test)
 
@@ -75,9 +103,11 @@ checkout checkbox. The privacy page already says so.
 
 ## 2. Founder identity (blocks the test: legally required)
 
-`assets/founder/founder.md` has name, phone and e-mail from your Stripe account. **Fill in `city`, `cvr`, `address`,
+`assets/founder/founder.md` has your name and e-mail from your Stripe account. There is deliberately **no phone
+field**: support runs on e-mail only, and no page can print a number. **Fill in `city`, `cvr`, `address`,
 the three `why` lines and drop `portrait.jpg` in the folder.** Until then the site hides the empty fields and the
-legal pages show "[Udfyld …]". Handelsbetingelser require name, CVR and address (e-handelsloven §7).
+legal pages show "[Udfyld …]". Handelsbetingelser require name, CVR, address and an e-mail address (e-handelsloven §7); a telephone number is not
+required when it is not offered as a contact channel, and we do not offer one.
 The copy uses your first name ("Mohammad finjusterer …") only once `portrait.jpg` and the three `why` lines exist;
 until then it says "vi", because a first name without a face reads as a persona (conversion attack #1, finding 2.2).
 The trust row under the hero becomes "Dansk virksomhed, <by> · CVR <nr>" the moment `city` and `cvr` are filled.

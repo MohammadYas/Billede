@@ -26,7 +26,7 @@ export default async function Godkend({ params, searchParams }: { params: Promis
         <div className="container" style={{ display: 'grid', gap: 'var(--s5)', maxWidth: 720 }}>
           <Wordmark />
           {body}
-          {c.phone && <p className="small muted">Spørgsmål? Ring på <a href={c.phoneHref}>{c.phone}</a>.</p>}
+          {c.email && <p className="small muted">Spørgsmål? Skriv til <a href={c.emailHref}>{c.email}</a> – vi svarer inden 24 timer.</p>}
         </div>
       </main>
       <Footer />
@@ -51,7 +51,7 @@ export default async function Godkend({ params, searchParams }: { params: Promis
     return shell(<>
       <h1>Tak. Vi printer og sender.</h1>
       <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}Du får en mail med tracking, når pakken er sendt – leveret {c.formatLabel ? '' : ''}inden 5 hverdage. Ordre {order.id.slice(0, 8)}.</p>
-      <p className="measure small muted">Skal noget alligevel ændres, så ring til os med det samme{c.phone ? ` på ${c.phone}` : ''}.</p>
+      <p className="measure small muted">Skal noget alligevel ændres, så skriv til os med det samme{c.email ? <> på <a href={c.emailHref}>{c.email}</a></> : null} – vi svarer inden 24 timer.</p>
     </>);
   }
   return shell(<>

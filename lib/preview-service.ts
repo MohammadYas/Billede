@@ -11,11 +11,13 @@ const heavy = async () => {
   return { restore: r.restore, colourise: r.colourise, ensureLongEdge: iu.ensureLongEdge, makePreview: pv.makePreview, makeMockup: mk.makeMockup };
 };
 import { logEvent, type Utm } from '@/lib/analytics/events';
-import { customerFormat } from '@/lib/pricing';
+import { customerFormat, customerFormats, isFormat, type Format } from '@/lib/pricing';
 import { getJob, setJob, type JobState } from '@/lib/jobs';
 
 export type PreviewPayload = {
   orderId: string; original: string; preview: string; mockup: string; colour: string | null;
+  /** the size the order is currently on, and one wall mockup per size the customer can pick */
+  format: Format; mockups: Partial<Record<Format, string>>;
   isMonochrome: boolean; chosenColour: boolean; status: Order['status'];
   /** share token, so the URL the customer sees (and copies to a sister) opens on any phone */
   token: string | null;
@@ -30,16 +32,24 @@ export type PreviewStatus = {
   payload: PreviewPayload | null;
 };
 
-type Meta = { session_id?: string | null; share_token?: string; upload_path?: string; cancelled?: boolean; output?: { width?: number; height?: number }; job?: JobState; colourised_full_path?: string; [k: string]: unknown };
+type Meta = { session_id?: string | null; share_token?: string; upload_path?: string; cancelled?: boolean; output?: { width?: number; height?: number }; job?: JobState; colourised_full_path?: string; mockups?: Partial<Record<Format, string>>; [k: string]: unknown };
 const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
 
 /**
  * Customer-facing image URLs are same-origin and gated by session cookie or share token
  * (app/api/preview/[id]/image). The token rides along so the page works wherever its URL does.
  */
-export function imageUrl(order: Order, kind: 'original' | 'preview' | 'colour' | 'mockup'): string {
+export function imageUrl(order: Order, kind: 'original' | 'preview' | 'colour' | 'mockup', format?: Format): string {
   const token = metaOf(order).share_token;
-  return `/api/preview/${order.id}/image?kind=${kind}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}${token ? `&t=${encodeURIComponent(token)}` : ''}`;
+  return `/api/preview/${order.id}/image?kind=${kind}${format ? `&f=${format}` : ''}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}${token ? `&t=${encodeURIComponent(token)}` : ''}`;
+}
+
+/** The wall mockup for every size on offer; sizes rendered before this order existed fall back to the default one. */
+export function mockupUrls(order: Order): Partial<Record<Format, string>> {
+  const rendered = metaOf(order).mockups ?? {};
+  const out: Partial<Record<Format, string>> = {};
+  for (const f of customerFormats()) out[f] = rendered[f] ? imageUrl(order, 'mockup', f) : imageUrl(order, 'mockup');
+  return out;
 }
 
 export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
@@ -48,6 +58,7 @@ export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
   return {
     orderId: order.id,
     original: imageUrl(order, 'original'), preview: imageUrl(order, 'preview'), mockup: imageUrl(order, 'mockup'),
+    format: isFormat(order.format) ? order.format : customerFormat(), mockups: mockupUrls(order),
     colour: order.colourised_path ? imageUrl(order, 'colour') : null,
     isMonochrome: Boolean(order.is_monochrome), chosenColour: order.chosen_colour, status: order.status,
     token: meta.share_token ?? null,
@@ -110,14 +121,23 @@ export async function processRestore(orderId: string): Promise<void> {
       return;
     }
 
-    const [previewBuf, mockupBuf] = await Promise.all([makePreview(result.restored), makeMockup(result.restored, { format: order.format })]);
+    // one wall mockup per size on offer, rendered here (sharp, no model) so switching size on the
+    // preview page is instant and shows the real proportions of that frame
+    const previewBuf = await makePreview(result.restored);
+    const mockups: Partial<Record<Format, string>> = {};
+    for (const fmt of customerFormats()) {
+      const buf = await makeMockup(result.restored, { format: fmt });
+      const p = objectPath(order.id, 'mockup');
+      await putObject(p, buf);
+      mockups[fmt] = p;
+    }
     const restoredPath = objectPath(order.id, 'restored');
     const previewPath = objectPath(order.id, 'preview');
-    const mockupPath = objectPath(order.id, 'mockup');
-    await Promise.all([putObject(restoredPath, result.restored), putObject(previewPath, previewBuf), putObject(mockupPath, mockupBuf)]);
+    const mockupPath = mockups[isFormat(order.format) ? order.format : customerFormat()] ?? Object.values(mockups)[0]!;
+    await Promise.all([putObject(restoredPath, result.restored), putObject(previewPath, previewBuf)]);
     await setStatus(order.id, 'PREVIEW_READY', {
       original_path: originalPath, restored_path: restoredPath, preview_path: previewPath, mockup_path: mockupPath,
-      is_monochrome: result.isMonochrome, preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta },
+      is_monochrome: result.isMonochrome, preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta, mockups },
     });
     await setJob(orderId, { kind: 'restore', state: 'done', finishedAt: new Date().toISOString() });
     await logEvent('UploadCompleted', { sessionId, orderId });

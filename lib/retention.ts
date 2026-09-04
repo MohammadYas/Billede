@@ -53,7 +53,7 @@ export async function runRetention(): Promise<{ deleted: number; reminded: numbe
       if (age > 48 * 3600e3 && !o.approval_reminder_sent_at) { await sendApprovalMail(o, { reminder: true }); reminded++; }
       else if (age > 7 * 864e5 && !meta.reminder2_at) { await sendApprovalMail(o, { reminder: true, second: true }); await updateOrder(o.id, { preview_meta: { ...meta, reminder2_at: new Date().toISOString() } }); reminded++; }
       else if (age > 10 * 864e5 && !meta.owner_nudged_at) {
-        await notifyOwner(`Ring til kunden – ordre ${o.id.slice(0, 8)} har ventet ${Math.round(age / 864e5)} dage på godkendelse`, [`${o.customer_name ?? ''} · ${o.customer_phone ?? ''} · ${o.customer_email ?? ''}`, 'To mails er sendt uden svar. Et opkald plejer at afgøre det.'], o.id);
+        await notifyOwner(`Skriv personligt til kunden – ordre ${o.id.slice(0, 8)} har ventet ${Math.round(age / 864e5)} dage på godkendelse`, [`${o.customer_name ?? ''} · ${o.customer_email ?? ''}`, 'To automatiske mails er sendt uden svar. En personlig mail plejer at afgøre det.'], o.id);
         await updateOrder(o.id, { preview_meta: { ...meta, owner_nudged_at: new Date().toISOString() } }); nudged++;
       }
     } catch (e) { console.error('reminder failed', o.id, e); }

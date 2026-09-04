@@ -5,6 +5,7 @@ import { markPaid } from '@/lib/payments/fulfil-paid';
 import { imageUrl } from '@/lib/preview-service';
 import { readSessionId } from '@/lib/session';
 import Footer from '@/components/Footer';
+import MailLine from '@/components/MailLine';
 import Wordmark from '@/components/Wordmark';
 import PurchaseEvent from '@/components/PurchaseEvent';
 import { headers } from 'next/headers';
@@ -74,7 +75,7 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
             <div style={{ display: 'grid', gap: 'var(--s4)' }}>
               <h1 style={{ maxWidth: '12em' }}>{c.tak.unverifiedH1}</h1>
               <p className="lead" style={{ maxWidth: '26em' }}>{c.tak.unverifiedP}</p>
-              {c.tak.doubt && <p className="measure">{c.tak.doubt.split(c.phone).map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <a href={c.phoneHref}>{c.phone}</a>}</span>)}</p>}
+              <MailLine text={c.tak.doubt} email={c.email} href={c.emailHref} />
               <p>{backTo ? <a className="btn" href={backTo}>{c.tak.back}</a> : <a className="btn" href="/">{c.tak.home}</a>}</p>
             </div>
           )}

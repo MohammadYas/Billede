@@ -32,7 +32,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 <h1 style="font-family:Georgia,serif;font-weight:500;font-size:28px;line-height:1.1;margin:0 0 20px;">Dit preview.</h1>
 <p style="margin:0 0 16px;">Her er linket til dit restaurerede billede. Det virker, indtil billedet slettes – 30 dage efter upload – og vi printer ikke noget, før du selv bestiller og siger ja.</p>
 <p style="margin:0 0 24px;"><a href="${link}" style="display:inline-block;padding:14px 22px;border-radius:2px;background:#1C1A17;color:#F6F1E8;text-decoration:none;font-weight:600;">Se dit billede</a></p>
-<p style="margin:0;font-size:14px;color:#5B554C;">${esc(f.name || 'Genfundet')}${f.phone ? ` · Tlf. ${esc(f.phone)}` : ''}</p></div></body></html>`;
+<p style="margin:0;font-size:14px;color:#5B554C;">${esc(f.name || 'Genfundet')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
   try {
     await sendMail({ to: email, subject: 'Dit preview hos Genfundet', html, text: `Dit preview: ${link}\n\nLinket virker, indtil billedet slettes – 30 dage efter upload. Vi printer ikke noget, før du bestiller og siger ja.\n\n${navn}` });
   } catch (e) { console.error('save-link mail failed', e); }
