@@ -2,7 +2,9 @@ import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
 
 export default function LegalPage({ title, updated, children }: { title: string; updated: string; children: React.ReactNode }) {
-  const draft = process.env.LEGAL_DRAFT !== 'false';
+  // Opt-in, not opt-out: a forgotten environment variable must never publish the words
+  // "udkast" on the page a hesitant customer opens to check whether we are real.
+  const draft = process.env.LEGAL_DRAFT === 'true';
   return (
     <>
       <main className="wrap" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>

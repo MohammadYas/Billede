@@ -105,14 +105,19 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const persist = (patch: { format?: Format; frame?: Frame; extraPrints?: number }) => {
     fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) }).catch(() => {});
   };
-  const pickFormat = (next: Format) => { if (next === format) return; setFormat(next); persist({ format: next }); };
+  const pickFormat = (next: Format) => {
+    if (next === format) return;
+    setFormat(next); persist({ format: next });
+    // the size is the price ladder: this is the real AddToCart, and it was the one step nobody measured
+    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints, repeat: data.repeat }).totalOere / 100 }, { serverLog: true });
+  };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   const setExtras = (next: number) => {
     const n = Math.min(MAX_EXTRA_PRINTS, Math.max(0, next));
     if (n === extraPrints) return;
     const up = n > extraPrints;
     setExtraPrints(n); persist({ extraPrints: n });
-    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar' });
+    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n, repeat: data.repeat }).totalOere / 100 }, { serverLog: true });
   };
 
   // Colour version: requested once, preloaded before the toggle is enabled, so the swap is instant and never shows the damaged original.
@@ -166,6 +171,13 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       setOrdering(false);
       setError(c.preview.checkoutError);
     }
+  };
+
+  /** "Slet mit billede nu": the deletion promise, as a button rather than a sentence. */
+  const erase = async () => {
+    if (!window.confirm(c.preview.eraseConfirm)) return;
+    try { await fetch(`/api/preview/${data.orderId}/cancel${q}`, { method: 'POST' }); } catch { /* it is deleted by retention anyway */ }
+    window.location.assign('/?slettet=1');
   };
 
   const saveLink = async (e: React.FormEvent) => {
@@ -226,6 +238,21 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="caption">{c.preview.frameNote}</p>
       </fieldset>
 
+      <div className="cfg bill">
+        <p className="cfg-label">{c.preview.summaryTitle}</p>
+        <dl className="bill-lines">
+          {bill.lines.map((l) => (
+            <div key={l.key}>
+              <dt>{l.quantity > 1 ? `${l.quantity} × ` : ''}{l.short}{l.note ? <span className="caption">{l.note}</span> : null}</dt>
+              <dd className="tabular">{formatOere(l.amountOere)}</dd>
+            </div>
+          ))}
+          <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
+        </dl>
+        <p className="bill-total"><span>{c.preview.total}</span> <b><Total oere={bill.totalOere} /></b></p>
+        <p className="caption">{c.preview.vat}{data.repeat ? ` · ${c.preview.repeatNote}` : ''}</p>
+      </div>
+
       <div className="cfg extra">
         <p className="cfg-title">{c.preview.extraTitle}</p>
         <p className="caption measure">{c.preview.extraLead}</p>
@@ -240,21 +267,6 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
             <button type="button" onClick={() => setExtras(extraPrints + 1)} aria-label={c.preview.extraAdd} disabled={extraPrints >= MAX_EXTRA_PRINTS}>+</button>
           </div>
         )}
-      </div>
-
-      <div className="cfg bill">
-        <p className="cfg-label">{c.preview.summaryTitle}</p>
-        <dl className="bill-lines">
-          {bill.lines.map((l) => (
-            <div key={l.key}>
-              <dt>{l.quantity > 1 ? `${l.quantity} × ` : ''}{l.short}{l.note ? <span className="caption">{l.note}</span> : null}</dt>
-              <dd className="tabular">{formatOere(l.amountOere)}</dd>
-            </div>
-          ))}
-          <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
-        </dl>
-        <p className="bill-total"><span>{c.preview.total}</span> <b><Total oere={bill.totalOere} /></b></p>
-        <p className="caption">{c.preview.vat}{data.repeat ? ` · ${c.preview.repeatNote}` : ''}</p>
       </div>
     </div>
   );
@@ -309,7 +321,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           </dl>
         </div>
         {!paid && save}
-        <p className="small"><a className="tap" href="/">{c.preview.again}</a></p>
+        <p className="small" style={{ display: 'flex', gap: 'var(--s5)', flexWrap: 'wrap' }}>
+          <a className="tap" href="/">{c.preview.again}</a>
+          {!paid && <button type="button" className="link-btn" onClick={erase}>{c.preview.erase}</button>}
+        </p>
       </div>
       <div className="pv-cta-bar">
         {errorLine}

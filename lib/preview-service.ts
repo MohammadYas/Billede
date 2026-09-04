@@ -144,21 +144,24 @@ export async function processRestore(orderId: string): Promise<void> {
       return;
     }
 
-    // one wall mockup per size on offer, rendered here (sharp, no model) so switching size on the
-    // preview page is instant and shows the real proportions of that frame
+    // The page needs exactly one wall mockup to open: the one the order is on. The other five (three
+    // sizes × two frames) are rendered after the customer already has their picture — measured at
+    // 2.1 s of pure waiting if they are made first.
     const previewBuf = await makePreview(result.restored);
+    const startFormat = isFormat(order.format) ? order.format : customerFormat();
+    const startFrame = readAddOns(metaOf(order).addons).frame;
     const mockups: Record<string, string> = {};
-    for (const fmt of customerFormats()) {
-      for (const frame of FRAMES) {
-        const buf = await makeMockup(result.restored, { format: fmt, frame: frameColour(frame) });
-        const p = objectPath(order.id, 'mockup');
-        await putObject(p, buf);
-        mockups[mockupKey(fmt, frame)] = p;
-      }
-    }
+    const renderMockup = async (fmt: Format, frame: Frame) => {
+      const buf = await makeMockup(result.restored, { format: fmt, frame: frameColour(frame) });
+      const p = objectPath(order.id, 'mockup');
+      await putObject(p, buf);
+      mockups[mockupKey(fmt, frame)] = p;
+      return p;
+    };
+    await renderMockup(startFormat, startFrame);
     const restoredPath = objectPath(order.id, 'restored');
     const previewPath = objectPath(order.id, 'preview');
-    const mockupPath = mockups[mockupKey(isFormat(order.format) ? order.format : customerFormat(), readAddOns(metaOf(order).addons).frame)] ?? Object.values(mockups)[0]!;
+    const mockupPath = mockups[mockupKey(startFormat, startFrame)] ?? Object.values(mockups)[0]!;
     await Promise.all([putObject(restoredPath, result.restored), putObject(previewPath, previewBuf)]);
     await setStatus(order.id, 'PREVIEW_READY', {
       original_path: originalPath, restored_path: restoredPath, preview_path: previewPath, mockup_path: mockupPath,
@@ -167,6 +170,18 @@ export async function processRestore(orderId: string): Promise<void> {
     await setJob(orderId, { kind: 'restore', state: 'done', finishedAt: new Date().toISOString() });
     await logEvent('UploadCompleted', { sessionId, orderId });
     await logEvent('PreviewShown', { sessionId, orderId, meta: { ms: result.meta.durationMs, ssim: result.meta.ssim } });
+
+    // the other five combinations, now that the customer is already looking at their photograph
+    try {
+      for (const fmt of customerFormats()) {
+        for (const frame of FRAMES) {
+          if (fmt === startFormat && frame === startFrame) continue;
+          await renderMockup(fmt, frame);
+        }
+      }
+      const fresh = (await getOrder(orderId)) ?? order;
+      await updateOrder(order.id, { preview_meta: { ...metaOf(fresh), mockups: { ...(metaOf(fresh).mockups ?? {}), ...mockups } } });
+    } catch (e) { console.error('extra mockups failed', orderId, e); }
   } catch (e) {
     const reason = e instanceof RestoreError ? e.code : 'error';
     console.error('preview failed', orderId, e);

@@ -1,6 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 import { approveByToken, isOldToken, orderByToken } from '@/lib/approval';
 import { copy } from '@/lib/copy';
+import { deliveryPromise } from '@/lib/config';
+import { orderDescription } from '@/lib/order-summary';
 import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
 import SubmitButton from '@/components/SubmitButton';
@@ -50,13 +52,13 @@ export default async function Godkend({ params, searchParams }: { params: Promis
   if (order.status !== 'AWAITING_APPROVAL') {
     return shell(<>
       <h1>Tak. Vi printer og sender.</h1>
-      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}Du får en mail med tracking, når pakken er sendt – leveret {c.formatLabel ? '' : ''}inden 5 hverdage. Ordre {order.id.slice(0, 8)}.</p>
+      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}Du får en mail med tracking, når pakken er sendt – leveret {deliveryPromise()}. Ordre {order.id.slice(0, 8)}.</p>
       <p className="measure small muted">Skal noget alligevel ændres, så skriv til os med det samme{c.email ? <> på <a href={c.emailHref}>{c.email}</a></> : null} – vi svarer inden 24 timer.</p>
     </>);
   }
   return shell(<>
     <h1 style={{ maxWidth: '14em' }}>Ligner det?</h1>
-    <p className="measure">Det her er det billede, vi printer i {c.formatLabel}. Tryk Godkend, og vi printer, indrammer og sender det. Er der noget, du vil have ændret, så skriv det – det koster ikke ekstra, og vi printer ikke, før du siger ja.</p>
+    <p className="measure">Det her er det billede, vi printer: {orderDescription(order)}. Tryk Godkend, og vi printer, indrammer og sender det. Er der noget, du vil have ændret, så skriv det – det koster ikke ekstra, og vi printer ikke, før du siger ja.</p>
     <form action={approveWithToken} style={{ display: 'grid', gap: 'var(--s3)' }}>
       <SubmitButton label="Godkend" pending="Sender dit ja…" />
       <a href={`/godkend/${token}/aendring`} className="btn btn-block btn-quiet">Jeg vil have en ændring</a>

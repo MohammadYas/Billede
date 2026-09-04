@@ -31,7 +31,7 @@ export async function runRetention(): Promise<{ deleted: number; reminded: numbe
   for (const o of (shipped ?? []) as Order[]) { if (await transition(o.id, ['SHIPPED'], 'COMPLETED')) completed++; }
 
   const { data: stale } = await db.from('orders').select('*').is('deleted_at', null)
-    .or(`and(status.in.(${UNPAID.join(',')}),updated_at.lt.${unpaidBefore}),and(status.in.(${DONE.join(',')}),updated_at.lt.${doneBefore})`).limit(200);
+    .or(`and(status.in.(${UNPAID.join(',')}),created_at.lt.${unpaidBefore}),and(status.in.(${DONE.join(',')}),updated_at.lt.${doneBefore})`).limit(200);
   let deleted = 0;
   for (const o of (stale ?? []) as Order[]) {
     try {

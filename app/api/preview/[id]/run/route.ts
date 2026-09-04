@@ -4,7 +4,6 @@ import { readSessionId } from '@/lib/session';
 import { objectExists } from '@/lib/db/storage';
 import { ownsOrder } from '@/lib/preview-service';
 import { enqueue, jobBusy } from '@/lib/jobs';
-import { logEvent } from '@/lib/analytics/events';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!uploadPath || !(await objectExists(uploadPath))) return NextResponse.json({ error: 'no_file' }, { status: 409 });
   try {
     await enqueue('restore', order.id);
-    await logEvent('UploadStarted', { sessionId: sid, orderId: order.id });
     return NextResponse.json({ ok: true, queued: true }, { headers: { 'cache-control': 'no-store' } });
   } catch (e) {
     console.error('enqueue failed', e);

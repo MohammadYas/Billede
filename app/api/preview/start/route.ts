@@ -18,6 +18,8 @@ export async function POST(req: NextRequest) {
   const [{ sid, fresh }, utm, repeatOf] = await Promise.all([ensureSessionId(), readUtm(), repeatSource(body.igen)]);
   try {
     const started = await beginUpload({ sessionId: sid, utm, size, type, repeatOf });
+    // the sheet only promises the repeat price once this has said yes
+    Object.assign(started as Record<string, unknown>, { repeat: Boolean(repeatOf) });
     const res = NextResponse.json(started, { headers: { 'cache-control': 'no-store' } });
     if (fresh) res.headers.append('set-cookie', sessionCookie(sid, req.nextUrl.protocol === 'https:'));
     return res;

@@ -1,4 +1,4 @@
-import { CONFIG } from '@/lib/config';
+import { CONFIG, deliveryPromise } from '@/lib/config';
 import { getFounder, fornavn } from '@/lib/founder';
 import { formatLabel, type Format } from '@/lib/pricing';
 import { orderDescription, orderLines, repeatLink, repeatDiscount } from '@/lib/order-summary';
@@ -57,7 +57,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     h1('Tak for din bestilling.'),
     p(`${esc(navn)} kigger på dit billede inden 24 timer og finjusterer det i hånden.`),
     p('Inden 48 timer får du en mail med det færdige billede. Du godkender det – eller beder om en ændring – før vi printer noget.'),
-    p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret inden ${CONFIG.deliveryDaysMax} hverdage efter dit ja.`),
+    p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja.`),
     mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">` : '',
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
     p(orderLines(o).map((l) => esc(l)).join('<br>') + `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt`),

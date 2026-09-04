@@ -1,6 +1,6 @@
 'use client';
 
-export type ClientEvent = 'PageView' | 'ViewContent' | 'UploadStarted' | 'UploadCompleted' | 'PreviewShown' | 'PreviewFallback' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
+export type ClientEvent = 'PageView' | 'ViewContent' | 'FlowOpened' | 'UploadStarted' | 'UploadCompleted' | 'PreviewShown' | 'PreviewFallback' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
 
 declare global {
   interface Window { fbq?: (...args: unknown[]) => void; _fbq?: unknown; __gfConsent?: 'yes' | 'no' | null; }
@@ -67,10 +67,11 @@ function fire(name: ClientEvent, params: Record<string, unknown>, eventId?: stri
 }
 
 /** Fires the Meta event (now if consented, later if undecided, never if declined) and logs the funnel event server-side (always, anonymous session). */
-export function track(name: ClientEvent, params: Record<string, unknown> = {}, opts: { serverLog?: boolean; eventId?: string } = {}) {
+export function track(name: ClientEvent, params: Record<string, unknown> = {}, opts: { serverLog?: boolean; eventId?: string; pixel?: boolean } = {}) {
   try {
     const c = consent();
-    if (c === 'yes') { if (!window.fbq) loadPixel(); fire(name, params, opts.eventId); }
+    if (opts.pixel === false) { /* loadPixel() already fired this one at Meta */ }
+    else if (c === 'yes') { if (!window.fbq) loadPixel(); fire(name, params, opts.eventId); }
     else if (c === null) queue(name, params, opts.eventId);
   } catch { /* never break the flow */ }
   if (opts.serverLog !== false) {

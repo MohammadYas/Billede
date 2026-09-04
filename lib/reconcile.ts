@@ -10,16 +10,24 @@ import { markPaid } from '@/lib/payments/fulfil-paid';
 export async function reconcilePayments(): Promise<{ checked: number; marked: number }> {
   if (!process.env.STRIPE_SECRET_KEY) return { checked: 0, marked: 0 };
   const since = new Date(Date.now() - 7 * 864e5).toISOString();
-  const { data } = await supabaseAdmin().from('orders').select('*').not('payment_session_id', 'is', null).in('status', ['NEW', 'PREVIEW_READY', 'ABANDONED']).gte('created_at', since).limit(100);
+  // Not just the newest session, and not just the unpaid rows: a customer who paid twice (once in a tab
+  // whose webhook never arrived) leaves a paid session that is referenced nowhere. markPaid refunds the
+  // second payment when it sees it — but only if somebody asks Stripe about that session.
+  const { data } = await supabaseAdmin().from('orders').select('*').not('payment_session_id', 'is', null).gte('created_at', since).limit(200);
   const { paymentProvider } = await import('@/lib/payments/stripe');
-  let marked = 0;
+  let marked = 0, checked = 0;
   for (const o of (data ?? []) as Order[]) {
-    try {
-      const v = await paymentProvider().verifySession(o.payment_session_id!);
-      if (v.paid) { const r = await markPaid(o.id, v); if (r?.status === 'PAID') marked++; }
-    } catch (e) { console.error('reconcile', o.id, e); }
+    const meta = (o.preview_meta ?? {}) as { sessions?: string[] };
+    const ids = [...new Set([...(meta.sessions ?? []), o.payment_session_id!].filter(Boolean))];
+    for (const id of ids) {
+      checked++;
+      try {
+        const v = await paymentProvider().verifySession(id);
+        if (v.paid) { const r = await markPaid(o.id, v); if (r?.status === 'PAID') marked++; }
+      } catch (e) { console.error('reconcile', o.id, id, e); }
+    }
   }
-  return { checked: data?.length ?? 0, marked };
+  return { checked, marked };
 }
 
 /** Admin "Tjek betaling hos Stripe" for one order. */

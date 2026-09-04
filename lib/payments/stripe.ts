@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { CONFIG } from '@/lib/config';
 import type { Order } from '@/lib/db/orders';
 import { formatLabel, type Quote } from '@/lib/pricing';
 import type { CheckoutResult, PaymentProvider, VerifiedSession, WebhookOutcome } from './provider';
@@ -55,11 +56,12 @@ export class StripeProvider implements PaymentProvider {
       line_items: this.lineItems(opts.quote, opts.previewImageUrl),
       shipping_address_collection: { allowed_countries: ['DK'] },
       custom_fields: [{ key: 'gavehilsen', label: { type: 'custom', custom: 'Hilsen på et kort i pakken (valgfri)' }, type: 'text', optional: true, text: { maximum_length: 200 } }],
-      phone_number_collection: { enabled: true },
+      // no phone number: nothing in fulfilment needs it, support runs on e-mail, and a required phone
+      // field is the most expensive question on a checkout for a brand the customer has just met
       consent_collection: { terms_of_service: 'required' },
       custom_text: {
         terms_of_service_acceptance: {
-          message: 'Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres, og at printet fremstilles specielt til mig. [Handelsbetingelser](' + (process.env.NEXT_PUBLIC_SITE_URL ?? '') + '/handelsbetingelser)',
+          message: `Du kan fortryde og få hele beløbet tilbage, indtil du har godkendt det færdige billede på mail. Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres, og at printet fremstilles specielt til mig. [Handelsbetingelser](${CONFIG.siteUrl.replace(/\/$/, '')}/handelsbetingelser)`,
         },
       },
       success_url: opts.successUrl,

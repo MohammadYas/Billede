@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { consent, loadPixel, setConsent, track } from '@/lib/analytics/client';
+import { consent, setConsent } from '@/lib/analytics/client';
 
 /**
  * Minimal bottom banner. Only rendered when a pixel id is configured.
@@ -10,10 +10,9 @@ import { consent, loadPixel, setConsent, track } from '@/lib/analytics/client';
 export default function Consent({ text, accept, decline }: { text: string; accept: string; decline: string }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
-    const c = consent();
-    if (c === 'yes') loadPixel();
-    track('PageView', {}, { serverLog: true });
-    if (c !== null || !process.env.NEXT_PUBLIC_META_PIXEL_ID) return;
+    // PixelBoot owns loading the pixel and logging the page view on every route; this component is
+    // only the banner, so a visitor is never counted twice for arriving once.
+    if (consent() !== null || !process.env.NEXT_PUBLIC_META_PIXEL_ID) return;
     // only after the first scroll: the visitor who taps the button straight away is never interrupted (nothing is tracked before consent anyway)
     const onScroll = () => { if (window.scrollY > 120) { setShow(true); window.removeEventListener('scroll', onScroll); } };
     onScroll();

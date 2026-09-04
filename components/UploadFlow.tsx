@@ -23,17 +23,37 @@ const MAX = 25 * 1024 * 1024;
 export default function UploadFlow({ c }: { c: Copy }) {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: 'closed' });
+  const stateRef = useRef<State>(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
   const sheetRef = useRef<HTMLDivElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const [coarse, setCoarse] = useState(true);
   // the repeat reference lives in a ref as well, because start() reads it inside an async chain
+  const [repeatConfirmed, setRepeatConfirmed] = useState(false);
   const [igen, setIgenState] = useState<string | null>(null);
   const igenRef = useRef<string | null>(null);
   const setIgen = (v: string | null) => { igenRef.current = v; setIgenState(v); };
   const [slow, setSlow] = useState(false);
   const [phase, setPhase] = useState(0); // 0–2: the wait sentence rotates at 15 s and 30 s
 
-  const open = useCallback(() => setState({ kind: 'pick' }), []);
+  const [keepEmail, setKeepEmail] = useState('');
+  const [keepState, setKeepState] = useState<'idle' | 'sending' | 'done'>('idle');
+  const keepLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = keepEmail.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return;
+    setKeepState('sending');
+    const st = stateRef.current;
+    const id = st.kind === 'processing' ? st.orderId : null;
+    const tok = st.kind === 'processing' ? st.token : null;
+    if (!id) { setKeepState('idle'); return; }
+    try {
+      await fetch(`/api/preview/${id}/save${tok ? `?t=${encodeURIComponent(tok)}` : ''}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
+      setKeepState('done');
+    } catch { setKeepState('idle'); }
+  };
+
+  const open = useCallback(() => { track('FlowOpened', {}, { serverLog: true }); setState({ kind: 'pick' }); }, []);
   const runRef = useRef(0); // bumped on every close: an in-flight start() sees it and stops
   const pollRef = useRef<number | null>(null);
   const stopPolling = () => { if (pollRef.current) window.clearTimeout(pollRef.current); pollRef.current = null; };
@@ -57,7 +77,11 @@ export default function UploadFlow({ c }: { c: Copy }) {
     const sp = new URLSearchParams(window.location.search);
     // ?igen=<orderId>.<token> from a paid order's receipt: the next photograph is priced as a repeat
     const again = sp.get('igen');
-    if (again && again.includes('.')) setIgen(again);
+    if (again && again.includes('.')) {
+      setIgen(again);
+      // the promise waits for the server: a refunded or purged parent order must not advertise a discount
+      fetch(`/api/repeat?ref=${encodeURIComponent(again)}`).then((r) => r.json()).then((j: { ok?: boolean }) => setRepeatConfirmed(Boolean(j.ok))).catch(() => {});
+    }
     const id = sp.get('order');
     if (id && /^[0-9a-f-]{36}$/.test(id)) router.replace(`/p/${id}${sp.get('cancelled') === '1' ? '?cancelled=1' : ''}${sp.get('t') ? `${sp.get('cancelled') === '1' ? '&' : '?'}t=${encodeURIComponent(sp.get('t')!)}` : ''}`);
   }, [router]);
@@ -74,7 +98,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
   // after 45 s the wait copy admits it is taking longer today (the bar keeps creeping)
   useEffect(() => {
     if (state.kind !== 'processing') { setSlow(false); setPhase(0); return; }
-    const t = setTimeout(() => setSlow(true), 75_000);
+    const t = setTimeout(() => setSlow(true), 110_000); // the page promises about a minute and a half; the apology belongs after that, not before
     const p1 = setTimeout(() => setPhase(1), 15_000);
     const p2 = setTimeout(() => setPhase(2), 30_000);
     return () => { clearTimeout(t); clearTimeout(p1); clearTimeout(p2); };
@@ -96,17 +120,35 @@ export default function UploadFlow({ c }: { c: Copy }) {
     setState({ kind: 'pick', file, thumb: URL.createObjectURL(file) });
   };
 
-  /** Fallback transport is capped at 4.5 MB (function body limit): downscale to ≤ 2200 px JPEG in the browser first. */
-  const shrink = async (file: File): Promise<Blob> => {
-    if (file.size <= 4_500_000) return file;
+  /** Downscale in the browser: `edge` px on the long side, JPEG. Returns null when the browser cannot decode the file (HEIC on Android, canvas memory). */
+  const resize = async (file: Blob, edge: number, quality = 0.9): Promise<Blob | null> => {
     try {
       const bmp = await createImageBitmap(file);
-      const s = Math.min(1, 2200 / Math.max(bmp.width, bmp.height));
+      const s = Math.min(1, edge / Math.max(bmp.width, bmp.height));
       const canvas = document.createElement('canvas'); canvas.width = Math.round(bmp.width * s); canvas.height = Math.round(bmp.height * s);
       canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
-      if (blob && blob.size <= 4_500_000) return blob;
-    } catch { /* HEIC on a browser that cannot decode it, or canvas memory */ }
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', quality));
+      bmp.close?.();
+      return blob;
+    } catch { return null; }
+  };
+
+  /**
+   * A phone photograph of a print is 2.5-6 MB, and on Danish mobile data that is 10-45 seconds of
+   * upload before the restoration has even started. 3200 px on the long side is more than the print
+   * pipeline uses (it re-runs the final at 2400 px), so nothing is lost but the wait.
+   */
+  const forUpload = async (file: File): Promise<Blob> => {
+    if (file.size <= 2_500_000) return file;
+    const small = await resize(file, 3200, 0.87);
+    return small && small.size < file.size ? small : file;
+  };
+
+  /** Fallback transport is capped at 4.5 MB (function body limit): 2200 px JPEG. */
+  const shrink = async (file: Blob): Promise<Blob> => {
+    if (file.size <= 4_500_000) return file;
+    const blob = await resize(file, 2200);
+    if (blob && blob.size <= 4_500_000) return blob;
     throw new Error('too_large');
   };
   /** XHR with progress, a hard timeout and a stall watchdog (no progress for 25 s = dead connection). */
@@ -202,15 +244,16 @@ export default function UploadFlow({ c }: { c: Copy }) {
     try {
       // 1st transport: straight into the bucket with the signed URL (no size limit, no double transfer)
       const put = (blob: Blob) => { const fd = new FormData(); fd.append('cacheControl', '3600'); fd.append('', blob, 'photo.jpg'); return send('PUT', started.uploadUrl, fd, { 'x-upsert': 'false' }, progress, 6_000); };
-      let status = await put(file);
+      const payload = await forUpload(file);
+      let status = await put(payload);
       // a HEIC from the camera roll: the bucket sniffs bytes, the part just needs a type it accepts
-      if (status === 400 || status === 415) status = await put(new Blob([file], { type: 'image/jpeg' }));
+      if (status === 400 || status === 415) status = await put(new Blob([payload], { type: 'image/jpeg' }));
       if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
     } catch (e) {
       if ((e as Error).message === 'abort' || cancelled()) return;
       // 2nd transport: through the app (≤ 4.5 MB, downscaled if needed) — for a proxy or an in-app browser that blocks the PUT
       try {
-        const small = await shrink(file);
+        const small = await shrink(await forUpload(file));
         const fd2 = new FormData(); fd2.append('file', small, 'photo.jpg');
         const status = await send('POST', `/api/preview/${started.orderId}/upload?t=${encodeURIComponent(started.token)}`, fd2, {}, progress);
         if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
@@ -254,7 +297,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         {state.kind === 'pick' && (
           <div style={{ display: 'grid', gap: 'var(--s4)' }}>
             <h2>Vis os billedet.</h2>
-            {igen && <p className="small notice" role="status">{c.upload.repeat}</p>}
+            {repeatConfirmed && <p className="small notice" role="status">{c.upload.repeat}</p>}
             {state.thumb ? (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
                 <img src={state.thumb} alt="Dit valgte billede" style={{ maxHeight: '38dvh', width: 'auto', maxWidth: '100%', objectFit: 'contain', justifySelf: 'start' }} />
@@ -268,6 +311,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
               </div>
             ) : coarse ? (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <p className="caption">{c.upload.free}</p>
                 <label className="btn btn-block" style={{ cursor: 'pointer' }}>{c.upload.camera}<input type="file" accept="image/*" capture="environment" hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
                 <label className="btn btn-block btn-quiet" style={{ cursor: 'pointer' }}>{c.upload.library}<input type="file" accept={ACCEPT} hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
               </div>
@@ -298,6 +342,18 @@ export default function UploadFlow({ c }: { c: Copy }) {
             </div>
             <p className="lead" style={{ fontFamily: 'var(--display)' }}>{sentence}</p>
             <p className="caption">{c.processing.stages[state.stage]}{state.stage === 'uploading' ? ` · ${state.percent} %` : ''} · {slow ? c.processing.slow : c.processing.wait}</p>
+            {/* the 90 seconds where a cold visitor leaves: if they do, we still have the address and can send them their own picture */}
+            {state.orderId && (
+              keepState === 'done' ? <p className="small" role="status">{c.processing.keepDone}</p> : (
+                <form onSubmit={keepLink} noValidate style={{ display: 'grid', gap: 'var(--s2)', paddingTop: 'var(--s3)', borderTop: '1px solid var(--hairline)' }}>
+                  <p className="small"><b style={{ fontWeight: 600 }}>{c.processing.keepTitle}</b><br /><span className="muted">{c.processing.keepP}</span></p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 'var(--s2)' }}>
+                    <div className="field"><label htmlFor="keep-email" className="visually-hidden">{c.processing.keepEmail}</label><input id="keep-email" type="email" inputMode="email" autoComplete="email" placeholder={c.processing.keepEmail} value={keepEmail} onChange={(e) => setKeepEmail(e.target.value)} /></div>
+                    <button type="submit" className="btn btn-quiet" disabled={keepState === 'sending'}>{c.processing.keepCta}</button>
+                  </div>
+                </form>
+              )
+            )}
             <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={close}>{c.processing.cancel}</button>
           </div>
         )}

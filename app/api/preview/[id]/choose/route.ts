@@ -26,5 +26,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   patch.amount = q.totalOere;
   patch.preview_meta = { ...meta, addons: q.addons };
   await updateOrder(order.id, patch);
+  // A Checkout session holds the line items it was created with. If the customer changes size, frame or
+  // quantity while an old tab is still open, paying that tab would charge an amount the bill never showed.
+  // Kill it here; the next "Bestil" makes a fresh one.
+  if (order.payment_session_id && (q.format !== order.format || JSON.stringify(q.addons) !== JSON.stringify(current))) {
+    try {
+      const { paymentProvider } = await import('@/lib/payments/stripe');
+      await paymentProvider().expireSession(order.payment_session_id);
+      await updateOrder(order.id, { payment_session_id: null });
+    } catch (e) { console.error('expire on config change failed', order.id, e); }
+  }
   return NextResponse.json({ ok: true, total: q.totalOere });
 }

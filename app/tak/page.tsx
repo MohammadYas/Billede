@@ -66,7 +66,7 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
                 {firePurchase && <PurchaseEvent value={value} eventId={order.id} email={order.customer_email} phone={order.customer_phone} />}
               </div>
               <div style={{ display: 'grid', gap: 'var(--s5)' }}>
-                {order.mockup_path && <img src={imageUrl(order, 'mockup', order.format, readAddOns((order.preview_meta as { addons?: unknown } | null)?.addons).frame)} alt={`Dit billede indrammet i ${c.formatLabel}`} width={1200} height={960} style={{ maxWidth: 520 }} />}
+                {order.mockup_path && <img src={imageUrl(order, 'mockup', order.format, readAddOns((order.preview_meta as { addons?: unknown } | null)?.addons).frame)} alt={`Dit billede indrammet: ${orderDescription(order)}`} width={1200} height={960} style={{ maxWidth: 520 }} />}
                 <div className="bill">
                   <p className="cfg-label">{c.preview.summaryTitle}</p>
                   <dl className="bill-lines">

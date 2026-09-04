@@ -7,7 +7,9 @@ export const dynamic = 'force-dynamic';
 
 // Client-side funnel events. Purchase / UploadCompleted / PreviewShown / PreviewFallback / InitiateCheckout
 // are written by the server routes that own them; the client copies are ignored to avoid double counting.
-const CLIENT_ALLOWED: EventName[] = ['PageView', 'ViewContent', 'UploadStarted'];
+// FlowOpened and AddToCart exist only in the browser — nothing on the server sees a sheet open or a
+// size picked, and those are the two steps where the funnel was blind.
+const CLIENT_ALLOWED: EventName[] = ['PageView', 'ViewContent', 'FlowOpened', 'UploadStarted', 'AddToCart'];
 
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as { name?: EventName; meta?: Record<string, unknown> } | null;

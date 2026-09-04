@@ -6,7 +6,7 @@ import { notifyOwner } from '@/lib/email/owner';
 import { logEvent } from '@/lib/analytics/events';
 import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
 import { formatDkk } from '@/lib/pricing';
-import { orderDescription, orderLines } from '@/lib/order-summary';
+import { orderDescription, orderLines, orderQuote } from '@/lib/order-summary';
 
 /**
  * Marks an order PAID from a verified session (webhook, /tak, or the hourly reconciliation).
@@ -35,8 +35,23 @@ export async function markPaid(orderId: string, s: VerifiedSession, ctx: { ip?: 
       } catch (e) { note += ` – REFUSION FEJLEDE: ${e instanceof Error ? e.message : e}`; }
       await updateOrder(current.id, { internal_notes: `${current.internal_notes ?? ''}\n${note}`.trim() });
       await notifyOwner(`Dobbelt betaling på ordre ${current.id.slice(0, 8)}`, [note, `Kunde: ${current.customer_email ?? '—'}`], current.id);
+      // the customer sees two charges on their statement; they must hear it from us first
+      if (current.customer_email) {
+        const { refundNotice } = await import('@/lib/email/templates');
+        const mail = refundNotice({ amount: (s.amount ?? 0) / 100 });
+        sendMail({ to: current.customer_email, ...mail }).catch((e) => console.error('duplicate refund mail failed', e));
+      }
     }
     return current;
+  }
+  // The amount on the card must equal the bill the customer saw. If it does not — a session created
+  // before a configuration change, a price edited between order and payment — nobody must find out
+  // from a customer's e-mail.
+  const expected = orderQuote(updated).totalOere;
+  if (typeof updated.amount === 'number' && updated.amount !== expected) {
+    const note = `BELØB AFVIGER: betalt ${(updated.amount / 100).toFixed(0)} kr., bestillingen på siden er ${(expected / 100).toFixed(0)} kr.`;
+    await updateOrder(updated.id, { internal_notes: `${updated.internal_notes ?? ''}\n${note}`.trim() });
+    notifyOwner(`Beløb afviger på ordre ${updated.id.slice(0, 8)}`, [note, 'Ret det med kunden, før du sender godkendelsesmailen — refundér differencen eller send et link til resten.'], updated.id).catch(() => {});
   }
   if (updated.customer_email) {
     const mail = orderConfirmation({ order: updated });

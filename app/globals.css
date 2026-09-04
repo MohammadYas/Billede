@@ -122,7 +122,7 @@ p + p { margin-top: var(--s4); }
 @media (min-width: 768px) { .hero-credit { display: none; } }
 .hero-media { position: relative; }
 @media (min-width: 1024px) {
-  .hero-grid { grid-template-columns: minmax(0, min(calc(var(--container) - 240px), calc(80vh * 4 / 3))) 1fr; gap: var(--s5); align-items: end; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
+  .hero-grid { grid-template-columns: minmax(0, min(calc(var(--container) - 240px), calc(58vh * 4 / 3))) 1fr; gap: var(--s5); align-items: end; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
   .hero-media .ba { max-height: 80vh; }
   .hero-caption { padding: 0 0 var(--s2); max-width: 16em; }
 }
@@ -150,6 +150,9 @@ p + p { margin-top: var(--s4); }
 /* Trust row — one hairline row */
 .trust { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); padding: var(--s3) 0; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); font-size: var(--fs-small); color: var(--ink-2); }
 .trust span { white-space: nowrap; }
+/* on a phone the longest promise is wider than the screen, and a horizontal scrollbar on the first
+   screen of a paid landing page is worse than a wrapped line */
+@media (max-width: 767px) { .trust span { white-space: normal; } }
 
 /* Steps — three sentences with photographs that show the object at each stage */
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s6); }
@@ -259,7 +262,10 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 /* Preview page (/p/[id]) */
 .pv { display: grid; gap: var(--s5); padding-top: var(--s4); padding-bottom: var(--s9); }
 .pv-left { display: grid; gap: var(--s4); }
-.pv .ba { max-height: 70dvh; margin-inline: auto; }
+/* the order bar is fixed and 102 px tall: the picture has to end above it, or its own controls
+   (Før/Efter, the colour toggle) sit behind the bar on the first screen */
+.pv .ba { max-height: min(70dvh, calc(100dvh - 320px)); margin-inline: auto; }
+@media (min-width: 1024px) { .pv .ba { max-height: 70dvh; } }
 .pv-toggle { display: flex; align-items: center; gap: var(--s4); min-height: 44px; }
 .pv-grid { display: grid; gap: var(--s5); }
 .pv-cta { display: grid; gap: var(--s2); }
