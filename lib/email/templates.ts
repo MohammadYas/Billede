@@ -1,6 +1,7 @@
 import { CONFIG } from '@/lib/config';
 import { getFounder, fornavn } from '@/lib/founder';
 import { formatLabel, type Format } from '@/lib/pricing';
+import { orderDescription, orderLines, repeatLink, repeatDiscount } from '@/lib/order-summary';
 
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
@@ -59,14 +60,16 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret inden ${CONFIG.deliveryDaysMax} hverdage efter dit ja.`),
     mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">` : '',
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
-    p(`Restaureret og indrammet familiebillede, ${esc(formatLabel(o.format))}${o.chosen_colour ? ', i farver' : ''} · ${esc(amount)} inkl. moms og fragt<br>` +
+    p(orderLines(o).map((l) => esc(l)).join('<br>') + `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt`),
+    p(`${esc(orderDescription(o))}<br>` +
       (address ? `Leveres til: ${esc(address)}<br>` : '') +
       `Ordre ${esc(o.id.slice(0, 8))} · betalt ${esc(o.paid_at ? new Date(o.paid_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }) : 'i dag')}` +
       (gift ? `<br>Hilsen på kortet i pakken: “${esc(gift)}”` : '')),
     p(`Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. <a href="${siteUrl('/handelsbetingelser')}" style="color:#2F4A3A;">Handelsbetingelser</a>${previewLink ? ` · <a href="${previewLink}" style="color:#2F4A3A;">Dit preview</a>` : ''}`),
     f.email ? p(`Spørgsmål? Skriv til ${esc(kontakt)} på <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a> – eller svar på denne mail. Vi svarer inden 24 timer.`) : '',
+    repeatLink(o) ? `<hr style="border:0;border-top:1px solid #D9D1C3;margin:32px 0 20px;">${p(`<strong>Har I flere billeder?</strong> De ligger sjældent alene i skuffen. Bestiller du et mere fra linket her, trækker vi ${esc(repeatDiscount())} fra.`)}${blockButton(repeatLink(o)!, 'Se billede nummer to', true)}` : '',
   ].join(''));
-  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret inden ${CONFIG.deliveryDaysMax} hverdage efter dit ja.\n\nDin bestilling: Restaureret og indrammet familiebillede, ${formatLabel(o.format)}${o.chosen_colour ? ', i farver' : ''} · ${amount} inkl. moms og fragt${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}`;
+  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret inden ${CONFIG.deliveryDaysMax} hverdage efter dit ja.\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms og fragt · ${orderDescription(o)}${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Bestil et mere med ${repeatDiscount()} rabat: ${repeatLink(o)}` : ''}`;
   return { subject, html, text };
 }
 

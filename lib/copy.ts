@@ -1,7 +1,7 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
 import { CONFIG, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, mobilePayEnabled, type Season } from '@/lib/config';
-import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, type Format } from '@/lib/pricing';
+import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, REPEAT_DISCOUNT_DKK, type Format } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
 
 export function copy(season: Season = currentSeason()) {
@@ -32,11 +32,12 @@ export function copy(season: Season = currentSeason()) {
   };
   const rowsFor = (fmt: Format, lbl: string): [string, string][] => [
     ['Print', `${lbl} på mat fotopapir, farveægte`],
-    ['Ramme', 'Sort ramme med passepartout, klar til at hænge op'],
+    ['Ramme', 'Sort eller eg, med passepartout og glas, klar til at hænge op'],
     ['Fil', 'Den restaurerede fil i høj opløsning, din for altid'],
     ['Manuelt tjek', `${cap(navn)} finjusterer hvert billede og tjekker ansigterne`],
     ['Godkendelse', 'Du ser det færdige billede og siger ja, før vi printer'],
     ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder`],
+    ['Flere eksemplarer', `Et mere af samme billede fra ${formatDkk(EXTRA_PRINT_DKK[fmt])}, i samme pakke`],
     ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
   ];
   const variant = (fmt: Format, landscape = false) => {
@@ -48,6 +49,7 @@ export function copy(season: Season = currentSeason()) {
       price: pris,
       priceDkk: PRICING[fmt].priceDkk,
       hint: hint[fmt] ?? '',
+      extraPrint: formatDkk(EXTRA_PRINT_DKK[fmt]),
       specTitle: `Det får du for ${pris}`,
       cta: `Bestil mit billede – ${pris}`,
       payWhen: `Du betaler ${pris} nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.`,
@@ -99,6 +101,7 @@ export function copy(season: Season = currentSeason()) {
         'Se resultatet på skærmen. Det tager under et minut og koster ikke noget.',
         `Bestil. ${cap(navn)} finjusterer, du godkender på mail, vi printer og sender. Leveret ${levering}.`,
       ],
+      note: 'Papir falmer, og folder bliver ikke glattere med årene. Et foto af billedet, som det er nu, er nok til at redde det.',
     },
     taetPaa: { h2: 'Tæt på', p: 'Det er i detaljerne, man kan se, om det er gjort ordentligt. Øjne, hænder, skrift og stof – ikke udglattet, bare rene.' },
     produkt: {
@@ -113,6 +116,11 @@ export function copy(season: Season = currentSeason()) {
       line: `Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret ${levering}.`,
       deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
       priceNote: 'inkl. moms, ramme og fragt · pengene tilbage, hvis det ikke ligner',
+      guarantee: [
+        'Du ser resultatet, før du bestiller',
+        'Du godkender det færdige billede på mail, før vi printer',
+        'Ligner det ikke, får du hele beløbet tilbage',
+      ] as string[],
       kontakt: email ? `Spørgsmål? ${cap(skrivTil)} på ${email} – vi svarer inden 24 timer.` : '',
       kontaktHref: emailHref,
       price,
@@ -157,6 +165,10 @@ export function copy(season: Season = currentSeason()) {
           ? { q: 'Når det frem inden jul?', a: `Ja, hvis du bestiller senest ${dato} og godkender billedet, når mailen kommer (inden 48 timer). Efter ${dato} leverer vi inden ${X} hverdage.` }
           : { q: 'Hvornår får jeg det?', a: `Vi leverer inden ${X} hverdage, efter du har godkendt det færdige billede.` },
         {
+          q: 'Kan jeg få flere eksemplarer af det samme billede?',
+          a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et ${formatLabel(format)} mere, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling – minus ${formatDkk(REPEAT_DISCOUNT_DKK)}, hvis du bestiller det fra kvitteringen.`,
+        },
+        {
           q: 'Kan jeg sende det direkte til modtageren?',
           a: 'Ja. Skriv modtagerens navn og adresse som leveringsadresse ved betaling. Godkendelsesmailen kommer stadig til dig, så du ser det færdige billede først.',
         },
@@ -195,6 +207,7 @@ export function copy(season: Season = currentSeason()) {
       noPhotoCta: 'Send mig linket',
       noPhotoDone: 'Linket er sendt. Tag et foto af billedet i dagslys, når du har det – resten tager under et minut.',
       back: 'Tilbage',
+      repeat: `Billede nummer to: ${formatDkk(REPEAT_DISCOUNT_DKK)} er trukket fra, når du bestiller.`,
     },
     processing: {
       stages: { uploading: 'Uploader', sending: 'Restaurerer', restoring: 'Restaurerer', preparing: 'Gør preview klar' } as Record<string, string>,
@@ -220,8 +233,27 @@ export function copy(season: Season = currentSeason()) {
       next: `Det her er det automatiske første udkast. Bestiller du, retter ${navn} det til i hånden, og du godkender det på mail, før vi printer.`,
       p: `Vi finjusterer billedet manuelt, printer det, indrammer det og sender det hjem til dig. Du godkender det færdige billede, før vi printer.`,
       specTitle: `Det får du for ${price}`,
-      sizeTitle: 'Vælg størrelse',
+      sizeTitle: 'Størrelse',
       sizeNote: 'Ramme, glas, gavekort og fragt er med i alle størrelser.',
+      frameTitle: 'Ramme',
+      frameSort: 'Sort',
+      frameSortHint: 'Klassisk. Lader billedet stå alene',
+      frameEg: 'Eg',
+      frameEgHint: 'Lyst træ. Varmere til gamle billeder',
+      frameNote: 'Begge med passepartout og glas. Samme pris.',
+      extraTitle: 'Skal en anden i familien også have et?',
+      extraLead: 'Restaureringen er lavet én gang. Et eksemplar mere er kun selve billedet, rammen og forsendelsen – og det kommer i samme pakke.',
+      extraAdd: 'Tilføj et eksemplar',
+      extraOne: 'eksemplar mere',
+      extraMany: 'eksemplarer mere',
+      extraRemove: 'Fjern',
+      summaryTitle: 'Din bestilling',
+      shipping: 'Fragt og indpakning',
+      shippingFree: 'Inkluderet',
+      total: 'I alt',
+      vat: 'inkl. moms',
+      repeatNote: `Billede nummer to: ${formatDkk(REPEAT_DISCOUNT_DKK)} er trukket fra, fordi du bestilte fra din forrige ordre.`,
+      steps: ['Dit billede', 'Størrelse og ramme', 'Betaling'] as string[],
       colourToggle: 'Vis i farver',
       monoToggle: 'Vis i sort-hvid',
       colourLoading: 'Farveversion på vej – ca. ½ minut',
@@ -263,6 +295,9 @@ export function copy(season: Season = currentSeason()) {
         ['Efter dit ja', `Print i den valgte størrelse, ramme og fri fragt. Leveret ${levering}.`],
       ] as [string, string][],
       more: 'Vis et billede mere',
+      againH2: 'Har I flere billeder?',
+      againP: `De ligger sjældent alene i skuffen. Bestiller du et mere fra linket her, trækker vi ${formatDkk(REPEAT_DISCOUNT_DKK)} fra – samme arbejde, samme godkendelse, fri fragt.`,
+      againCta: 'Se billede nummer to',
       unverifiedH1: 'Vi kunne ikke bekræfte betalingen med det samme.',
       unverifiedP: 'Er pengene trukket, er din bestilling hos os, og du får en mail inden for få minutter. Ellers kan du gå tilbage til dit billede og prøve igen.',
       back: 'Tilbage til dit billede',

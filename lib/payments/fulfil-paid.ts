@@ -6,6 +6,7 @@ import { notifyOwner } from '@/lib/email/owner';
 import { logEvent } from '@/lib/analytics/events';
 import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
 import { formatDkk } from '@/lib/pricing';
+import { orderDescription, orderLines } from '@/lib/order-summary';
 
 /**
  * Marks an order PAID from a verified session (webhook, /tak, or the hourly reconciliation).
@@ -45,7 +46,8 @@ export async function markPaid(orderId: string, s: VerifiedSession, ctx: { ip?: 
   notifyOwner(`Ny betaling ${formatDkk((updated.amount ?? 59900) / 100)} · ordre ${updated.id.slice(0, 8)}`, [
     `${updated.customer_name ?? addr.name ?? ''} · ${updated.customer_email ?? ''} · ${updated.customer_phone ?? ''}`,
     `${[addr.line1, addr.postal_code, addr.city].filter(Boolean).join(', ')}`,
-    `${updated.chosen_colour ? 'Farveversion' : 'Sort-hvid'} · ${updated.format}`,
+    orderDescription(updated),
+    ...orderLines(updated),
     ...(s.giftNote ? [`Gavehilsen: “${s.giftNote}”`] : []),
     'Næste skridt: generér eller upload final, send godkendelsesmail (inden 48 timer).',
   ], updated.id).catch(() => {});

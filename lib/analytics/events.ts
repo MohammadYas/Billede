@@ -1,7 +1,7 @@
 import { isSupabaseConfigured, supabaseAdmin } from '@/lib/db/supabase';
 
 export type EventName =
-  | 'PageView' | 'ViewContent' | 'UploadStarted' | 'UploadCompleted' | 'PreviewShown' | 'PreviewFallback' | 'InitiateCheckout' | 'Purchase';
+  | 'PageView' | 'ViewContent' | 'UploadStarted' | 'UploadCompleted' | 'PreviewShown' | 'PreviewFallback' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
 
 export type Utm = Partial<Record<'utm_source' | 'utm_medium' | 'utm_campaign' | 'utm_content' | 'utm_term' | 'fbclid', string>>;
 

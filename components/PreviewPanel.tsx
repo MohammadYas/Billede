@@ -1,13 +1,68 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BeforeAfter from './BeforeAfter';
 import { PRODUCT, track } from '@/lib/analytics/client';
 import MailLine from './MailLine';
 import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
+import { quote, formatOere, MAX_EXTRA_PRINTS, type Format, type Frame } from '@/lib/pricing';
 
 /** Loads an image off-screen so a swap never flashes the wrong picture. */
 const preload = (src: string) => new Promise<void>((resolve) => { const i = new Image(); i.onload = () => resolve(); i.onerror = () => resolve(); i.src = src; });
+
+const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * The total counts to its new value instead of jumping: the number is what the eye is on when a size
+ * or an extra copy is picked, and a jump reads as a different price rather than the same price
+ * changing. 380 ms, ease-out, tabular figures so nothing reflows. Reduced motion sets it straight away.
+ */
+function Total({ oere }: { oere: number }) {
+  const [shown, setShown] = useState(oere);
+  const from = useRef(oere);
+  const raf = useRef<number | null>(null);
+  useEffect(() => {
+    if (reduced()) { setShown(oere); from.current = oere; return; }
+    const a = from.current; const b = oere;
+    if (a === b) return;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / 380);
+      const e = 1 - Math.pow(1 - t, 3);
+      const value = Math.round(a + (b - a) * e);
+      setShown(value); from.current = value;
+      if (t < 1) raf.current = requestAnimationFrame(step); else { from.current = b; raf.current = null; }
+    };
+    raf.current = requestAnimationFrame(step);
+    return () => { if (raf.current) cancelAnimationFrame(raf.current); };
+  }, [oere]);
+  return <span className="tabular">{formatOere(shown)}</span>;
+}
+
+/** Two stacked layers, so a new frame or size fades in over the old one instead of blinking. */
+function Mockup({ src, alt }: { src: string; alt: string }) {
+  const [layers, setLayers] = useState<{ src: string; key: number }[]>([{ src, key: 0 }]);
+  const n = useRef(0);
+  useEffect(() => {
+    if (layers[layers.length - 1].src === src) return;
+    let alive = true;
+    preload(src).then(() => {
+      if (!alive) return;
+      n.current += 1;
+      setLayers((ls) => [...ls.slice(-1), { src, key: n.current }]);
+      window.setTimeout(() => { if (alive) setLayers((ls) => ls.slice(-1)); }, 300);
+    });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
+  return (
+    <div className="pv-mock">
+      {layers.map((l, i) => (
+        <img key={l.key} className={i > 0 ? 'in' : ''} src={l.src} alt={i === layers.length - 1 ? alt : ''} aria-hidden={i !== layers.length - 1} width={1200} height={960} />
+      ))}
+    </div>
+  );
+}
 
 export default function PreviewPanel({ c, data: initial, cancelled, paid, token }: { c: Copy; data: PreviewPayload; cancelled: boolean; paid: boolean; token?: string }) {
   const q = token ? `?t=${encodeURIComponent(token)}` : '';
@@ -20,26 +75,24 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const [ordering, setOrdering] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // The configuration. `quote()` is the same pure function the server runs before Stripe sees anything,
+  // so the total under the finger and the amount on the card are one piece of arithmetic, not two guesses.
+  const [format, setFormat] = useState<Format>(data.format);
+  const [frame, setFrame] = useState<Frame>(data.addons.frame);
+  const [extraPrints, setExtraPrints] = useState(data.addons.extraPrints);
+  const bill = quote({ format, frame, extraPrints, repeat: data.repeat });
+
   // landscape photographs are printed landscape: "40×30 cm (liggende)"
   const landscape = data.width > data.height;
   const variants = landscape ? c.variants.landscape : c.variants.portrait;
-  const [format, setFormat] = useState(data.format);
   const v = variants.find((x) => x.format === format) ?? variants[0];
   const label = landscape ? `${v.label} ${c.preview.landscape}` : v.label;
-  const [mockup, setMockup] = useState(data.mockups[data.format] ?? data.mockup);
+  const mockup = data.mockups[`${format}:${frame}`] ?? data.mockup;
 
-  // every size's wall mockup is fetched up front, so picking a size swaps the frame with no flash and no wait
+  // every combination is fetched up front, so picking a size or a frame swaps the wall with no wait
   useEffect(() => {
     Object.values(data.mockups).forEach((u) => { if (u) void preload(u); });
   }, [data.mockups]);
-
-  const pickFormat = (next: typeof format) => {
-    if (next === format) return;
-    setFormat(next);
-    const url = data.mockups[next];
-    if (url) preload(url).then(() => setMockup(url));
-    fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ format: next }) }).catch(() => {});
-  };
 
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
@@ -47,6 +100,20 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     return () => document.body.classList.remove('has-pv-bar');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** The order row follows what the customer is looking at, so admin — and a recovered checkout — sees it. */
+  const persist = (patch: { format?: Format; frame?: Frame; extraPrints?: number }) => {
+    fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) }).catch(() => {});
+  };
+  const pickFormat = (next: Format) => { if (next === format) return; setFormat(next); persist({ format: next }); };
+  const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
+  const setExtras = (next: number) => {
+    const n = Math.min(MAX_EXTRA_PRINTS, Math.max(0, next));
+    if (n === extraPrints) return;
+    const up = n > extraPrints;
+    setExtraPrints(n); persist({ extraPrints: n });
+    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar' });
+  };
 
   // Colour version: requested once, preloaded before the toggle is enabled, so the swap is instant and never shows the damaged original.
   useEffect(() => {
@@ -88,11 +155,11 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const order = async () => {
     setOrdering(true); setError(null);
     try {
-      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: showColour, format, t: token }) });
+      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: showColour, format, frame, extraPrints, t: token }) });
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
-      track('InitiateCheckout', { ...PRODUCT }, { eventId: j.sessionId });
+      track('InitiateCheckout', { ...PRODUCT, value: bill.totalOere / 100 }, { eventId: j.sessionId });
       window.location.assign(j.url);
     } catch {
       // never a server string: one calm message with a second door (e-mail)
@@ -113,7 +180,11 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   // the address in the error is a mailto link (in-app browsers do not auto-link anything)
   const errorLine = error && <MailLine className="alert" role="alert" text={error} email={c.email} href={c.emailHref} />;
-  const button = <button type="button" className="btn btn-block" onClick={order} disabled={ordering || paid}>{paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : v.cta}</button>;
+  const button = (
+    <button type="button" className="btn btn-block" onClick={order} disabled={ordering || paid}>
+      {paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : <>{c.preview.ctaShort} <span aria-hidden>·</span> <Total oere={bill.totalOere} /></>}
+    </button>
+  );
 
   const cta = (
     <div className="pv-cta">
@@ -121,6 +192,70 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       <p className="caption" style={{ textAlign: 'center' }}>{c.preview.payment}</p>
       {button}
       <p className="caption" style={{ textAlign: 'center' }}>{c.preview.under} {v.payWhen}</p>
+    </div>
+  );
+
+  const config = (
+    <div className="config">
+      <fieldset className="cfg">
+        <legend className="cfg-label">{c.preview.sizeTitle}</legend>
+        <div className="sizes-row">
+          {variants.map((x) => (
+            <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}`}>
+              <input type="radio" name="stoerrelse" value={x.format} checked={x.format === format} onChange={() => pickFormat(x.format)} />
+              <b>{x.label}</b>
+              <span className="size-price tabular">{x.price}</span>
+              <span className="caption">{x.hint}</span>
+            </label>
+          ))}
+        </div>
+        <p className="caption">{c.preview.sizeNote}</p>
+      </fieldset>
+
+      <fieldset className="cfg">
+        <legend className="cfg-label">{c.preview.frameTitle}</legend>
+        <div className="frames-row">
+          {([['sort', c.preview.frameSort, c.preview.frameSortHint], ['eg', c.preview.frameEg, c.preview.frameEgHint]] as [Frame, string, string][]).map(([key, name, hint]) => (
+            <label key={key} className={`frame${key === frame ? ' is-on' : ''}`}>
+              <input type="radio" name="ramme" value={key} checked={key === frame} onChange={() => pickFrame(key)} />
+              <span className={`swatch swatch-${key}`} aria-hidden />
+              <span className="frame-text"><b>{name}</b><span className="caption">{hint}</span></span>
+            </label>
+          ))}
+        </div>
+        <p className="caption">{c.preview.frameNote}</p>
+      </fieldset>
+
+      <div className="cfg extra">
+        <p className="cfg-title">{c.preview.extraTitle}</p>
+        <p className="caption measure">{c.preview.extraLead}</p>
+        {extraPrints === 0 ? (
+          <button type="button" className="btn btn-quiet extra-add" onClick={() => setExtras(1)}>
+            {c.preview.extraAdd} <span className="tabular">+ {v.extraPrint}</span>
+          </button>
+        ) : (
+          <div className="stepper" role="group" aria-label={c.preview.extraTitle}>
+            <button type="button" onClick={() => setExtras(extraPrints - 1)} aria-label={c.preview.extraRemove}>−</button>
+            <span aria-live="polite"><b className="tabular">{extraPrints}</b> {extraPrints === 1 ? c.preview.extraOne : c.preview.extraMany}</span>
+            <button type="button" onClick={() => setExtras(extraPrints + 1)} aria-label={c.preview.extraAdd} disabled={extraPrints >= MAX_EXTRA_PRINTS}>+</button>
+          </div>
+        )}
+      </div>
+
+      <div className="cfg bill">
+        <p className="cfg-label">{c.preview.summaryTitle}</p>
+        <dl className="bill-lines">
+          {bill.lines.map((l) => (
+            <div key={l.key}>
+              <dt>{l.quantity > 1 ? `${l.quantity} × ` : ''}{l.short}{l.note ? <span className="caption">{l.note}</span> : null}</dt>
+              <dd className="tabular">{formatOere(l.amountOere)}</dd>
+            </div>
+          ))}
+          <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
+        </dl>
+        <p className="bill-total"><span>{c.preview.total}</span> <b><Total oere={bill.totalOere} /></b></p>
+        <p className="caption">{c.preview.vat}{data.repeat ? ` · ${c.preview.repeatNote}` : ''}</p>
+      </div>
     </div>
   );
 
@@ -142,6 +277,9 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     <div className="container pv">
       <div className="pv-left">
         {cancelled && <p className="small notice" role="status">{c.preview.cancelled}</p>}
+        <ol className="pv-steps" aria-label="Hvor du er i bestillingen">
+          {c.preview.steps.map((s, i) => <li key={s} className={i === 0 ? 'done' : i === 1 ? 'now' : ''} aria-current={i === 1 ? 'step' : undefined}>{s}</li>)}
+        </ol>
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
         <BeforeAfter before={data.original} after={showColour && data.colour ? data.colour : data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal />
         {data.isMonochrome && (
@@ -159,22 +297,9 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         {/* desktop: the decision first, the object and the label under it */}
         <div className="pv-desktop-cta">{cta}</div>
         <div className="pv-grid">
-          <img className="pv-mock" src={mockup} alt={`Dit billede indrammet i ${label}`} width={1200} height={960} />
+          <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <p className="caption">{v.mockupCaption}</p>
-          <fieldset className="sizes">
-            <legend className="label small">{c.preview.sizeTitle}</legend>
-            <div className="sizes-row">
-              {variants.map((x) => (
-                <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}`}>
-                  <input type="radio" name="stoerrelse" value={x.format} checked={x.format === format} onChange={() => pickFormat(x.format)} />
-                  <b>{x.label}</b>
-                  <span className="size-price">{x.price}</span>
-                  <span className="caption">{x.hint}</span>
-                </label>
-              ))}
-            </div>
-            <p className="caption">{c.preview.sizeNote}</p>
-          </fieldset>
+          {config}
           <p className="measure">{v.p}</p>
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <dl className="label small">

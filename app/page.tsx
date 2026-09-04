@@ -101,6 +101,7 @@ export default async function Page() {
                 );
               })}
             </ol>
+            <p className="caption measure">{c.saadan.note}</p>
           </div>
         </section>
 
@@ -206,6 +207,9 @@ export default async function Page() {
               <p className="price" aria-label={c.offer.price}>{c.offer.price.replace(' kr.', '')}<small>kr.</small></p>
               <p className="caption price-note">{c.offer.priceNote}</p>
               {c.offer.priceFrom && <p className="caption price-note">{c.offer.priceFrom}</p>}
+              <ul className="guarantee">
+                {c.offer.guarantee.map((g) => <li key={g}>{g}</li>)}
+              </ul>
               {c.offer.kontakt && <MailLine className="caption price-note" text={c.offer.kontakt} email={c.email} href={c.emailHref} />}
             </div>
           </div>

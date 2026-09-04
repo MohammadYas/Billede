@@ -3,6 +3,7 @@ import { isAdmin } from '@/lib/admin/auth';
 import { getOrder } from '@/lib/db/orders';
 import { signedUrl } from '@/lib/db/storage';
 import { FORMATS, formatLabel, PRICING } from '@/lib/pricing';
+import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
 import { STATUS_FLOW } from '@/lib/db/orders';
 import { ManualProvider } from '@/lib/fulfillment/manual';
 import { actionCheckPayment, actionFulfillment, actionNote, actionSendApproval, actionSetFormat, actionSetStatus } from '@/lib/admin/actions';
@@ -36,7 +37,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const days = (iso?: string | null) => (iso ? Math.floor((Date.now() - Date.parse(iso)) / 864e5) : null);
   const next: string | null = order.status === 'PAID' ? 'Næste: generér eller upload final, send godkendelsesmail (inden 48 timer fra betaling).'
     : order.status === 'CHANGE_REQUESTED' ? 'Næste: ret efter kundens besked, upload ny final, send ny godkendelsesmail (inden 48 timer).'
-    : order.status === 'AWAITING_APPROVAL' ? `Venter på kundens ja${days(order.awaiting_approval_at) !== null ? ` i ${days(order.awaiting_approval_at)} dage` : ''}. Efter 7 dage: ring.`
+    : order.status === 'AWAITING_APPROVAL' ? `Venter på kundens ja${days(order.awaiting_approval_at) !== null ? ` i ${days(order.awaiting_approval_at)} dage` : ''}. Efter 7 dage: skriv personligt til kunden.`
     : order.status === 'APPROVED' ? 'Næste: bestil print hos partneren (tjekliste nederst), sæt IN_PRODUCTION.'
     : order.status === 'IN_PRODUCTION' ? 'Næste: når pakken er sendt, gem tracking og sæt SHIPPED (mailen går automatisk).'
     : order.status === 'MANUAL_REVIEW' ? 'Næste: vurder billedet, svar kunden på mail inden 24 timer.'
@@ -50,7 +51,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s4)', alignItems: 'baseline' }}>
           <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordre {order.id.slice(0, 8)}</h1>
           <span>{order.status}</span>
-          <span>{formatLabel(order.format)}{order.chosen_colour ? ' · farve' : ' · sort-hvid'}</span>
+          <span>{orderDescription(order)}</span>
           <span>{order.amount ? `${(order.amount / 100).toLocaleString('da-DK')} kr.` : ''}</span>
         </div>
 
@@ -66,6 +67,9 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           {Array.isArray(meta.reviewReasons) && (meta.reviewReasons as string[]).length > 0 && <p style={{ color: 'var(--error)' }}>Manuel vurdering: {(meta.reviewReasons as string[]).join(', ')}</p>}
           {order.change_request_text && <p style={{ background: 'var(--paper-2)', padding: 'var(--s3)' }}><strong>Kundens ændringsønske:</strong> {order.change_request_text}</p>}
           {typeof meta.gift_note === 'string' && meta.gift_note && <p style={{ background: 'var(--paper-2)', padding: 'var(--s3)' }}><strong>Gavehilsen til kortet i pakken:</strong> “{String(meta.gift_note)}”</p>}
+          <p><strong>Bestilling:</strong> {orderLines(order).join(' · ')}</p>
+          {typeof meta.repeat_of === 'string' && meta.repeat_of && <p><strong>Billede nummer to</strong> fra ordre <a href={`/admin/orders/${String(meta.repeat_of)}`}>{String(meta.repeat_of).slice(0, 8)}</a> – samme kunde, rabatten er trukket fra.</p>}
+          {repeatLink(order) && <p><strong>Gentagelseslink (kunden har det i kvitteringen):</strong> <span className="muted">{repeatLink(order)}</span></p>}
         </section>
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 'var(--s4)' }}>

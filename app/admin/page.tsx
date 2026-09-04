@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, recordAttempt } from '@/lib/admin/auth';
 import { listOrders } from '@/lib/db/orders';
 import { formatLabel } from '@/lib/pricing';
+import { readAddOns } from '@/lib/pricing';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
@@ -88,7 +89,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                   <td>{new Date(o.created_at).toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', dateStyle: 'short', timeStyle: 'short' })}</td>
                   <td><a href={`/admin/orders/${o.id}`}>{o.id.slice(0, 8)}</a></td>
                   <td>{STATUS_DA[o.status] ?? o.status}</td>
-                  <td>{formatLabel(o.format)}{o.chosen_colour ? ' · farve' : ''}</td>
+                  <td>{formatLabel(o.format)}{readAddOns((o.preview_meta as { addons?: unknown } | null)?.addons).frame === 'eg' ? ' · eg' : ''}{o.chosen_colour ? ' · farve' : ''}{readAddOns((o.preview_meta as { addons?: unknown } | null)?.addons).extraPrints > 0 ? ` · +${readAddOns((o.preview_meta as { addons?: unknown } | null)?.addons).extraPrints}` : ''}</td>
                   <td>{o.customer_email ?? '—'}</td>
                   <td>{o.amount ? `${(o.amount / 100).toLocaleString('da-DK')} kr.` : '—'}</td>
                   <td>{o.utm?.utm_content ?? o.utm?.utm_source ?? '—'}</td>

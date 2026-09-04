@@ -123,3 +123,32 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **Christmas is a layer, not the site.** The headline, the lead, the product and the promise are the same in July and
   in December. The season only adds an eyebrow with the last order date, the deadline line with a day countdown, the
   delivery answer in the FAQ and the closing line. The window starts 14 November (`CHRISTMAS_START_DATE`), not 1 October.
+
+## Ninth pass (the shop: add-ons, the second copy, and a bill that adds up under the finger)
+
+- **One quote, two places.** `quote()` in `lib/pricing.ts` is a pure function from a configuration
+  (size, frame, extra copies, repeat) to lines and a total. The browser runs it to draw the bill under the
+  customer's finger; `/api/checkout` runs it again from the same file before Stripe sees anything. The page
+  therefore never sends a price, only a choice — hostile input (`format: 'hack'`, `extraPrints: 99`) falls back to
+  the default size and clamps at three copies (`work/pass9/repeat-guard.mts`).
+- **Add-ons that the owner can actually deliver.** A frame choice (sort or eg, same price — a choice, not an
+  upsell), and *ekstra eksemplar af samme billede* (349 / 449 / 549 kr. by size, up to three). The extra copy is the
+  honest one: the restoration is already paid for, so only the print, the frame and the parcel repeat, and it goes in
+  the same box. Nothing is pre-ticked — the add is a button, never a checkbox someone has to find and clear.
+- **The frame is visible, not a word.** `processRestore` renders a wall mockup for every size *and* frame
+  (six sharp composites, no model), the preview page preloads them all, and picking a frame crossfades the wall.
+  A choice you can see is a choice people make.
+- **The second photograph is a post-purchase offer, not a cart.** Carts, bundled fulfilment and multi-item approval
+  would be a week of risk for an order that is one picture 95 % of the time. Instead the receipt (on /tak and in the
+  ordrebekræftelse) carries a link with the order's own share token: `/?igen=<id>.<token>`. It starts a completely
+  ordinary new order that remembers where it came from, and that memory — validated server-side against a real, paid
+  order — is the only thing that unlocks the 100 kr. repeat price. One order, one approval, one shipment, and an
+  upsell at the moment people are most likely to say yes.
+- **The preview page became a product page.** Where you are (three steps), the object on the wall, the three
+  decisions, and *Din bestilling*: hairline rows, tabular figures, shipping named as included, and a total that counts
+  to its new value over 380 ms instead of jumping (reduced motion sets it straight). The order button carries the same
+  total, so the number under the thumb and the number on the card are never two different numbers.
+- **Risk reversal moved next to the price.** Three lines under the big 599: you see it first, you approve before we
+  print, you get the money back. That is where the doubt is, so that is where the answer belongs.
+- **No dark patterns.** No fake stock, no countdown that is not a real delivery deadline, no pre-selected add-ons, no
+  invented "mest valgt" badge — the size hints are opinions ("Det store, man ser fra døren"), which is what they are.

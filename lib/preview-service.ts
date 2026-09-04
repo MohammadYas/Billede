@@ -11,13 +11,13 @@ const heavy = async () => {
   return { restore: r.restore, colourise: r.colourise, ensureLongEdge: iu.ensureLongEdge, makePreview: pv.makePreview, makeMockup: mk.makeMockup };
 };
 import { logEvent, type Utm } from '@/lib/analytics/events';
-import { customerFormat, customerFormats, isFormat, type Format } from '@/lib/pricing';
+import { customerFormat, customerFormats, isFormat, readAddOns, FRAMES, frameColour, type AddOns, type Format, type Frame } from '@/lib/pricing';
 import { getJob, setJob, type JobState } from '@/lib/jobs';
 
 export type PreviewPayload = {
   orderId: string; original: string; preview: string; mockup: string; colour: string | null;
-  /** the size the order is currently on, and one wall mockup per size the customer can pick */
-  format: Format; mockups: Partial<Record<Format, string>>;
+  /** what the order is currently configured as, and one wall mockup per size and frame */
+  format: Format; addons: AddOns; mockups: Record<string, string>; repeat: boolean;
   isMonochrome: boolean; chosenColour: boolean; status: Order['status'];
   /** share token, so the URL the customer sees (and copies to a sister) opens on any phone */
   token: string | null;
@@ -32,23 +32,30 @@ export type PreviewStatus = {
   payload: PreviewPayload | null;
 };
 
-type Meta = { session_id?: string | null; share_token?: string; upload_path?: string; cancelled?: boolean; output?: { width?: number; height?: number }; job?: JobState; colourised_full_path?: string; mockups?: Partial<Record<Format, string>>; [k: string]: unknown };
+type Meta = { session_id?: string | null; share_token?: string; upload_path?: string; cancelled?: boolean; output?: { width?: number; height?: number }; job?: JobState; colourised_full_path?: string; mockups?: Record<string, string>; addons?: unknown; repeat_of?: string; [k: string]: unknown };
 const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
 
 /**
  * Customer-facing image URLs are same-origin and gated by session cookie or share token
  * (app/api/preview/[id]/image). The token rides along so the page works wherever its URL does.
  */
-export function imageUrl(order: Order, kind: 'original' | 'preview' | 'colour' | 'mockup', format?: Format): string {
+export function imageUrl(order: Order, kind: 'original' | 'preview' | 'colour' | 'mockup', format?: Format, frame?: Frame): string {
   const token = metaOf(order).share_token;
-  return `/api/preview/${order.id}/image?kind=${kind}${format ? `&f=${format}` : ''}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}${token ? `&t=${encodeURIComponent(token)}` : ''}`;
+  return `/api/preview/${order.id}/image?kind=${kind}${format ? `&f=${format}` : ''}${frame ? `&fr=${frame}` : ''}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}${token ? `&t=${encodeURIComponent(token)}` : ''}`;
 }
 
-/** The wall mockup for every size on offer; sizes rendered before this order existed fall back to the default one. */
-export function mockupUrls(order: Order): Partial<Record<Format, string>> {
+/** `30x40:sort` → the wall mockup for that size in that frame. Combinations rendered before this order existed fall back. */
+export const mockupKey = (format: Format, frame: Frame) => `${format}:${frame}`;
+
+export function mockupUrls(order: Order): Record<string, string> {
   const rendered = metaOf(order).mockups ?? {};
-  const out: Partial<Record<Format, string>> = {};
-  for (const f of customerFormats()) out[f] = rendered[f] ? imageUrl(order, 'mockup', f) : imageUrl(order, 'mockup');
+  const out: Record<string, string> = {};
+  for (const f of customerFormats()) {
+    for (const fr of FRAMES) {
+      const key = mockupKey(f, fr);
+      out[key] = rendered[key] ? imageUrl(order, 'mockup', f, fr) : rendered[f] ? imageUrl(order, 'mockup', f) : imageUrl(order, 'mockup');
+    }
+  }
   return out;
 }
 
@@ -58,7 +65,8 @@ export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
   return {
     orderId: order.id,
     original: imageUrl(order, 'original'), preview: imageUrl(order, 'preview'), mockup: imageUrl(order, 'mockup'),
-    format: isFormat(order.format) ? order.format : customerFormat(), mockups: mockupUrls(order),
+    format: isFormat(order.format) ? order.format : customerFormat(), addons: readAddOns(meta.addons), mockups: mockupUrls(order),
+    repeat: Boolean(meta.repeat_of),
     colour: order.colourised_path ? imageUrl(order, 'colour') : null,
     isMonochrome: Boolean(order.is_monochrome), chosenColour: order.chosen_colour, status: order.status,
     token: meta.share_token ?? null,
@@ -75,9 +83,24 @@ export async function statusFor(order: Order): Promise<PreviewStatus> {
  * Step 1 of an upload: the order exists before the file does, and the browser uploads straight to
  * the private bucket with a one-time signed URL (no function body limit, no double transfer).
  */
-export async function beginUpload(ctx: { sessionId: string | null; utm: Utm | null; size: number; type: string }): Promise<{ orderId: string; token: string; uploadUrl: string; path: string }> {
+/**
+ * "Endnu et billede" from a paid order (the link on /tak and in the order mail): the new order is a
+ * normal order that remembers which paid order sent it, which is the only thing that unlocks the
+ * repeat price. The reference is checked here — an id and its share token must match a real, paid order.
+ */
+export async function repeatSource(ref: string | null | undefined): Promise<string | null> {
+  if (!ref) return null;
+  const [id, token] = String(ref).split('.');
+  if (!/^[0-9a-f-]{36}$/.test(id ?? '') || !token || token.length < 16) return null;
+  const parent = await getOrder(id);
+  if (!parent || metaOf(parent).share_token !== token) return null;
+  const paid: Order['status'][] = ['PAID', 'IN_RETOUCH', 'AWAITING_APPROVAL', 'CHANGE_REQUESTED', 'APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'];
+  return paid.includes(parent.status) ? parent.id : null;
+}
+
+export async function beginUpload(ctx: { sessionId: string | null; utm: Utm | null; size: number; type: string; repeatOf?: string | null }): Promise<{ orderId: string; token: string; uploadUrl: string; path: string }> {
   const token = randomBytes(18).toString('base64url');
-  const order = await createOrder({ status: 'NEW', format: customerFormat(), utm: ctx.utm ?? null, preview_meta: { session_id: ctx.sessionId, share_token: token, upload_type: ctx.type, upload_size: ctx.size } });
+  const order = await createOrder({ status: 'NEW', format: customerFormat(), utm: ctx.utm ?? null, preview_meta: { session_id: ctx.sessionId, share_token: token, upload_type: ctx.type, upload_size: ctx.size, ...(ctx.repeatOf ? { repeat_of: ctx.repeatOf } : {}) } });
   const path = objectPath(order.id, 'upload');
   const { signedUrl } = await createSignedUpload(path);
   await updateOrder(order.id, { preview_meta: { ...metaOf(order), upload_path: path } });
@@ -124,16 +147,18 @@ export async function processRestore(orderId: string): Promise<void> {
     // one wall mockup per size on offer, rendered here (sharp, no model) so switching size on the
     // preview page is instant and shows the real proportions of that frame
     const previewBuf = await makePreview(result.restored);
-    const mockups: Partial<Record<Format, string>> = {};
+    const mockups: Record<string, string> = {};
     for (const fmt of customerFormats()) {
-      const buf = await makeMockup(result.restored, { format: fmt });
-      const p = objectPath(order.id, 'mockup');
-      await putObject(p, buf);
-      mockups[fmt] = p;
+      for (const frame of FRAMES) {
+        const buf = await makeMockup(result.restored, { format: fmt, frame: frameColour(frame) });
+        const p = objectPath(order.id, 'mockup');
+        await putObject(p, buf);
+        mockups[mockupKey(fmt, frame)] = p;
+      }
     }
     const restoredPath = objectPath(order.id, 'restored');
     const previewPath = objectPath(order.id, 'preview');
-    const mockupPath = mockups[isFormat(order.format) ? order.format : customerFormat()] ?? Object.values(mockups)[0]!;
+    const mockupPath = mockups[mockupKey(isFormat(order.format) ? order.format : customerFormat(), readAddOns(metaOf(order).addons).frame)] ?? Object.values(mockups)[0]!;
     await Promise.all([putObject(restoredPath, result.restored), putObject(previewPath, previewBuf)]);
     await setStatus(order.id, 'PREVIEW_READY', {
       original_path: originalPath, restored_path: restoredPath, preview_path: previewPath, mockup_path: mockupPath,

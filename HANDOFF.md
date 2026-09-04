@@ -34,11 +34,21 @@ Nothing in this list is code. The code is done and verified; each line below is 
    Measurement priorities Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent; first campaign
    optimised for the PreviewShown custom conversion, not Purchase.
 9. Supabase: the HEIC bucket update is already applied; keep the project in Ireland; nothing else.
-10. Print partner that ships **framed 30×40, 40×50 and 50×70** within 3–4 business days (the site promises "inden
-    5 hverdage" from the customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold. Confirm your
-    cost for all three sizes before the ads run: the prices on the page are 599 / 799 / 999 kr. including frame, glass,
-    gift card, packaging and shipping. A size the partner cannot deliver profitably is one line in `lib/pricing.ts`
-    (`enabled: false`) and disappears everywhere.
+10. Print partner that ships **framed 30×40, 40×50 and 50×70, in black and in oak**, within 3–4 business days (the site
+    promises "inden 5 hverdage" from the customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold.
+    Before the ads run, write down your cost for six combinations (three sizes × two frames) and for a second copy of the
+    same picture, and check it against what the page charges:
+
+    | | 30×40 | 40×50 | 50×70 |
+    |---|---|---|---|
+    | Billedet, i ramme | 599 kr. | 799 kr. | 999 kr. |
+    | Ekstra eksemplar af samme billede | 349 kr. | 449 kr. | 549 kr. |
+
+    Everything above includes frame, glass, mount, gift card, packaging and shipping. The extra copy has no restoration
+    work in it, only the object — that is why it is cheaper, and why it must still carry the print, the frame and the
+    parcel. A second *photograph* ordered from a receipt gets 100 kr. off (`REPEAT_DISCOUNT_DKK`). A size, a frame or a
+    price that does not work is one line in `lib/pricing.ts` (`enabled: false`, or another number) and it changes
+    everywhere: page, mockups, Stripe, mails, admin and the print checklist.
 11. Lawyer reads `/privatliv` and `/handelsbetingelser`, then `LEGAL_DRAFT=false`.
 12. `public/mockup/wall.jpg` (a photo of your own wall, optional) and, over time, consented customer before/afters to
     replace the archive examples (§1).

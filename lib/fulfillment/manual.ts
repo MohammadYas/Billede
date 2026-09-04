@@ -1,5 +1,5 @@
 import type { Order } from '@/lib/db/orders';
-import { formatLabel } from '@/lib/pricing';
+import { readAddOns, formatLabel } from '@/lib/pricing';
 import type { FulfillmentJob, FulfillmentProvider } from './provider';
 
 /**
@@ -13,11 +13,15 @@ export class ManualProvider implements FulfillmentProvider {
 
   checklist(order: Order, finalDownloadUrl: string): string[] {
     const fmt = formatLabel(order.format);
+    const a = readAddOns(((order.preview_meta ?? {}) as { addons?: unknown }).addons);
+    const ramme = a.frame === 'eg' ? 'EG (lys træ)' : 'SORT';
+    const antal = 1 + a.extraPrints;
     const addr = order.shipping_address as Record<string, string> | null;
     const address = addr ? [addr.name, addr.line1, addr.line2, `${addr.postal_code ?? ''} ${addr.city ?? ''}`.trim()].filter(Boolean).join(', ') : '(adresse mangler)';
     return [
       `Download den færdige fil i printopløsning: ${finalDownloadUrl}`,
-      `Bestil hos CEWE → "Billede i ramme", ${fmt}, sort eller eg ramme, mat papir. Alternativt et dansk fotolaboratorium med ramme i ${fmt}.`,
+      `Bestil hos CEWE → "Billede i ramme", ${fmt}, ramme: ${ramme}, mat papir, passepartout. Alternativt et dansk fotolaboratorium med ramme i ${fmt}.`,
+      antal > 1 ? `ANTAL: ${antal} stk. af samme billede i samme ramme – de skal i SAMME pakke.` : 'Antal: 1 stk.',
       `Leveringsadresse (kopiér præcis): ${address}`,
       order.customer_phone ? `Telefon til fragtfirma: ${order.customer_phone}` : 'Telefon til fragtfirma: (mangler)',
       ...(((order.preview_meta ?? {}) as { gift_note?: string }).gift_note ? [`GAVEKORT – skriv på et kort og læg i pakken: “${((order.preview_meta ?? {}) as { gift_note?: string }).gift_note}”`] : []),

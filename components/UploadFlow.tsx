@@ -26,6 +26,10 @@ export default function UploadFlow({ c }: { c: Copy }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const [coarse, setCoarse] = useState(true);
+  // the repeat reference lives in a ref as well, because start() reads it inside an async chain
+  const [igen, setIgenState] = useState<string | null>(null);
+  const igenRef = useRef<string | null>(null);
+  const setIgen = (v: string | null) => { igenRef.current = v; setIgenState(v); };
   const [slow, setSlow] = useState(false);
   const [phase, setPhase] = useState(0); // 0–2: the wait sentence rotates at 15 s and 30 s
 
@@ -51,6 +55,9 @@ export default function UploadFlow({ c }: { c: Copy }) {
   // ?order=<id> (a resume link) goes straight to the preview; read client-side so the landing page can stay static
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
+    // ?igen=<orderId>.<token> from a paid order's receipt: the next photograph is priced as a repeat
+    const again = sp.get('igen');
+    if (again && again.includes('.')) setIgen(again);
     const id = sp.get('order');
     if (id && /^[0-9a-f-]{36}$/.test(id)) router.replace(`/p/${id}${sp.get('cancelled') === '1' ? '?cancelled=1' : ''}${sp.get('t') ? `${sp.get('cancelled') === '1' ? '&' : '?'}t=${encodeURIComponent(sp.get('t')!)}` : ''}`);
   }, [router]);
@@ -182,7 +189,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
     track('UploadStarted', { bytes: file.size, type: file.type });
     let started: { orderId: string; token: string; uploadUrl: string };
     try {
-      const r = await fetch('/api/preview/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ size: file.size, type: file.type, name: file.name }) });
+      const r = await fetch('/api/preview/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ size: file.size, type: file.type, name: file.name, igen: igenRef.current }) });
       if (r.status === 413) { setState({ kind: 'pick', file, thumb, error: c.upload.tooBig }); return; }
       if (r.status === 415) { setState({ kind: 'pick', error: c.upload.wrongType }); return; }
       if (!r.ok) throw new Error('start');
@@ -247,6 +254,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         {state.kind === 'pick' && (
           <div style={{ display: 'grid', gap: 'var(--s4)' }}>
             <h2>Vis os billedet.</h2>
+            {igen && <p className="small notice" role="status">{c.upload.repeat}</p>}
             {state.thumb ? (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
                 <img src={state.thumb} alt="Dit valgte billede" style={{ maxHeight: '38dvh', width: 'auto', maxWidth: '100%', objectFit: 'contain', justifySelf: 'start' }} />

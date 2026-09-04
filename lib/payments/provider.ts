@@ -1,4 +1,5 @@
 import type { Order } from '@/lib/db/orders';
+import type { Quote } from '@/lib/pricing';
 
 export type CheckoutResult = { url: string; sessionId: string };
 export type VerifiedSession = {
@@ -19,7 +20,7 @@ export type WebhookOutcome = { handled: boolean; type: string; orderId?: string 
 
 export interface PaymentProvider {
   readonly name: string;
-  createCheckout(order: Order, opts: { successUrl: string; cancelUrl: string; previewImageUrl?: string }): Promise<CheckoutResult>;
+  createCheckout(order: Order, opts: { quote: Quote; successUrl: string; cancelUrl: string; previewImageUrl?: string }): Promise<CheckoutResult>;
   verifySession(sessionId: string): Promise<VerifiedSession>;
   handleWebhook(rawBody: string, signature: string | null): Promise<WebhookOutcome>;
   refund(paymentIntent: string): Promise<{ id: string; status: string }>;

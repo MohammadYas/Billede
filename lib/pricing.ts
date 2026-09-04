@@ -54,3 +54,84 @@ export function formatLabelFor(format: Format, landscape = false): string {
 export function lineItemName(format: Format): string {
   return `Restaureret og indrammet familiebillede, ${formatLabel(format)}`;
 }
+
+/* ---------------------------------------------------------------------------
+ * Frames and add-ons.
+ *
+ * Everything the customer can add is priced here and nowhere else. The browser
+ * renders a quote so the total is live under the finger; the server builds the
+ * same quote again before Stripe sees it, so the page can never move the amount.
+ * Nothing is pre-selected: an add-on the customer did not tick is an add-on they
+ * did not buy (and Danish marketing law agrees).
+ * ------------------------------------------------------------------------- */
+
+export type Frame = 'sort' | 'eg';
+export const FRAMES: Frame[] = ['sort', 'eg'];
+export function isFrame(v: unknown): v is Frame {
+  return v === 'sort' || v === 'eg';
+}
+/** The mockup generator speaks English colours. */
+export function frameColour(frame: Frame): 'black' | 'oak' {
+  return frame === 'eg' ? 'oak' : 'black';
+}
+
+/** A second framed copy of the same photograph — the restoration is already paid for, so only the object repeats. */
+export const EXTRA_PRINT_DKK: Record<Format, number> = { '20x30': 279, '30x40': 349, '40x50': 449, '50x70': 549 };
+export const MAX_EXTRA_PRINTS = 3;
+/** Off the next photograph when it is ordered from a paid order's link (see /tak). */
+export const REPEAT_DISCOUNT_DKK = 100;
+
+export type AddOns = { frame: Frame; extraPrints: number };
+export const DEFAULT_ADDONS: AddOns = { frame: 'sort', extraPrints: 0 };
+
+export function readAddOns(value: unknown): AddOns {
+  const v = (value ?? {}) as { frame?: unknown; extraPrints?: unknown };
+  const n = Number(v.extraPrints);
+  return {
+    frame: isFrame(v.frame) ? v.frame : DEFAULT_ADDONS.frame,
+    extraPrints: Number.isFinite(n) ? Math.min(MAX_EXTRA_PRINTS, Math.max(0, Math.trunc(n))) : 0,
+  };
+}
+
+/** `name` is what Stripe and the receipt print; `short` is what the bill on the page shows. */
+export type QuoteLine = { key: string; name: string; short: string; note?: string; quantity: number; unitOere: number; amountOere: number };
+export type Quote = { format: Format; addons: AddOns; repeat: boolean; lines: QuoteLine[]; totalOere: number };
+
+/** The one place an order's amount is decided. Input is untrusted; output is always sellable. */
+export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown; repeat?: boolean } = {}): Quote {
+  const format = sellableFormat(input.format);
+  const addons = readAddOns({ frame: input.frame, extraPrints: input.extraPrints });
+  const label = formatLabel(format);
+  const lines: QuoteLine[] = [
+    {
+      key: 'print',
+      name: lineItemName(format),
+      short: `Restaureret billede, ${label}`,
+      note: `${label} · ${addons.frame === 'eg' ? 'egetræsramme' : 'sort ramme'} med passepartout · digital fil inkluderet`,
+      quantity: 1,
+      unitOere: priceOere(format),
+      amountOere: priceOere(format),
+    },
+  ];
+  if (addons.extraPrints > 0) {
+    const unit = EXTRA_PRINT_DKK[format] * 100;
+    lines.push({
+      key: 'extra_print',
+      name: `Ekstra eksemplar, ${label}`,
+      short: `Ekstra eksemplar, ${label}`,
+      note: 'Samme billede, samme ramme – til en anden i familien',
+      quantity: addons.extraPrints,
+      unitOere: unit,
+      amountOere: unit * addons.extraPrints,
+    });
+  }
+  if (input.repeat) {
+    lines.push({ key: 'repeat', name: 'Rabat, billede nummer to', short: 'Rabat, billede nummer to', note: 'Fordi restaureringen er bestilt fra din forrige ordre', quantity: 1, unitOere: -REPEAT_DISCOUNT_DKK * 100, amountOere: -REPEAT_DISCOUNT_DKK * 100 });
+  }
+  const totalOere = lines.reduce((sum, l) => sum + l.amountOere, 0);
+  return { format, addons, repeat: Boolean(input.repeat), lines, totalOere };
+}
+
+export function formatOere(oere: number): string {
+  return formatDkk(Math.round(oere / 100));
+}

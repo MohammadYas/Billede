@@ -3,6 +3,8 @@ import { paymentProvider } from '@/lib/payments/stripe';
 import { getOrderByField, latestOrderForSession, updateOrder, type Order } from '@/lib/db/orders';
 import { markPaid } from '@/lib/payments/fulfil-paid';
 import { imageUrl } from '@/lib/preview-service';
+import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
+import { readAddOns, formatOere } from '@/lib/pricing';
 import { readSessionId } from '@/lib/session';
 import Footer from '@/components/Footer';
 import MailLine from '@/components/MailLine';
@@ -64,11 +66,30 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
                 {firePurchase && <PurchaseEvent value={value} eventId={order.id} email={order.customer_email} phone={order.customer_phone} />}
               </div>
               <div style={{ display: 'grid', gap: 'var(--s5)' }}>
-                {order.mockup_path && <img src={imageUrl(order, 'mockup')} alt={`Dit billede indrammet i ${c.formatLabel}`} width={1200} height={960} style={{ maxWidth: 520 }} />}
+                {order.mockup_path && <img src={imageUrl(order, 'mockup', order.format, readAddOns((order.preview_meta as { addons?: unknown } | null)?.addons).frame)} alt={`Dit billede indrammet i ${c.formatLabel}`} width={1200} height={960} style={{ maxWidth: 520 }} />}
+                <div className="bill">
+                  <p className="cfg-label">{c.preview.summaryTitle}</p>
+                  <dl className="bill-lines">
+                    {orderLines(order).map((l) => {
+                      const i = l.lastIndexOf(' — ');
+                      return <div key={l}><dt>{l.slice(0, i)}</dt><dd className="tabular">{l.slice(i + 3)}</dd></div>;
+                    })}
+                    <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
+                  </dl>
+                  <p className="bill-total"><span>{c.preview.total}</span> <b className="tabular">{formatOere(order.amount ?? 0)}</b></p>
+                  <p className="caption">{orderDescription(order)} · {c.preview.vat}</p>
+                </div>
                 <dl className="timeline">
                   {c.tak.timeline.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
                 </dl>
-                <p className="small"><a className="tap" href="/">{c.tak.more}</a></p>
+                {repeatLink(order) && (
+                  <section className="again">
+                    <h2>{c.tak.againH2}</h2>
+                    <p className="measure">{c.tak.againP}</p>
+                    <p><a className="btn btn-quiet" href={repeatLink(order)!}>{c.tak.againCta}</a></p>
+                  </section>
+                )}
+                {!repeatLink(order) && <p className="small"><a className="tap" href="/">{c.tak.more}</a></p>}
               </div>
             </div>
           ) : (
