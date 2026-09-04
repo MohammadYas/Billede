@@ -24,6 +24,20 @@ if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production' && !p
   throw new Error('JOB_SECRET is not set: the background job runner would reject every restoration. Set it in Netlify → Environment variables.');
 }
 
+// /privatliv, /handelsbetingelser and /sitemap.xml are prerendered, so the canonical URL, og:url and
+// the sitemap entries are frozen at BUILD time from CONFIG.siteUrl. The runtime console.error in
+// lib/config.ts fires far too late for those: the wrong host is already inside the HTML. A Meta ad
+// pointing at a page whose og:url says localhost also loses its share card. So fail the build.
+if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? process.env.DEPLOY_PRIME_URL ?? '';
+  if (!siteUrl || siteUrl.includes('localhost')) {
+    throw new Error(
+      `The site URL resolves to "${siteUrl || '(nothing)'}", so every canonical tag, og:url and sitemap entry on the ` +
+      'prerendered pages would point at localhost. Set NEXT_PUBLIC_SITE_URL to https://genfundet.dk in Netlify → Environment variables.',
+    );
+  }
+}
+
 // The seller's identity on /handelsbetingelser and /privatliv falls back to "[Udfyld: CVR]" when
 // assets/founder/founder.md is incomplete. That is the right thing to show the owner and the worst
 // thing to show a customer checking whether we are a real company — so a production build refuses

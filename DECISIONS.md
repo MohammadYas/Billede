@@ -243,3 +243,14 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **`npm run lint` is gone.** It ran `next lint`, which Next 16 removed; the repo has no ESLint installed
   or configured, so the script only ever produced "Invalid project directory provided, no such directory:
   lint". A command that always fails teaches everyone to ignore it.
+- **A production build cannot ship `localhost` any more.** `/privatliv`, `/handelsbetingelser` and
+  `/sitemap.xml` are prerendered, so the canonical tag, `og:url` and every sitemap entry are frozen at
+  *build* time from `CONFIG.siteUrl`. The runtime `console.error` in `lib/config.ts` fires long after the
+  wrong host is already inside the HTML — and a Meta ad pointing at a page whose `og:url` says localhost
+  loses its share card. `next.config.ts` now fails the build instead. Verified both ways: without the
+  variable the build stops; with it, the string `localhost` is gone from the prerendered pages and the
+  sitemap reads `https://genfundet.dk/…`.
+- **Families open the example row.** The visitor now meets a mother holding her baby, a family on a
+  staircase and a family group before she meets anyone's solo portrait. The hero stays the 1916 couple:
+  it is the pair whose damage is legible at a glance, and it is the only argument that works before a
+  single word is read.

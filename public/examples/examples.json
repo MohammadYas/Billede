@@ -23,29 +23,6 @@
     "placeholder": true
   },
   {
-    "id": "cooper",
-    "mode": "hold",
-    "detail": {
-      "before": "/examples/cooper-detail-before.jpg",
-      "after": "/examples/cooper-detail-after.jpg",
-      "label": "Ansigt og krave"
-    },
-    "mockup": "/examples/cooper-mockup.jpg",
-    "before": "/examples/cooper-before.jpg",
-    "after": "/examples/cooper-after.jpg",
-    "width": 1092,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
     "id": "mor-barn-a",
     "mode": "wipe",
     "detail": {
@@ -92,6 +69,29 @@
     "placeholder": true
   },
   {
+    "id": "asplund",
+    "mode": "hold",
+    "detail": {
+      "before": "/examples/asplund-detail-before.jpg",
+      "after": "/examples/asplund-detail-after.jpg",
+      "label": "Bedsteforældrene"
+    },
+    "mockup": "/examples/asplund-mockup.jpg",
+    "before": "/examples/asplund-before.jpg",
+    "after": "/examples/asplund-after.jpg",
+    "width": 942,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
     "id": "gunhild-barn",
     "mode": "fade",
     "detail": {
@@ -115,17 +115,17 @@
     "placeholder": true
   },
   {
-    "id": "asplund",
+    "id": "cooper",
     "mode": "hold",
     "detail": {
-      "before": "/examples/asplund-detail-before.jpg",
-      "after": "/examples/asplund-detail-after.jpg",
-      "label": "Bedsteforældrene"
+      "before": "/examples/cooper-detail-before.jpg",
+      "after": "/examples/cooper-detail-after.jpg",
+      "label": "Ansigt og krave"
     },
-    "mockup": "/examples/asplund-mockup.jpg",
-    "before": "/examples/asplund-before.jpg",
-    "after": "/examples/asplund-after.jpg",
-    "width": 942,
+    "mockup": "/examples/cooper-mockup.jpg",
+    "before": "/examples/cooper-before.jpg",
+    "after": "/examples/cooper-after.jpg",
+    "width": 1092,
     "height": 1400,
     "widths": [
       480,
@@ -133,7 +133,7 @@
       1000,
       1400
     ],
-    "caption": "Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden.",
+    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
     "consent": true,
     "placeholder": true
   },
