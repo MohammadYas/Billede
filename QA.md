@@ -120,7 +120,7 @@ Fails found and fixed during the audit: Fraunces/Instrument Sans (A1), slider kn
 - **Does the preview make me want the object?** The mockup is composed from *their* photo in a real 30×40 frame with a
   natural shadow, directly under the slider. Improvement possible: a real wall photograph (HANDOFF §11).
 - **Would I still buy at 10 business days?** The "inden jul" promise switches automatically at the cutoff; after
-  that the copy says "inden 10 hverdage" everywhere it matters. Honest and configurable.
+  that the copy says "inden 5 hverdage" (the configured number) everywhere it matters. Honest and configurable.
 
 ## Security checklist (spec §10)
 

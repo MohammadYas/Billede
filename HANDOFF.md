@@ -114,10 +114,12 @@ they are read with `fs` at runtime.
 ## 7. Configuration to confirm
 
 - `CHRISTMAS_START_DATE` / `CHRISTMAS_CUTOFF_DATE` (defaults 1 Nov / 10 Dec) — the Christmas copy runs only inside
-  this window; outside it the site says "inden 10 hverdage".
+  this window; outside it the site says "inden 5 hverdage".
 - `LEGAL_DRAFT=false` once the lawyer has reviewed `/privatliv` and `/handelsbetingelser` (removes the "Udkast" line).
-- `DELIVERY_DAYS_MAX` (default 10) — CEWE's own promise is 6–11 business days; 10 is honest only if you approve
-  finals within 48 h.
+- `DELIVERY_DAYS_MAX` (default **5**, your decision) — the promise "inden 5 hverdage" counts from the customer's approval.
+  CEWE's own promise is 6–11 business days, so 5 needs a print partner that ships a framed 30×40 within 3–4 days
+  (or a local lab / your own framing). The number is on the page, in the mails and in Handelsbetingelser; if the
+  partner cannot hold it, set the env var to what they can — a missed promise is the one thing this audience punishes.
 - `ADMIN_PASSWORD` — long and random.
 
 ## 8. Legal review

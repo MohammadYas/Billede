@@ -3,7 +3,7 @@
 
 export const CONFIG = {
   /** Max business days from approval to delivery, shown as "inden X hverdage". */
-  deliveryDaysMax: Number(process.env.DELIVERY_DAYS_MAX ?? 10),
+  deliveryDaysMax: Number(process.env.DELIVERY_DAYS_MAX ?? 5),
   /** Christmas copy runs from this date … */
   christmasStartDate: process.env.CHRISTMAS_START_DATE ?? '2026-11-01',
   /** … until this last order date that is still delivered before Christmas (ISO dates). */
@@ -37,7 +37,7 @@ export function formatCutoffDate(iso: string = CONFIG.christmasCutoffDate): stri
   );
 }
 
-/** "inden jul" or "inden 10 hverdage", depending on season. */
+/** "inden jul" or "inden 5 hverdage", depending on season. */
 export function deliveryPromise(season: Season = currentSeason()): string {
   return season === 'jul' ? 'inden jul' : `inden ${CONFIG.deliveryDaysMax} hverdage`;
 }

@@ -29,7 +29,7 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **Critique method.** Assessment A (design review, isolated agent) and Assessment B (detector + browser + Lighthouse, isolated agent) ran in parallel per the impeccable playbook; reports in `work/critique-a/report.md` and `work/critique-b/report.md`, synthesis in QA.md.
 - **Preview is a page, not a sheet.** `/p/<orderId>` (session-gated) replaces the preview state inside the bottom sheet. The buy button was below the fold of a 1 286 px sheet; a page gives the slider its own proportions, a sticky price bar on mobile, a two-column layout on desktop, survives an evening interruption and is where Stripe's cancel URL returns to.
 - **The customer's photo is never cropped.** The payload carries the restored image's width/height; the slider uses the photo's own aspect with `object-fit: contain`.
-- **Christmas window.** `CHRISTMAS_START_DATE` (default 1 Nov) added; before it the site says "inden 10 hverdage", not "under juletræet".
+- **Christmas window.** `CHRISTMAS_START_DATE` (default 1 Nov) added; before it the site says "inden 5 hverdage" (owner's number, `DELIVERY_DAYS_MAX`), not "under juletræet".
 - **"20 sekunder" was factually wrong** (measured 38–42 s). Sub-line and step 2 now say "under et minut"; the processing state says "normalt 30–45 sekunder". The spec allows changing locked copy when it is wrong for the repo.
 - **Steps show the object, not an icon and not the hero again.** Damaged print → restored screen → framed mockup, from the second example, 112/160 px.
 - **Price as an object.** Newsreader 300 at 88–168 px, ink not green (green is for links), right-aligned on desktop opposite the offer line.
