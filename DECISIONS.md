@@ -254,3 +254,8 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   staircase and a family group before she meets anyone's solo portrait. The hero stays the 1916 couple:
   it is the pair whose damage is legible at a glance, and it is the only argument that works before a
   single word is read.
+- **The deletion promise now matches what the code does.** Four short lines said the photograph is deleted
+  after 30 days, flat. `/privatliv` has always been precise — 30 days for an upload without an order,
+  90 days after delivery for one with — so the promise was wrong by two months for the only customer who
+  pays. The lines now read the numbers from `CONFIG` and name the case: *bestiller du ikke, slettes
+  billedet efter 30 dage*. It cannot drift from the retention job again.

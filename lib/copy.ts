@@ -91,7 +91,7 @@ export function copy(season: Season = currentSeason()) {
     tryghed: [
       `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
       'Du godkender, før vi printer – ellers pengene tilbage',
-      'Billedet slettes efter 30 dage – eller straks, hvis du beder om det',
+      `Bestiller du ikke, slettes billedet efter ${CONFIG.retentionUnpaidDays} dage – eller straks, hvis du beder om det`,
     ],
     saadan: {
       h2: 'Sådan fungerer det',
@@ -154,7 +154,7 @@ export function copy(season: Season = currentSeason()) {
         },
         {
           q: 'Hvad sker der med mit billede?',
-          a: 'Det bruges kun til din bestilling, deles aldrig og slettes automatisk efter 30 dage – eller straks, hvis du beder om det.',
+          a: `Det bruges kun til din bestilling og deles aldrig. Bestiller du ikke, slettes det automatisk efter ${CONFIG.retentionUnpaidDays} dage; bestiller du, ${CONFIG.retentionCompletedDays} dage efter leveringen. Eller straks, hvis du beder om det.`,
         },
         {
           q: 'Hvad er forskellen på det her og en app?',
@@ -199,7 +199,7 @@ export function copy(season: Season = currentSeason()) {
       tips: 'Læg billedet fladt i dagslys, uden blitz. Fyld skærmen med det.',
       check: 'Er det skarpt og uden genskin? Ellers vælg et andet.',
       free: 'Det koster ikke noget at se. Du betaler først, hvis du bestiller – og først efter du har set resultatet.',
-      note: 'Billedet bruges kun til din bestilling. Det ligger i EU, sendes kun til dem, der laver restaureringen og printet, og slettes efter 30 dage – eller med det samme, hvis du beder om det.',
+      note: `Billedet bruges kun til din bestilling. Det ligger i EU, sendes kun til dem, der laver restaureringen og printet, og slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller – eller med det samme, hvis du beder om det.`,
       privacy: 'Læs mere under Privatliv',
       cta: 'Vis mig resultatet',
       remove: 'Fjern',
@@ -290,7 +290,7 @@ export function copy(season: Season = currentSeason()) {
       saveP: 'Skal du vise det til din søster eller vente til i aften? Vi sender linket – og ikke andet.',
       saveEmail: 'Din e-mail',
       saveCta: 'Send mig linket',
-      saveDone: 'Linket er sendt. Det virker, indtil billedet slettes – 30 dage efter upload.',
+      saveDone: `Linket er sendt. Det virker, indtil billedet slettes – ${CONFIG.retentionUnpaidDays} dage efter upload, hvis du ikke bestiller.`,
       saveInvalid: 'Skriv en e-mail, vi kan sende til.',
       saveFailed: 'Linket blev ikke sendt. Prøv igen om et øjeblik – eller tag et skærmbillede af siden, så har du den.',
       before: 'Før',
