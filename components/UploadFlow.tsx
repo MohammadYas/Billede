@@ -326,7 +326,8 @@ export default function UploadFlow({ c }: { c: Copy }) {
               </div>
             )}
             {state.error && <p className="small" style={{ color: 'var(--error)' }} role="alert">{state.error}</p>}
-            {!state.thumb && <p className="caption">{c.upload.free}</p>}
+            {/* the touch branch already prints this above the buttons, where it is read before the tap */}
+            {!state.thumb && !coarse && <p className="caption">{c.upload.free}</p>}
             {!state.thumb && <p className="caption">{c.upload.tips}</p>}
             <p className="caption">{c.upload.note} <a href="/privatliv">{c.upload.privacy}</a>.</p>
             {!state.thumb && <p className="small"><button type="button" className="link-btn" onClick={() => setState({ kind: 'nophoto', email: '', sending: false, sent: false })}>{c.upload.noPhoto}</button></p>}

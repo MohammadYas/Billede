@@ -12,6 +12,7 @@
     "examples:sources": "node scripts/fetch-archive-sources.mjs",
     "examples:colour": "tsx scripts/quality-report.ts --source assets/examples-source --label \"FSA farvedias 1940-42\" --quality high --concurrency 3",
     "screenshots": "tsx scripts/screenshots.ts",
+    "review:html": "node scripts/build-page-review.mjs http://localhost:3111 docs/review/alle-sider.html",
     "lint": "next lint"
   },
   "dependencies": {

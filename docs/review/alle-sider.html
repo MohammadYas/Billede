@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genfundet — alle sider</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;600&display=swap">
+<style>
+/* Genfundet — tokens and base. See DESIGN.md. */
+/* Metric-compatible fallbacks so the swap does not reflow (Lighthouse showed 0.009 CLS from font swap). */
+
+:root {
+  --paper: #f6f1e8;
+  --paper-2: #efe8db;
+  --ink: #1c1a17;
+  --ink-2: #5b554c;
+  --hairline: #d9d1c3;
+  --accent: #2f4a3a;
+  --accent-ink: #f6f1e8;
+  --error: #8a3b2e;
+
+  --display: 'Newsreader', Georgia, 'Times New Roman', serif; /* self-hosted woff2 on the real site */
+  --sans: 'Public Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif; /* self-hosted woff2 on the real site */
+
+  --measure: 34em;
+  --gutter: 20px;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px; --s10: 128px;
+
+  --fs-display: 36px; --lh-display: 1.02;
+  --fs-h2: 28px; --lh-h2: 1.1;
+  --fs-lead: 18px;
+  --fs-body: 16px; --lh-body: 1.55;
+  --fs-small: 14px;
+  --fs-caption: 14px;
+
+  --cta-height: 52px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --container: 1120px;
+  color-scheme: light;
+}
+@media (min-width: 768px) { :root { --gutter: 32px; --fs-display: 48px; --fs-h2: 32px; --fs-lead: 19px; } }
+@media (min-width: 1024px) { :root { --gutter: 48px; --fs-display: 60px; --fs-h2: 38px; --fs-lead: 20px; --fs-body: 17px; } }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--paper); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: var(--fs-body); line-height: var(--lh-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; hyphens: auto; -webkit-hyphens: auto; }
+img, video { max-width: 100%; height: auto; display: block; }
+button, input, textarea, select { font: inherit; color: inherit; }
+a { color: var(--accent); text-decoration: underline; text-underline-offset: 0.16em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+::selection { background: var(--paper-2); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, textarea { caret-color: var(--accent); }
+
+h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 400; font-optical-sizing: auto; text-wrap: balance; }
+h1 { font-size: var(--fs-display); line-height: var(--lh-display); letter-spacing: -0.025em; }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: -0.015em; }
+h3 { font-size: var(--fs-lead); line-height: 1.3; font-family: var(--sans); font-weight: 600; }
+p { margin: 0; }
+p + p { margin-top: var(--s4); }
+.lead { font-size: var(--fs-lead); line-height: 1.45; }
+.small { font-size: var(--fs-small); }
+.caption { font-size: var(--fs-caption); color: var(--ink-2); line-height: 1.4; }
+.caption b { font-weight: 500; color: var(--ink); }
+.muted { color: var(--ink-2); }
+.measure { max-width: var(--measure); }
+.wrap { padding-left: var(--gutter); padding-right: var(--gutter); }
+.container { max-width: var(--container); margin-left: auto; margin-right: auto; }
+.tabular { font-variant-numeric: tabular-nums; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.italic { font-family: var(--display); font-style: italic; font-weight: 400; }
+
+/* Inline links that must still be 44 px tall to tap (footer, contact) */
+/* 44 px of tappable height without changing where the text sits */
+.tap { display: inline-block; padding: 12px 0; margin: -12px 0; }
+
+/* Wordmark — one class, always a link home */
+.wordmark { font-family: var(--display); font-size: 24px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; line-height: 1; display: inline-block; padding: 10px 0; margin: -10px 0; }
+.wordmark:hover { text-decoration: none; }
+
+/* Button — the one primary style. Feedback lands on pointer-down (apple-design §1). */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--cta-height); padding: 0 var(--s5); background: var(--ink); color: var(--paper); border: 0; border-radius: 2px; cursor: pointer; font-family: var(--sans); font-weight: 600; font-size: var(--fs-body); letter-spacing: 0.005em; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background-color 100ms ease-out; }
+.btn:hover { background: #2a2724; text-decoration: none; }
+.btn:active { background: #0f0e0c; }
+.btn[disabled], .btn[aria-disabled="true"] { background: var(--ink-2); cursor: default; }
+.btn-block { width: 100%; }
+.btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+.btn-quiet:hover { background: var(--paper-2); }
+.btn-quiet:active { background: var(--hairline); }
+.btn-quiet[disabled], .btn-quiet[aria-disabled="true"] { background: transparent; color: var(--ink-2); border-color: var(--hairline); }
+.pv-toggle .btn { white-space: nowrap; }
+.link-btn { background: none; border: 0; padding: 10px 0; margin: -10px 0; color: var(--accent); text-decoration: underline; text-underline-offset: 0.16em; cursor: pointer; min-height: 44px; font-size: var(--fs-body); }
+.link-btn[disabled] { color: var(--ink-2); cursor: default; }
+
+/* Text field */
+.field { display: flex; flex-direction: column; gap: var(--s2); }
+.field label { font-size: var(--fs-small); font-weight: 600; }
+.field input, .field textarea, .field select { width: 100%; min-height: 48px; padding: var(--s3) var(--s4); background: var(--paper); border: 1px solid var(--hairline); border-bottom-color: var(--ink-2); border-radius: 2px; font-size: max(16px, var(--fs-body)); }
+.field input:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.field .error { color: var(--error); font-size: var(--fs-small); }
+.field input[aria-invalid="true"], .field textarea[aria-invalid="true"] { border-color: var(--error); }
+.notice { background: var(--paper-2); padding: var(--s3) var(--s4); border-left: 0; }
+
+/* Section rhythm — deliberately unequal. */
+.section { padding-top: var(--s7); padding-bottom: var(--s7); }
+@media (min-width: 1024px) { .section { padding-top: var(--s9); padding-bottom: var(--s9); } }
+.section-quiet { background: var(--paper-2); }
+
+/* Editorial two-column at ≥1024: heading in a 5/12 column, content in 7/12. */
+.ed { display: grid; gap: var(--s5); }
+@media (min-width: 1024px) { .ed { grid-template-columns: 5fr 7fr; gap: var(--s8); align-items: start; } .ed > h2, .ed > .ed-head { position: sticky; top: var(--s6); } }
+
+/* Header */
+.site-head { display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: space-between; align-items: baseline; padding-top: var(--s2); padding-bottom: var(--s2); }
+
+/* Hero — photo-book spread. 4:3 on every width so the first screen on a phone still holds the offer and the button; on desktop the photo is left-set and the caption column sits at its bottom edge. */
+.hero-grid { display: grid; gap: var(--s2); }
+.hero-media .ba { aspect-ratio: 4 / 3; }
+.hero-media .ba img { object-position: 50% 16%; } /* portrait originals: keep the faces in a 4:3 crop */
+.hero-caption { padding: var(--s2) var(--gutter) 0; }
+.hero-credit { position: absolute; left: 50%; bottom: var(--s3); transform: translateX(-50%); z-index: 2; font-size: 12px; padding: 4px 9px; background: rgba(246,241,232,0.86); color: var(--ink-2); border-radius: 2px; white-space: nowrap; pointer-events: none; }
+.hero-credit .caption { font-size: 12px; color: var(--ink-2); }
+.hero-credit .caption b { color: var(--ink); }
+@media (max-width: 767px) { .hero-caption { display: none; } }
+@media (min-width: 768px) { .hero-credit { display: none; } }
+.hero-media { position: relative; }
+@media (min-width: 1024px) {
+  .hero-grid { grid-template-columns: minmax(0, min(calc(var(--container) - 240px), calc(58vh * 4 / 3))) 1fr; gap: var(--s5); align-items: end; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
+  .hero-media .ba { max-height: 80vh; }
+  .hero-caption { padding: 0 0 var(--s2); max-width: 16em; }
+}
+.hero-text { display: grid; gap: var(--s3); padding-top: var(--s2); padding-bottom: var(--s6); }
+.hero-text h1 { max-width: 10em; }
+.hero-text .lead { max-width: 24em; }
+.hero-cta { display: grid; gap: var(--s2); justify-items: start; padding-top: var(--s2); }
+@media (min-width: 1024px) { .hero-text { grid-template-columns: 7fr 5fr; gap: var(--s6); align-items: end; padding-top: var(--s6); padding-bottom: var(--s8); } .hero-text h1 { grid-column: 1; max-width: 11em; } .hero-text .lead { grid-column: 1; } .hero-cta { grid-column: 2; grid-row: 1 / span 2; justify-self: end; align-self: end; } }
+
+/* Eyebrow above the headline: the season and the deadline, in the display face, never a badge */
+.eyebrow { font-family: var(--display); font-style: normal; font-size: var(--fs-body); line-height: 1.3; color: var(--accent); letter-spacing: 0; max-width: 24em; }
+.countdown { font-family: var(--sans); font-size: var(--fs-small); font-weight: 600; color: var(--accent); }
+.deadline { font-family: var(--display); font-size: var(--fs-lead); color: var(--accent); max-width: 22em; }
+
+/* Gaven — head on the left, four hairline rows on the right */
+.gift { display: grid; gap: var(--s6); }
+.gift-head { display: grid; gap: var(--s4); align-content: start; }
+.gift-points { display: grid; margin: 0; }
+.gift-points > div { display: grid; gap: var(--s1); padding: var(--s4) 0; border-top: 1px solid var(--hairline); }
+.gift-points > div:last-child { border-bottom: 1px solid var(--hairline); }
+.gift-points dt { font-family: var(--display); font-size: var(--fs-lead); font-weight: 500; }
+.gift-points dd { margin: 0; color: var(--ink-2); max-width: 30em; }
+@media (min-width: 1024px) { .gift { grid-template-columns: 5fr 7fr; gap: var(--s8); align-items: start; } .gift-head { position: sticky; top: var(--s6); } }
+
+/* Trust row — one hairline row */
+.trust { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); padding: var(--s3) 0; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); font-size: var(--fs-small); color: var(--ink-2); }
+.trust span { white-space: nowrap; }
+/* on a phone the longest promise is wider than the screen, and a horizontal scrollbar on the first
+   screen of a paid landing page is worse than a wrapped line */
+@media (max-width: 767px) { .trust span { white-space: normal; } }
+
+/* Steps — three sentences with photographs that show the object at each stage */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s6); }
+.step { display: grid; grid-template-columns: 112px 1fr; gap: var(--s4); align-items: start; }
+.step img, .step .ph { width: 112px; aspect-ratio: 4 / 5; object-fit: cover; }
+.step .ph { background: var(--paper-2); }
+.step p { font-size: var(--fs-lead); line-height: 1.4; max-width: 22em; }
+.step .n { font-family: var(--display); font-size: 14px; color: var(--ink-2); display: block; margin-bottom: var(--s1); font-variant-numeric: oldstyle-nums; }
+@media (min-width: 768px) { .step { grid-template-columns: 160px 1fr; gap: var(--s5); } .step img, .step .ph { width: 160px; } }
+
+/* Examples — horizontal swipe on mobile, offset editorial grid on desktop */
+.swipe { display: flex; align-items: flex-start; gap: var(--s4); overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 var(--gutter); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.swipe::-webkit-scrollbar { display: none; }
+.swipe > * { scroll-snap-align: start; flex: 0 0 82%; }
+.swipe .ba, .swipe .cmp { outline: 1px solid var(--hairline); outline-offset: -1px; }
+@media (min-width: 768px) { .swipe { display: grid; grid-template-columns: 1.25fr 1fr; gap: var(--s7) var(--s6); overflow: visible; padding: 0; } .swipe > * { flex: none; } .swipe > :nth-child(2) { margin-top: var(--s8); } .swipe > :nth-child(4) { margin-top: var(--s8); } }
+
+/* Offer — the price is an object */
+.offer { display: grid; gap: var(--s5); }
+.price { font-family: var(--display); font-weight: 300; font-size: clamp(88px, 24vw, 168px); line-height: 0.9; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: lining-nums; }
+.price small { font-size: 0.32em; letter-spacing: 0; font-weight: 400; margin-left: 0.15em; }
+/* On a phone the price comes before the button: read the number, then act. */
+.offer > .offer-act { order: 2; }
+@media (min-width: 1024px) { .offer { grid-template-columns: 1fr auto; align-items: end; gap: var(--s8); } .offer > .offer-act { order: 0; } .price, .price-note { text-align: right; } }
+
+/* Founder */
+.founder { display: grid; gap: var(--s5); }
+@media (min-width: 768px) { .founder { grid-template-columns: 220px 1fr; gap: var(--s7); align-items: start; } }
+.founder img { width: 100%; aspect-ratio: 10 / 13; object-fit: cover; }
+
+/* Accordion — hairline, no card */
+details.q { border-top: 1px solid var(--hairline); }
+details.q:last-of-type { border-bottom: 1px solid var(--hairline); }
+details.q summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); padding: var(--s4) 0; font-family: var(--display); font-size: var(--fs-lead); font-weight: 500; line-height: 1.3; min-height: 48px; }
+details.q summary::-webkit-details-marker { display: none; }
+details.q summary::after { content: '+'; font-family: var(--sans); font-weight: 400; font-size: 22px; line-height: 1; color: var(--ink-2); flex: none; }
+details.q[open] summary::after { content: '–'; }
+details.q .a { padding: 0 0 var(--s5); max-width: var(--measure); }
+
+/* Closing line */
+.closing { font-family: var(--display); font-size: var(--fs-h2); line-height: 1.2; max-width: 18em; }
+
+/* Footer */
+.foot { border-top: 1px solid var(--hairline); padding-top: var(--s6); padding-bottom: calc(var(--s6) + var(--safe-bottom)); font-size: var(--fs-small); color: var(--ink-2); }
+.foot-grid { display: grid; gap: var(--s3); }
+@media (min-width: 768px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
+
+/* Sticky mobile CTA */
+.sticky-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: var(--s3) var(--gutter) calc(var(--s3) + var(--safe-bottom)); background: var(--paper); border-top: 1px solid var(--hairline); transform: translateY(100%); transition: transform 180ms ease-out; }
+.sticky-cta.on { transform: translateY(0); }
+@media (min-width: 768px) { .sticky-cta { display: none; } }
+@media (prefers-reduced-motion: reduce) { .sticky-cta { transition: none; } .btn { transition: none; } }
+body.has-sticky { padding-bottom: calc(var(--cta-height) + var(--s3) * 2 + var(--safe-bottom)); }
+body.sticky-on { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--safe-bottom)); }
+@media (min-width: 768px) { body.has-sticky { padding-bottom: 0; } body.sticky-on { --bar-h: 0px; } }
+
+/* Consent banner — stacks above whichever bottom bar is showing (--bar-h) */
+.consent { position: fixed; left: 0; right: 0; bottom: var(--bar-h, 0px); z-index: 50; background: var(--paper-2); border-top: 1px solid var(--hairline); padding: var(--s3) var(--gutter); transition: bottom 180ms ease-out; }
+.consent .container { flex-wrap: nowrap; }
+.consent p { flex: 1 1 auto; min-width: 0; font-size: 13px; line-height: 1.35; }
+.consent .btn { min-height: 40px; padding: 0 var(--s4); }
+body[data-flow-open] .consent { display: none; }
+body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) + var(--safe-bottom)); }
+
+/* Before/after slider. The handle moves with transform (no layout), the after image is clipped. */
+.ba { position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: pan-y; background: var(--paper-2); width: 100%; }
+.ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--zoom, 1)); transform-origin: 50% 42%; transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .ba img { transition: none; } }
+.ba.contain img { object-fit: contain; }
+.ba img.after { clip-path: inset(0 0 0 var(--x, 50%)); }
+.ba .handle { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; pointer-events: none; transform: translateX(var(--x, 50%)) translateX(var(--kx, 0px)); will-change: transform; }
+.ba .handle::before { content: ''; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--paper); box-shadow: 0 0 0 1px rgba(28,26,23,0.25); }
+.ba .knob { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 2px rgba(28,26,23,0.3); transition: transform 100ms ease-out, box-shadow 100ms ease-out; }
+.ba.pressed .knob { transform: translate(-50%, -50%) scale(1.12); box-shadow: 0 2px 6px rgba(28,26,23,0.35); } /* feedback on pointer-down */
+.ba .knob::before, .ba .knob::after { content: ''; position: absolute; top: 17px; width: 2px; height: 10px; background: var(--ink); }
+.ba .knob::before { left: 15px; }
+.ba .knob::after { right: 15px; }
+/* Labels are buttons: a 44 px target with the 32 px chip inside it */
+.ba .lbl { position: absolute; bottom: calc(var(--s3) - 6px); z-index: 2; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 6px; border: 0; background: none; color: var(--ink); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.ba .lbl > span { display: inline-block; font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; line-height: 24px; padding: 4px 10px; background: rgba(246,241,232,0.92); border-radius: 2px; transition: background-color 100ms ease-out; }
+.ba .lbl:active > span { background: var(--paper-2); }
+.ba .lbl.before { left: calc(var(--s3) - 6px); }
+.ba .lbl.after { right: calc(var(--s3) - 6px); }
+.ba input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: ew-resize; pointer-events: none; }
+.ba input[type=range]:focus-visible + .focus-ring { outline: 2px solid var(--accent); outline-offset: -2px; position: absolute; inset: 0; pointer-events: none; }
+
+/* Bottom sheet / modal */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(28,26,23,0.45); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 92dvh; overflow: auto; overscroll-behavior: contain; background: var(--paper); border-radius: 12px 12px 0 0; padding: var(--s2) var(--gutter) calc(var(--s6) + var(--safe-bottom)); will-change: transform; touch-action: pan-y; }
+.sheet .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--hairline); margin: var(--s2) auto var(--s5); }
+.sheet .close { position: absolute; right: calc(var(--gutter) - 10px); top: 2px; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: none; border: 0; color: var(--ink); font-size: 24px; cursor: pointer; }
+@media (min-width: 768px) {
+  .sheet { left: 50%; right: auto; top: 50%; bottom: auto; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 64px)); max-height: 88vh; border-radius: 4px; padding: var(--s6); }
+  .sheet .grab { display: none; }
+  .sheet .close { right: var(--s3); top: var(--s3); }
+}
+@media (prefers-reduced-transparency: reduce) { .scrim { background: rgba(28,26,23,0.7); } }
+.drop { border: 1px dashed var(--hairline); padding: var(--s5); text-align: center; color: var(--ink-2); font-size: var(--fs-small); }
+.drop.over { border-color: var(--accent); color: var(--ink); background: var(--paper-2); }
+
+/* Processing — the photograph stays, the progress line runs along its bottom edge */
+.proc { position: relative; display: grid; justify-items: start; }
+.proc img { max-height: 40dvh; width: auto; max-width: 100%; opacity: 0.45; transition: opacity 300ms ease-out; }
+.proc .progress { position: absolute; left: 0; right: 0; bottom: 0; }
+.progress { height: 2px; background: var(--hairline); overflow: hidden; }
+.progress > span { display: block; height: 100%; width: 100%; background: var(--ink); transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform var(--pt, 300ms) linear; }
+
+/* Preview page (/p/[id]) */
+.pv { display: grid; gap: var(--s5); padding-top: var(--s4); padding-bottom: var(--s9); }
+.pv-left { display: grid; gap: var(--s4); }
+/* the order bar is fixed and 102 px tall: the picture has to end above it, or its own controls
+   (Før/Efter, the colour toggle) sit behind the bar on the first screen */
+.pv .ba { max-height: min(70dvh, calc(100dvh - 372px)); margin-inline: auto; }
+@media (min-width: 1024px) { .pv .ba { max-height: 70dvh; } }
+.pv-toggle { display: flex; align-items: center; gap: var(--s4); min-height: 44px; }
+.pv-grid { display: grid; gap: var(--s5); }
+.pv-cta { display: grid; gap: var(--s2); }
+
+/* ---------------------------------------------------------------------------
+ * The configurator (/p/[id]): size, frame, extra copies, and a bill that adds up
+ * under the finger. Hairline rows and gallery labels, never cards — the object on
+ * the wall above it is the only thing allowed to look expensive.
+ * ------------------------------------------------------------------------- */
+.config { display: grid; }
+/* the rule is an inset shadow, not a border: a fieldset cuts its own border away behind the legend */
+.cfg { border: 0; margin: 0; padding: var(--s5) 0; display: grid; gap: var(--s3); box-shadow: inset 0 1px 0 var(--hairline); }
+.cfg:first-child { box-shadow: none; padding-top: var(--s2); }
+.cfg legend { float: left; width: 100%; }
+.cfg-title { margin: 0; font-family: var(--display); font-size: 19px; font-weight: 500; letter-spacing: -0.01em; }
+.cfg-label { margin: 0; font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); padding: 0; }
+
+/* three real radios, so keyboard and VoiceOver get the semantics for free */
+.sizes-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }
+.size { position: relative; display: grid; gap: 2px; align-content: start; padding: var(--s3); min-height: 92px; cursor: pointer; background: var(--paper); box-shadow: inset 0 0 0 1px var(--hairline); transition: box-shadow 140ms ease-out, background 140ms ease-out, transform 120ms ease-out; }
+.size input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.size b { font-family: var(--display); font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+.size .size-price { font-size: var(--fs-small); font-weight: 600; }
+.size .caption { line-height: 1.3; }
+.size.is-on { background: var(--paper-2); box-shadow: inset 0 0 0 2px var(--ink); }
+.size:active, .frame:active { transform: scale(0.99); }
+.size:has(input:focus-visible), .frame:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (hover: hover) { .size:hover, .frame:hover { box-shadow: inset 0 0 0 1px var(--ink-2); } }
+@media (max-width: 359px) { .size { padding: var(--s2) var(--s3); min-height: 84px; } .size .caption { display: none; } }
+
+/* frame: the swatch is the moulding itself, mount and all */
+.frames-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s2); }
+.frame { position: relative; display: flex; align-items: center; gap: var(--s3); padding: var(--s3); min-height: 60px; cursor: pointer; background: var(--paper); box-shadow: inset 0 0 0 1px var(--hairline); transition: box-shadow 140ms ease-out, background 140ms ease-out, transform 120ms ease-out; }
+.frame input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.frame.is-on { background: var(--paper-2); box-shadow: inset 0 0 0 2px var(--ink); }
+.frame .swatch { flex: none; width: 30px; height: 38px; background: #F4F0E8; }
+.swatch-sort { border: 5px solid #181614; }
+.swatch-eg { border: 5px solid #8A6A46; }
+.frame-text { display: grid; }
+.frame-text b { font-family: var(--display); font-size: 17px; font-weight: 500; }
+.frame-text .caption { line-height: 1.25; }
+
+/* extra copies: nothing is ticked for you — the add is a button, the count is a stepper */
+.extra-add { justify-self: start; display: inline-flex; gap: var(--s2); align-items: baseline; }
+.stepper { display: inline-flex; align-items: center; gap: var(--s3); justify-self: start; padding: 0 var(--s3); min-height: 48px; background: var(--paper-2); box-shadow: inset 0 0 0 1px var(--ink); }
+.stepper button { min-width: 40px; min-height: 44px; border: 0; background: none; color: var(--ink); font-size: 20px; line-height: 1; cursor: pointer; font-family: var(--sans); }
+.stepper button:disabled { color: var(--hairline); cursor: default; }
+.stepper span { font-size: var(--fs-small); }
+.stepper b { font-weight: 600; }
+
+/* the bill */
+.bill-lines { display: grid; margin: 0; }
+.bill-lines > div { display: grid; grid-template-columns: 1fr auto; gap: var(--s4); align-items: baseline; padding: var(--s3) 0; border-top: 1px solid var(--hairline); }
+.bill-lines > div:first-child { border-top: 0; }
+.bill-lines dt { font-size: var(--fs-small); display: grid; gap: 2px; }
+.bill-lines dt .caption { line-height: 1.3; }
+.bill-lines dd { margin: 0; font-size: var(--fs-small); }
+.bill-total { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); margin: 0; padding-top: var(--s3); border-top: 1px solid var(--ink); font-family: var(--sans); font-size: var(--fs-small); font-weight: 600; }
+.bill-total b { font-family: var(--display); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* where you are: three steps, the current one in ink */
+.pv-steps { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s4); margin: 0; padding: 0; font-family: var(--sans); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hairline-ink, var(--ink-2)); }
+/* no faded step: dimming it below AA contrast is not a hierarchy, it is a bug */
+.pv-steps li { color: var(--ink-2); }
+.pv-steps li.done { color: var(--ink-2); }
+.pv-steps li.now { color: var(--ink); opacity: 1; box-shadow: inset 0 -2px 0 var(--ink); }
+
+/* the wall, crossfading between sizes and frames */
+.pv-mock { position: relative; width: min(100%, 520px); }
+.pv-mock img { display: block; width: 100%; height: auto; }
+.pv-mock img.in { position: absolute; inset: 0; animation: mockIn 260ms ease-out both; }
+@keyframes mockIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pv-mock img.in { animation: none; } .size, .frame { transition: none; } }
+
+/* Sizes on the landing page: a price list, not a card */
+.size-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.size-list li { display: flex; justify-content: space-between; gap: var(--s4); padding: var(--s2) 0; border-top: 1px solid var(--hairline); font-size: var(--fs-small); }
+.size-list li:last-child { border-bottom: 1px solid var(--hairline); }
+.size-list li span:last-child { font-variant-numeric: tabular-nums; }
+.price-from { font-family: var(--sans); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+/* The three promises, next to the price, where the doubt is */
+.guarantee { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; gap: 0; max-width: 26em; }
+.guarantee li { font-size: var(--fs-small); padding: var(--s2) 0 var(--s2) 1.6em; border-top: 1px solid var(--hairline); position: relative; }
+.guarantee li:last-child { border-bottom: 1px solid var(--hairline); }
+.guarantee li::before { content: ''; position: absolute; left: 0.15em; top: 1.05em; width: 0.5em; height: 0.28em; border-left: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: rotate(-45deg); }
+@media (min-width: 1024px) {
+  .pv { grid-template-columns: 7fr 5fr; gap: var(--s8); align-items: start; padding-top: var(--s6); }
+  /* the photograph stays while the choices scroll: the object is the argument, the column of decisions is the work */
+  .pv .pv-left { grid-column: 1; display: grid; gap: var(--s4); position: sticky; top: var(--s6); align-self: start; }
+  .pv .pv-right { grid-column: 2; display: grid; gap: var(--s5); }
+}
+/* Mobile order bar: how you pay above the button, when you pay under it, and the error where the button is */
+.pv-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; gap: var(--s2); padding: var(--s3) var(--gutter) calc(var(--s3) + var(--safe-bottom)); background: var(--paper); border-top: 1px solid var(--hairline); }
+.pv-cta-bar .caption { text-align: center; font-size: 13px; line-height: 1.35; }
+.pv-cta-bar .alert { font-size: var(--fs-small); color: var(--error); line-height: 1.4; }
+@media (min-width: 1024px) { .pv-cta-bar { display: none; } }
+body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 18px + var(--safe-bottom)); padding-bottom: var(--bar-h); }
+.pv-money { color: var(--ink-2); }
+@media (min-width: 1024px) { .pv-money { display: none; } }
+@media (min-width: 1024px) { body.has-pv-bar { --bar-h: 0px; padding-bottom: 0; } }
+
+/* "Gem dit preview" is an alternative to buying: available, not competing */
+.pv-save { border-top: 1px solid var(--hairline); padding-top: var(--s4); }
+.pv-save summary { cursor: pointer; list-style: none; padding: 12px 0; margin: -12px 0; font-weight: 600; }
+.pv-save summary::-webkit-details-marker { display: none; }
+.pv-save summary::before { content: '+ '; color: var(--ink-2); }
+.pv-save[open] summary::before { content: '– '; }
+
+/* Tak — the receipt, the timeline, and the one question worth asking after a purchase */
+.again { display: grid; gap: var(--s3); padding: var(--s5) 0 0; border-top: 1px solid var(--hairline); }
+.again h2 { font-family: var(--display); font-size: var(--fs-lead); font-weight: 500; margin: 0; }
+
+/* Tak — timeline as hairline rows */
+.timeline { display: grid; margin: 0; }
+.timeline > div { display: grid; grid-template-columns: 8.5em 1fr; gap: var(--s4); padding: var(--s4) 0; border-top: 1px solid var(--hairline); }
+.timeline > div:last-child { border-bottom: 1px solid var(--hairline); }
+.timeline dt { font-family: var(--display); font-size: var(--fs-lead); }
+.timeline dd { margin: 0; }
+
+/* Legal */
+.legal h2 { font-family: var(--display); font-size: 24px; font-weight: 400; margin-top: var(--s7); }
+.legal ul { padding-left: 1.2em; margin: 0; }
+.legal li + li { margin-top: var(--s2); }
+.legal li strong { display: block; }
+
+/* Admin */
+.admin table { border-collapse: collapse; width: 100%; font-size: var(--fs-small); }
+.admin th, .admin td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--hairline); vertical-align: top; }
+.admin th { font-weight: 600; color: var(--ink-2); }
+@media (max-width: 1023px) { .pv-desktop-cta { display: none; } }
+
+/* Compare — lens / hold / fade (see components/Compare.tsx) */
+.cmp { position: relative; overflow: hidden; background: var(--paper-2); width: 100%; user-select: none; -webkit-user-select: none; touch-action: pan-y; outline-offset: 2px; cursor: pointer; }
+.cmp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cmp .lbl { position: absolute; bottom: var(--s3); font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; padding: 4px 9px; background: rgba(246,241,232,0.92); color: var(--ink); border-radius: 2px; pointer-events: none; }
+.cmp .lbl.before { left: var(--s3); } .cmp .lbl.after { right: var(--s3); }
+.cmp .hint { position: absolute; top: var(--s3); left: var(--s3); font-size: 13px; letter-spacing: 0.02em; padding: 4px 9px; background: rgba(28,26,23,0.72); color: var(--paper); border-radius: 2px; pointer-events: none; }
+.cmp-lens img.before { clip-path: circle(var(--r, 120px) at var(--lx, 50%) var(--ly, 42%)); }
+.cmp-lens .lens-ring { position: absolute; left: var(--lx, 50%); top: var(--ly, 42%); width: calc(var(--r, 120px) * 2); height: calc(var(--r, 120px) * 2); transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px rgba(28,26,23,0.35), 0 6px 18px rgba(28,26,23,0.22); transition: box-shadow 100ms ease-out; /* the handle: hit-tested as a circle, and it owns the gesture so a drag never turns into a page scroll */ pointer-events: auto; touch-action: none; cursor: grab; }
+.cmp-lens.pressed .lens-ring { cursor: grabbing; }
+.cmp-lens.pressed .lens-ring { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px rgba(28,26,23,0.5), 0 10px 26px rgba(28,26,23,0.3); }
+.cmp-lens .lbl.before { display: none; }
+.cmp-hold img.before, .cmp-fade img.before { opacity: 0; transition: opacity 260ms ease-out; } /* back out gently */
+.cmp-hold.show-before img.before { opacity: 1; transition-duration: 120ms; } /* in fast: feedback lands on the press */
+.cmp-fade img.before { transition: opacity 1400ms ease-in-out; }
+.cmp-fade.show-before img.before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .cmp-fade img.before { transition: opacity 200ms ease-out; } }
+.cmp-hold .lbl.before, .cmp-fade .lbl.before { opacity: 0; transition: opacity 220ms; }
+.cmp-hold.show-before .lbl.before, .cmp-fade.show-before .lbl.before { opacity: 1; }
+.cmp-hold.show-before .lbl.after, .cmp-fade.show-before .lbl.after { opacity: 0.4; }
+
+/* Detail pairs — "Tæt på" */
+.details { display: grid; gap: var(--s6); }
+.detail { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--hairline); border: 1px solid var(--hairline); margin: 0; }
+.detail img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.detail figcaption { grid-column: 1 / -1; background: var(--paper); padding: var(--s2) 0 0; }
+@media (min-width: 768px) { .details { grid-template-columns: repeat(2, 1fr); gap: var(--s6) var(--s5); } }
+@media (min-width: 1024px) { .details { grid-template-columns: repeat(3, 1fr); } }
+
+/* Product — "Det får du": the object, a gallery label */
+.product { display: grid; gap: var(--s6); }
+.product .mock { width: 100%; }
+.label { display: grid; margin: 0; }
+.label > div { display: grid; grid-template-columns: 9em 1fr; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--hairline); }
+.label > div:last-child { border-bottom: 1px solid var(--hairline); }
+.label dt { color: var(--ink-2); font-size: var(--fs-small); padding-top: 3px; }
+.label dd { margin: 0; }
+@media (min-width: 1024px) { .product { grid-template-columns: 7fr 5fr; gap: var(--s8); align-items: start; } }
+.compare-note { font-family: var(--display); font-size: var(--fs-lead); color: var(--ink-2); max-width: 26em; }
+
+
+/* --- review chrome: not part of the site --- */
+body.rv { margin: 0; background: #2a2724; }
+.rv-page { max-width: 430px; margin: 0 auto 64px; }
+.rv-head { padding: 40px 20px 14px; color: #efeae1; font-family: 'Public Sans', -apple-system, sans-serif; }
+.rv-n { margin: 0; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #a09789; }
+.rv-t { margin: 4px 0 2px; font-size: 21px; font-weight: 600; color: #fff; font-family: 'Public Sans', sans-serif; }
+.rv-u { margin: 0; font-size: 12px; color: #8fa88f; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.rv-note { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #b8b0a3; max-width: 46ch; }
+/* each page renders inside its own frame, so the fixed bars of one page cannot sit on top of another */
+.rv-frame { position: relative; overflow: hidden; background: var(--paper, #F6F1E8); border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.45); contain: layout paint; }
+.rv-frame [style*="position:fixed"], .rv-frame [style*="position: fixed"] { position: absolute !important; }
+.rv-frame > .sheet { position: static !important; inset: auto !important; max-height: none !important; transform: none !important; }
+.rv-index { max-width: 430px; margin: 0 auto; padding: 48px 20px 8px; font-family: 'Public Sans', sans-serif; color: #efeae1; }
+.rv-index h1 { font-family: 'Newsreader', Georgia, serif; font-size: 30px; font-weight: 400; margin: 0 0 6px; color: #fff; }
+.rv-index p { font-size: 13px; line-height: 1.6; color: #b8b0a3; max-width: 46ch; }
+.rv-index ol { padding-left: 1.2em; font-size: 14px; line-height: 1.9; }
+.rv-index a { color: #cfc7b8; }
+
+</style>
+</head>
+<body class="rv">
+<div class="rv-index">
+  <h1>Genfundet — alle sider</h1>
+  <p>Ægte markup og det rigtige stylesheet fra siden, gengivet i telefonbredde (390 px). Fotografierne er
+  erstattet af grå felter i den rigtige form, så der ikke ligger billeddata i filen. Kopiér hele filen ind
+  hvor som helst — den henter kun to skrifter udefra.</p>
+  <ol>
+    <li><a href="#p01">Forside</a> <span style="opacity:.55">/</span></li>
+    <li><a href="#p02">Upload-ark</a> <span style="opacity:.55">/</span></li>
+    <li><a href="#p03">Bestillingsside</a> <span style="opacity:.55">/p/<ordre-id></span></li>
+    <li><a href="#p04">Kvittering</a> <span style="opacity:.55">/tak?session_id=cs_test_preview</span></li>
+    <li><a href="#p05">Privatlivspolitik</a> <span style="opacity:.55">/privatliv</span></li>
+    <li><a href="#p06">Handelsbetingelser</a> <span style="opacity:.55">/handelsbetingelser</span></li>
+    <li><a href="#p07">Admin — log ind</a> <span style="opacity:.55">/admin</span></li>
+    <li><a href="#p08">Admin — ordrer</a> <span style="opacity:.55">/admin</span></li>
+    <li><a href="#p09">Ikke fundet</a> <span style="opacity:.55">/findes-ikke</span></li>
+  </ol>
+</div>
+<section class="rv-page" id="p01">
+  <header class="rv-head">
+    <p class="rv-n">01</p>
+    <h2 class="rv-t">Forside</h2>
+    <p class="rv-u">/</p>
+    <p class="rv-note">Det første en kold besøgende fra Meta ser.</p>
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main><header class="wrap"><div class="container site-head"><a href="/" class="wordmark">Genfundet</a><span class="caption">fra 599 kr. · fri fragt</span></div></header><section id="hero" aria-label="Eksempel på restaurering"><div class="hero-grid"><div class="hero-media"><div class="ba" style="--x: 30%; --zoom: 1; aspect-ratio: 4 / 3; --kx: 0px;"><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før og efter: Soldat og ung kvinde, ca. 1916. Arkivfoto, Wikimedia Commons" width="1200" height="900"></picture><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><div class="handle" aria-hidden="true"><div class="knob"></div></div><button type="button" class="lbl before" aria-label="Vis hele billedet før"><span>Før</span></button><button type="button" class="lbl after" aria-label="Vis hele billedet efter"><span>Efter</span></button><input type="range" min="0" max="100" step="5" aria-label="Før og Efter: træk for at sammenligne" value="30"><span class="focus-ring" aria-hidden="true"></span></div><span class="hero-credit" aria-hidden="true"><span class="caption" title="Arkivfoto, Wikimedia Commons."><b>Soldat og ung kvinde</b>, ca. 1916 · arkivfoto</span></span></div><p class="hero-caption"><span class="caption" title="Arkivfoto, Wikimedia Commons."><b>Soldat og ung kvinde</b>, ca. 1916 · arkivfoto</span></p></div><div class="wrap"><div class="container hero-text"><p class="eyebrow">Gaven, de ikke selv kan købe</p><h1>Mors gamle billede. Skarpt igen, i ramme, hjemme hos dig.</h1><p class="lead">Tag et foto af billedet med telefonen. Halvandet minut efter ser du det restaureret.</p><div class="hero-cta"><button type="button" class="btn" style="min-width:240px">Se dit billede nu</button><span class="caption">Det koster ikke noget at se resultatet. Skal det hjem til dig: fra 599 kr. for print, ramme og fri fragt.</span></div></div></div></section><div class="wrap"><div class="container trust"><span>Dansk virksomhed</span><span>Du godkender, før vi printer – ellers pengene tilbage</span><span>Billedet slettes efter 30 dage – eller straks, hvis du beder om det</span></div></div><section class="wrap section" aria-labelledby="saadan"><div class="container ed"><h2 id="saadan">Sådan fungerer det</h2><ol class="steps"><li class="step"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22160%22%20height%3D%22200%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2211%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="160" height="200"><p><span class="n">1</span>Tag et foto af billedet med telefonen. Dagslys, ingen blitz – det er nok.</p></li><li class="step"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22160%22%20height%3D%22200%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2211%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="160" height="200"><p><span class="n">2</span>Se resultatet på skærmen. Det tager omkring halvandet minut.</p></li><li class="step"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22160%22%20height%3D%22200%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2211%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="160" height="200"><p><span class="n">3</span>Bestil. Vi finjusterer, du godkender på mail, vi printer og sender. Leveret inden 5 hverdage.</p></li></ol><p class="caption measure">Papir falmer, og folder bliver ikke glattere med årene. Et foto af billedet, som det er nu, er nok til at redde det.</p></div></section><section class="wrap section section-quiet" aria-labelledby="gave"><div class="container gift"><div class="gift-head"><h2 id="gave">Den gave, de ikke selv kan købe</h2><p class="lead" style="max-width:24em">Til den runde fødselsdag, jubilæet, guldbrylluppet eller julen: et billede, de troede var gået tabt – skarpt, i ramme, klar til at hænge op. Det er den slags, der bliver stille ved bordet.</p><div><button type="button" class="btn" style="min-width:240px">Se dit billede nu</button></div></div><dl class="gift-points"><div><dt>Tag billedet i smug</dt><dd>Et foto af det gamle billede med telefonen er nok. Læg det tilbage i skuffen, inden nogen ser det.</dd></div><div><dt>Skriv en hilsen</dt><dd>Ved betaling kan du skrive et par linjer. Vi lægger et kort ved med din hilsen.</dd></div><div><dt>Send det direkte – eller hjem til dig</dt><dd>Skriv modtagerens adresse ved betaling, hvis det skal sendes direkte. Ellers kommer det hjem til dig, pakket så glasset holder.</dd></div><div><dt>Til tiden</dt><dd>Leveret inden 5 hverdage, efter du har godkendt billedet på mail.</dd></div></dl></div></section><section class="section" aria-labelledby="eksempler"><div class="wrap"><div class="container"><h2 id="eksempler" style="margin-bottom:var(--s5)">Eksempler</h2></div></div><div class="container"><div class="swipe"><figure style="margin:0"><div class="cmp cmp-hold" style="aspect-ratio:1092 / 1400;--lx:50%;--ly:42%;--r:120px" tabindex="0" role="img" aria-label="Før og efter: Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress. Hold for at se før."><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><span class="lbl before" aria-hidden="true">Før</span><span class="lbl after" aria-hidden="true">Efter</span><span class="hint" aria-hidden="true">Hold for at se før</span></div><figcaption style="padding-top:var(--s2)"><span class="caption" title="Arkivfoto, Library of Congress."><b>Anna J. Cooper</b>, ca. 1902.</span></figcaption></figure><figure style="margin:0"><div class="ba" style="--x:50%;--zoom:1;aspect-ratio:1028 / 1400"><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før og efter: Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen" width="1200" height="900"></picture><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><div class="handle" aria-hidden="true"><div class="knob"></div></div><button type="button" class="lbl before" aria-label="Vis hele billedet før"><span>Før</span></button><button type="button" class="lbl after" aria-label="Vis hele billedet efter"><span>Efter</span></button><input type="range" min="0" max="100" step="5" aria-label="Før og Efter: træk for at sammenligne" value="50"><span class="focus-ring" aria-hidden="true"></span></div><figcaption style="padding-top:var(--s2)"><span class="caption" title="Arkivfoto, Museene i Nord-Østerdalen."><b>Mor og barn, kabinetkort</b>, ca. 1900.</span></figcaption></figure><figure style="margin:0"><div class="cmp cmp-lens" style="aspect-ratio: 1052 / 1400; --lx: 50%; --ly: 42%; --r: 80px;" tabindex="0" role="img" aria-label="Før og efter: Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden. Tryk eller træk luppen."><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><div class="lens-ring" aria-hidden="true"></div><span class="lbl before" aria-hidden="true">Før</span><span class="lbl after" aria-hidden="true">Efter</span><span class="hint" aria-hidden="true">Tryk eller træk luppen</span></div><figcaption style="padding-top:var(--s2)"><span class="caption" title="Arkivfoto, Domkirkeodden."><b>Familie på trappen</b>, ca. 1920.</span></figcaption></figure><figure style="margin:0"><div class="cmp cmp-fade" style="aspect-ratio:1400 / 953;--lx:50%;--ly:42%;--r:120px" tabindex="0" role="img" aria-label="Før og efter: Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden. Overtoner langsomt · rør for at holde."><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><span class="lbl before" aria-hidden="true">Før</span><span class="lbl after" aria-hidden="true">Efter</span><span class="hint" aria-hidden="true">Overtoner langsomt · rør for at holde</span></div><figcaption style="padding-top:var(--s2)"><span class="caption" title="Arkivfoto, Domkirkeodden."><b>Gunhild og Ole Christian</b>, ca. 1935.</span></figcaption></figure><figure style="margin:0"><div class="cmp cmp-hold" style="aspect-ratio:942 / 1400;--lx:50%;--ly:42%;--r:120px" tabindex="0" role="img" aria-label="Før og efter: Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden. Hold for at se før."><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><span class="lbl before" aria-hidden="true">Før</span><span class="lbl after" aria-hidden="true">Efter</span><span class="hint" aria-hidden="true">Hold for at se før</span></div><figcaption style="padding-top:var(--s2)"><span class="caption" title="Arkivfoto, Domkirkeodden."><b>Familien Asplund</b>, ca. 1910.</span></figcaption></figure><figure style="margin:0"><div style="display:grid;gap:var(--s2)"><div class="ba" style="--x:50%;--zoom:1;aspect-ratio:1073 / 1400"><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før og efter: Ung kvinde med fjerhat, ca. 1905. Arkivfoto, Grenna Museum" width="1200" height="900"></picture><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><div class="handle" aria-hidden="true"><div class="knob"></div></div><button type="button" class="lbl before" aria-label="Vis hele billedet før"><span>Før</span></button><button type="button" class="lbl after" aria-label="Vis hele billedet efter"><span>Efter</span></button><input type="range" min="0" max="100" step="5" aria-label="Før og Efter: træk for at sammenligne" value="50"><span class="focus-ring" aria-hidden="true"></span></div><div style="display:flex;gap:var(--s4);min-height:44px;align-items:center"><button type="button" class="link-btn" aria-pressed="false">Vis i farver</button></div></div><figcaption style="padding-top:var(--s2)"><span class="caption" title="Arkivfoto, Grenna Museum."><b>Ung kvinde med fjerhat</b>, ca. 1905.</span></figcaption></figure></div><p class="wrap caption" style="padding-top:var(--s5);max-width:44em">Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.</p></div></section><section class="wrap section" aria-labelledby="taetpaa" style="padding-top:0"><div class="container" style="display:grid;gap:var(--s6)"><div class="ed"><h2 id="taetpaa">Tæt på</h2><p class="lead" style="max-width:26em">Det er i detaljerne, man kan se, om det er gjort ordentligt. Øjne, hænder, skrift og stof – ikke udglattet, bare rene.</p></div><div class="details"><figure class="detail"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før, udsnit: Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress." width="700" height="700"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Efter, udsnit: Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress." width="700" height="700"><figcaption><span class="caption" title="Arkivfoto, Library of Congress."><b>Ansigt og krave – Anna J. Cooper</b>, ca. 1902.</span></figcaption></figure><figure class="detail"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før, udsnit: Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen." width="700" height="700"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Efter, udsnit: Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen." width="700" height="700"><figcaption><span class="caption" title="Arkivfoto, Museene i Nord-Østerdalen."><b>Barnets ansigt – Mor og barn, kabinetkort</b>, ca. 1900.</span></figcaption></figure><figure class="detail"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før, udsnit: Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden." width="700" height="700"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Efter, udsnit: Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden." width="700" height="700"><figcaption><span class="caption" title="Arkivfoto, Domkirkeodden."><b>Familien – Familie på trappen</b>, ca. 1920.</span></figcaption></figure><figure class="detail"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før, udsnit: Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden." width="700" height="700"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Efter, udsnit: Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden." width="700" height="700"><figcaption><span class="caption" title="Arkivfoto, Domkirkeodden."><b>Mor og søn – Gunhild og Ole Christian</b>, ca. 1935.</span></figcaption></figure><figure class="detail"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før, udsnit: Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden." width="700" height="700"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Efter, udsnit: Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden." width="700" height="700"><figcaption><span class="caption" title="Arkivfoto, Domkirkeodden."><b>Bedsteforældrene – Familien Asplund</b>, ca. 1910.</span></figcaption></figure><figure class="detail"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Før, udsnit: Ung kvinde med fjerhat, ca. 1905. Arkivfoto, Grenna Museum." width="700" height="700"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2235%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Efter, udsnit: Ung kvinde med fjerhat, ca. 1905. Arkivfoto, Grenna Museum." width="700" height="700"><figcaption><span class="caption" title="Arkivfoto, Grenna Museum."><b>Hat og ansigt – Ung kvinde med fjerhat</b>, ca. 1905.</span></figcaption></figure></div></div></section><section class="wrap section" aria-labelledby="produkt" style="padding-top:0"><div class="container product"><div><img class="mock" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22960%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Indrammet 30×40 cm på en væg" width="1200" height="960"></div><div style="display:grid;gap:var(--s5)"><h2 id="produkt">Det får du for 599 kr.</h2><dl class="label"><div><dt>Print</dt><dd>30×40 cm på mat fotopapir, farveægte</dd></div><div><dt>Ramme</dt><dd>Sort eller eg, med passepartout og glas, klar til at hænge op</dd></div><div><dt>Fil</dt><dd>Den restaurerede fil i høj opløsning, din for altid</dd></div><div><dt>Manuelt tjek</dt><dd>Vi finjusterer hvert billede og tjekker ansigterne</dd></div><div><dt>Godkendelse</dt><dd>Du ser det færdige billede og siger ja, før vi printer</dd></div><div><dt>Levering</dt><dd>Inden 5 hverdage, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder</dd></div><div><dt>Flere eksemplarer</dt><dd>Et mere af samme billede for 349 kr., uanset størrelse, i samme pakke</dd></div><div><dt>Garanti</dt><dd>Ligner det ikke, får du pengene tilbage</dd></div></dl><div style="display:grid;gap:var(--s3)"><p class="label small">Størrelser</p><ul class="size-list"><li><span>30×40 cm</span><span>599 kr.</span></li><li><span>40×50 cm</span><span>799 kr.</span></li><li><span>50×70 cm</span><span>999 kr.</span></li></ul><p class="caption">Samme billede og samme håndarbejde i alle tre. Du vælger størrelsen, når du har set resultatet.</p></div><p class="compare-note">Restaurering, print, ramme, kort med din hilsen, indpakning og fragt – ét beløb per billede.</p></div></div></section><section class="wrap section section-quiet" aria-labelledby="tilbud"><div class="container offer"><h2 id="tilbud" class="visually-hidden">Pris</h2><div class="offer-act" style="display:grid;gap:var(--s4);align-content:end"><p class="lead" style="max-width:22em">Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret inden 5 hverdage, efter du har godkendt billedet på mail.</p><div><button type="button" class="btn" style="min-width:240px">Se dit billede nu</button></div><p class="caption" style="max-width:26em">Du bestiller først, når du har set resultatet.</p></div><div style="display:grid;gap:var(--s2)"><p class="price-from">fra</p><p class="price" aria-label="599 kr.">599<small>kr.</small></p><p class="caption price-note">inkl. moms, ramme og fragt · pengene tilbage, hvis det ikke ligner</p><p class="caption price-note">for 30×40 cm · større: 40×50 cm 799 kr. · 50×70 cm 999 kr.</p><ul class="guarantee"><li>Du ser resultatet, før du bestiller</li><li>Du godkender det færdige billede på mail, før vi printer</li><li>Ligner det ikke, får du hele beløbet tilbage</li></ul><p class="caption price-note"><span>Spørgsmål? Skriv til os på <a href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></span><span> – vi svarer inden 24 timer.</span></p></div></div></section><section class="wrap section" aria-labelledby="spoergsmaal"><div class="container ed"><h2 id="spoergsmaal">Spørgsmål</h2><div style="max-width:40em"><details class="q"><summary>Ser det kunstigt ud?</summary><div class="a"><p>Det er præcis det, vi tjekker for, før det printes. Hvis AI'en har ændret noget i et ansigt, rettes det tilbage. Og du ser det færdige billede og godkender det, før vi printer.</p></div></details><details class="q"><summary>Virker det også på farvebilleder fra 70’erne og 80’erne?</summary><div class="a"><p>Ja. Falmede farver, gulstik, folder og ridser er det, vi ser mest af. Tag et foto af det, og se selv – det koster ikke noget at kigge.</p></div></details><details class="q"><summary>Jeg har ikke billedet – det ligger hos min mor.</summary><div class="a"><p>Tag et foto af det med telefonen, næste gang du er hjemme. Læg det fladt i dagslys, uden blitz. Det er nok i langt de fleste tilfælde. Du kan også få et link på mail, så du har siden ved hånden.</p><p><button type="button" class="link-btn">Send mig linket</button></p></div></details><details class="q"><summary>Skal jeg sende det originale billede til jer?</summary><div class="a"><p>Nej. Du tager kun et foto af det med telefonen. Originalen bliver liggende i skuffen hos dig – vi rører den aldrig.</p></div></details><details class="q"><summary>Mit billede er meget ødelagt – kan I stadig gøre noget?</summary><div class="a"><p>Prisen er den samme, uanset hvor beskadiget billedet er. Revner, folder, gulstik, vandskjolder og manglende hjørner er det, vi ser mest af. Tag et foto af det og se selv, hvad der kommer ud af det – det koster ikke noget at kigge.</p></div></details><details class="q"><summary>Hvad sker der med mit billede?</summary><div class="a"><p>Det bruges kun til din bestilling, deles aldrig og slettes automatisk efter 30 dage – eller straks, hvis du beder om det.</p></div></details><details class="q"><summary>Hvad er forskellen på det her og en app?</summary><div class="a"><p>En app giver dig en fil på telefonen. Her får du et rigtigt print i ramme, som hænger på væggen inden 5 hverdage – og et menneske, der har tjekket ansigterne, før det blev printet.</p></div></details><details class="q"><summary>Hvilke størrelser kan jeg få?</summary><div class="a"><p>30×40 cm for 599 kr., 40×50 cm for 799 kr., 50×70 cm for 999 kr. – alle med sort ramme, passepartout, glas og fri fragt. Du vælger størrelsen, når du har set dit billede restaureret. Er billedet liggende, printes det liggende i samme mål.</p></div></details><details class="q"><summary>Kan jeg fortryde?</summary><div class="a"><p>Du betaler ved bestilling – fra 599 kr., alt efter størrelse. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. Selve printet er lavet til dig og kan ikke returneres, men er det beskadiget ved levering, sender vi et nyt.</p></div></details><details class="q"><summary>Hvornår får jeg det?</summary><div class="a"><p>Vi leverer inden 5 hverdage, efter du har godkendt det færdige billede.</p></div></details><details class="q"><summary>Kan jeg få flere eksemplarer af det samme billede?</summary><div class="a"><p>Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – 349 kr. for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling – minus 100 kr., hvis du bestiller det fra kvitteringen.</p></div></details><details class="q"><summary>Kan jeg sende det direkte til modtageren?</summary><div class="a"><p>Ja. Skriv modtagerens navn og adresse som leveringsadresse ved betaling. Godkendelsesmailen kommer stadig til dig, så du ser det færdige billede først.</p></div></details><details class="q"><summary>Kan jeg lægge en hilsen ved?</summary><div class="a"><p>Ja. Ved betaling er der et felt til en hilsen på op til 200 tegn. Vi skriver den på et kort og lægger det i pakken.</p></div></details><details class="q"><summary>Hvordan betaler jeg?</summary><div class="a"><p>Apple Pay, Google Pay eller kort. Du betaler ved bestilling og kan fortryde med fuld refusion, indtil du har godkendt det færdige billede.</p></div></details></div></div></section><section class="wrap" aria-label="Afslutning" style="padding-top:var(--s6);padding-bottom:var(--s10)"><div class="container ed"><p class="closing">Halvandet minut, så har du set det. Du bestiller først bagefter.</p><div><button type="button" class="btn" style="min-width:240px">Se dit billede nu</button></div></div></section></main><footer class="wrap foot"><div class="container foot-grid"><div style="display:grid;gap:var(--s3);align-content:start"><a href="/" class="wordmark">Genfundet</a><p>Mohammad Yassin</p></div><div style="display:grid;gap:var(--s2);align-content:start"><p><a class="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a class="tap" href="/privatliv">Privatliv</a></p><p><a class="tap" href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></p><p class="caption">Vi svarer på mail inden 24 timer – som regel meget hurtigere.</p></div></div></footer><div class="sticky-cta" aria-hidden="true"><button type="button" class="btn btn-block" tabindex="-1">Se dit billede nu · fra 599 kr.</button></div></div>
+</section>
+<section class="rv-page" id="p02">
+  <header class="rv-head">
+    <p class="rv-n">02</p>
+    <h2 class="rv-t">Upload-ark</h2>
+    <p class="rv-u">/</p>
+    <p class="rv-note">Arket der glider op, når man trykker "Se dit billede nu". Forsiden under det er nr. 01.</p>
+  </header>
+  <div class="rv-frame"><div class="sheet" role="dialog" aria-modal="true" aria-label="Vis os billedet" tabindex="-1" style="opacity: 1; transform: translateY(0px);"><div class="grab" aria-hidden="true"></div><button type="button" class="close" aria-label="Luk">×</button><div style="display: grid; gap: var(--s4);"><h2>Vis os billedet.</h2><div style="display: grid; gap: var(--s3);"><p class="caption">Det koster ikke noget at se. Du betaler først, hvis du bestiller – og først efter du har set resultatet.</p><label class="btn btn-block" style="cursor: pointer;">Tag et foto<input accept="image/*" capture="environment" hidden="" type="file"></label><label class="btn btn-block btn-quiet" style="cursor: pointer;">Vælg fra kamerarulle<input accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" hidden="" type="file"></label></div><p class="caption">Læg billedet fladt i dagslys, uden blitz. Fyld skærmen med det.</p><p class="caption">Billedet bruges kun til din bestilling. Det ligger i EU, sendes kun til dem, der laver restaureringen og printet, og slettes efter 30 dage – eller med det samme, hvis du beder om det. <a href="/privatliv">Læs mere under Privatliv</a>.</p><p class="small"><button type="button" class="link-btn">Jeg har ikke billedet lige nu</button></p></div></div></div>
+</section>
+<section class="rv-page" id="p03">
+  <header class="rv-head">
+    <p class="rv-n">03</p>
+    <h2 class="rv-t">Bestillingsside</h2>
+    <p class="rv-u">/p/<ordre-id></p>
+    <p class="rv-note">Produktsiden: resultatet, størrelse, ramme, regning, bestil.</p>
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main class="wrap"><div class="container site-head"><a href="/" class="wordmark">Genfundet</a><span class="caption">Fri fragt · pengene tilbage</span></div><div class="container pv"><div class="pv-left"><ol class="pv-steps" aria-label="Hvor du er i bestillingen"><li class="done">Dit billede</li><li class="now" aria-current="step">Størrelse og ramme</li><li class="">Betaling</li></ol><h1 style="font-size:var(--fs-h2);max-width:14em">Her er dit billede.</h1><div class="ba contain" style="--x: 35%; --zoom: 1; aspect-ratio: 1202 / 1600; --kx: 0px;"><picture><img class="before" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Dit billede før og efter" width="1200" height="900"></picture><picture><img class="after" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="" width="1200" height="900"></picture><div class="handle" aria-hidden="true"><div class="knob"></div></div><button type="button" class="lbl before" aria-label="Vis hele billedet før"><span>Før</span></button><button type="button" class="lbl after" aria-label="Vis hele billedet efter"><span>Efter</span></button><input type="range" min="0" max="100" step="5" aria-label="Før og Efter: træk for at sammenligne" value="35"><span class="focus-ring" aria-hidden="true"></span></div><div class="pv-toggle"><button type="button" class="btn btn-quiet" style="min-height:44px" aria-pressed="false">Se tæt på</button><button type="button" class="btn btn-quiet" style="min-height:44px" aria-pressed="false">Vis i farver</button></div><p class="caption measure">De fleste vælger sort-hvid: det er sådan, billedet blev taget. Farver gør det til noget nyt – prøv begge dele.</p><p class="caption measure">Det her er den hurtige første restaurering. Derfra går det i hånden: vi finpudser billedet og går især ansigterne efter. Du får det færdige billede på mail og siger ja, før vi printer noget – og så kommer det hjem til dig, printet og indrammet.</p><p class="small measure pv-money"><b style="font-weight:600">Pengene tilbage, hvis det ikke ligner.</b> Du betaler <span class="tabular">1.148 kr.</span> nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.</p><p class="caption measure">Er det en gave? Ved betaling kan du skrive en hilsen, som vi lægger ved på et kort.</p></div><div class="pv-right"><div class="pv-desktop-cta"><div class="pv-cta"><p class="caption" style="text-align:center">Apple Pay, Google Pay eller kort · Ingen oprettelse</p><button type="button" class="btn btn-block">Bestil mit billede <span aria-hidden="true">·</span> <span class="tabular">1.148 kr.</span></button><p class="caption" style="text-align:center">Pengene tilbage, hvis det ikke ligner. Du betaler <span class="tabular">1.148 kr.</span> nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.</p></div></div><div class="pv-grid"><div class="pv-mock"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22960%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ddd6c8%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-size%3D%2260%22%20fill%3D%22%236b655c%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3Efoto%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Dit billede indrammet i 40×50 cm, sort ramme" width="1200" height="960"></div><p class="caption">Sådan hænger det. 40×50 cm, med passepartout og glas, klar til væggen.</p><p class="measure">Du får billedet printet i 40×50 cm på mat fotopapir, i ramme med passepartout og glas, klar til at hænge op – og den restaurerede fil i høj opløsning. Fri fragt, og du godkender det færdige billede, før vi printer.</p><h2 style="font-size:var(--fs-lead);font-family:var(--display);font-weight:500">Det får du for 799 kr.</h2><dl class="label small"><div><dt>Print</dt><dd>40×50 cm på mat fotopapir, farveægte</dd></div><div><dt>Ramme</dt><dd>Sort eller eg, med passepartout og glas, klar til at hænge op</dd></div><div><dt>Fil</dt><dd>Den restaurerede fil i høj opløsning, din for altid</dd></div><div><dt>Manuelt tjek</dt><dd>Vi finjusterer hvert billede og tjekker ansigterne</dd></div><div><dt>Godkendelse</dt><dd>Du ser det færdige billede og siger ja, før vi printer</dd></div><div><dt>Levering</dt><dd>Inden 5 hverdage, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder</dd></div><div><dt>Flere eksemplarer</dt><dd>Et mere af samme billede for 349 kr., uanset størrelse, i samme pakke</dd></div><div><dt>Garanti</dt><dd>Ligner det ikke, får du pengene tilbage</dd></div></dl><div class="config"><div class="cfg ready"><p class="cfg-title">Din bestilling er klar</p><p class="caption measure">Du behøver ikke vælge noget: 30×40 cm i sort ramme er sat op for dig. Vil du have den større, en anden ramme eller et eksemplar mere, så ret det her.</p></div><fieldset class="cfg"><legend class="cfg-label">Størrelse</legend><div class="sizes-row"><label class="size"><input type="radio" name="stoerrelse" value="30x40"><b>30×40 cm</b><span class="size-price tabular">599 kr.</span><span class="caption">Som en almindelig fotoramme</span></label><label class="size is-on"><input type="radio" name="stoerrelse" checked="" value="40x50"><b>40×50 cm</b><span class="size-price tabular">799 kr.</span><span class="caption">Fylder på væggen</span></label><label class="size"><input type="radio" name="stoerrelse" value="50x70"><b>50×70 cm</b><span class="size-price tabular">999 kr.</span><span class="caption">Det store, man ser fra døren</span></label></div><p class="caption">Ramme, glas, kort med din hilsen og fri fragt er med i alle størrelser.</p></fieldset><fieldset class="cfg"><legend class="cfg-label">Ramme</legend><div class="frames-row"><label class="frame is-on"><input type="radio" name="ramme" checked="" value="sort"><span class="swatch swatch-sort" aria-hidden="true"></span><span class="frame-text"><b>Sort</b><span class="caption">Klassisk. Lader billedet stå alene</span></span></label><label class="frame"><input type="radio" name="ramme" value="eg"><span class="swatch swatch-eg" aria-hidden="true"></span><span class="frame-text"><b>Eg</b><span class="caption">Lyst træ. Varmere til gamle billeder</span></span></label></div><p class="caption">Begge med passepartout og glas. Samme pris.</p></fieldset><div class="cfg bill"><p class="cfg-label">Din bestilling</p><dl class="bill-lines"><div><dt>Restaureret billede, 40×50 cm<span class="caption">40×50 cm · sort ramme med passepartout og glas · digital fil i høj opløsning inkluderet · fri fragt</span></dt><dd class="tabular">799 kr.</dd></div><div><dt>Ekstra eksemplar, 40×50 cm<span class="caption">Samme billede, samme ramme – til en anden i familien</span></dt><dd class="tabular">349 kr.</dd></div><div><dt>Fragt og indpakning</dt><dd>Inkluderet</dd></div></dl><p class="bill-total"><span>I alt</span> <b><span class="tabular">1.148 kr.</span></b></p><p class="caption">inkl. moms</p></div><div class="cfg extra"><p class="cfg-title">Skal en anden i familien også have et?</p><p class="caption measure">Restaureringen er lavet én gang. Et eksemplar mere er kun selve billedet, rammen og forsendelsen – og det kommer i samme pakke.</p><div class="stepper" role="group" aria-label="Skal en anden i familien også have et?"><button type="button" aria-label="Fjern">−</button><span aria-live="polite"><b class="tabular">1</b> eksemplar mere</span><button type="button" aria-label="Tilføj et eksemplar">+</button></div></div></div><div class="pv-desktop-cta"><div class="pv-cta"><p class="caption" style="text-align:center">Apple Pay, Google Pay eller kort · Ingen oprettelse</p><button type="button" class="btn btn-block">Bestil mit billede <span aria-hidden="true">·</span> <span class="tabular">1.148 kr.</span></button><p class="caption" style="text-align:center">Pengene tilbage, hvis det ikke ligner. Du betaler <span class="tabular">1.148 kr.</span> nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.</p></div></div></div><details class="pv-save"><summary class="small">Gem dit preview</summary><form novalidate="" style="display:grid;gap:var(--s3);padding-top:var(--s3)"><p class="small muted">Skal du vise det til din søster eller vente til i aften? Vi sender linket – og ikke andet.</p><div style="display:grid;grid-template-columns:1fr auto;gap:var(--s2)"><div class="field"><label for="save-email" class="visually-hidden">Din e-mail</label><input id="save-email" type="email" inputmode="email" autocomplete="email" placeholder="Din e-mail" aria-invalid="false" value=""></div><button type="submit" class="btn btn-quiet">Send mig linket</button></div></form></details><p class="small" style="display:flex;gap:var(--s5);flex-wrap:wrap"><a class="tap" href="/">Vis et andet billede</a><button type="button" class="link-btn">Slet mit billede nu</button></p></div><div class="pv-cta-bar"><p class="caption">Apple Pay, Google Pay eller kort · Ingen oprettelse</p><button type="button" class="btn btn-block">Bestil mit billede <span aria-hidden="true">·</span> <span class="tabular">1.148 kr.</span></button></div></div></main><footer class="wrap foot"><div class="container foot-grid"><div style="display:grid;gap:var(--s3);align-content:start"><a href="/" class="wordmark">Genfundet</a><p>Mohammad Yassin</p></div><div style="display:grid;gap:var(--s2);align-content:start"><p><a class="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a class="tap" href="/privatliv">Privatliv</a></p><p><a class="tap" href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></p><p class="caption">Vi svarer på mail inden 24 timer – som regel meget hurtigere.</p></div></div></footer></div>
+</section>
+<section class="rv-page" id="p04">
+  <header class="rv-head">
+    <p class="rv-n">04</p>
+    <h2 class="rv-t">Kvittering</h2>
+    <p class="rv-u">/tak?session_id=cs_test_preview</p>
+    <p class="rv-note">Vist her i sin reservetilstand — betalingen kunne ikke bekræftes, fordi ordren er opdigtet.</p>
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s9)"><div class="container" style="display:grid;gap:var(--s6)"><a href="/" class="wordmark">Genfundet</a><div style="display:grid;gap:var(--s4)"><h1 style="max-width:12em">Vi kunne ikke bekræfte betalingen med det samme.</h1><p class="lead" style="max-width:26em">Er pengene trukket, er din bestilling hos os, og du får en mail inden for få minutter. Ellers kan du gå tilbage til dit billede og prøve igen.</p><p class="measure"><span>Er du i tvivl, så skriv til os på <a href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></span><span>. Vi svarer inden 24 timer.</span></p><p><a class="btn" href="/">Til forsiden</a></p></div></div></main><footer class="wrap foot"><div class="container foot-grid"><div style="display:grid;gap:var(--s3);align-content:start"><a href="/" class="wordmark">Genfundet</a><p>Mohammad Yassin</p></div><div style="display:grid;gap:var(--s2);align-content:start"><p><a class="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a class="tap" href="/privatliv">Privatliv</a></p><p><a class="tap" href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></p><p class="caption">Vi svarer på mail inden 24 timer – som regel meget hurtigere.</p></div></div></footer></div>
+</section>
+<section class="rv-page" id="p05">
+  <header class="rv-head">
+    <p class="rv-n">05</p>
+    <h2 class="rv-t">Privatlivspolitik</h2>
+    <p class="rv-u">/privatliv</p>
+    
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s9)"><div class="container ed" style="row-gap:var(--s6)"><div class="ed-head" style="display:grid;gap:var(--s5);align-content:start"><a href="/" class="wordmark">Genfundet</a><h1 style="max-width:12em">Sådan behandler vi dine oplysninger</h1><p class="caption">Opdateret 3. september 2026.</p></div><div class="legal" style="max-width:40em;display:grid;gap:var(--s4)"><p>Genfundet restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p><h2>Dataansvarlig</h2><p>Mohammad Yassin, [Udfyld: CVR], [Udfyld: adresse], mohammadyassin2626@gmail.com.</p><h2>Hvilke oplysninger og hvorfor</h2><ul><li><strong>Dit billede.</strong> Det foto, du uploader, og de restaurerede versioner. Formål: at lave dit preview og, hvis du bestiller, det færdige print. Retsgrundlag: opfyldelse af aftalen med dig (databeskyttelsesforordningens artikel 6, stk. 1, litra b). Billeder kan indeholde oplysninger om andre personer (dine slægtninge); vi behandler dem alene for at levere din bestilling.</li><li><strong>Kontakt- og leveringsoplysninger.</strong> Navn, e-mail, telefon og adresse, som du oplyser ved betaling. Formål: levering, godkendelsesmail, kvittering. Retsgrundlag: aftalen samt bogføringsloven (opbevaring af bilag i 5 år).</li><li><strong>Betalingsoplysninger.</strong> Behandles af Stripe. Vi ser aldrig dit kortnummer.</li><li><strong>Teknisk session.</strong> En anonym sessions-cookie (gf_sid), der knytter dit preview til din browser, så kun du kan se det, og en cookie i 7 dage (gf_utm) med kampagneparametrene fra det link, du kom fra, så vi kan se, hvilken annonce der virkede. Begge er nødvendige for tjenesten og deles ikke.</li><li><strong>Annoncemåling.</strong> Kun hvis du siger ja i banneret, indlæser vi Meta Pixel, som registrerer besøg, upload, preview og køb hos Meta. Retsgrundlag: dit samtykke, som du kan trække tilbage ved at slette cookien gf_consent eller skrive til os. Ved køb sender vi desuden ordre-id, beløb og en hashet (ulæselig) udgave af din e-mail og dit telefonnummer til Meta fra vores server, så vi kan måle, om annoncen førte til et køb – kun hvis du har sagt ja til Meta-cookien.</li></ul><h2>Hvem hjælper os (databehandlere)</h2><ul><li><strong>Supabase</strong> (database og lagring af billeder, EU-region Irland).</li><li><strong>OpenAI</strong> (den automatiske restaurering og kvalitetstjek af billedet). Billedet sendes til OpenAI's API; ifølge OpenAI's API-vilkår bruges data sendt via API ikke til træning af deres modeller. Overførsel kan ske til USA; grundlaget er EU's standardkontraktbestemmelser og EU-US Data Privacy Framework, hvor det gælder.</li><li><strong>Stripe</strong> (betaling). Kan overføre til USA under samme grundlag.</li><li><strong>Resend</strong> (afsendelse af mails).</li><li><strong>Netlify</strong> (hosting af hjemmesiden, EU-region).</li><li><strong>Printpartner:</strong> CEWE (print og ramme), som modtager dit færdige billede, navn og leveringsadresse for at kunne producere og sende.</li><li><strong>Meta</strong> (kun ved samtykke, se ovenfor).</li></ul><h2>Hvor længe</h2><ul><li>Uploads og previews uden bestilling: slettes automatisk efter 30 dage – eller straks, hvis du beder om det.</li><li>Billeder til en gennemført bestilling: slettes 90 dage efter levering.</li><li>Ordre- og betalingsoplysninger: 5 år efter regnskabsårets udløb (bogføringsloven).</li><li>Hvis du særskilt har givet lov til, at dit før/efter-billede må vises som eksempel på siden: indtil du trækker tilladelsen tilbage. Det spørger vi aldrig om ved betalingen – kun i en separat mail, og et nej ændrer intet ved din ordre.</li></ul><h2>Dine rettigheder</h2><p>Du kan få indsigt i, rettet, slettet eller udleveret dine oplysninger, gøre indsigelse og trække samtykke tilbage. Skriv til mohammadyassin2626@gmail.com. Du kan klage til Datatilsynet, Carl Jacobsens Vej 35, 2500 Valby, www.datatilsynet.dk.</p><h2>Det, vi ikke påstår</h2><p>Vi siger ikke, at dine billeder "aldrig forlader EU", at noget er "100 % sikkert" eller "GDPR-certificeret". Vi siger, hvad vi gør: lagrer i EU, sender billedet til de leverandører, der er nævnt ovenfor, sletter automatisk og deler aldrig med andre.</p></div></div></main><footer class="wrap foot"><div class="container foot-grid"><div style="display:grid;gap:var(--s3);align-content:start"><a href="/" class="wordmark">Genfundet</a><p>Mohammad Yassin</p></div><div style="display:grid;gap:var(--s2);align-content:start"><p><a class="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a class="tap" href="/privatliv">Privatliv</a></p><p><a class="tap" href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></p><p class="caption">Vi svarer på mail inden 24 timer – som regel meget hurtigere.</p></div></div></footer></div>
+</section>
+<section class="rv-page" id="p06">
+  <header class="rv-head">
+    <p class="rv-n">06</p>
+    <h2 class="rv-t">Handelsbetingelser</h2>
+    <p class="rv-u">/handelsbetingelser</p>
+    <p class="rv-note">CVR og adresse står stadig som [Udfyld: …].</p>
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s9)"><div class="container ed" style="row-gap:var(--s6)"><div class="ed-head" style="display:grid;gap:var(--s5);align-content:start"><a href="/" class="wordmark">Genfundet</a><h1 style="max-width:12em">Handelsbetingelser</h1><p class="caption">Opdateret 3. september 2026.</p></div><div class="legal" style="max-width:40em;display:grid;gap:var(--s4)"><h2>Sælger</h2><p>Mohammad Yassin, [Udfyld: CVR], [Udfyld: adresse], mohammadyassin2626@gmail.com.</p><h2>Produktet</h2><p>Restaurering af ét fotografi ud fra det foto, du uploader, leveret som print i ramme med passepartout og glas, samt en digital fil i høj opløsning. Du vælger størrelse og ramme (sort eller eg – samme pris), og du kan lægge ekstra eksemplarer af samme billede til. Alle priser er inkl. moms og fri fragt i Danmark:</p><ul><li>30×40 cm: 599 kr..</li><li>40×50 cm: 799 kr..</li><li>50×70 cm: 999 kr..</li><li>Ekstra eksemplar af samme billede i samme størrelse og ramme: 349 kr. pr. stk., op til tre.</li><li>Bestiller du et nyt billede fra linket i din kvittering, trækkes 100 kr. fra.</li></ul><p>Restaureringen laves af en automatisk billedmodel og finjusteres manuelt. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p><h2>Sådan foregår det</h2><ul><li>Du uploader og ser et preview med vandmærke. Prisen er den samme, uanset hvor beskadiget billedet er.</li><li>Du betaler. Inden 48 timer sender vi det færdige billede til godkendelse på mail.</li><li>Du godkender – eller beder om en ændring, så mange gange det er rimeligt. Vi printer først, når du har godkendt.</li><li>Efter godkendelse printer, indrammer og sender vi. Levering inden 5 hverdage. Bestillinger godkendt senest 10. december leveres inden jul.</li></ul><h2>Fortrydelsesret</h2><p>Du har som forbruger 14 dages fortrydelsesret fra bestillingen. Fordi den digitale fil leveres, når du godkender, og printet fremstilles specielt til dig, bortfalder fortrydelsesretten, når den digitale fil er leveret, og for printet, når produktionen er sat i gang efter din godkendelse. Det accepterer du udtrykkeligt ved betalingen. Indtil du har godkendt, kan du fortryde uden begrundelse og få hele beløbet retur.</p><h2>Ligner det ikke, får du pengene tilbage</h2><p>Hvis du efter at have set det færdige billede ikke synes, det ligner, refunderer vi hele beløbet – også efter en eller flere ændringsrunder. Det er dig, der afgør det.</p><h2>Reklamation</h2><p>Du har 2 års reklamationsret efter købeloven. Er printet eller rammen beskadiget ved levering, sender vi et nyt uden beregning – send os et foto inden for rimelig tid.</p><h2>Betaling</h2><p>Betaling sker via Stripe med de betalingsmetoder, der vises ved kassen. Beløbet trækkes ved bestilling.</p><h2>Dine billeder</h2><p>Du bekræfter, at du må lade os behandle det billede, du uploader. Vi bruger det kun til din bestilling. Se <a href="/privatliv">Privatliv</a>.</p><h2>Klager</h2><p>Skriv først til os. Kan vi ikke løse det, kan du klage til Center for Klageløsning, Nævnenes Hus, Toldboden 2, 8800 Viborg, www.naevneneshus.dk, eller via EU-Kommissionens klageportal ec.europa.eu/odr.</p></div></div></main><footer class="wrap foot"><div class="container foot-grid"><div style="display:grid;gap:var(--s3);align-content:start"><a href="/" class="wordmark">Genfundet</a><p>Mohammad Yassin</p></div><div style="display:grid;gap:var(--s2);align-content:start"><p><a class="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a class="tap" href="/privatliv">Privatliv</a></p><p><a class="tap" href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></p><p class="caption">Vi svarer på mail inden 24 timer – som regel meget hurtigere.</p></div></div></footer></div>
+</section>
+<section class="rv-page" id="p07">
+  <header class="rv-head">
+    <p class="rv-n">07</p>
+    <h2 class="rv-t">Admin — log ind</h2>
+    <p class="rv-u">/admin</p>
+    
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main class="wrap admin" style="padding-top:var(--s8)"><form class="container" style="max-width:360px;display:grid;gap:var(--s4)" action="" enctype="multipart/form-data" method="POST"><input type="hidden" name="$ACTION_ID_405d0cb73c0eb643b98e8d936e49c9ce7471c8a6b0"><h1 style="font-size:var(--fs-h2)">Genfundet admin</h1><div class="field"><label for="pw">Adgangskode</label><input id="pw" type="password" autocomplete="current-password" required="" name="password"></div><button class="btn" type="submit">Log ind</button></form></main></div>
+</section>
+<section class="rv-page" id="p08">
+  <header class="rv-head">
+    <p class="rv-n">08</p>
+    <h2 class="rv-t">Admin — ordrer</h2>
+    <p class="rv-u">/admin</p>
+    <p class="rv-note">Tom, fordi ubetalte previews er skjult som standard. Nul betalte ordrer.</p>
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main class="wrap admin" style="padding-top: var(--s6); padding-bottom: var(--s9);"><div class="container" style="display: grid; gap: var(--s5);"><div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--s3);"><h1 style="font-size: var(--fs-h2);">Ordrer</h1><p class="small"><a href="/admin?status=PAID" style="margin-right: 12px;">Betalt</a><a href="/admin?status=IN_RETOUCH" style="margin-right: 12px;">I retouch</a><a href="/admin?status=AWAITING_APPROVAL" style="margin-right: 12px;">Venter på godkendelse</a><a href="/admin?status=CHANGE_REQUESTED" style="margin-right: 12px;">Ændring ønsket</a><a href="/admin?status=APPROVED" style="margin-right: 12px;">Godkendt</a><a href="/admin?status=IN_PRODUCTION" style="margin-right: 12px;">I produktion</a><a href="/admin?status=MANUAL_REVIEW" style="margin-right: 12px;">Manuel vurdering</a><a href="/admin">Alle</a></p></div><section style="display: grid; gap: var(--s3);"><h2 style="font-size: var(--fs-lead); font-family: var(--sans); font-weight: 600;">Til handling</h2><p class="small muted">Intet at gøre lige nu.</p><p class="caption">Previews uden køb og opgivne uploads er skjult her (<a href="/admin?alle=1">vis alle</a>).</p></section><div style="overflow-x: auto;"><table class="tabular"><thead><tr><th>Oprettet</th><th>Ordre</th><th>Status</th><th>Format</th><th>Kunde</th><th>Beløb</th><th>Kilde</th></tr></thead><tbody><tr><td colspan="7" class="muted">Ingen ordrer endnu.</td></tr></tbody></table></div></div></main></div>
+</section>
+<section class="rv-page" id="p09">
+  <header class="rv-head">
+    <p class="rv-n">09</p>
+    <h2 class="rv-t">Ikke fundet</h2>
+    <p class="rv-u">/findes-ikke</p>
+    <p class="rv-note">Samme side som et udløbet godkendelseslink rammer.</p>
+  </header>
+  <div class="rv-frame"><div hidden=""></div><main class="wrap" style="padding-top:var(--s5);padding-bottom:var(--s9);min-height:70dvh"><div class="container" style="display:grid;gap:var(--s6)"><a href="/" class="wordmark">Genfundet</a><div style="display:grid;gap:var(--s4)"><h1 style="max-width:12em">Den side findes ikke her.</h1><p class="lead" style="max-width:26em">Et preview-link virker kun på den telefon, billedet blev uploadet fra – medmindre du har fået linket tilsendt fra "Gem dit preview". Det link kan åbnes overalt.</p><p class="measure">Er du i tvivl, så skriv til <a href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a> – vi svarer inden 24 timer.</p><p><a class="btn" href="/">Til forsiden</a></p></div></div></main><footer class="wrap foot"><div class="container foot-grid"><div style="display:grid;gap:var(--s3);align-content:start"><a href="/" class="wordmark">Genfundet</a><p>Mohammad Yassin</p></div><div style="display:grid;gap:var(--s2);align-content:start"><p><a class="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a class="tap" href="/privatliv">Privatliv</a></p><p><a class="tap" href="mailto:mohammadyassin2626@gmail.com">mohammadyassin2626@gmail.com</a></p><p class="caption">Vi svarer på mail inden 24 timer – som regel meget hurtigere.</p></div></div></footer></div>
+</section>
+</body>
+</html>
