@@ -15,6 +15,9 @@ and the ad copy ("Det gamle billede af hendes forældre") deserves real ones.
 2. `npm run quality:report` → open `QUALITY_REPORT.md`, look at `work/quality/<name>/restored.jpg`, fill in your own
    ratings. Gate: ≥70 % pass.
 3. `npm run examples:export -- --source assets/originals` → replaces `public/examples/` (only `consent: yes`).
+   The strongest example you can add is one the archives do not have: **a faded colour print from the 1970s–80s**
+   (your parents' wedding, a birthday in the garden). That is the most common real case for Danish families and
+   the site currently has no colour original at all.
    Sidecar extras per photo: `order:` (1 = hero), `mode: wipe|lens|hold|fade`, `detail: x,y` + `detailLabel:` for the
    "Tæt på" crop, `colour: yes` to expose the colourised version. Aim for variety: portraits, children, a group,
    a colour print from the 1970s, one really damaged one.
@@ -28,6 +31,9 @@ checkout checkbox. The privacy page already says so.
 `assets/founder/founder.md` has name, phone and e-mail from your Stripe account. **Fill in `city`, `cvr`, `address`,
 the three `why` lines and drop `portrait.jpg` in the folder.** Until then the site hides the empty fields and the
 legal pages show "[Udfyld …]". Handelsbetingelser require name, CVR and address (e-handelsloven §7).
+The copy uses your first name ("Mohammad finjusterer …") only once `portrait.jpg` and the three `why` lines exist;
+until then it says "vi", because a first name without a face reads as a persona (conversion attack #1, finding 2.2).
+The trust row under the hero becomes "Dansk virksomhed, <by> · CVR <nr>" the moment `city` and `cvr` are filled.
 Your Stripe account is `business_type: individual` — if you have no CVR yet, get one (virk.dk) before selling.
 
 ## 3. Stripe go-live (blocks the test)
@@ -119,7 +125,18 @@ assumes it. Buy one framed print of a test image first so you know the mount col
 `public/mockup/wall.jpg` is missing. The mockup renders a neutral wall by code until you drop in a real photo of a
 plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are composed on top.
 
-## 12. Unverified
+## 12. Things the fourth pass added that you should know
+
+- **Preview links are shareable by design.** The URL the app opens after an upload is `/p/<id>?t=<token>`; the same
+  token is on every image URL. Anyone with that exact URL can see the preview (not the original file, not the order).
+  Without the token a preview only opens on the phone with the session cookie; everything else gets the Danish 404.
+- **"Jeg har ikke billedet lige nu"** in the sheet mails a link to the site and creates a `MANUAL_REVIEW` order with the
+  note "link requested, no photo yet". In admin, treat those as leads, not as work: nothing to restore until they upload.
+- **The wait.** The bar creeps to 85 % while the model runs (~30–45 s); after 45 s the caption says it is taking longer
+  today. If OpenAI is slow for a whole day, that line is what people see — no action needed, but expect calls.
+- **Founder's first name** is used in copy only once the portrait and the three "why" lines exist (see §2).
+
+## 13. Unverified
 
 - Playwright checkpoints were rendered in headless Chromium; test on a real iPhone (Safari toolbar + safe-area), in particular the sheet's drag-to-dismiss and the fixed price bar on `/p/<id>`.
 - Lighthouse (production build, mobile emulation): performance 89–93, a11y/best-practices/SEO 100, CLS 0; desktop 100. Re-run after replacing the example photographs — the damaged "before" images decide LCP.

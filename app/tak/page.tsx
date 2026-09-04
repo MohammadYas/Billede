@@ -1,8 +1,9 @@
 import { copy } from '@/lib/copy';
 import { paymentProvider } from '@/lib/payments/stripe';
-import { getOrderByField, updateOrder, type Order } from '@/lib/db/orders';
+import { getOrderByField, latestOrderForSession, updateOrder, type Order } from '@/lib/db/orders';
 import { markPaid } from '@/lib/payments/fulfil-paid';
 import { imageUrl } from '@/lib/preview-service';
+import { readSessionId } from '@/lib/session';
 import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
 import PurchaseEvent from '@/components/PurchaseEvent';
@@ -30,6 +31,13 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
     const o = await getOrderByField('payment_session_id', session_id).catch(() => null);
     if (o && o.status !== 'NEW' && o.status !== 'PREVIEW_READY') order = o;
   }
+  // Unverified: the session cookie still knows the customer's preview, so the way back is the preview, not the front page.
+  let backTo: string | null = null;
+  if (!order) {
+    const sid = await readSessionId();
+    const last = sid ? await latestOrderForSession(sid).catch(() => null) : null;
+    if (last && last.preview_path) backTo = `/p/${last.id}`;
+  }
   const value = ((order?.amount ?? 59900) / 100);
   return (
     <>
@@ -54,9 +62,10 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 'var(--s4)' }}>
-              <h1 style={{ maxWidth: '12em' }}>Vi kunne ikke bekræfte betalingen.</h1>
-              <p className="lead" style={{ maxWidth: '26em' }}>Hvis pengene er trukket, får du en bekræftelse på mail inden for få minutter. Ellers kan du prøve igen fra forsiden.</p>
-              <p><a className="tap" href="/">Til forsiden</a></p>
+              <h1 style={{ maxWidth: '12em' }}>{c.tak.unverifiedH1}</h1>
+              <p className="lead" style={{ maxWidth: '26em' }}>{c.tak.unverifiedP}</p>
+              {c.tak.doubt && <p className="measure">{c.tak.doubt.split(c.phone).map((part, i, arr) => <span key={i}>{part}{i < arr.length - 1 && <a href={c.phoneHref}>{c.phone}</a>}</span>)}</p>}
+              <p>{backTo ? <a className="btn" href={backTo}>{c.tak.back}</a> : <a className="btn" href="/">{c.tak.home}</a>}</p>
             </div>
           )}
         </div>

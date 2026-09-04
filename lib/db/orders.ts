@@ -85,6 +85,13 @@ export async function getOrderByField(field: 'payment_session_id' | 'approval_to
   return (data as Order) ?? null;
 }
 
+/** Newest order made from a browser session (preview_meta.session_id). */
+export async function latestOrderForSession(sessionId: string): Promise<Order | null> {
+  const { data, error } = await supabaseAdmin().from('orders').select('*').eq('preview_meta->>session_id', sessionId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw new Error(`latestOrderForSession: ${error.message}`);
+  return (data as Order) ?? null;
+}
+
 export async function updateOrder(id: string, fields: Partial<Order>): Promise<Order> {
   const { data, error } = await supabaseAdmin().from('orders').update(fields).eq('id', id).select('*').single();
   if (error) throw new Error(`updateOrder: ${error.message}`);

@@ -16,6 +16,10 @@ type Props = {
   className?: string;
 };
 
+/** The wipe starts almost fully damaged and settles here: the restoration dominates the still image. */
+const REST = 35;
+const START = 88;
+
 const toSource = (s: string | Source): Source => (typeof s === 'string' ? { src: s } : s);
 
 function Picture({ s, className, alt, priority, ariaHidden }: { s: Source; className: string; alt: string; priority: boolean; ariaHidden?: boolean }) {
@@ -45,7 +49,7 @@ function Picture({ s, className, alt, priority, ariaHidden }: { s: Source; class
  */
 export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', afterLabel = 'Efter', aspect = '1 / 1', contain = false, reveal = false, priority = false, className = '' }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [x, setX] = useState(reveal ? 12 : 50);
+  const [x, setX] = useState(reveal ? START : 50);
   const revealed = useRef(!reveal);
   const raf = useRef<number | null>(null);
   const b = toSource(before), a = toSource(after);
@@ -53,7 +57,7 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
   useEffect(() => {
     if (revealed.current) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { revealed.current = true; setX(50); return; }
+    if (reduce) { revealed.current = true; setX(REST); return; }
     const el = ref.current; if (!el) return;
     const io = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting || revealed.current) return;
@@ -63,9 +67,9 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
       const step = (t: number) => {
         const p = Math.min(1, (t - t0) / 1600);
         const ease = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
-        const v = 12 + 50 * ease;
+        const v = START - (START - REST) * ease;
         el.style.setProperty('--x', `${v}%`);
-        if (p < 1) raf.current = requestAnimationFrame(step); else { raf.current = null; setX(62); }
+        if (p < 1) raf.current = requestAnimationFrame(step); else { raf.current = null; setX(REST); }
       };
       raf.current = requestAnimationFrame(step);
     }, { threshold: 0.5 });

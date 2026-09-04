@@ -1,11 +1,11 @@
 import { Resend } from 'resend';
-import { getFounder, fornavn } from '@/lib/founder';
+import { getFounder } from '@/lib/founder';
 
 let resend: Resend | null = null;
 
 export function fromAddress(): string {
   const domain = process.env.EMAIL_DOMAIN ?? 'genfundet.dk';
-  const local = (process.env.EMAIL_FROM_LOCAL ?? fornavn()).toLowerCase().replace(/[^a-z0-9.-]/g, '') || 'hej';
+  const local = (process.env.EMAIL_FROM_LOCAL ?? getFounder().firstName).toLowerCase().replace(/[^a-z0-9.-]/g, '') || 'hej';
   const name = getFounder().name || 'Genfundet';
   return `${name} · Genfundet <${local}@${domain}>`;
 }

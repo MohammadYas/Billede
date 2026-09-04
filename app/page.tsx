@@ -59,9 +59,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
           <div className="hero-grid">
             <div className="hero-media">
               {hero ? (
-                <BeforeAfter before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption}`} reveal priority />
+                <BeforeAfter before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption}`} aspect="4 / 3" reveal priority />
               ) : (
-                <div className="ba" style={{ aspectRatio: '1 / 1' }} />
+                <div className="ba" style={{ aspectRatio: '4 / 3' }} />
               )}
             </div>
             {hero && <p className="hero-caption"><Caption text={hero.caption} /></p>}
@@ -170,11 +170,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         <section className="wrap section section-quiet" aria-labelledby="tilbud">
           <div className="container offer">
             <h2 id="tilbud" className="visually-hidden">Pris</h2>
-            <div style={{ display: 'grid', gap: 'var(--s5)', alignContent: 'end' }}>
+            <div className="offer-act" style={{ display: 'grid', gap: 'var(--s4)', alignContent: 'end' }}>
               <p className="lead" style={{ maxWidth: '22em' }}>{c.offer.line}</p>
               <div><OpenFlowButton style={{ minWidth: 240 }}>{c.offer.cta}</OpenFlowButton></div>
+              <p className="caption" style={{ maxWidth: '26em' }}>{c.offer.under}</p>
             </div>
-            <p className="price" aria-label={c.offer.price}>{c.offer.price.replace(' kr.', '')}<small>kr.</small></p>
+            <div style={{ display: 'grid', gap: 'var(--s2)' }}>
+              <p className="price" aria-label={c.offer.price}>{c.offer.price.replace(' kr.', '')}<small>kr.</small></p>
+              <p className="caption price-note">{c.offer.priceNote}</p>
+              {c.offer.phone && <p className="caption price-note"><a href={c.offer.phoneHref}>{c.offer.phone}</a></p>}
+            </div>
           </div>
         </section>
 

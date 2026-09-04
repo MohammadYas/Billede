@@ -10,12 +10,12 @@ import Wordmark from '@/components/Wordmark';
 export const dynamic = 'force-dynamic';
 
 /** The preview is the product page: it survives an interruption, can be reopened, and has room for the price. */
-export default async function PreviewPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ cancelled?: string }> }) {
+export default async function PreviewPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ cancelled?: string; t?: string }> }) {
   const { id } = await params;
-  const { cancelled } = await searchParams;
+  const { cancelled, t } = await searchParams;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
-  if (!order || !ownsOrder(order, sid)) notFound();
+  if (!order || !ownsOrder(order, sid, t ?? null)) notFound();
   const payload = await payloadFor(order);
   if (!payload) notFound();
   const c = copy();
@@ -27,7 +27,7 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
           <Wordmark />
           <span className="caption">{c.price} · fri fragt</span>
         </div>
-        <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} />
+        <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} token={t} />
       </main>
       <Footer />
     </>

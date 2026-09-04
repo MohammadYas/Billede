@@ -37,7 +37,12 @@ export function getFounder(): Founder {
   return cache;
 }
 
-/** "[fornavn]" in copy → the first name, or "vi" when unknown. */
+/**
+ * "[fornavn]" in copy → the first name, but only once the person is actually on the page
+ * (portrait + "why" lines in founder.md). A first name without a face reads as a persona, so
+ * until then the copy says "vi". The full name still appears in the footer and legal pages.
+ */
 export function fornavn(): string {
-  return getFounder().firstName || 'vi';
+  const f = getFounder();
+  return f.portrait && f.why.length > 0 && f.firstName ? f.firstName : 'vi';
 }

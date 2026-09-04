@@ -29,17 +29,18 @@ export function esc(s: string): string {
 
 export function orderConfirmation(opts: { format: Format; orderShort: string }): { subject: string; html: string; text: string } {
   const navn = cap(fornavn());
+  const kontakt = navn === 'Vi' ? 'os' : navn;
   const f = getFounder();
   const subject = 'Tak for din bestilling';
   const html = shell(subject, [
     h1('Tak for din bestilling.'),
-    p(`${esc(navn)} kigger på dit billede i dag og finjusterer det i hånden.`),
+    p(`${esc(navn)} kigger på dit billede inden 24 timer og finjusterer det i hånden.`),
     p('Inden 48 timer får du en mail med det færdige billede. Du godkender det – eller beder om en ændring – før vi printer noget.'),
     p(`Derefter printer vi det i ${esc(formatLabel(opts.format))}, indrammer det og sender det hjem til dig med fri fragt.`),
-    f.phone ? p(`Spørgsmål? Ring eller skriv til ${esc(navn)} på <a href="tel:${esc(f.phone.replace(/\s/g, ''))}" style="color:#2F4A3A;">${esc(f.phone)}</a>.`) : '',
+    f.phone ? p(`Spørgsmål? Ring eller skriv til ${esc(kontakt)} på <a href="tel:${esc(f.phone.replace(/\s/g, ''))}" style="color:#2F4A3A;">${esc(f.phone)}</a>.`) : '',
     p(`<span style="color:#5B554C;font-size:14px;">Ordre ${esc(opts.orderShort)}</span>`),
   ].join(''));
-  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede i dag og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja.\n\nOrdre ${opts.orderShort}${f.phone ? `\nTlf. ${f.phone}` : ''}`;
+  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja.\n\nOrdre ${opts.orderShort}${f.phone ? `\nTlf. ${f.phone}` : ''}`;
   return { subject, html, text };
 }
 

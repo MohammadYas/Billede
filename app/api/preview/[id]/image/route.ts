@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const kind = req.nextUrl.searchParams.get('kind') as keyof typeof KINDS | null;
   if (!kind || !(kind in KINDS) || !/^[0-9a-f-]{36}$/.test(id)) return new NextResponse('Not found', { status: 404 });
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
-  if (!order || !ownsOrder(order, sid)) return new NextResponse('Not found', { status: 404 });
+  if (!order || !ownsOrder(order, sid, req.nextUrl.searchParams.get('t'))) return new NextResponse('Not found', { status: 404 });
   const path = order[KINDS[kind]];
   if (!path) return new NextResponse('Not found', { status: 404 });
   const buf = await getObject(path);

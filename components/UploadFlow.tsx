@@ -10,7 +10,8 @@ type State =
   | { kind: 'pick'; file?: File; thumb?: string; error?: string; over?: boolean }
   | { kind: 'processing'; stage: Stage; percent: number; file: File; thumb: string }
   | { kind: 'error'; file: File; thumb: string; message: string }
-  | { kind: 'fallback'; orderId: string | null; email: string; sending: boolean; sent: boolean; error?: string };
+  | { kind: 'fallback'; orderId: string | null; email: string; sending: boolean; sent: boolean; error?: string }
+  | { kind: 'nophoto'; email: string; sending: boolean; sent: boolean; error?: string };
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif';
 const MAX = 25 * 1024 * 1024;
@@ -25,6 +26,7 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
   const sheetRef = useRef<HTMLDivElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
   const [coarse, setCoarse] = useState(true);
+  const [slow, setSlow] = useState(false);
 
   const open = useCallback(() => setState({ kind: 'pick' }), []);
   const close = useCallback(() => { xhrRef.current?.abort(); setState({ kind: 'closed' }); }, []);
@@ -38,6 +40,13 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
     if (openNow) { document.body.setAttribute('data-flow-open', '1'); document.body.style.overflow = 'hidden'; }
     else { document.body.removeAttribute('data-flow-open'); document.body.style.overflow = ''; }
     return () => { document.body.removeAttribute('data-flow-open'); document.body.style.overflow = ''; };
+  }, [state.kind]);
+
+  // after 45 s the wait copy admits it is taking longer today (the bar keeps creeping)
+  useEffect(() => {
+    if (state.kind !== 'processing') { setSlow(false); return; }
+    const t = setTimeout(() => setSlow(true), 45_000);
+    return () => clearTimeout(t);
   }, [state.kind]);
 
   useEffect(() => {
@@ -70,7 +79,7 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
       for (const line of chunk.slice(0, lastNl).split('\n')) {
         if (!line.trim()) continue;
         try {
-          const msg = JSON.parse(line) as { stage?: Stage; done?: boolean; fallback?: boolean; orderId?: string | null; reason?: string; preview?: string; isMonochrome?: boolean };
+          const msg = JSON.parse(line) as { stage?: Stage; done?: boolean; fallback?: boolean; orderId?: string | null; reason?: string; preview?: string; isMonochrome?: boolean; token?: string | null };
           if (msg.stage) setState((s) => (s.kind === 'processing' ? { ...s, stage: msg.stage!, percent: 100 } : s));
           if (msg.done) {
             finished = true;
@@ -80,7 +89,7 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
             } else {
               track('UploadCompleted', {});
               track('PreviewShown', { monochrome: msg.isMonochrome });
-              router.push(`/p/${msg.orderId}`);
+              router.push(`/p/${msg.orderId}${msg.token ? `?t=${encodeURIComponent(msg.token)}` : ''}`);
             }
           }
         } catch { /* partial line */ }
@@ -95,12 +104,12 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
 
   const sendLead = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (state.kind !== 'fallback') return;
+    if (state.kind !== 'fallback' && state.kind !== 'nophoto') return;
     const email = state.email.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setState({ ...state, error: 'Skriv en e-mail, vi kan svare på.' }); return; }
     setState({ ...state, sending: true, error: undefined });
     try {
-      const r = await fetch('/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: state.orderId, email }) });
+      const r = await fetch('/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: state.kind === 'fallback' ? state.orderId : null, email, kind: state.kind === 'nophoto' ? 'nophoto' : undefined }) });
       if (!r.ok) throw new Error('lead');
       setState({ ...state, sending: false, sent: true });
     } catch { setState({ ...state, sending: false, error: 'Det lykkedes ikke at sende. Prøv igen.' }); }
@@ -108,13 +117,14 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
 
   if (state.kind === 'closed') return null;
   const processing = state.kind === 'processing';
-  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? 36 : state.stage === 'restoring' ? 85 : 100) : 0;
-  const creep = processing && state.stage === 'restoring' ? '28s' : '300ms';
+  // upload 0–30 %, then a 28 s creep to 85 % while the model works (the request is in flight = 'sending'), 92 % once stored, 100 % when the preview is ready
+  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? 85 : state.stage === 'restoring' ? 92 : 100) : 0;
+  const creep = processing && state.stage === 'sending' ? '28s' : '300ms';
 
   return (
     <>
       <div className="scrim" onClick={close} aria-hidden />
-      <Sheet ref={sheetRef} onDismiss={close} label={state.kind === 'pick' ? 'Vis os billedet' : state.kind === 'processing' ? 'Vi arbejder på dit billede' : 'Det her kræver et par hænder'}>
+      <Sheet ref={sheetRef} onDismiss={close} label={state.kind === 'pick' ? 'Vis os billedet' : state.kind === 'processing' ? 'Vi arbejder på dit billede' : state.kind === 'nophoto' ? c.upload.noPhotoH : 'Det her kræver et par hænder'}>
         {state.kind === 'pick' && (
           <div style={{ display: 'grid', gap: 'var(--s4)' }}>
             <h2>Vis os billedet.</h2>
@@ -125,7 +135,9 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
                   <label className="link-btn" style={{ display: 'inline-flex', alignItems: 'center' }}>{c.upload.reupload}<input type="file" accept={ACCEPT} hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
                   <button type="button" className="link-btn" onClick={() => setState({ kind: 'pick' })}>{c.upload.remove}</button>
                 </div>
+                <p className="caption">{c.upload.check}</p>
                 <button type="button" className="btn btn-block" onClick={() => start(state.file!, state.thumb!)}>{c.upload.cta}</button>
+                <p className="caption">{c.upload.free}</p>
               </div>
             ) : coarse ? (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
@@ -142,8 +154,10 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
               </div>
             )}
             {state.error && <p className="small" style={{ color: 'var(--error)' }} role="alert">{state.error}</p>}
+            {!state.thumb && <p className="caption">{c.upload.free}</p>}
             {!state.thumb && <p className="caption">{c.upload.tips}</p>}
-            <p className="caption">{c.upload.note}</p>
+            <p className="caption">{c.upload.note} <a href="/privatliv">{c.upload.privacy}</a>.</p>
+            {!state.thumb && <p className="small"><button type="button" className="link-btn" onClick={() => setState({ kind: 'nophoto', email: '', sending: false, sent: false })}>{c.upload.noPhoto}</button></p>}
           </div>
         )}
 
@@ -156,7 +170,7 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
               </div>
             </div>
             <p className="lead" style={{ fontFamily: 'var(--display)' }}>{c.processing.sentences[state.stage]}</p>
-            <p className="caption">{c.processing.stages[state.stage]}{state.stage === 'uploading' ? ` · ${state.percent} %` : ''} · {c.processing.wait}</p>
+            <p className="caption">{c.processing.stages[state.stage]}{state.stage === 'uploading' ? ` · ${state.percent} %` : ''} · {slow ? c.processing.slow : c.processing.wait}</p>
             <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={close}>{c.processing.cancel}</button>
           </div>
         )}
@@ -168,6 +182,26 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
             <p className="measure" role="alert">{state.message}</p>
             <button type="button" className="btn btn-block" onClick={() => start(state.file, state.thumb)}>{c.processing.retry}</button>
             <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={() => setState({ kind: 'pick' })}>{c.upload.reupload}</button>
+          </div>
+        )}
+
+        {state.kind === 'nophoto' && (
+          <div style={{ display: 'grid', gap: 'var(--s4)' }}>
+            <h2 style={{ maxWidth: '12em' }}>{c.upload.noPhotoH}</h2>
+            {state.sent ? (
+              <p className="lead">{c.upload.noPhotoDone}</p>
+            ) : (
+              <form onSubmit={sendLead} style={{ display: 'grid', gap: 'var(--s4)' }} noValidate>
+                <p className="measure">{c.upload.noPhotoP}</p>
+                <div className="field">
+                  <label htmlFor="nophoto-email">{c.upload.noPhotoEmail}</label>
+                  <input id="nophoto-email" type="email" inputMode="email" autoComplete="email" required value={state.email} onChange={(e) => setState({ ...state, email: e.target.value })} aria-invalid={Boolean(state.error)} aria-describedby={state.error ? 'nophoto-error' : undefined} />
+                  {state.error && <span id="nophoto-error" className="error" role="alert">{state.error}</span>}
+                </div>
+                <button type="submit" className="btn btn-block" disabled={state.sending}>{state.sending ? 'Sender…' : c.upload.noPhotoCta}</button>
+              </form>
+            )}
+            <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={() => setState({ kind: 'pick' })}>{c.upload.back}</button>
           </div>
         )}
 

@@ -12,10 +12,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => ({}))) as { orderId?: string; colour?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { orderId?: string; colour?: boolean; t?: string };
   if (!body.orderId || !/^[0-9a-f-]{36}$/.test(body.orderId)) return NextResponse.json({ error: 'order' }, { status: 400 });
   const [order, sid, utm] = await Promise.all([getOrder(body.orderId), readSessionId(), readUtm()]);
-  if (!order || !ownsOrder(order, sid)) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  if (!order || !ownsOrder(order, sid, body.t ?? null)) return NextResponse.json({ error: 'not found' }, { status: 404 });
   if (order.status !== 'PREVIEW_READY') return NextResponse.json({ error: 'state' }, { status: 409 });
   if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'Betaling er ikke sat op endnu.' }, { status: 503 });
 

@@ -152,3 +152,97 @@ Vision notes: B preserves the single sitter, pose, clothing, hat and background 
 - Own likeness (1–5): **4**
 - Own naturalness (1–5): **4**
 - Notes: Sitter, hat with flowers, bracelets preserved; the corroded plate edge cleaned. Likeness 4: the model lightened the shadow side of the face slightly.
+
+---
+
+# Set 3 — Norwegian and Swedish museum photographs via Europeana (fourth pass)
+
+Eight public-domain originals (Domkirkeodden, Museene i Nord-Østerdalen, Grenna Museum; PD mark / CC0) chosen so the example set looks like the Danish customer's own album: two sisters, mother and child, an elderly couple, a family on a bench, grandparents, a young woman in a feather hat, a 1916 wedding. **8 of 8 pass** (own likeness 5, naturalness 4–5, same_people true, invented false, face counts 2→2, 2→2, 2→2, 3→3, 4→4, 1→1, 2→2, 44→44).
+
+Source: `work/pd-originals-3` (public-domain validation set 3 (Norwegian and Swedish museums via Europeana)). Model: gpt-image-2 at quality **medium**, 2 candidates, vision check gpt-5.5. Generated 2026-09-04T00:23:19.122Z.
+
+Automated columns come from the pipeline. The two **own rating** columns (likeness, naturalness, 1–5) are filled in by hand after looking at the full-size files in `work/quality/<name>/` — see the notes under each image.
+
+| Image | Original | Restored | Colour | Restore s | Total s | Tokens (img / vision) | Est. USD | SSIM (chosen / other) | Faces A→B | Vision JSON | Manual review |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| asplund | ![](checkpoints/quality/asplund-original.jpg) | ![](checkpoints/quality/asplund-restored.jpg) | ![](checkpoints/quality/asplund-colour.jpg) | 31 | 37 | 8491 / 2153 | 0.35 | 0.815 / 0.811 | 4→4 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| bryllup-1916 | ![](checkpoints/quality/bryllup-1916-original.jpg) | ![](checkpoints/quality/bryllup-1916-restored.jpg) | ![](checkpoints/quality/bryllup-1916-colour.jpg) | 32 | 45 | 9652 / 2574 | 0.40 | 0.906 / 0.481 | 44→44 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| familie-trappe | ![](checkpoints/quality/familie-trappe-original.jpg) | ![](checkpoints/quality/familie-trappe-restored.jpg) | ![](checkpoints/quality/familie-trappe-colour.jpg) | 36 | 43 | 9882 / 2371 | 0.41 | 0.368 / 0.129 | 3→3 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| feather-hat | ![](checkpoints/quality/feather-hat-original.jpg) | ![](checkpoints/quality/feather-hat-restored.jpg) | ![](checkpoints/quality/feather-hat-colour.jpg) | 34 | 39 | 9356 / 2355 | 0.39 | 0.885 / 0.559 | 1→1 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| gunhild-barn | ![](checkpoints/quality/gunhild-barn-original.jpg) | ![](checkpoints/quality/gunhild-barn-restored.jpg) | ![](checkpoints/quality/gunhild-barn-colour.jpg) | 32 | 38 | 9652 / 2179 | 0.40 | 0.775 / 0.589 | 2→2 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| lars-marit | ![](checkpoints/quality/lars-marit-original.jpg) | ![](checkpoints/quality/lars-marit-restored.jpg) | ![](checkpoints/quality/lars-marit-colour.jpg) | 34 | 41 | 10116 / 2397 | 0.42 | 0.264 / 0.168 | 2→2 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| mor-barn-a | ![](checkpoints/quality/mor-barn-a-original.jpg) | ![](checkpoints/quality/mor-barn-a-restored.jpg) | ![](checkpoints/quality/mor-barn-a-colour.jpg) | 37 | 46 | 9652 / 2209 | 0.40 | 0.844 / 0.442 | 2→2 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+| pauline-ingeborg | ![](checkpoints/quality/pauline-ingeborg-original.jpg) | ![](checkpoints/quality/pauline-ingeborg-restored.jpg) | ![](checkpoints/quality/pauline-ingeborg-colour.jpg) | 31 | 37 | 9126 / 2005 | 0.38 | 0.748 / 0.704 | 2→2 | same_people=true, likeness=5, invented=false, removed=false, over=false | no |
+
+## Per-image notes and own ratings
+
+### asplund
+Input 807×1200 → output 1615×2400. Chroma std 0.0 (monochrome/sepia).
+Vision notes: B preserves the same four people and their clothing, pose, chair and background while mainly cleaning damage and improving contrast.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Four faces exact, the grandparents' seated pose and the porch kept; fading lifted without plastic skin.
+
+### bryllup-1916
+Context: Bryllup, 1916. Arkivfoto, Museene i Nord-Østerdalen. · consent: yes
+Input 3000×2049 → output 2400×1641. Chroma std 0.0 (monochrome/sepia).
+Vision notes: B faithfully preserves the group and setting while cleaning damage and removing only the archive marking.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **4**
+- Notes: A 44-person wedding group with every face preserved (44→44 by the face count); slight softening in the back rows, which the original also has.
+
+### familie-trappe
+Context: Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden. · consent: yes
+Input 1960×2609 → output 1804×2400. Chroma std 0.0 (monochrome/sepia).
+Vision notes: The restoration preserves the three people, their poses, clothing, bench, and background without apparent invented or removed non-damage content.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Father, daughter and mother on the bench, corrugated roof and grass all kept; the girl's wind-blown hair untouched. The low SSIM comes from the strong contrast lift on a very faded print, not from content change.
+
+### feather-hat
+Context: Ung kvinde med fjerhat, ca. 1905. Arkivfoto, Grenna Museum. · consent: yes
+Input 919×1200, upscaled before send → output 1839×2400. Chroma std 0.0 (monochrome/sepia).
+Vision notes: The restoration preserves the single subject's face, clothing, hat, feather, chair, and pose while mainly cleaning damage and background artifacts.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Fur collar, muff and the single feather preserved; colourisation is restrained (grey-green backdrop, brown fur).
+
+### gunhild-barn
+Context: Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden. · consent: yes
+Input 2853×1941 → output 2400×1634. Chroma std 0.0 (monochrome/sepia).
+Vision notes: The restoration preserves the two subjects and surrounding scene faithfully, mainly reducing damage and improving contrast without adding or removing substantive content.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Mother and son exact; the second candidate was chosen (higher SSIM).
+
+### lars-marit
+Context: Lars og Marit, ca. 1900. Arkivfoto, Domkirkeodden. · consent: yes
+Input 1960×2597 → output 1810×2400. Chroma std 0.0 (monochrome/sepia).
+Vision notes: B faithfully preserves the two sitters, their clothing, poses and background while mainly removing damage and improving contrast.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Two weather-beaten faces, the watch chain and the brooch intact; contrast recovered from a very faded print.
+
+### mor-barn-a
+Context: Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen. · consent: yes
+Input 2060×3000 → output 1648×2400. Chroma std 0.0 (monochrome/sepia).
+Vision notes: B faithfully restores the two faces and clothing while removing scratches, dirt, and the archive marking without adding or omitting substantive content.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Cabinet card: the baby's lace collar, the mother's tiara and the puffed sleeves are all exact; the painted backdrop kept.
+
+### pauline-ingeborg
+Context: Pauline og Ingeborg, ca. 1915. Arkivfoto, Domkirkeodden. · consent: yes
+Input 1215×2000 → output 1457×2400. Chroma std 0.0 (monochrome/sepia).
+Vision notes: The restoration preserves the two children, clothing, chair, hand, and background faithfully while mainly cleaning scratches and improving contrast.
+
+- Own likeness (1–5): **5**
+- Own naturalness (1–5): **5**
+- Notes: Two sisters: hair bows, lace collars, the fringe of the chair and the fur rug — all exact. The most emotionally useful example in the set.

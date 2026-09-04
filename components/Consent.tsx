@@ -2,7 +2,11 @@
 import { useEffect, useState } from 'react';
 import { consent, loadPixel, setConsent, track } from '@/lib/analytics/client';
 
-/** Minimal bottom banner. Only rendered when a pixel id is configured. */
+/**
+ * Minimal bottom banner. Only rendered when a pixel id is configured.
+ * It sits above the sticky CTA / preview order bar (body.sticky-on, body.has-pv-bar → --bar-h) so the one
+ * persistent button is never covered during the first scroll.
+ */
 export default function Consent({ text, accept, decline }: { text: string; accept: string; decline: string }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -13,7 +17,7 @@ export default function Consent({ text, accept, decline }: { text: string; accep
   }, []);
   if (!show) return null;
   return (
-    <div role="dialog" aria-label="Cookies" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50, background: 'var(--paper-2)', borderTop: '1px solid var(--hairline)', padding: 'var(--s4) var(--gutter) calc(var(--s4) + var(--safe-bottom))' }}>
+    <div role="dialog" aria-label="Cookies" className="consent">
       <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s3) var(--s5)', alignItems: 'center', justifyContent: 'space-between' }}>
         <p className="small" style={{ maxWidth: '40em' }}>{text} <a href="/privatliv">Privatliv</a></p>
         <div style={{ display: 'flex', gap: 'var(--s3)' }}>

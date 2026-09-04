@@ -246,3 +246,45 @@ Owner's brief: 599 kr. must feel worth it, and before/after must convince with m
   LCP 2.4–2.9 s (simulated), CLS 0, TBT 70–80 ms. Desktop 99.
 - Anti-slop: the motion rule (F4) was amended and re-audited — motion exists only where comparison is the content; no
   scroll reveals, no hover lifts, no decorative loops. The fade example stops off-screen and under reduced motion.
+
+
+# Fourth pass — Nordic examples and two conversion attacks
+
+Owner's brief: the examples should look like Danish families; attack every part of the page that stops a conversion, fix, attack again, fix.
+
+## Attack round 1 (`work/attack-1/report.md`)
+Method: adversarial CRO agent, read-only, Playwright iPhone 14 at 390×844 and 390×664, desktop 1440×900, one real restoration (40.9 s). 25 findings, 8 HIGH.
+
+| # | Finding | Fix |
+|---|---|---|
+| 1.1 HIGH | Slider knob never moved (`.ba .handle` had `width: 0`, percentage translate = 0) | handle full-width, `translateX(var(--x))`; knob measured on the seam (35 %) on hero and grid |
+| 1.2 HIGH | First screen at 390×664 ended mid-headline | landscape Nordic hero at 4:3, `.hero-text` padding, shorter lead; CTA bottom 644 px, price line 652 px |
+| 1.3 MED | "hendes forældre" — ad-continuation voice | "Mors gamle billede. Skarpt igen, i ramme, hjemme hos dig." |
+| 1.4 MED | At rest 62 % damage | reveal 88 % → 35 % |
+| 2.1 MED | "Dansk virksomhed" without CVR | trust row renders city + CVR from founder.md (owner fills) |
+| 2.2 MED | First name without a face | `fornavn()` returns "vi" until portrait + why exist |
+| 2.3 MED | 145–600 kr. anchor | "ét beløb, ingen tillæg" |
+| 2.4 MED | Button before price on mobile | `.offer-act` ordered after the price below 1024 px; "Det koster ikke noget at se…" |
+| 2.5 MED | Consent banner over sticky CTA | `.consent` bottom = `--bar-h` |
+| 2.6 LOW | Four gestures | kept (owner's decision) |
+| 2.7–2.8 LOW | FAQ wording, no colour-photo answer | rewritten, added |
+| 3.1 HIGH | Sheet never says it costs nothing | line under the buttons and under the CTA |
+| 3.2 MED | No path for "billedet ligger hos mor" | "Jeg har ikke billedet lige nu" → e-mail → link mailed |
+| 3.3 LOW | Tip vanishes after picking | "Er det skarpt og uden genskin? Ellers vælg et andet." |
+| 5.1 HIGH | 32 s "Sender billedet" with frozen bar | stage relabelled "Restaurerer", creep runs while the request is in flight, 45 s "tager lidt længere" line |
+| 5.2 LOW | "Afbryd" | "Afbryd (billedet slettes)" |
+| 6.1 MED | Watermark across the face | bottom row + corner mark |
+| 6.2 MED | No sentence about what happens next | line under the slider |
+| 6.3 HIGH | No payment reassurance on iPhone | bar: "MobilePay, Apple Pay eller kort · Ingen oprettelse"; content: money-back + when you pay |
+| 6.4 HIGH | When do I pay? | "Du betaler 599 kr. nu. Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage." |
+| 6.5 MED | English 404 on a copied URL | token in the pushed URL and image URLs; Danish `not-found.tsx` |
+| 6.6 LOW | Colour toggle flashes the original | preloaded before enabling; "Farveversion på vej – ca. ½ minut" |
+| 6.7–6.8 LOW | Spec list heading, Levering row, "Hænder", landscape label | all done |
+| 8.1 HIGH | Silent checkout failure on iPhone | alert rendered inside the bar |
+| 9.1 MED | Dead-end error text | phone number + "Dit preview er gemt", never a server string |
+| 10.1 MED | /tak unverified sends to the front page | back to `/p/<id>` via session, phone shown |
+| 10.2 LOW | "I dag" at 23:15 | "inden 24 timer" |
+| 11.1 HIGH | Gmail, no CVR/address, "Udkast" | owner (HANDOFF §2, §8); code already renders them when filled |
+| 11.2 LOW | Privacy not reachable from the sheet | linked |
+
+Evidence: `work/attack-1-fix/*.png` (first screen 390×664, sheet, no-photo path, offer, examples, 404, /tak unverified, preview first screen and failed order, desktop preview), `preview-watermark.jpg`.

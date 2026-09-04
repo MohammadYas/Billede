@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { CONFIG } from '@/lib/config';
 import { createOrder, getOrder, setStatus, updateOrder, type Order } from '@/lib/db/orders';
 import { objectPath, putObject, getObject } from '@/lib/db/storage';
@@ -11,15 +12,21 @@ import { customerFormat } from '@/lib/pricing';
 export type PreviewPayload = {
   orderId: string; original: string; preview: string; mockup: string; colour: string | null;
   isMonochrome: boolean; chosenColour: boolean; status: Order['status'];
+  /** share token, so the URL the customer sees (and copies to a sister) opens on any phone */
+  token: string | null;
   /** the photograph's own proportions (restored output) so the slider never crops it */
   width: number; height: number;
 };
 
 export type Progress = (stage: 'sending' | 'restoring' | 'preparing') => void;
 
-/** Customer-facing image URLs are same-origin and session-gated (app/api/preview/[id]/image). */
+/**
+ * Customer-facing image URLs are same-origin and gated by session cookie or share token
+ * (app/api/preview/[id]/image). The token rides along so the page works wherever its URL does.
+ */
 export function imageUrl(order: Order, kind: 'original' | 'preview' | 'colour' | 'mockup'): string {
-  return `/api/preview/${order.id}/image?kind=${kind}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}`;
+  const token = (order.preview_meta as { share_token?: string } | null)?.share_token;
+  return `/api/preview/${order.id}/image?kind=${kind}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}${token ? `&t=${encodeURIComponent(token)}` : ''}`;
 }
 
 export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
@@ -29,6 +36,7 @@ export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
     original: imageUrl(order, 'original'), preview: imageUrl(order, 'preview'), mockup: imageUrl(order, 'mockup'),
     colour: order.colourised_path ? imageUrl(order, 'colour') : null,
     isMonochrome: Boolean(order.is_monochrome), chosenColour: order.chosen_colour, status: order.status,
+    token: ((order.preview_meta as { share_token?: string } | null)?.share_token) ?? null,
     width: Number((order.preview_meta as { output?: { width?: number } } | null)?.output?.width ?? 4),
     height: Number((order.preview_meta as { output?: { height?: number } } | null)?.output?.height ?? 3),
   };
@@ -42,7 +50,9 @@ export async function runPreview(file: Buffer, ctx: { sessionId: string | null; 
   if (file.length > CONFIG.maxUploadBytes) return { fallback: true, orderId: null, reason: 'too_large' };
   if (!sniffImageType(file)) return { fallback: true, orderId: null, reason: 'unsupported_image' };
 
-  const order = await createOrder({ status: 'NEW', format: customerFormat(), utm: ctx.utm ?? null, preview_meta: { session_id: ctx.sessionId } });
+  const token = randomBytes(18).toString('base64url');
+  const ident = { session_id: ctx.sessionId, share_token: token };
+  const order = await createOrder({ status: 'NEW', format: customerFormat(), utm: ctx.utm ?? null, preview_meta: ident });
   progress('sending');
   try {
     const result = await restore(file, { quality: (process.env.PREVIEW_IMAGE_QUALITY as 'low' | 'medium' | 'high') ?? 'medium', candidates: 2, colourise: false, likenessCheck: true, minLongEdge: 1600 });
@@ -53,7 +63,7 @@ export async function runPreview(file: Buffer, ctx: { sessionId: string | null; 
     if (result.meta.needsManualReview) {
       const restoredPath = objectPath(order.id, 'restored');
       await putObject(restoredPath, result.restored);
-      await setStatus(order.id, 'MANUAL_REVIEW', { original_path: originalPath, restored_path: restoredPath, preview_meta: { ...result.meta, session_id: ctx.sessionId }, is_monochrome: result.isMonochrome });
+      await setStatus(order.id, 'MANUAL_REVIEW', { original_path: originalPath, restored_path: restoredPath, preview_meta: { ...result.meta, ...ident }, is_monochrome: result.isMonochrome });
       await logEvent('PreviewFallback', { sessionId: ctx.sessionId, orderId: order.id, utm: ctx.utm, meta: { reasons: result.meta.reviewReasons } });
       return { fallback: true, orderId: order.id, reason: result.meta.reviewReasons.join(',') };
     }
@@ -66,7 +76,7 @@ export async function runPreview(file: Buffer, ctx: { sessionId: string | null; 
     await Promise.all([putObject(restoredPath, result.restored), putObject(previewPath, previewBuf), putObject(mockupPath, mockupBuf)]);
     const updated = await setStatus(order.id, 'PREVIEW_READY', {
       original_path: originalPath, restored_path: restoredPath, preview_path: previewPath, mockup_path: mockupPath,
-      is_monochrome: result.isMonochrome, preview_meta: { ...result.meta, session_id: ctx.sessionId },
+      is_monochrome: result.isMonochrome, preview_meta: { ...result.meta, ...ident },
     });
     await logEvent('UploadCompleted', { sessionId: ctx.sessionId, orderId: order.id, utm: ctx.utm });
     await logEvent('PreviewShown', { sessionId: ctx.sessionId, orderId: order.id, utm: ctx.utm, meta: { ms: result.meta.durationMs, ssim: result.meta.ssim } });
@@ -77,7 +87,7 @@ export async function runPreview(file: Buffer, ctx: { sessionId: string | null; 
     const reason = e instanceof RestoreError ? e.code : 'error';
     console.error('preview failed', order.id, e);
     try {
-      await setStatus(order.id, 'MANUAL_REVIEW', { preview_meta: { session_id: ctx.sessionId, error: String(e instanceof Error ? e.message : e) } });
+      await setStatus(order.id, 'MANUAL_REVIEW', { preview_meta: { ...ident, error: String(e instanceof Error ? e.message : e) } });
       if (!(await getOrder(order.id))?.original_path) {
         const p = objectPath(order.id, 'original');
         await putObject(p, file).then(() => updateOrder(order.id, { original_path: p })).catch(() => {});
@@ -105,7 +115,8 @@ export async function ensureColour(order: Order): Promise<string | null> {
 }
 
 /** A preview belongs to the browser session that made it (or to admin). */
-export function ownsOrder(order: Order, sessionId: string | null): boolean {
-  const sid = (order.preview_meta as { session_id?: string } | null)?.session_id;
-  return Boolean(sid && sessionId && sid === sessionId);
+export function ownsOrder(order: Order, sessionId: string | null, shareToken?: string | null): boolean {
+  const meta = order.preview_meta as { session_id?: string; share_token?: string } | null;
+  if (shareToken && meta?.share_token && shareToken.length >= 16 && shareToken === meta.share_token) return true;
+  return Boolean(meta?.session_id && sessionId && meta.session_id === sessionId);
 }

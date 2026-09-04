@@ -108,17 +108,16 @@ p + p { margin-top: var(--s4); }
 /* Header */
 .site-head { display: flex; justify-content: space-between; align-items: baseline; padding-top: var(--s4); padding-bottom: var(--s3); }
 
-/* Hero — photo-book spread. Square on mobile; on desktop the photo is left-set and the caption column sits at its bottom edge. */
+/* Hero — photo-book spread. 4:3 on every width so the first screen on a phone still holds the offer and the button; on desktop the photo is left-set and the caption column sits at its bottom edge. */
 .hero-grid { display: grid; gap: var(--s2); }
-.hero-media .ba { aspect-ratio: 1 / 1; }
+.hero-media .ba { aspect-ratio: 4 / 3; }
 .hero-caption { padding: var(--s2) var(--gutter) 0; }
-@media (min-width: 768px) { .hero-media .ba { aspect-ratio: 4 / 3; } }
 @media (min-width: 1024px) {
   .hero-grid { grid-template-columns: minmax(0, min(calc(var(--container) - 240px), calc(80vh * 4 / 3))) 1fr; gap: var(--s5); align-items: end; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
   .hero-media .ba { max-height: 80vh; }
   .hero-caption { padding: 0 0 var(--s2); max-width: 16em; }
 }
-.hero-text { display: grid; gap: var(--s3); padding-top: var(--s4); padding-bottom: var(--s6); }
+.hero-text { display: grid; gap: var(--s3); padding-top: var(--s3); padding-bottom: var(--s6); }
 .hero-text h1 { max-width: 10em; }
 .hero-text .lead { max-width: 24em; }
 .hero-cta { display: grid; gap: var(--s2); justify-items: start; padding-top: var(--s2); }
@@ -148,7 +147,9 @@ p + p { margin-top: var(--s4); }
 .offer { display: grid; gap: var(--s5); }
 .price { font-family: var(--display); font-weight: 300; font-size: clamp(88px, 24vw, 168px); line-height: 0.9; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: lining-nums; }
 .price small { font-size: 0.32em; letter-spacing: 0; font-weight: 400; margin-left: 0.15em; }
-@media (min-width: 1024px) { .offer { grid-template-columns: 1fr auto; align-items: end; gap: var(--s8); } .price { text-align: right; } }
+/* On a phone the price comes before the button: read the number, then act. */
+.offer > .offer-act { order: 2; }
+@media (min-width: 1024px) { .offer { grid-template-columns: 1fr auto; align-items: end; gap: var(--s8); } .offer > .offer-act { order: 0; } .price, .price-note { text-align: right; } }
 
 /* Founder */
 .founder { display: grid; gap: var(--s5); }
@@ -178,14 +179,19 @@ details.q .a { padding: 0 0 var(--s5); max-width: var(--measure); }
 @media (min-width: 768px) { .sticky-cta { display: none; } }
 @media (prefers-reduced-motion: reduce) { .sticky-cta { transition: none; } .btn { transition: none; } }
 body.has-sticky { padding-bottom: calc(var(--cta-height) + var(--s3) * 2 + var(--safe-bottom)); }
-@media (min-width: 768px) { body.has-sticky { padding-bottom: 0; } }
+body.sticky-on { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--safe-bottom)); }
+@media (min-width: 768px) { body.has-sticky { padding-bottom: 0; } body.sticky-on { --bar-h: 0px; } }
+
+/* Consent banner — stacks above whichever bottom bar is showing (--bar-h) */
+.consent { position: fixed; left: 0; right: 0; bottom: var(--bar-h, 0px); z-index: 50; background: var(--paper-2); border-top: 1px solid var(--hairline); padding: var(--s4) var(--gutter) var(--s4); transition: bottom 180ms ease-out; }
+body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) + var(--safe-bottom)); }
 
 /* Before/after slider. The handle moves with transform (no layout), the after image is clipped. */
 .ba { position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: pan-y; background: var(--paper-2); width: 100%; }
 .ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ba.contain img { object-fit: contain; }
 .ba img.after { clip-path: inset(0 0 0 var(--x, 50%)); }
-.ba .handle { position: absolute; top: 0; bottom: 0; left: 0; width: 0; transform: translateX(calc(var(--x, 50%) * 1)); will-change: transform; }
+.ba .handle { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; pointer-events: none; transform: translateX(var(--x, 50%)); will-change: transform; }
 .ba .handle::before { content: ''; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--paper); box-shadow: 0 0 0 1px rgba(28,26,23,0.25); }
 .ba .knob { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 2px rgba(28,26,23,0.3); }
 .ba .knob::before, .ba .knob::after { content: ''; position: absolute; top: 17px; width: 2px; height: 10px; background: var(--ink); }
@@ -230,10 +236,15 @@ body.has-sticky { padding-bottom: calc(var(--cta-height) + var(--s3) * 2 + var(-
   .pv .pv-left { grid-column: 1; display: grid; gap: var(--s4); }
   .pv .pv-right { grid-column: 2; display: grid; gap: var(--s5); position: sticky; top: var(--s6); }
 }
-.pv-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: var(--s3) var(--gutter) calc(var(--s3) + var(--safe-bottom)); background: var(--paper); border-top: 1px solid var(--hairline); }
+/* Mobile order bar: how you pay above the button, when you pay under it, and the error where the button is */
+.pv-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; gap: var(--s2); padding: var(--s3) var(--gutter) calc(var(--s3) + var(--safe-bottom)); background: var(--paper); border-top: 1px solid var(--hairline); }
+.pv-cta-bar .caption { text-align: center; font-size: 13px; line-height: 1.35; }
+.pv-cta-bar .alert { font-size: var(--fs-small); color: var(--error); line-height: 1.4; }
 @media (min-width: 1024px) { .pv-cta-bar { display: none; } }
-body.has-pv-bar { padding-bottom: calc(var(--cta-height) + var(--s3) * 2 + var(--safe-bottom)); }
-@media (min-width: 1024px) { body.has-pv-bar { padding-bottom: 0; } }
+body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 18px + var(--safe-bottom)); padding-bottom: var(--bar-h); }
+.pv-money { color: var(--ink-2); }
+@media (min-width: 1024px) { .pv-money { display: none; } }
+@media (min-width: 1024px) { body.has-pv-bar { --bar-h: 0px; padding-bottom: 0; } }
 
 /* Tak — timeline as hairline rows */
 .timeline { display: grid; margin: 0; }
