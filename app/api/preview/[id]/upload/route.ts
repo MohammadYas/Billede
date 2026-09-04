@@ -28,7 +28,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!(file instanceof File)) return NextResponse.json({ error: 'file' }, { status: 400 });
   if (file.size > FALLBACK_MAX) return NextResponse.json({ error: 'too_large' }, { status: 413 });
   const buf = Buffer.from(await file.arrayBuffer());
-  if (!sniffImageType(buf)) return NextResponse.json({ error: 'type' }, { status: 415 });
-  await putObject(path, buf, file.type || 'image/jpeg');
+  const sniffed = sniffImageType(buf);
+  if (!sniffed) return NextResponse.json({ error: 'type' }, { status: 415 });
+  await putObject(path, buf, sniffed);
   return NextResponse.json({ ok: true });
 }

@@ -7,6 +7,7 @@ import { signedUrl } from '@/lib/db/storage';
 import { logEvent } from '@/lib/analytics/events';
 import { CONFIG } from '@/lib/config';
 import { priceOere } from '@/lib/pricing';
+import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,9 @@ export async function POST(req: NextRequest) {
   if (order.status !== 'PREVIEW_READY') return NextResponse.json({ error: 'state' }, { status: 409 });
   if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'Betaling er ikke sat op endnu.' }, { status: 503 });
 
+  // a stale Checkout tab must not be able to pay a second time
+  if (order.payment_session_id) await paymentProvider().expireSession(order.payment_session_id);
+  const shareToken = (order.preview_meta as { share_token?: string } | null)?.share_token;
   const chosen = Boolean(body.colour) && Boolean(order.colourised_path);
   const updated = await updateOrder(order.id, { chosen_colour: chosen, amount: priceOere(order.format), currency: 'dkk', payment_provider: paymentProvider().name });
   const base = CONFIG.siteUrl.replace(/\/$/, '');
@@ -27,14 +31,16 @@ export async function POST(req: NextRequest) {
   try {
     const { url, sessionId } = await paymentProvider().createCheckout(updated, {
       successUrl: `${base}/tak?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${base}/p/${order.id}?cancelled=1`,
+      cancelUrl: `${base}/p/${order.id}?cancelled=1${shareToken ? `&t=${encodeURIComponent(shareToken)}` : ''}`,
       previewImageUrl: process.env.STRIPE_PRODUCT_IMAGE === 'false' ? undefined : previewImageUrl,
     });
-    await updateOrder(order.id, { payment_session_id: sessionId });
+    const withSession = await updateOrder(order.id, { payment_session_id: sessionId });
     await logEvent('InitiateCheckout', { sessionId: sid, orderId: order.id, utm });
-    return NextResponse.json({ url });
+    await sendServerEvent('InitiateCheckout', { eventId: sessionId, order: withSession, sourceUrl: eventSourceUrl(`/p/${order.id}`), ip: (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null, ua: req.headers.get('user-agent') });
+    return NextResponse.json({ url, sessionId });
   } catch (e) {
-    console.error('checkout failed', e);
+    // Stripe's message is what the owner needs in the function log (e.g. the Dashboard's missing Terms URL)
+    console.error('checkout failed', order.id, e instanceof Error ? e.message : e);
     return NextResponse.json({ error: 'checkout' }, { status: 502 });
   }
 }

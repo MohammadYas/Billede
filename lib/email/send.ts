@@ -27,7 +27,7 @@ export async function sendMail(opts: { to: string; subject: string; html: string
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
-    replyTo: opts.replyTo ?? getFounder().email ?? undefined,
+    replyTo: opts.replyTo ?? process.env.EMAIL_REPLY_TO ?? getFounder().email ?? undefined,
   });
   if (error) throw new Error(`resend: ${error.message}`);
   return data?.id ?? null;

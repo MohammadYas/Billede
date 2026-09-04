@@ -7,6 +7,9 @@ import { readSessionId } from '@/lib/session';
 import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
 import PurchaseEvent from '@/components/PurchaseEvent';
+import { headers } from 'next/headers';
+
+export const metadata = { robots: { index: false, follow: false } };
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +23,8 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
     try {
       const verified = await paymentProvider().verifySession(session_id);
       if (verified.paid && verified.orderId) {
-        order = await markPaid(verified.orderId, verified);
+        const h = await headers();
+        order = await markPaid(verified.orderId, verified, { ip: (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || null, ua: h.get('user-agent') });
         if (order && !(order as unknown as { purchase_tracked_at?: string | null }).purchase_tracked_at) {
           await updateOrder(order.id, { purchase_tracked_at: new Date().toISOString() } as never);
           firePurchase = true;
@@ -56,7 +60,7 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
                 <h1 style={{ maxWidth: '12em' }}>{c.tak.h1}</h1>
                 <p className="lead" style={{ maxWidth: '24em' }}>{c.tak.p}</p>
                 <p className="caption tabular">Ordre {order.id.slice(0, 8)}</p>
-                {firePurchase && <PurchaseEvent value={value} eventId={order.id} />}
+                {firePurchase && <PurchaseEvent value={value} eventId={order.id} email={order.customer_email} phone={order.customer_phone} />}
               </div>
               <div style={{ display: 'grid', gap: 'var(--s5)' }}>
                 {order.mockup_path && <img src={imageUrl(order, 'mockup')} alt={`Dit billede indrammet i ${c.formatLabel}`} width={1200} height={960} style={{ maxWidth: 520 }} />}

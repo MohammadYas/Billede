@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { CONFIG } from '@/lib/config';
+import PixelBoot from '@/components/PixelBoot';
 
 export const metadata: Metadata = {
   metadataBase: new URL(CONFIG.siteUrl),
@@ -11,9 +12,10 @@ export const metadata: Metadata = {
     description: 'Se dit gamle familiebillede restaureret på under et minut. Indrammet 30×40 cm, 599 kr., fri fragt.',
     locale: 'da_DK',
     type: 'website',
-    images: ['/og.jpg'],
+    images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Før og efter: restaureret familiebillede' }],
   },
   icons: { icon: '/favicon.svg' },
+  alternates: { canonical: '/' },
 };
 
 export const viewport: Viewport = {
@@ -29,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preload" href="/fonts/PublicSans-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
-      <body>{children}</body>
+      <body>{children}<PixelBoot /></body>
     </html>
   );
 }

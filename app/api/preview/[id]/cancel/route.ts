@@ -14,6 +14,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
   if (!order || !ownsOrder(order, sid, req.nextUrl.searchParams.get('t'))) return NextResponse.json({ error: 'not found' }, { status: 404 });
   if (order.status !== 'NEW' && order.status !== 'PREVIEW_READY' && order.status !== 'MANUAL_REVIEW') return NextResponse.json({ ok: false }, { status: 409 });
+  const sessionAge = Date.now() - (Date.parse(order.updated_at ?? '') || 0);
+  if (order.payment_session_id && sessionAge < 3600e3) return NextResponse.json({ ok: false, reason: 'checkout_open' }, { status: 409 });
   if (jobBusy(order, 'restore')) {
     await updateOrder(order.id, { preview_meta: { ...(order.preview_meta ?? {}), cancelled: true } });
   } else {

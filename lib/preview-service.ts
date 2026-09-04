@@ -2,10 +2,14 @@ import { randomBytes } from 'node:crypto';
 import { CONFIG } from '@/lib/config';
 import { createOrder, getOrder, setStatus, updateOrder, type Order } from '@/lib/db/orders';
 import { objectPath, putObject, getObject, removeObjects, createSignedUpload } from '@/lib/db/storage';
-import { restore, colourise, RestoreError } from '@/lib/restoration/restore';
-import { ensureLongEdge } from '@/lib/restoration/image-utils';
-import { makePreview } from '@/lib/restoration/preview';
-import { makeMockup } from '@/lib/restoration/mockup';
+import { RestoreError } from '@/lib/restoration/errors';
+import { notifyOwner } from '@/lib/email/owner';
+
+/** sharp + the OpenAI SDK are loaded only inside jobs, never on the request path (cold starts on the first tap). */
+const heavy = async () => {
+  const [r, iu, pv, mk] = await Promise.all([import('@/lib/restoration/restore'), import('@/lib/restoration/image-utils'), import('@/lib/restoration/preview'), import('@/lib/restoration/mockup')]);
+  return { restore: r.restore, colourise: r.colourise, ensureLongEdge: iu.ensureLongEdge, makePreview: pv.makePreview, makeMockup: mk.makeMockup };
+};
 import { logEvent, type Utm } from '@/lib/analytics/events';
 import { customerFormat } from '@/lib/pricing';
 import { getJob, setJob, type JobState } from '@/lib/jobs';
@@ -84,6 +88,7 @@ export async function processRestore(orderId: string): Promise<void> {
   if (order.status !== 'NEW') { await setJob(orderId, { kind: 'restore', state: 'done' }); return; }
   await setJob(orderId, { kind: 'restore', state: 'running', stage: 'restoring', startedAt: new Date().toISOString() });
   try {
+    const { restore, ensureLongEdge, makePreview, makeMockup } = await heavy();
     const file = await getObject(uploadPath);
     if (file.length > CONFIG.maxUploadBytes) throw new RestoreError('unsupported_image', 'too large');
     const result = await restore(file, { quality: (process.env.PREVIEW_IMAGE_QUALITY as 'low' | 'medium' | 'high') ?? 'medium', candidates: 2, colourise: false, likenessCheck: true, minLongEdge: 1600 });
@@ -101,6 +106,7 @@ export async function processRestore(orderId: string): Promise<void> {
       await setStatus(order.id, 'MANUAL_REVIEW', { original_path: originalPath, restored_path: restoredPath, is_monochrome: result.isMonochrome, preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta } });
       await setJob(orderId, { kind: 'restore', state: 'done', reason: result.meta.reviewReasons.join(',') });
       await logEvent('PreviewFallback', { sessionId, orderId, meta: { reasons: result.meta.reviewReasons } });
+      await notifyOwner(`Manuel vurdering · ordre ${order.id.slice(0, 8)}`, [`Årsag: ${result.meta.reviewReasons.join(', ')}`, 'Kunden får en mail-formular; svar inden 24 timer.'], order.id);
       return;
     }
 
@@ -138,6 +144,7 @@ export async function processColour(orderId: string): Promise<void> {
   if (!order.is_monochrome || !order.restored_path) { await setJob(orderId, { kind: 'colour', state: 'failed', reason: 'not_monochrome' }); return; }
   await setJob(orderId, { kind: 'colour', state: 'running', startedAt: new Date().toISOString() });
   try {
+    const { colourise, makePreview } = await heavy();
     const restored = await getObject(order.restored_path);
     const { image } = await colourise(restored, (process.env.PREVIEW_IMAGE_QUALITY as 'low' | 'medium' | 'high') ?? 'medium');
     const previewColour = await makePreview(image);
@@ -161,6 +168,7 @@ export async function processFinal(orderId: string): Promise<void> {
   if (!order || !source) { if (order) await setJob(orderId, { kind: 'final', state: 'failed', reason: 'no_original' }); return; }
   await setJob(orderId, { kind: 'final', state: 'running', startedAt: new Date().toISOString() });
   try {
+    const { restore, colourise } = await heavy();
     const original = await getObject(source);
     const result = await restore(original, { quality: 'high', candidates: 2, likenessCheck: true, minLongEdge: 2400, timeoutMs: 600_000, size: process.env.FINAL_IMAGE_SIZE ?? 'auto' });
     let final = result.restored;
@@ -173,6 +181,7 @@ export async function processFinal(orderId: string): Promise<void> {
   } catch (e) {
     console.error('final failed', orderId, e);
     await setJob(orderId, { kind: 'final', state: 'failed', reason: e instanceof RestoreError ? e.code : 'error', error: String(e instanceof Error ? e.message : e) });
+    await notifyOwner(`Final fejlede · ordre ${orderId.slice(0, 8)}`, [String(e instanceof Error ? e.message : e), 'Prøv igen fra admin, eller upload en manuel final.'], orderId);
   }
 }
 

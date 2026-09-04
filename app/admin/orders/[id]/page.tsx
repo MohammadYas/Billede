@@ -5,8 +5,12 @@ import { signedUrl } from '@/lib/db/storage';
 import { FORMATS, formatLabel, PRICING } from '@/lib/pricing';
 import { STATUS_FLOW } from '@/lib/db/orders';
 import { ManualProvider } from '@/lib/fulfillment/manual';
-import { actionFulfillment, actionNote, actionSendApproval, actionSetFormat, actionSetStatus, actionUploadFinal } from '@/lib/admin/actions';
+import { actionCheckPayment, actionFulfillment, actionNote, actionSendApproval, actionSetFormat, actionSetStatus } from '@/lib/admin/actions';
 import GenerateFinalButton from '@/components/admin/GenerateFinalButton';
+import FinalUpload from '@/components/admin/FinalUpload';
+import { getJob } from '@/lib/jobs';
+
+export const metadata = { robots: { index: false, follow: false } };
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +32,15 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const checklist = order.final_path ? new ManualProvider().checklist(order, urls.final ?? '') : null;
   const addr = order.shipping_address as Record<string, string> | null;
   const likeness = meta.likeness as Record<string, unknown> | undefined;
+  const job = getJob(order);
+  const days = (iso?: string | null) => (iso ? Math.floor((Date.now() - Date.parse(iso)) / 864e5) : null);
+  const next: string | null = order.status === 'PAID' ? 'Næste: generér eller upload final, send godkendelsesmail (inden 48 timer fra betaling).'
+    : order.status === 'CHANGE_REQUESTED' ? 'Næste: ret efter kundens besked, upload ny final, send ny godkendelsesmail (inden 48 timer).'
+    : order.status === 'AWAITING_APPROVAL' ? `Venter på kundens ja${days(order.awaiting_approval_at) !== null ? ` i ${days(order.awaiting_approval_at)} dage` : ''}. Efter 7 dage: ring.`
+    : order.status === 'APPROVED' ? 'Næste: bestil print hos partneren (tjekliste nederst), sæt IN_PRODUCTION.'
+    : order.status === 'IN_PRODUCTION' ? 'Næste: når pakken er sendt, gem tracking og sæt SHIPPED (mailen går automatisk).'
+    : order.status === 'MANUAL_REVIEW' ? 'Næste: vurder billedet, svar kunden på mail inden 24 timer.'
+    : null;
 
   return (
     <main className="wrap admin" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>
@@ -41,10 +54,12 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           <span>{order.amount ? `${(order.amount / 100).toLocaleString('da-DK')} kr.` : ''}</span>
         </div>
 
+        {next && <p className="notice" style={{ fontWeight: 600 }}>{next}</p>}
+        {job && job.state !== 'done' && <p className="small" style={{ color: job.state === 'failed' ? 'var(--error)' : 'var(--ink-2)' }}>Job {job.kind}: {job.state}{job.stage ? ` · ${job.stage}` : ''}{job.reason ? ` · ${job.reason}` : ''}</p>}
         <section style={{ display: 'grid', gap: 'var(--s2)' }} className="small">
           <p><strong>Kunde:</strong> {order.customer_name ?? '—'} · {order.customer_email ?? '—'} · {order.customer_phone ?? '—'}</p>
           <p><strong>Adresse:</strong> {addr ? [addr.line1, addr.line2, `${addr.postal_code ?? ''} ${addr.city ?? ''}`].filter(Boolean).join(', ') : '—'}</p>
-          <p><strong>Betaling:</strong> {order.payment_provider ?? '—'} {order.payment_session_id ?? ''} {order.payment_intent ?? ''}</p>
+          <p><strong>Betaling:</strong> {order.payment_provider ?? '—'} {order.payment_session_id ?? ''} {order.payment_intent ?? ''}{order.payment_session_id && ['NEW', 'PREVIEW_READY', 'ABANDONED'].includes(order.status) ? <form action={actionCheckPayment.bind(null, order.id)} style={{ display: 'inline' }}> <button type="submit" className="link-btn">Tjek betaling hos Stripe</button></form> : null}</p>
           <p><strong>Kilde:</strong> {order.utm ? Object.entries(order.utm).map(([k, v]) => `${k}=${v}`).join(' ') : '—'}</p>
           <p><strong>Pipeline:</strong> {meta.model ? `${meta.model} · ${meta.quality} · ${Math.round(Number(meta.durationMs) / 1000)} s · SSIM ${Number(meta.ssim).toFixed(3)}` : '—'} {likeness ? `· likeness ${likeness.likeness} · invented ${String(likeness.invented_details)} · faces ${likeness.face_count_a}→${likeness.face_count_b}` : ''}</p>
           {likeness?.notes ? <p className="muted">{String(likeness.notes)}</p> : null}
@@ -79,12 +94,10 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
             <button className="btn btn-quiet" type="submit">Skift format</button>
           </form>
 
-          <form action={actionUploadFinal.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
-            <label className="small" htmlFor="final"><strong>Upload færdig fil</strong> (JPEG/PNG, printopløsning)</label>
-            <input id="final" name="final" type="file" accept="image/jpeg,image/png" required />
-            <button className="btn btn-quiet" type="submit">Upload final</button>
+          <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+            <FinalUpload orderId={order.id} />
             <GenerateFinalButton orderId={order.id} />
-          </form>
+          </div>
 
           <form action={actionSendApproval.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
             <p className="small"><strong>Godkendelsesmail</strong> {order.approval_status !== 'NONE' ? `· ${order.approval_status}` : ''}</p>

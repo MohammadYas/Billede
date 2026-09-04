@@ -2,12 +2,11 @@
 import { redirect } from 'next/navigation';
 import { isAdmin } from './auth';
 import { getOrder, setStatus, updateOrder, type OrderStatus } from '@/lib/db/orders';
-import { objectPath, putObject } from '@/lib/db/storage';
 import { isFormat } from '@/lib/pricing';
 import { sendApprovalMail } from '@/lib/approval';
-import { shippedNotice } from '@/lib/email/templates';
+import { refundNotice, shippedNotice } from '@/lib/email/templates';
+import { reconcileOrder } from '@/lib/reconcile';
 import { sendMail } from '@/lib/email/send';
-import { normaliseToJpeg } from '@/lib/restoration/image-utils';
 import { paymentProvider } from '@/lib/payments/stripe';
 
 async function guard() { if (!(await isAdmin())) throw new Error('unauthorized'); }
@@ -20,7 +19,8 @@ export async function actionSetStatus(id: string, formData: FormData) {
   if (status === 'REFUNDED' && order.payment_intent && order.status !== 'REFUNDED') {
     const r = await paymentProvider().refund(order.payment_intent);
     await setStatus(id, 'REFUNDED', { internal_notes: `${order.internal_notes ?? ''}\nRefund ${r.id} (${r.status})`.trim() });
-    back(id, 'Refunderet via Stripe');
+    if (order.customer_email) await sendMail({ to: order.customer_email, ...refundNotice({ amount: (order.amount ?? 59900) / 100 }) }).catch((e) => console.error(e));
+    back(id, 'Refunderet via Stripe – kunden har fået besked');
   }
   if (status === 'SHIPPED' && order.customer_email) {
     const mail = shippedNotice({ trackingNumber: order.tracking_number, trackingUrl: order.tracking_url });
@@ -55,16 +55,13 @@ export async function actionNote(id: string, formData: FormData) {
   back(id, 'Note gemt');
 }
 
-export async function actionUploadFinal(id: string, formData: FormData) {
+export async function actionCheckPayment(id: string) {
   await guard();
-  const file = formData.get('final');
-  if (!(file instanceof File) || file.size === 0) back(id, 'Ingen fil');
-  const buf = Buffer.from(await (file as File).arrayBuffer());
-  const { jpeg } = await normaliseToJpeg(buf);
-  const path = objectPath(id, 'final');
-  await putObject(path, jpeg);
-  await updateOrder(id, { final_path: path });
-  back(id, 'Final uploadet');
+  const order = await getOrder(id); if (!order) return;
+  try {
+    const r = await reconcileOrder(order);
+    back(id, r === 'paid' ? 'Stripe siger betalt – ordren er sat til PAID' : r === 'unpaid' ? 'Stripe: ikke betalt' : 'Ingen Checkout-session på ordren');
+  } catch (e) { back(id, `Stripe-fejl: ${e instanceof Error ? e.message : e}`); }
 }
 
 export async function actionSendApproval(id: string) {

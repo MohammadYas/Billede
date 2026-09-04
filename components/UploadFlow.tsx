@@ -20,7 +20,7 @@ const MAX = 25 * 1024 * 1024;
  * Upload sheet → processing → hands off to /p/<orderId> (the preview is a page, not a sheet).
  * Falls back to the manual-review state on server doubt, and to a retry state on network loss.
  */
-export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; resumeOrderId?: string | null; cancelled?: boolean }) {
+export default function UploadFlow({ c }: { c: Copy }) {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: 'closed' });
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -46,7 +46,12 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
     const h = (e: Event) => { if ((e as CustomEvent).detail === 'nophoto') setState({ kind: 'nophoto', email: '', sending: false, sent: false }); else open(); };
     window.addEventListener('gf:open', h); return () => window.removeEventListener('gf:open', h);
   }, [open]);
-  useEffect(() => { if (resumeOrderId) router.replace(`/p/${resumeOrderId}${cancelled ? '?cancelled=1' : ''}`); }, [resumeOrderId, cancelled, router]);
+  // ?order=<id> (a resume link) goes straight to the preview; read client-side so the landing page can stay static
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const id = sp.get('order');
+    if (id && /^[0-9a-f-]{36}$/.test(id)) router.replace(`/p/${id}${sp.get('cancelled') === '1' ? '?cancelled=1' : ''}${sp.get('t') ? `${sp.get('cancelled') === '1' ? '&' : '?'}t=${encodeURIComponent(sp.get('t')!)}` : ''}`);
+  }, [router]);
 
   useEffect(() => () => stopPolling(), []);
 
@@ -60,7 +65,7 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
   // after 45 s the wait copy admits it is taking longer today (the bar keeps creeping)
   useEffect(() => {
     if (state.kind !== 'processing') { setSlow(false); setPhase(0); return; }
-    const t = setTimeout(() => setSlow(true), 35_000);
+    const t = setTimeout(() => setSlow(true), 75_000);
     const p1 = setTimeout(() => setPhase(1), 15_000);
     const p2 = setTimeout(() => setPhase(2), 30_000);
     return () => { clearTimeout(t); clearTimeout(p1); clearTimeout(p2); };
@@ -96,13 +101,15 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
     throw new Error('too_large');
   };
   /** XHR with progress, a hard timeout and a stall watchdog (no progress for 25 s = dead connection). */
-  const send = (method: string, url: string, body: FormData, headers: Record<string, string>, onProgress: (p: number) => void) => new Promise<number>((resolve, reject) => {
+  const send = (method: string, url: string, body: FormData, headers: Record<string, string>, onProgress: (p: number) => void, firstByteMs = 25_000) => new Promise<number>((resolve, reject) => {
     const xhr = new XMLHttpRequest(); xhrRef.current = xhr;
-    let watchdog = 0;
-    const kick = () => { window.clearTimeout(watchdog); watchdog = window.setTimeout(() => { xhr.abort(); reject(new Error('stall')); }, 25_000); };
+    let watchdog = 0; let started = false;
+    // no first progress event within firstByteMs (a blocked cross-origin PUT hangs, it does not fail) → give up fast; 25 s between events after that
+    const kick = () => { window.clearTimeout(watchdog); watchdog = window.setTimeout(() => { xhr.abort(); reject(new Error('stall')); }, started ? 25_000 : firstByteMs); };
     xhr.open(method, url); xhr.timeout = 180_000;
     for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
-    xhr.upload.onprogress = (e) => { kick(); if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
+    xhr.upload.onloadstart = () => onProgress(1);
+    xhr.upload.onprogress = (e) => { started = true; kick(); if (e.lengthComputable) onProgress(Math.max(1, Math.round((e.loaded / e.total) * 100))); };
     xhr.onload = () => { window.clearTimeout(watchdog); resolve(xhr.status); };
     xhr.onerror = () => { window.clearTimeout(watchdog); reject(new Error('network')); };
     xhr.ontimeout = () => { window.clearTimeout(watchdog); reject(new Error('timeout')); };
@@ -138,9 +145,11 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
         }
         if (st.job?.stage) setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: st.job?.stage === 'preparing' ? 'preparing' : 'sending', percent: 100 } : cur));
       } catch { /* transient: keep polling */ }
-      pollRef.current = window.setTimeout(tick, 1500);
+      if (Date.now() - t0 > 150_000) { fail(file, thumb, c.processing.timeout, c.processing.timeoutTitle, orderId, token); return; }
+      pollRef.current = window.setTimeout(tick, Date.now() - t0 > 60_000 ? 4000 : 2000);
     };
-    pollRef.current = window.setTimeout(tick, 1200);
+    const t0 = Date.now();
+    pollRef.current = window.setTimeout(tick, 6000); // nothing finishes earlier
   };
 
   /** Step 3: the file is in the bucket — start (or retry) the job. */
@@ -178,8 +187,10 @@ export default function UploadFlow({ c, resumeOrderId, cancelled }: { c: Copy; r
     let aborted = false;
     try {
       // 1st transport: straight into the bucket with the signed URL (no size limit, no double transfer)
-      const fd = new FormData(); fd.append('cacheControl', '3600'); fd.append('', file, file.name || 'photo.jpg');
-      const status = await send('PUT', started.uploadUrl, fd, { 'x-upsert': 'false' }, progress);
+      const put = (blob: Blob) => { const fd = new FormData(); fd.append('cacheControl', '3600'); fd.append('', blob, 'photo.jpg'); return send('PUT', started.uploadUrl, fd, { 'x-upsert': 'false' }, progress, 6_000); };
+      let status = await put(file);
+      // a HEIC from the camera roll: the bucket sniffs bytes, the part just needs a type it accepts
+      if (status === 400 || status === 415) status = await put(new Blob([file], { type: 'image/jpeg' }));
       if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
     } catch (e) {
       if ((e as Error).message === 'abort') return;

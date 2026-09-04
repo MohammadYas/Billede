@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import BeforeAfter from './BeforeAfter';
-import { track } from '@/lib/analytics/client';
+import { PRODUCT, track } from '@/lib/analytics/client';
 import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
 
@@ -26,7 +26,9 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
+    track('ViewContent', { ...PRODUCT, content_name: 'preview' });
     return () => document.body.classList.remove('has-pv-bar');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Colour version: requested once, preloaded before the toggle is enabled, so the swap is instant and never shows the damaged original.
@@ -45,7 +47,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         if (st.payload?.colour) { await arrive(st.payload.colour); return; }
         if ((st.job?.kind === 'colour' && st.job.state === 'failed') || Date.now() > deadline) { if (alive) setColourLoading(false); return; }
       } catch { /* transient */ }
-      if (alive) timer = window.setTimeout(check, 2500);
+      if (alive) timer = window.setTimeout(check, document.visibilityState === 'hidden' ? 15000 : 2500);
     };
     fetch(`/api/preview/${data.orderId}/colour${q}`, { method: 'POST' })
       .then(async (r) => {
@@ -68,11 +70,12 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   const order = async () => {
     setOrdering(true); setError(null);
-    track('InitiateCheckout', { value: 599, currency: 'DKK' });
     try {
       const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: showColour, t: token }) });
-      const j = (await r.json().catch(() => ({}))) as { url?: string };
+      const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
+      // same event_id as the server-side copy, so Meta counts one InitiateCheckout
+      track('InitiateCheckout', { ...PRODUCT }, { eventId: j.sessionId });
       window.location.assign(j.url);
     } catch {
       // never a server string: one calm message with a second door (the phone)

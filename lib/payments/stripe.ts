@@ -75,6 +75,10 @@ export class StripeProvider implements PaymentProvider {
     };
   }
 
+  async expireSession(sessionId: string): Promise<void> {
+    try { await this.stripe.checkout.sessions.expire(sessionId); } catch { /* already paid, expired or unknown: nothing to close */ }
+  }
+
   async verifySession(sessionId: string): Promise<VerifiedSession> {
     const s = await this.stripe.checkout.sessions.retrieve(sessionId);
     return this.toVerified(s);

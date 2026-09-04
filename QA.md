@@ -326,3 +326,45 @@ Evidence after the fifth pass: breakpoints 375–1440 no overflow, no tap target
 - End-to-end on the new flow (`work/attack-1-fix/e2e.mjs`, iPhone 14 profile, dev server with in-process jobs): pick → "Vis mig resultatet" → order created → signed PUT (blocked in this sandbox: the browser cannot reach the bucket host) → watchdog → fallback through the app (4.5 MB cap, browser downscale) → job → poll → landed on `/p/<id>?t=…` after 81.9 s; stage captions "Uploader 100 %" → "Restaurerer" (rotating sentences at 15/30 s, slow line at 35 s) → "Gør preview klar"; colour version arrived by polling after 135 s. No console errors except the expected blocked PUT.
 - `zip-it-and-ship-it` (the bundler Netlify uses) bundles both functions from the repo root: `job-background` (19 MB with sharp's linux binaries, `background: true`), `retention` (`schedule: 0 3 * * *`), the `@/` aliases resolve, `processRestore/processColour/processFinal` are in the bundle.
 - Not verifiable here: the signed direct upload from a real phone (sandbox network), Netlify's own build. HANDOFF §6 lists the three things to check after the first deploy.
+
+## Attack round 3 (`work/attack-3/report.md`) — the money path and operations
+Method: adversarial agent on the Netlify architecture; one real restoration (68.7 s end to end incl. 13 s of blocked PUT in the sandbox), the approval flow staged in Supabase, the four mails rendered, a direct probe of the bucket. 30+ findings.
+
+| # | Finding | Fix |
+|---|---|---|
+| 1.1 HIGH | HEIC from the camera roll rejected by the bucket (415) and by the fallback route | bucket allows heic/heif (migration 0003, applied live); fallback sniffs bytes; direct PUT retried typed as JPEG |
+| 1.2 HIGH | Paid order invisible when the webhook fails or /tak never renders | hourly reconciliation with Stripe (`lib/reconcile.ts`) + admin "Tjek betaling hos Stripe" |
+| 1.3 HIGH | Second Checkout session accepted; double payment silent | previous session expired; a second payment refunded automatically, owner mailed, note on the order |
+| 1.4 MED | Webhook and /tak race → two mails | atomic `transition()` (PAID, APPROVED, CHANGE_REQUESTED) |
+| 1.5 MED | Cancel URL without token → 404 | token appended |
+| 1.6 MED | 25 s at 0 % before the fallback | first-byte watchdog 6 s on the direct transport; bar starts at 1 % |
+| 1.7 MED | Jobs stuck forever | failed enqueue recorded; `jobBusy` ages; sheet gives up at 150 s with retry |
+| 1.8–1.9 LOW | "30 dage" copy; cancel under open checkout | copy; refused within 1 h of a session |
+| 2.1 HIGH | Purchase only from a consenting browser | server-side Purchase via CAPI, same event_id, hashed matching, fbc |
+| 2.2 HIGH | ViewContent/InitiateCheckout lost pre-consent and on revisits | pre-consent queue replayed on Ok; PixelBoot on every page; Consent on /p; ViewContent on /p; IC with session id |
+| 2.3 MED | Advanced matching, product params, mid-funnel event | em/ph on /tak; PRODUCT params everywhere; HANDOFF §5 (custom conversion on PreviewShown) |
+| 2.4 LOW | gf_utm not listed | privacy text |
+| 3.1 MED | Confirmation not an ordrebekræftelse | amount, address, order, terms link, refund line, mockup, preview link |
+| 3.2 MED | Approval buttons under a tall image | buttons above and below, full width; "svar med ja" line |
+| 3.3 LOW | Reply-to gmail | `EMAIL_REPLY_TO` |
+| 4.1 HIGH | Godkend changed nothing on screen | redirect to a confirmation; SubmitButton pending state; atomic |
+| 4.2 HIGH | Change request: old mail still approves; nobody told | own page state, new token per version, old tokens → "nyere version" page, mail to customer and owner |
+| 4.3 MED | Decision below the fold | buttons first, image ≤ 70dvh, "Det her er det billede, vi printer" |
+| 4.4 MED | One reminder, then silence | 7-day reminder with the phone, owner nudge at 10 days |
+| 5.1 HIGH | Owner never told anything | `notifyOwner()` on every event that needs a human |
+| 5.2 HIGH | Final upload dies on the 6 MB function limit | signed-URL upload (`FinalUpload`, `/api/admin/final-upload`) |
+| 5.3 MED | No "what to do next" | "Til handling" block; next-step line on the order; analytics rows hidden by default |
+| 5.4 MED | No refund mail; COMPLETED never set | refund mail; auto-complete 14 days after SHIPPED |
+| 5.5 LOW | SDK timeout | 300 s |
+| 6.1 HIGH | OG/site URL at build time | HANDOFF; OG image with size and alt; canonical |
+| 6.2 MED | Stripe Terms URL | HANDOFF §3b; error message logged |
+| 6.3 MED | Privacy vs. code | SHIPPED included in 90-day deletion; Netlify EU; gf_utm; CAPI line |
+| 6.5 LOW | robots/noindex | `app/robots.ts`, `app/sitemap.ts`, noindex on /p, /tak, /godkend, /admin |
+| 7.1 HIGH | JOB_RUNNER detection | `JOB_RUNNER=netlify` documented; build fails without JOB_SECRET in production |
+| 7.2 MED | Landing page hits a function per click | static, ISR hourly; resume via client; sharp/OpenAI loaded only in jobs |
+| 7.3 MED | Region | HANDOFF (EU region) |
+| 7.4 MED | Retention as a sync scheduled function | scheduled function hands over to the background job, hourly |
+| 7.5 LOW | Poll cost | first poll at 6 s, 2 s → 4 s after 60 s; colour poll 15 s when hidden |
+| 8 | Wait copy, preview images | "omkring et minut", slow line at 75 s, preload of both slider images |
+
+Evidence after round 3: approval flow on the iPhone profile — first Godkend button at y 281 (above the picture), change request → "Tak, vi retter det." with no Godkend button, a re-send rotates the token (old link: "Der findes en nyere version."), Godkend → "Tak. Vi printer og sender." with "Dit ja er registreret", `/aendring` after approval → "Billedet er godkendt og på vej i produktion."; admin "Til handling" lists the order with the customer's change text; order page shows the next step. Upload flow end to end after the changes: landed in 76 s (a slow provider minute: 60 s of restoration), first-byte watchdog moved the bar to 1 % at 1.5 s, fallback transport took over, colour arrived by polling; no console errors. Emails re-rendered (`checkpoints/04-email-*.png`): ordrebekræftelse with amount, address, order id, terms and preview links; approval mail with the buttons above and below the picture. Netlify bundles rebuilt with the housekeeping job. Production build: the landing page is static (ISR 1 h); robots.txt and sitemap.xml serve. Test orders purged (`--all`).

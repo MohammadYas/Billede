@@ -21,4 +21,6 @@ export interface PaymentProvider {
   verifySession(sessionId: string): Promise<VerifiedSession>;
   handleWebhook(rawBody: string, signature: string | null): Promise<WebhookOutcome>;
   refund(paymentIntent: string): Promise<{ id: string; status: string }>;
+  /** Close a still-open Checkout session so a stale tab cannot pay a second time. */
+  expireSession(sessionId: string): Promise<void>;
 }

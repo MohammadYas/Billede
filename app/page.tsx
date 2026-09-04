@@ -13,7 +13,8 @@ import Consent from '@/components/Consent';
 import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
 
-export const dynamic = 'force-dynamic';
+// Static, regenerated hourly: an ad click hits the CDN, not a cold function. The ?order= resume lives in UploadFlow.
+export const revalidate = 3600;
 
 const src = (e: Example, side: 'before' | 'after', sizes: string): Source => ({
   src: side === 'before' ? e.before : e.after,
@@ -30,8 +31,7 @@ function Caption({ text, credit = false }: { text: string; credit?: boolean }) {
   return <span className="caption" title={m[3] || undefined}><b>{m[1]}</b>, {m[2]}{credit && m[3] ? ' · arkivfoto' : '.'}</span>;
 }
 
-export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const sp = await searchParams;
+export default async function Page() {
   const c = copy();
   const examples = getExamples();
   const hero = examples[0] ?? null;
@@ -43,7 +43,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   // "Tæt på" must open with a pair where the difference is unmistakable, so the (soft) hero pair goes last
   const details = [...examples.filter((e) => e.detail && e.id !== hero?.id), ...examples.filter((e) => e.detail && e.id === hero?.id)].slice(0, 6);
   const productMock = (examples.find((e) => e.mockup && e.id !== hero?.id) ?? hero)?.mockup ?? null;
-  const resumeOrder = typeof sp.order === 'string' && /^[0-9a-f-]{36}$/.test(sp.order) ? sp.order : null;
 
   return (
     <>
@@ -226,7 +225,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         </section>
       </main>
       <Footer />
-      <UploadFlow c={c} resumeOrderId={resumeOrder} cancelled={sp.cancelled === '1'} />
+      <UploadFlow c={c} />
       <StickyCtaMount label={c.sticky} />
       <Consent text={c.cookie.text} accept={c.cookie.accept} decline={c.cookie.decline} />
     </>

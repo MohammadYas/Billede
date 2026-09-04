@@ -5,6 +5,7 @@ import { listOrders } from '@/lib/db/orders';
 import { formatLabel } from '@/lib/pricing';
 
 export const dynamic = 'force-dynamic';
+export const metadata = { robots: { index: false, follow: false } };
 
 async function login(formData: FormData) {
   'use server';
@@ -24,7 +25,17 @@ const STATUS_DA: Record<string, string> = {
   APPROVED: 'Godkendt', IN_PRODUCTION: 'I produktion', SHIPPED: 'Sendt', COMPLETED: 'Afsluttet', REFUNDED: 'Refunderet', MANUAL_REVIEW: 'Manuel vurdering', ABANDONED: 'Opgivet',
 };
 
-export default async function Admin({ searchParams }: { searchParams: Promise<{ fejl?: string; status?: string }> }) {
+const WORK: Record<string, string> = {
+  PAID: 'Generér/upload final og send godkendelsesmail',
+  CHANGE_REQUESTED: 'Ret efter kundens besked, ny final, ny mail',
+  AWAITING_APPROVAL: 'Venter på kundens ja (ring efter 7 dage)',
+  APPROVED: 'Bestil print hos partneren',
+  IN_PRODUCTION: 'Gem tracking og sæt SHIPPED',
+  MANUAL_REVIEW: 'Svar kunden inden 24 timer',
+};
+const ANALYTICS = ['NEW', 'PREVIEW_READY', 'ABANDONED'];
+
+export default async function Admin({ searchParams }: { searchParams: Promise<{ fejl?: string; status?: string; alle?: string }> }) {
   const sp = await searchParams;
   if (!(await isAdmin())) {
     return (
@@ -40,7 +51,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
     );
   }
   const orders = await listOrders({ status: sp.status as never });
-  const active = orders.filter((o) => !['ABANDONED'].includes(o.status));
+  const active = sp.status || sp.alle ? orders.filter((o) => o.status !== 'ABANDONED' || sp.status === 'ABANDONED') : orders.filter((o) => !ANALYTICS.includes(o.status));
+  const age = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / 864e5);
+  const work = Object.keys(WORK).map((st) => ({ st, rows: orders.filter((o) => o.status === st && !(st === 'MANUAL_REVIEW' && !o.customer_email)) })).filter((g) => g.rows.length);
   return (
     <main className="wrap admin" style={{ paddingTop: 'var(--s6)', paddingBottom: 'var(--s9)' }}>
       <div className="container" style={{ display: 'grid', gap: 'var(--s5)' }}>
@@ -51,6 +64,21 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <a href="/admin">Alle</a>
           </p>
         </div>
+        {!sp.status && (
+          <section style={{ display: 'grid', gap: 'var(--s3)' }}>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Til handling</h2>
+            {work.length === 0 && <p className="small muted">Intet at gøre lige nu.</p>}
+            {work.map((g) => (
+              <div key={g.st} className="small" style={{ borderTop: '1px solid var(--hairline)', paddingTop: 'var(--s2)' }}>
+                <p><strong>{STATUS_DA[g.st]} · {g.rows.length}</strong> — {WORK[g.st]}</p>
+                <ul style={{ margin: 'var(--s1) 0 0', paddingLeft: '1.2em' }}>
+                  {g.rows.map((o) => <li key={o.id}><a href={`/admin/orders/${o.id}`}>{o.id.slice(0, 8)}</a> · {o.customer_name ?? o.customer_email ?? '—'} · {age(o.updated_at ?? o.created_at)} d{o.change_request_text ? ` · “${o.change_request_text.slice(0, 60)}”` : ''}</li>)}
+                </ul>
+              </div>
+            ))}
+            <p className="caption">Previews uden køb og opgivne uploads er skjult her (<a href="/admin?alle=1">vis alle</a>).</p>
+          </section>
+        )}
         <div style={{ overflowX: 'auto' }}>
           <table className="tabular">
             <thead><tr><th>Oprettet</th><th>Ordre</th><th>Status</th><th>Format</th><th>Kunde</th><th>Beløb</th><th>Kilde</th></tr></thead>

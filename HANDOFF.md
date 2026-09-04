@@ -60,6 +60,11 @@ Then, in order (§13 of the spec):
 Until then the code runs against Stripe test keys (`sk_test_…`, card 4242 4242 4242 4242). The agent had no test
 keys, so journey A stops at "Stripe Checkout opens" — see QA.md.
 
+### 3b. Before the first ad: three Stripe Dashboard settings (Checkout will not open without the first)
+- **Public details → Terms of service URL** = `https://genfundet.dk/handelsbetingelser` (and the privacy URL). Checkout requires it because we ask for consent to the terms.
+- **Webhook** on `https://genfundet.dk/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`; then "Send test event" and confirm a 200 in the Netlify function log. The hourly housekeeping job also asks Stripe about every open session from the last 7 days and marks paid orders (so a broken webhook cannot hide a payment), and admin has "Tjek betaling hos Stripe" on an order.
+- **Customer receipts** in Stripe on, until you trust our own ordrebekræftelse.
+
 ## 4. E-mail (Resend) — DNS
 
 Resend is not connected in Composio, so domain status could not be checked. Create the domain `genfundet.dk` in
@@ -75,7 +80,11 @@ Resend and add the records it shows (typically):
 Then `RESEND_API_KEY`, `EMAIL_DOMAIN=genfundet.dk`, `EMAIL_FROM_LOCAL=mohammad` (mails come from `mohammad@genfundet.dk`).
 Send yourself a test order confirmation from `/admin` by completing a test purchase.
 
-## 5. Meta Pixel
+## 5. Meta Pixel and Conversions API
+
+- `NEXT_PUBLIC_META_PIXEL_ID` loads the pixel after consent, on every page. Events: PageView, ViewContent (hero and preview), UploadStarted, UploadCompleted, PreviewShown, PreviewFallback (custom), InitiateCheckout, Purchase — all with the same product parameters. Events that happen before the visitor answers the banner are kept in the tab and replayed on "Ok".
+- `META_CAPI_TOKEN` (Events Manager → Conversions API → Generate access token) sends **Purchase and InitiateCheckout from the server** too, with the same event ids as the browser (deduplicated) and hashed e-mail/phone/name/postcode + the click id. That is the copy Meta gets when the buyer paid in another browser (MobilePay app-switch out of the Facebook browser) or never consented. `META_TEST_EVENT_CODE` shows them in the Test events tab while you check.
+- In Business Manager: verify genfundet.dk, prioritise Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent for iOS, create the custom conversion on `PreviewShown`, and run the first campaign optimised for that (1.500 kr. will not produce enough purchases to leave learning).
 
 Create the pixel in Events Manager, set `NEXT_PUBLIC_META_PIXEL_ID`. Events fired: PageView, ViewContent (hero ≥3 s),
 UploadStarted, UploadCompleted, PreviewShown, PreviewFallback, InitiateCheckout, Purchase (value 599, DKK, once,
@@ -98,10 +107,12 @@ one 60 s, and a request body may be at most 6 MB. The restoration takes 30–45 
 - retention and the 48 h approval reminders run as a **scheduled function** (`netlify/functions/retention.ts`, 03:00 UTC);
 - job state is on the order (`preview_meta.job`) and visible in admin.
 
-**Env vars to set in Netlify** (Site configuration → Environment variables), from `.env.example`: the OpenAI, Supabase,
+**Env vars to set in Netlify** — set `JOB_RUNNER=netlify` explicitly, and the build fails on purpose if `JOB_SECRET` is missing in production; set the **functions region to an EU region** (Site configuration → Functions), otherwise every request hops Ohio → Ireland for the database (Site configuration → Environment variables), from `.env.example`: the OpenAI, Supabase,
 Stripe, Resend and Meta keys, `NEXT_PUBLIC_SITE_URL=https://genfundet.dk` (the job runner calls itself on this URL),
-`JOB_SECRET` (any long random string), `CRON_SECRET`, `ADMIN_PASSWORD`, `LEGAL_DRAFT`. `JOB_RUNNER` may stay empty
+`JOB_SECRET` (any long random string), `CRON_SECRET`, `ADMIN_PASSWORD`, `LEGAL_DRAFT`, `META_CAPI_TOKEN`, `OWNER_EMAIL` (where the "ny betaling / ændring ønsket / godkendt" mails go; defaults to founder.md's e-mail), `EMAIL_REPLY_TO` (kontakt@genfundet.dk once it exists). `JOB_RUNNER` may stay empty
 (Netlify sets `NETLIFY=true`; on any other Node host set `JOB_RUNNER=inline`).
+
+**HEIC:** the bucket accepts image/heic and image/heif (migration 0003, applied). Test one upload from an iPhone camera roll before spending.
 
 **After the first deploy, check three things in the Netlify UI:** the deploy log lists `job-background` and `retention`
 under Functions; the Stripe webhook URL (`/api/webhooks/stripe`) is the Netlify one; one real upload from a phone lands

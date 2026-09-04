@@ -19,6 +19,10 @@ const csp = [
   "frame-ancestors 'none'",
 ].join('; ');
 
+if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production' && !process.env.JOB_SECRET) {
+  throw new Error('JOB_SECRET is not set: the background job runner would reject every restoration. Set it in Netlify → Environment variables.');
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,

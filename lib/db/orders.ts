@@ -98,6 +98,19 @@ export async function updateOrder(id: string, fields: Partial<Order>): Promise<O
   return data as Order;
 }
 
+/**
+ * Atomic status transition: succeeds only while the row is still in one of `from`; returns null when
+ * another caller (webhook vs. /tak, a double-tap) moved it first. The caller that gets the row does the side effects.
+ */
+export async function transition(id: string, from: OrderStatus[], to: OrderStatus, extra: Partial<Order> = {}): Promise<Order | null> {
+  const ts = TRANSITION_TS[to];
+  const fields: Partial<Order> = { status: to, ...extra };
+  if (ts) (fields as Record<string, unknown>)[ts] = new Date().toISOString();
+  const { data, error } = await supabaseAdmin().from('orders').update(fields).eq('id', id).in('status', from).select('*').maybeSingle();
+  if (error) throw new Error(`transition: ${error.message}`);
+  return (data as Order) ?? null;
+}
+
 /** Sets status and stamps the matching transition timestamp. */
 export async function setStatus(id: string, status: OrderStatus, extra: Partial<Order> = {}): Promise<Order> {
   const ts = TRANSITION_TS[status];

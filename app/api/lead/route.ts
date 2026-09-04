@@ -6,6 +6,7 @@ import { customerFormat } from '@/lib/pricing';
 import { sendMail } from '@/lib/email/send';
 import { esc, siteUrl } from '@/lib/email/templates';
 import { getFounder } from '@/lib/founder';
+import { notifyOwner } from '@/lib/email/owner';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
   const nophoto = body.kind === 'nophoto';
   if (!order) order = await createOrder({ status: 'MANUAL_REVIEW', format: customerFormat(), utm, preview_meta: { session_id: sid, note: nophoto ? 'link requested, no photo yet' : 'lead without upload' } });
   await setStatus(order.id, 'MANUAL_REVIEW', { customer_email: email });
+  notifyOwner(nophoto ? `Lead uden billede · ${email}` : `Manuel vurdering – kunden venter · ordre ${order.id.slice(0, 8)}`, [nophoto ? 'Fik et link til siden. Ingen handling nu.' : `${email} har sendt sit billede til manuel vurdering. Svar inden 24 timer.`], order.id).catch(() => {});
   if (nophoto) {
     const f = getFounder();
     const link = siteUrl('/');

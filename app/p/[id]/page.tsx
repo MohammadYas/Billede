@@ -6,6 +6,9 @@ import { ownsOrder, payloadFor } from '@/lib/preview-service';
 import PreviewPanel from '@/components/PreviewPanel';
 import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
+import Consent from '@/components/Consent';
+
+export const metadata = { robots: { index: false, follow: false } };
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +25,9 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
   const paid = !['NEW', 'PREVIEW_READY', 'MANUAL_REVIEW', 'ABANDONED'].includes(order.status);
   return (
     <>
+      {/* the slider needs both images before it can say anything: fetch them with the HTML */}
+      <link rel="preload" as="image" href={payload.original} />
+      <link rel="preload" as="image" href={payload.preview} />
       <main className="wrap">
         <div className="container site-head">
           <Wordmark />
@@ -30,6 +36,7 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
         <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} token={t} />
       </main>
       <Footer />
+      <Consent text={c.cookie.text} accept={c.cookie.accept} decline={c.cookie.decline} />
     </>
   );
 }

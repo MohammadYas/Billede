@@ -1,3 +1,4 @@
+import { RestoreError } from './errors';
 import OpenAI, { toFile } from 'openai';
 import { CONFIG } from '@/lib/config';
 import { COLOURISATION_PROMPT, LIKENESS_PROMPT, RESTORATION_PROMPT } from './prompts';
@@ -76,17 +77,13 @@ export type RestoreResult = {
   meta: RestoreMetadata;
 };
 
-export class RestoreError extends Error {
-  constructor(public code: 'timeout' | 'unsupported_image' | 'too_small' | 'provider_error' | 'unknown', message: string) {
-    super(message);
-  }
-}
+export { RestoreError } from './errors';
 
 let client: OpenAI | null = null;
 function openai(): OpenAI {
   if (!client) {
     if (!process.env.OPENAI_API_KEY) throw new RestoreError('provider_error', 'OPENAI_API_KEY missing');
-    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 120_000, maxRetries: 0 });
+    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 300_000, maxRetries: 0 });
   }
   return client;
 }
