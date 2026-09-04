@@ -323,8 +323,9 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 
 /* where you are: three steps, the current one in ink */
 .pv-steps { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s4); margin: 0; padding: 0; font-family: var(--sans); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hairline-ink, var(--ink-2)); }
-.pv-steps li { color: var(--ink-2); opacity: 0.55; }
-.pv-steps li.done { opacity: 1; }
+/* no faded step: dimming it below AA contrast is not a hierarchy, it is a bug */
+.pv-steps li { color: var(--ink-2); }
+.pv-steps li.done { color: var(--ink-2); }
 .pv-steps li.now { color: var(--ink); opacity: 1; box-shadow: inset 0 -2px 0 var(--ink); }
 
 /* the wall, crossfading between sizes and frames */

@@ -407,3 +407,5 @@ End-to-end after the changes: upload → restoration → preview landed in 77 s 
 The money path is arithmetic in one file: `quote()` draws the bill in the browser and builds the Stripe line items on the server. Hostile input (`format:'hack'`, `frame:'guld'`, `extraPrints:99`) resolves to 30×40, sort, 3 — never to a price the page invented.
 
 Desktop (1440): the photograph is sticky while the choices scroll, and the order button appears again directly under the total. The money sentence names the **total**, not the size price — it counts along with everything else (`work/pass9/paywhen.mjs`: 1.697 kr. → 2.097 kr. when the size changes).
+
+Lighthouse after the pass (dev server, so `performance` and `valid-source-maps` are not representative — the production build is what the earlier 93–97 numbers were measured on): landing page **accessibility 100 · best-practices 100 · SEO 100**; the order page **accessibility 100 · best-practices 100 · CLS 0**. One real finding was fixed on the way: the un-reached step in the step indicator was dimmed to 2.44:1 contrast — dimming below AA is not a hierarchy, so the steps now separate by ink and an underline instead of by opacity.
