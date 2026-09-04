@@ -195,3 +195,14 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   damaged family photo, was refused: an invented before is a fake result, whatever the after looks like.
   The restoration itself has not run — the OpenAI account is out of credit (HANDOFF item A0) — so the
   originals, the sidecars and a one-command rebuild are committed and `examples.json` is untouched.
+- **The example set was a museum; it is now a drawer.** Seven of the seventeen examples were objects no
+  customer owns: a glass negative with "088" inked on it, two press negatives with the subject's name
+  written across the sky, an 1850 daguerreotype, and four tintypes in gilt oval mats. Two more carried the
+  lending museum's accession number (`MINØ.27719`, `MINØ.25058`) printed into the frame. A visitor holding a
+  creased 10×15 from an album learns nothing from a catalogue entry — worse, she reads the whole page as
+  "restoration of antiques", which is not what she came for. The seven are retired (`consent: no` plus a
+  `retired:` line saying why, so the decision survives the next export), the two accession numbers are
+  cropped off, and the hero is now Gunhild and her son: a snapshot, on a porch, in 1935.
+- **A found photograph has no date, and we do not invent one.** The vernacular prints carry
+  `årstal ukendt` where the archive photographs carry a year; the caption parser accepts it rather than
+  forcing a plausible-looking decade into the line.

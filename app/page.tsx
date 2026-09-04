@@ -24,9 +24,13 @@ const src = (e: Example, side: 'before' | 'after', sizes: string): Source => ({
   sizes,
 });
 
-/** "Soldat og ung kvinde, ca. 1916. Arkivfoto, …" → subject in ink, date in ink-2, credit to title. */
+/**
+ * "Soldat og ung kvinde, ca. 1916. Arkivfoto, …" → subject in ink, date in ink-2, credit to title.
+ * A found snapshot usually has no date at all; "årstal ukendt" is the honest half of that pair, and
+ * inventing a decade to make the caption look tidier would be inventing provenance.
+ */
 function Caption({ text, credit = false }: { text: string; credit?: boolean }) {
-  const m = text.match(/^(.+?),\s*(ca\.\s*\d{4}|\d{4})\.\s*(.*)$/);
+  const m = text.match(/^(.+?),\s*(ca\.\s*\d{4}|\d{4}|årstal ukendt)\.\s*(.*)$/);
   if (!m) return <span className="caption">{text}</span>;
   // the hero says "arkivfoto" out loud so nobody reads Gunhild as a customer; the grid keeps the credit in the title
   return <span className="caption" title={m[3] || undefined}><b>{m[1]}</b>, {m[2]}{credit && m[3] ? ' · arkivfoto' : '.'}</span>;

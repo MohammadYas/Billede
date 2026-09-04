@@ -1,53 +1,7 @@
 [
   {
-    "id": "soldier-girl",
-    "detail": {
-      "before": "/examples/soldier-girl-detail-before.jpg",
-      "after": "/examples/soldier-girl-detail-after.jpg",
-      "label": "Hendes ansigt"
-    },
-    "mockup": "/examples/soldier-girl-mockup.jpg",
-    "before": "/examples/soldier-girl-before.jpg",
-    "after": "/examples/soldier-girl-after.jpg",
-    "width": 1030,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Soldat og ung kvinde, ca. 1916. Arkivfoto, Wikimedia Commons.",
-    "consent": true,
-    "placeholder": true,
-    "mode": "wipe"
-  },
-  {
-    "id": "olesen",
-    "mode": "lens",
-    "detail": {
-      "before": "/examples/olesen-detail-before.jpg",
-      "after": "/examples/olesen-detail-after.jpg",
-      "label": "Øjne og fregner"
-    },
-    "mockup": "/examples/olesen-mockup.jpg",
-    "before": "/examples/olesen-before.jpg",
-    "after": "/examples/olesen-after.jpg",
-    "width": 1015,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Andreas Martinus Olesen, glasplade, ca. 1870. Arkivfoto, Wikimedia Commons.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
     "id": "gunhild-barn",
-    "mode": "wipe",
+    "mode": "fade",
     "detail": {
       "before": "/examples/gunhild-barn-detail-before.jpg",
       "after": "/examples/gunhild-barn-detail-after.jpg",
@@ -69,8 +23,31 @@
     "placeholder": true
   },
   {
+    "id": "familie-trappe",
+    "mode": "lens",
+    "detail": {
+      "before": "/examples/familie-trappe-detail-before.jpg",
+      "after": "/examples/familie-trappe-detail-after.jpg",
+      "label": "Familien"
+    },
+    "mockup": "/examples/familie-trappe-mockup.jpg",
+    "before": "/examples/familie-trappe-before.jpg",
+    "after": "/examples/familie-trappe-after.jpg",
+    "width": 1052,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
     "id": "pauline-ingeborg",
-    "mode": "fade",
+    "mode": "wipe",
     "detail": {
       "before": "/examples/pauline-ingeborg-detail-before.jpg",
       "after": "/examples/pauline-ingeborg-detail-after.jpg",
@@ -88,29 +65,6 @@
       1400
     ],
     "caption": "Pauline og Ingeborg, ca. 1915. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "mor-barn-a",
-    "mode": "wipe",
-    "detail": {
-      "before": "/examples/mor-barn-a-detail-before.jpg",
-      "after": "/examples/mor-barn-a-detail-after.jpg",
-      "label": "Mor og barn"
-    },
-    "mockup": "/examples/mor-barn-a-mockup.jpg",
-    "before": "/examples/mor-barn-a-before.jpg",
-    "after": "/examples/mor-barn-a-after.jpg",
-    "width": 961,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen.",
     "consent": true,
     "placeholder": true
   },
@@ -134,6 +88,29 @@
       1400
     ],
     "caption": "Lars og Marit, ca. 1900. Arkivfoto, Domkirkeodden.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
+    "id": "soldier-girl",
+    "mode": "lens",
+    "detail": {
+      "before": "/examples/soldier-girl-detail-before.jpg",
+      "after": "/examples/soldier-girl-detail-after.jpg",
+      "label": "Hendes ansigt"
+    },
+    "mockup": "/examples/soldier-girl-mockup.jpg",
+    "before": "/examples/soldier-girl-before.jpg",
+    "after": "/examples/soldier-girl-after.jpg",
+    "width": 1030,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Soldat og ung kvinde, ca. 1916. Arkivfoto, Wikimedia Commons.",
     "consent": true,
     "placeholder": true
   },
@@ -162,17 +139,17 @@
     "placeholder": true
   },
   {
-    "id": "familie-trappe",
-    "mode": "lens",
+    "id": "cooper",
+    "mode": "hold",
     "detail": {
-      "before": "/examples/familie-trappe-detail-before.jpg",
-      "after": "/examples/familie-trappe-detail-after.jpg",
-      "label": "Familien"
+      "before": "/examples/cooper-detail-before.jpg",
+      "after": "/examples/cooper-detail-after.jpg",
+      "label": "Ansigt og krave"
     },
-    "mockup": "/examples/familie-trappe-mockup.jpg",
-    "before": "/examples/familie-trappe-before.jpg",
-    "after": "/examples/familie-trappe-after.jpg",
-    "width": 1052,
+    "mockup": "/examples/cooper-mockup.jpg",
+    "before": "/examples/cooper-before.jpg",
+    "after": "/examples/cooper-after.jpg",
+    "width": 1010,
     "height": 1400,
     "widths": [
       480,
@@ -180,30 +157,7 @@
       1000,
       1400
     ],
-    "caption": "Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "strunk",
-    "mode": "wipe",
-    "detail": {
-      "before": "/examples/strunk-detail-before.jpg",
-      "after": "/examples/strunk-detail-after.jpg",
-      "label": "Ansigt"
-    },
-    "mockup": "/examples/strunk-mockup.jpg",
-    "before": "/examples/strunk-before.jpg",
-    "after": "/examples/strunk-after.jpg",
-    "width": 1400,
-    "height": 1002,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Amos Strunk, 1913. Arkivfoto, Library of Congress.",
+    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
     "consent": true,
     "placeholder": true
   },
@@ -231,6 +185,29 @@
     "placeholder": true
   },
   {
+    "id": "mor-barn-a",
+    "mode": "wipe",
+    "detail": {
+      "before": "/examples/mor-barn-a-detail-before.jpg",
+      "after": "/examples/mor-barn-a-detail-after.jpg",
+      "label": "Mor og barn"
+    },
+    "mockup": "/examples/mor-barn-a-mockup.jpg",
+    "before": "/examples/mor-barn-a-before.jpg",
+    "after": "/examples/mor-barn-a-after.jpg",
+    "width": 1028,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen.",
+    "consent": true,
+    "placeholder": true
+  },
+  {
     "id": "bryllup-1916",
     "mode": "fade",
     "detail": {
@@ -242,7 +219,7 @@
     "before": "/examples/bryllup-1916-before.jpg",
     "after": "/examples/bryllup-1916-after.jpg",
     "width": 1400,
-    "height": 957,
+    "height": 866,
     "widths": [
       480,
       800,
@@ -250,145 +227,6 @@
       1400
     ],
     "caption": "Bryllup, 1916. Arkivfoto, Museene i Nord-Østerdalen.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "cooper",
-    "mode": "hold",
-    "detail": {
-      "before": "/examples/cooper-detail-before.jpg",
-      "after": "/examples/cooper-detail-after.jpg",
-      "label": "Ansigt og krave"
-    },
-    "mockup": "/examples/cooper-mockup.jpg",
-    "before": "/examples/cooper-before.jpg",
-    "after": "/examples/cooper-after.jpg",
-    "width": 1010,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "11090",
-    "mode": "wipe",
-    "colour": "/examples/11090-colour.jpg",
-    "detail": {
-      "before": "/examples/11090-detail-before.jpg",
-      "after": "/examples/11090-detail-after.jpg",
-      "label": "Hat og ansigt"
-    },
-    "mockup": "/examples/11090-mockup.jpg",
-    "before": "/examples/11090-before.jpg",
-    "after": "/examples/11090-after.jpg",
-    "width": 974,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Kvinde med hat, ferrotypi, ca. 1880. Arkivfoto, Library of Congress.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "11040",
-    "mode": "hold",
-    "detail": {
-      "before": "/examples/11040-detail-before.jpg",
-      "after": "/examples/11040-detail-after.jpg",
-      "label": "Moderens ansigt"
-    },
-    "mockup": "/examples/11040-mockup.jpg",
-    "before": "/examples/11040-before.jpg",
-    "after": "/examples/11040-after.jpg",
-    "width": 883,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Kvinde med to børn, ferrotypi, ca. 1870. Arkivfoto, Library of Congress.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "mcrae",
-    "mode": "fade",
-    "detail": {
-      "before": "/examples/mcrae-detail-before.jpg",
-      "after": "/examples/mcrae-detail-after.jpg",
-      "label": "Knapper og epauletter"
-    },
-    "mockup": "/examples/mcrae-mockup.jpg",
-    "before": "/examples/mcrae-before.jpg",
-    "after": "/examples/mcrae-after.jpg",
-    "width": 1012,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Dandridge McRae, ca. 1850. Arkivfoto, Wikimedia Commons.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "11006",
-    "mode": "lens",
-    "detail": {
-      "before": "/examples/11006-detail-before.jpg",
-      "after": "/examples/11006-detail-after.jpg",
-      "label": "Drengens ansigt"
-    },
-    "mockup": "/examples/11006-mockup.jpg",
-    "before": "/examples/11006-before.jpg",
-    "after": "/examples/11006-after.jpg",
-    "width": 893,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Dreng ved en stol, ferrotypi, ca. 1870. Arkivfoto, Library of Congress.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "11014",
-    "mode": "fade",
-    "detail": {
-      "before": "/examples/11014-detail-before.jpg",
-      "after": "/examples/11014-detail-after.jpg",
-      "label": "Tre ansigter"
-    },
-    "mockup": "/examples/11014-mockup.jpg",
-    "before": "/examples/11014-before.jpg",
-    "after": "/examples/11014-after.jpg",
-    "width": 895,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Tre i familien, ferrotypi, ca. 1870. Arkivfoto, Library of Congress.",
     "consent": true,
     "placeholder": true
   }

@@ -1,11 +1,13 @@
 # assets/examples-source
 
-Public-domain originals for the **colour** half of the example set on the front page.
+Every original behind `public/examples/`, and the sidecar that decides whether it is shown.
 
 Every photograph in the current set (`public/examples/examples.json`) is a black-and-white archive
 photograph from 1850–1935. That is the wrong evidence for the buyer we are advertising to: what she
 has in the drawer is a colour snapshot from the second half of the century, dark, yellowed and
 colour-shifted — and the site currently shows her nothing that looks like it.
+
+### The colour half
 
 These seven are the closest freely usable thing that exists: **colour transparencies shot for the
 U.S. Farm Security Administration between 1940 and 1942** — ordinary families, at home, on a bad
@@ -37,3 +39,33 @@ Captions must stay in the form `Motiv, ÅÅÅÅ. Arkivfoto, kilde.` — `app/pag
 front page prints "· arkivfoto" next to the hero so no visitor mistakes these for customer work.
 The day real customer photographs replace them, drop `--placeholder` and delete the honesty note in
 `lib/copy.ts` (`eksempler.placeholderNote`).
+
+### The vernacular half
+
+Seven found family snapshots from the simpleinsomnia collection (Flickr, CC BY 2.0), via Wikimedia
+Commons. Torn across the middle and taped back together, bleached almost blank, foxed, water-stained,
+a corner gone. No accession number, no plate edge, no gilt mat — someone's photograph, kept badly.
+They have no date and none is invented: the caption says `årstal ukendt`, and `app/page.tsx` accepts it.
+
+### What is retired, and why
+
+`consent: no` plus a `retired:` line keeps a pair out of `examples.json` and records the reason, so the
+next export does not quietly bring it back. Ten are retired today: four tintypes in gilt mats, an 1850
+daguerreotype, a glass negative, two press negatives, and the two colour originals whose faces are too
+small to carry a likeness comparison. They were removed for looking like museum objects, not for being
+badly restored — the restorations are fine; they are simply not what a customer has in a drawer.
+
+### Sidecar fields
+
+```
+context:      the caption, exactly "Motiv, ÅÅÅÅ. Kilde." or "Motiv, årstal ukendt. Kilde."
+source:       the file this came from
+rights:       the licence, in the words of the licensor
+consent:      yes | no  — only yes is exported
+retired:      why a no is a no
+order:        position on the page; lowest is the hero
+mode:         wipe | lens | hold | fade — how the before/after is revealed
+detail:       x,y (0-1) of the point the "Tæt på" crop centres on
+detailLabel:  what the visitor is being asked to look at
+colour:       yes to also export the colourised version
+```

@@ -16,7 +16,15 @@ import sharp from 'sharp';
 const OUT = (process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : 'assets/examples-source');
 const UA = 'GenfundetBuild/0.1 (https://genfundet.dk)';
 
-/** name → Commons file title. The sidecar next to each output file carries the caption and the licence. */
+/**
+ * name → Commons file title. The sidecar next to each output file carries the caption and the licence.
+ *
+ * Two groups, for two things the old example set could not show:
+ *   fsa-*      1940-42 colour transparencies (U.S. federal, public domain) — a faded colour photograph.
+ *   vernacular found family snapshots from the simpleinsomnia collection (CC BY 2.0) — a damaged print,
+ *              with the tears, the foxing, the missing corner and the sticky-album stain a customer has.
+ *              Not a museum scan: no accession number, no plate edge, no gilt mat.
+ */
 const FILES = {
   'whinery-familie': 'Jack Whinery and his family, homesteaders, Pie Town, New Mexico LCCN2017877757.tif',
   'whinery-tre': 'Jack Whinery, homesteader, with his wife and the youngest of his five children, Pie Town, New Mexico LCCN2017877758.tif',
@@ -25,7 +33,18 @@ const FILES = {
   'pige-dukke': 'Girl with doll standing by fence LCCN2017877931.tif',
   'modelfly': 'Boy building a model airplane (as girl watches), FSA camp, Robstown, Texas, LCCN2017877653.jpg',
   'pige-lade': 'Girl next to barn with chicken LCCN2017877932.tif',
+  // vernacular prints — Flickr/simpleinsomnia, CC BY 2.0
+  'skolefoto-pige': 'School photo of a smiling girl (10508141153).jpg',
+  'to-drenge-hund': 'Damaged polaroid of two boys dressing up a dog (13428706935).jpg',
+  'fotoautomat-pige': 'Grungy photo booth image of a little girl (16238851683).jpg',
+  'barnevogn': 'Baby in a stroller with a creepy house in the background (10694225606).jpg',
+  'barn-bil': 'Child sits on the edge of a car (12478058314).jpg',
+  'kvinde-barn-hat': 'Eyeless woman and child wearing a hat (10888209904).jpg',
+  'mand-hat': 'Well-dressed, confused man (10878038805).jpg',
 };
+
+/** The vernacular prints are photographed as they are — paper edge and all — so nothing is trimmed. */
+const NO_TRIM = new Set(['skolefoto-pige', 'to-drenge-hund', 'fotoautomat-pige', 'barnevogn', 'barn-bil', 'kvinde-barn-hat', 'mand-hat']);
 
 async function originalUrl(title) {
   const u = new URL('https://commons.wikimedia.org/w/api.php');
@@ -76,7 +95,7 @@ for (const [name, title] of Object.entries(FILES)) {
   const res = await fetch(url, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(300_000) });
   if (!res.ok) { console.error('download failed', name, res.status); continue; }
   const buf = Buffer.from(await res.arrayBuffer());
-  const box = await trimMount(buf, FLOOR[name] ?? 0.35);
+  const box = NO_TRIM.has(name) ? null : await trimMount(buf, FLOOR[name] ?? 0.35);
   const img = sharp(buf, { limitInputPixels: false }).rotate();
   const out = path.join(OUT, `${name}.jpg`);
   const info = await (box ? img.extract(box) : img).resize(3000, 3000, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 93 }).toFile(out);
