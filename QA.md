@@ -409,3 +409,50 @@ The money path is arithmetic in one file: `quote()` draws the bill in the browse
 Desktop (1440): the photograph is sticky while the choices scroll, and the order button appears again directly under the total. The money sentence names the **total**, not the size price — it counts along with everything else (`work/pass9/paywhen.mjs`: 1.697 kr. → 2.097 kr. when the size changes).
 
 Lighthouse after the pass (dev server, so `performance` and `valid-source-maps` are not representative — the production build is what the earlier 93–97 numbers were measured on): landing page **accessibility 100 · best-practices 100 · SEO 100**; the order page **accessibility 100 · best-practices 100 · CLS 0**. One real finding was fixed on the way: the un-reached step in the step indicator was dimmed to 2.44:1 contrast — dimming below AA is not a hierarchy, so the steps now separate by ink and an underline instead of by opacity.
+
+## Pass 10 — brutal full-funnel conversion audit (cold Meta traffic)
+
+Three parallel audits against the running funnel on an iPhone 14 profile: design/CRO, mechanical evidence
+(detector, tap targets, contrast, overflow, CLS, Lighthouse, analytics inventory), and price/promise
+consistency across every surface. Full report: `work/audit/`, published as an artifact.
+
+**The two findings that decide go/no-go, both measured, neither a design problem:**
+1. **The money path has never executed once.** Supabase on 4 September: 5 orders, none with a
+   `payment_session_id`; events ever logged: PageView 352 · ViewContent 137 · UploadStarted 13 ·
+   UploadCompleted 2 · PreviewShown 2 · **InitiateCheckout 0 · Purchase 0**. `.env.local` has no Stripe,
+   Resend, pixel or CAPI keys. Checkout answers 503 today.
+2. **The trader cannot be verified.** `founder.md` still has TODO for city/CVR/address and no portrait, so
+   the terms page renders a partial identity, the founder section hides itself, and the only contact is a
+   personal Gmail address printed directly above the buy button.
+
+**Fixed in this pass (all verified in the browser):**
+
+| Finding | Evidence | Fix |
+|---|---|---|
+| Both legal pages published the words "Udkast – gennemgås af advokat" | `LegalPage.tsx:5` defaulted to draft | the banner is opt-in (`LEGAL_DRAFT === 'true'`) |
+| A missing CVR or address disappeared silently because name + e-mail were present | terms rendered `Mohammad Yassin, <e-mail>` as if complete | each missing field names itself |
+| The terms described one size at one price | `handelsbetingelser:18` | the three sizes, both frames, extra-copy prices and the repeat discount, from `PRICING` |
+| "under et minut" in five places, measured 75-120 s | `copy.ts` ×4, `layout.tsx` ×2 | "omkring halvandet minut"; the apology moved 75 s → 110 s |
+| The browser uploaded the camera's original file | `UploadFlow` downscaled only above 4.5 MB, and only on the fallback transport | ≤3200 px on both transports — **2.83 MB → 1.10 MB measured** |
+| Six wall mockups rendered before the page could open | measured 2.453 s vs 346 ms for one | only the order's own combination first; the other five after |
+| A stale Checkout tab could charge an amount the bill never showed | session lives 1 h, `choose` mutated the order | changing the configuration expires the session; `markPaid` compares the charge with the order's own quote |
+| A second payment made while the webhook was down was referenced nowhere | reconcile only asked about the newest session, only on unpaid rows | every session id is kept and re-checked; the customer now gets the refund mail too |
+| Stripe required a phone number | `stripe.ts:58` | off — nothing in fulfilment needs it |
+| Opening the upload sheet fired no event | no `track()` on the open path | `FlowOpened`; `AddToCart` now also fires on size choice with the real value; one PageView per route on every route; the duplicate `UploadStarted` row is gone |
+| The approval page told every customer "vi printer i 30×40 cm" | `c.formatLabel`, not the order | `orderDescription(order)` |
+| Desktop hero pushed its own h1 and CTA below the fold (CTA showed 17.5 px of 52) | 1440×900 | hero image 80vh → 58vh; CTA now ends at 796 px |
+| Før/Efter and the colour toggle sat behind the fixed order bar at rest | product page, 390×664 | picture height bound to the viewport minus the bar |
+| Horizontal scrollbar at 320 px | `.trust span { white-space: nowrap }` | wraps below 768 px |
+| The extra-copy offer sat between the customer and the total | +349 kr. crossed the eye before "I alt" | the bill comes first |
+| "gavekort" (= gift voucher in Danish) | `copy.ts:111,239` | "kort med din hilsen" |
+| Retention counted 30 days from the last write, not from upload | `retention.ts:34` | `created_at` for unpaid rows |
+| The repeat discount was promised on a `.` in the query string | `UploadFlow` | `/api/repeat` validates it first |
+| No way to delete your own photograph | promise existed only as a sentence | "Slet mit billede nu" on the preview page |
+
+**Hypothesis killed with data:** dropping to one model candidate would not shorten the wait
+(`candidates=1` 44.3 s vs `candidates=2` 42.9 s — the API generates them in parallel, and the second one
+buys the SSIM pick). The ~45-65 s restoration is a floor; only the upload leg and the mockups were free.
+
+**After the fixes, measured end to end with a real 2.83 MB phone photograph: 79.8 s** (upload 8.6 s on
+localhost, restoration 64.5 s, preparation 4.6 s — down from 9-11 s), the wait-state e-mail capture
+delivers, no console errors, landing page accessibility 100 / SEO 100, CLS 0.
