@@ -74,6 +74,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const [colourLoading, setColourLoading] = useState(Boolean(initial.isMonochrome && !initial.colour));
   const [zoom, setZoom] = useState(false);
   const [ordering, setOrdering] = useState(false);
+  const [specOpen, setSpecOpen] = useState(false); // phone: the spec is one line until asked
   const [error, setError] = useState<string | null>(null);
 
   // The configuration. `quote()` is the same pure function the server runs before Stripe sees anything,
@@ -336,9 +337,13 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <p className="caption measure">{c.produkt.lead}</p>
-          <dl className="label small">
-            {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
-          </dl>
+          {/* a phone gets the spec as one line and a link; a desktop has the room for the rows */}
+          <div className={`spec${specOpen ? ' open' : ''}`}>
+            <p className="spec-line small">{label} · {c.preview.specTail} <button type="button" className="link-btn spec-toggle" aria-expanded={specOpen} aria-controls="spec-rows" onClick={() => setSpecOpen((o) => !o)}>{specOpen ? c.preview.specLess : c.preview.specMore}</button></p>
+            <dl id="spec-rows" className="label small spec-rows">
+              {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
+            </dl>
+          </div>
           {config}
           {/* desktop: the button again, right under the total it belongs to */}
           <div className="pv-desktop-cta">{cta}</div>

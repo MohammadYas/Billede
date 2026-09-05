@@ -371,4 +371,16 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   event_id — the same id the pixel's copy carries, so Meta counts one. Admin opens with the one number
   the test is decided on: distinct previews shown → distinct checkouts started, last 30 days, from our
   own event log.
+- **One address, one source.** `founder.md` is the only place the contact address lives, so hej@genfundet.dk
+  now prints on the price block, both footers, the 404, /tak, the approval pages and in every mail —
+  and the Resend sender defaults to the same local part. The mailbox has to exist and be read daily; the
+  site promises an answer within 24 hours.
+- **Where the picture is, said plainly.** Storage is in the EU (Supabase, Ireland); the restoration runs
+  at OpenAI, which is not EU-resident. *Det ligger i EU* overstated that, so the sheet and the FAQ now say
+  *gemmes i EU og behandles af vores AI-leverandør*, and the privacy page carries the detail.
+- **No borrowed experience.** *Det, vi ser mest af* implied a track record nobody has yet; the FAQ says
+  what is true instead — *det, restaureringen er bedst til*.
+- **The spec is one line on a phone.** Seven rows between the wall mockup and the size choice pushed the
+  first decision 2.4 screens down at 390 px; a line and *Se alt, der er med* bring it to 1.8. A desktop
+  keeps the rows.
 

@@ -9,7 +9,7 @@ name: Mohammad Yassin
 firstName: Mohammad
 city: TODO
 cvr: TODO
-email: mohammadyassin2626@gmail.com
+email: hej@genfundet.dk
 address: TODO (gade, postnr og by — kræves i handelsbetingelser og footer)
 portrait: portrait.jpg (TODO — læg et rigtigt portræt i denne mappe)
 

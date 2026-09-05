@@ -53,7 +53,7 @@ export function daysToCutoff(now: Date = new Date()): number {
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 864e5);
 }
 
-/** "inden jul" or "inden 5 hverdage", depending on season. */
+/** "inden jul" or "inden N hverdage" (N = deliveryDaysMax), depending on season. */
 export function deliveryPromise(season: Season = currentSeason()): string {
   return season === 'jul' ? 'inden jul' : `inden ${CONFIG.deliveryDaysMax} hverdage`;
 }

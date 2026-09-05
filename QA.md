@@ -644,3 +644,17 @@ PreviewShown via CAPI, admin-ratio. Kørt mod en produktionsbygning på 3111.
 | CAPI PreviewShown | kode: sendes fra restaureringsjobbet med ordre-id som event_id; kan ikke køres uden OpenAI-credits og META_CAPI_TOKEN |
 | Admin-ratio | kræver ADMIN_PASSWORD for at vise; beregnes af events-tabellen (PreviewShown → InitiateCheckout, 30 dage) |
 
+## Tillid og sandhed før lancering, 5. september 2026
+
+| Punkt | Resultat |
+|---|---|
+| Gmail-adresse → hej@genfundet.dk | én kilde (`founder.md`); `git grep` over alle sporede filer: 0 forekomster. Afsender: `Mohammad Yassin · Genfundet <hej@genfundet.dk>` |
+| `deliveryDaysMax` fra config | eneste hårdkodede "5 hverdage" var jule-eyebrowens fallback; nu `${X}`. "5–10 hverdage" i refusionsmailen er bankens tid, ikke levering |
+| Upload-arkets privatlivstekst | "Det ligger i EU" fjernet; nu "gemmes i EU og behandles af vores AI-leverandør" med link til Privatliv. FAQ-svaret om billedet ligeså |
+| FAQ "meget ødelagt" og "farvebilleder" | "det, vi ser mest af" → "det, restaureringen er bedst til" |
+| "Det får du" på bestillingssiden, mobil | én linje + "Se alt, der er med"; størrelsesvalget fra 2,4 til 1,8 skærm nede ved 390; desktop viser rækkerne |
+| Åbner i toppen, ingen autofocus | scrollY 0, aktivt element body; eneste `.focus()` er arket (fixed) |
+| `npm test` · `test:order` · `test:viewport` | 8/8 · 9/9 · 12/12 |
+
+Ikke bekræftet: at 5 hverdage matcher printpartnerens reelle leveringstid – det er ejerens tal (`DELIVERY_DAYS_MAX`).
+

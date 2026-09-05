@@ -92,7 +92,7 @@ export function copy(season: Season = currentSeason()) {
     variants: { portrait: sizes.map((fmt) => variant(fmt, false)), landscape: sizes.map((fmt) => variant(fmt, true)) },
     sizes: sizes.map((fmt) => [formatLabel(fmt), formatDkk(PRICING[fmt].priceDkk)] as [string, string]),
     hero: {
-      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Gaven, de ikke selv kan købe.',
+      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : `Julen er nået – vi leverer inden ${X} hverdage`) : 'Gaven, de ikke selv kan købe.',
       h1: 'Det gamle billede af mor og far. Skarpt igen, i ramme, klar til at give.',
       sub: 'Tag et foto af det med telefonen, og se det restaureret – før du beslutter noget.',
       cta,
@@ -166,7 +166,7 @@ export function copy(season: Season = currentSeason()) {
         },
         {
           q: 'Mit billede er meget ødelagt eller sløret – kan I stadig gøre noget?',
-          a: 'Prisen er den samme, uanset hvor beskadiget billedet er. Revner, folder, gulstik, vandskjolder og manglende hjørner er det, vi ser mest af. Sløret er sværere end ridset – skarphed, der aldrig var i billedet, kan vi ikke opfinde – men også det koster ikke noget at prøve. Tag et foto af det og se selv.',
+          a: 'Prisen er den samme, uanset hvor beskadiget billedet er. Revner, folder, gulstik og vandskjolder er det, restaureringen er bedst til. Sløret er sværere end ridset – skarphed, der aldrig var i billedet, kan vi ikke opfinde – men også det koster ikke noget at prøve. Tag et foto af det og se selv.',
         },
         {
           q: 'Ser det kunstigt ud?',
@@ -181,7 +181,7 @@ export function copy(season: Season = currentSeason()) {
           : { q: 'Hvornår får jeg det?', a: `Vi leverer inden ${X} hverdage, efter du har godkendt det færdige billede.` },
         {
           q: 'Hvad sker der med mit billede?',
-          a: `Det bruges kun til din bestilling og deles aldrig. Bestiller du ikke, slettes det automatisk efter ${CONFIG.retentionUnpaidDays} dage; bestiller du, ${CONFIG.retentionCompletedDays} dage efter leveringen. Eller straks, hvis du beder om det.`,
+          a: `Det bruges kun til din bestilling: gemt i EU, behandlet af vores AI-leverandør og – hvis du bestiller – sendt til printpartneren. Aldrig brugt til andet. Bestiller du ikke, slettes det automatisk efter ${CONFIG.retentionUnpaidDays} dage; bestiller du, ${CONFIG.retentionCompletedDays} dage efter leveringen. Eller straks, hvis du beder om det.`,
         },
         {
           q: 'Skal jeg sende det originale billede til jer?',
@@ -194,7 +194,7 @@ export function copy(season: Season = currentSeason()) {
         },
         {
           q: 'Virker det også på farvebilleder fra 70’erne og 80’erne?',
-          a: 'Ja. Falmede farver, gulstik, folder og ridser er det, vi ser mest af. Tag et foto af det, og se selv – det koster ikke noget at kigge.',
+          a: 'Ja. Falmede farver, gulstik, folder og ridser er det, restaureringen er bedst til. Tag et foto af det, og se selv – det koster ikke noget at kigge.',
         },
         {
           q: 'Hvilke størrelser kan jeg få?',
@@ -236,7 +236,7 @@ export function copy(season: Season = currentSeason()) {
       tips: 'Læg billedet fladt i dagslys, uden blitz. Fyld skærmen med det.',
       check: 'Er det skarpt og uden genskin? Ellers vælg et andet.',
       free: 'Det koster ikke noget at se. Du betaler først, hvis du bestiller – og først efter du har set resultatet.',
-      note: `Billedet bruges kun til din bestilling. Det ligger i EU, sendes kun til dem, der laver restaureringen og printet, og slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller – eller med det samme, hvis du beder om det.`,
+      note: `Billedet bruges kun til din bestilling. Det gemmes i EU og behandles af vores AI-leverandør, og det slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller – eller med det samme, hvis du beder om det.`,
       privacy: 'Læs mere under Privatliv',
       cta: 'Vis mig resultatet',
       remove: 'Fjern',
@@ -280,6 +280,10 @@ export function copy(season: Season = currentSeason()) {
     preview: {
       h2: 'Her er dit billede.',
       hang: 'Og sådan hænger det hos dig.',
+      specTail: 'ramme med passepartout og glas · digital fil · fri fragt',
+      specMore: 'Se alt, der er med',
+      specLess: 'Vis mindre',
+
       next: `Det her er AI'ens første forslag. Bestiller du, gennemgår ${navn} billedet – især ansigterne – og du godkender det færdige billede på mail, før vi printer.`,
       headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',

@@ -5,7 +5,8 @@ let resend: Resend | null = null;
 
 export function fromAddress(): string {
   const domain = process.env.EMAIL_DOMAIN ?? 'genfundet.dk';
-  const local = (process.env.EMAIL_FROM_LOCAL ?? getFounder().firstName).toLowerCase().replace(/[^a-z0-9.-]/g, '') || 'hej';
+  // the sender is the same address the site prints (hej@genfundet.dk), unless EMAIL_FROM_LOCAL says otherwise
+  const local = (process.env.EMAIL_FROM_LOCAL ?? getFounder().email.split('@')[0] ?? '').toLowerCase().replace(/[^a-z0-9.-]/g, '') || 'hej';
   const name = getFounder().name || 'Genfundet';
   return `${name} · Genfundet <${local}@${domain}>`;
 }

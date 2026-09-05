@@ -286,6 +286,12 @@ plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are com
 - **The wait.** The bar creeps to 85 % while the model runs (~30–45 s); after 45 s the caption says it is taking longer
   today. If OpenAI is slow for a whole day, that line is what people see — no action needed, but expect calls.
 - **Founder's first name** is used in copy only once the portrait and the three "why" lines exist (see §2).
+- **hej@genfundet.dk must exist before the first ad.** It is now the only address on the site and in every
+  mail (`founder.md`), the Resend sender and the default reply-to and owner-notification address. Create
+  the mailbox (or a forward to one you read daily), verify the domain in Resend, and set `OWNER_EMAIL`
+  if notifications should go elsewhere.
+- **`DELIVERY_DAYS_MAX=5` is your promise to keep.** It is the only place the number lives; check it
+  against the print partner's actual lead time plus shipping before the ads run.
 - **The price anchor under 599 kr. is your claim, not ours.** *"Til sammenligning: hos en fotograf koster
   restaureringen alene typisk 300–600 kr. – uden ramme og levering."* is a comparative price statement
   under markedsføringsloven: keep two or three photographers' price lists (screenshots with dates) so you

@@ -336,6 +336,13 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 .stepper span { font-size: var(--fs-small); }
 .stepper b { font-weight: 600; }
 
+/* the spec: one line on a phone, the rows on request; a desktop shows the rows and no toggle */
+.spec-line { color: var(--ink-2); }
+.spec-line .spec-toggle { font-size: var(--fs-small); margin-left: var(--s2); }
+/* .label sets display: grid later in this file; the extra class on the selector keeps the phone rule ahead of it */
+.spec .spec-rows { display: none; }
+.spec.open .spec-rows { display: grid; margin-top: var(--s3); }
+@media (min-width: 1024px) { .spec-line { display: none; } .spec .spec-rows { display: grid; } }
 /* the bill: the picture first, then the lines */
 .bill-head { display: grid; grid-template-columns: 96px 1fr; gap: var(--s4); align-items: center; padding-bottom: var(--s3); border-bottom: 1px solid var(--hairline); }
 .bill-head img { width: 96px; height: auto; display: block; }
