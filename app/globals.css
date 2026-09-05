@@ -114,6 +114,8 @@ p + p { margin-top: var(--s4); }
 .hero-grid { display: grid; gap: var(--s2); }
 .hero-media .ba { aspect-ratio: 4 / 3; }
 .hero-media .ba img { object-position: 50% 16%; } /* portrait originals: keep the faces in a 4:3 crop */
+/* the product on the wall, full bleed on a phone; 5:4 is the mockup's own proportion, so nothing is cropped */
+.hero-img { display: block; width: 100%; aspect-ratio: 5 / 4; object-fit: cover; background: var(--paper-2); }
 .hero-caption { padding: var(--s2) var(--gutter) 0; }
 .hero-credit { position: absolute; left: 50%; bottom: var(--s3); transform: translateX(-50%); z-index: 2; font-size: 12px; padding: 4px 9px; background: rgba(246,241,232,0.86); color: var(--ink-2); border-radius: 2px; white-space: nowrap; pointer-events: none; }
 .hero-credit .caption { font-size: 12px; color: var(--ink-2); }
@@ -123,11 +125,11 @@ p + p { margin-top: var(--s4); }
 .hero-media { position: relative; }
 @media (min-width: 1024px) {
   .hero-grid { grid-template-columns: minmax(0, min(calc(var(--container) - 240px), calc(58vh * 4 / 3))) 1fr; gap: var(--s5); align-items: end; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
-  .hero-media .ba { max-height: 80vh; }
+  .hero-media .ba, .hero-img { max-height: 80vh; }
   .hero-caption { padding: 0 0 var(--s2); max-width: 16em; }
   .hero-side { display: grid; gap: var(--s4); align-content: end; }
-  .hero-mock { display: grid; gap: var(--s2); max-width: 260px; }
-  .hero-mock img { width: 100%; height: auto; }
+  .hero-mock { display: grid; gap: var(--s2); max-width: 200px; }
+  .hero-mock img { width: 100%; height: auto; outline: 1px solid var(--hairline); outline-offset: -1px; }
   .hero-mock .caption { max-width: 16em; }
 }
 .hero-text { display: grid; gap: var(--s3); padding-top: var(--s2); padding-bottom: var(--s6); }
@@ -135,7 +137,7 @@ p + p { margin-top: var(--s4); }
 .hero-text .lead { max-width: 24em; }
 /* the framed state next to the one sentence, phone only (desktop has it beside the slider) */
 .hero-row { display: grid; grid-template-columns: 96px 1fr; gap: var(--s4); align-items: center; }
-.hero-mock-sm { width: 96px; height: auto; }
+.hero-mock-sm { width: 96px; height: auto; outline: 1px solid var(--hairline); outline-offset: -1px; }
 @media (min-width: 1024px) { .hero-row { display: contents; } .hero-mock-sm { display: none; } }
 .hero-cta { display: grid; gap: var(--s2); justify-items: start; padding-top: var(--s2); }
 .hero-note { max-width: 26em; }

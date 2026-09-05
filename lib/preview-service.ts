@@ -12,6 +12,7 @@ const heavy = async () => {
   return { restore: r.restore, colourise: r.colourise, ensureLongEdge: iu.ensureLongEdge, makePreview: pv.makePreview, makeMockup: mk.makeMockup };
 };
 import { logEvent, type Utm } from '@/lib/analytics/events';
+import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
 import { customerFormat, customerFormats, isFormat, readAddOns, FRAMES, frameColour, type AddOns, type Format, type Frame } from '@/lib/pricing';
 import { getJob, setJob, type JobState } from '@/lib/jobs';
 
@@ -170,13 +171,15 @@ export async function processRestore(orderId: string): Promise<void> {
     const previewPath = objectPath(order.id, 'preview');
     const mockupPath = mockups[mockupKey(startFormat, startFrame)] ?? Object.values(mockups)[0]!;
     await Promise.all([putObject(restoredPath, result.restored), putObject(previewPath, previewBuf)]);
-    await setStatus(order.id, 'PREVIEW_READY', {
+    const ready = await setStatus(order.id, 'PREVIEW_READY', {
       original_path: originalPath, restored_path: restoredPath, preview_path: previewPath, mockup_path: mockupPath,
       is_monochrome: result.isMonochrome, preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta, mockups },
     });
     await setJob(orderId, { kind: 'restore', state: 'done', finishedAt: new Date().toISOString() });
     await logEvent('UploadCompleted', { sessionId, orderId });
     await logEvent('PreviewShown', { sessionId, orderId, meta: { ms: result.meta.durationMs, ssim: result.meta.ssim } });
+    // the one event the first campaign optimises for: server-side too, same event_id as the pixel's copy
+    await sendServerEvent('PreviewShown', { eventId: order.id, order: ready, sourceUrl: eventSourceUrl(`/p/${order.id}`) });
 
     // the other five combinations, now that the customer is already looking at their photograph
     try {

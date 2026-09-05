@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, recordAttempt } from '@/lib/admin/auth';
 import { listOrders } from '@/lib/db/orders';
+import { supabaseAdmin } from '@/lib/db/supabase';
 import { formatLabel } from '@/lib/pricing';
 import { readAddOns } from '@/lib/pricing';
 
@@ -52,6 +53,13 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
     );
   }
   const orders = await listOrders({ status: sp.status as never });
+  // The one number that decides the test: of the people who saw their own preview, how many went on
+  // to payment. Distinct orders per event, last 30 days, from our own event log (not Meta's).
+  const since = new Date(Date.now() - 30 * 864e5).toISOString();
+  const { data: ev } = await supabaseAdmin().from('events').select('name, order_id, session_id').in('name', ['PreviewShown', 'InitiateCheckout', 'Purchase']).gte('created_at', since).limit(10000);
+  const distinct = (n: string) => new Set(((ev ?? []) as { name: string; order_id: string | null; session_id: string | null }[]).filter((e) => e.name === n).map((e) => e.order_id ?? e.session_id).filter(Boolean)).size;
+  const shown = distinct('PreviewShown'), started = distinct('InitiateCheckout'), bought = distinct('Purchase');
+  const ratio = shown ? Math.round((started / shown) * 100) : null;
   const active = sp.status || sp.alle ? orders.filter((o) => o.status !== 'ABANDONED' || sp.status === 'ABANDONED') : orders.filter((o) => !ANALYTICS.includes(o.status));
   const age = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / 864e5);
   const work = Object.keys(WORK).map((st) => ({ st, rows: orders.filter((o) => o.status === st && !(st === 'MANUAL_REVIEW' && !o.customer_email)) })).filter((g) => g.rows.length);
@@ -65,6 +73,13 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <a href="/admin">Alle</a>
           </p>
         </div>
+        {!sp.status && (
+          <section style={{ display: 'grid', gap: 'var(--s1)', padding: 'var(--s4) 0', borderTop: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)' }}>
+            <p className="cfg-label">Preview → betaling · 30 dage</p>
+            <p style={{ fontFamily: 'var(--display)', fontSize: 'var(--fs-display)', lineHeight: 1, fontWeight: 300 }} className="tabular">{ratio === null ? '–' : `${ratio} %`}</p>
+            <p className="small muted">{started} af {shown} viste previews gik videre til betaling · {bought} {bought === 1 ? 'køb' : 'køb'}. Kilde: vores egen eventlog (PreviewShown → InitiateCheckout), ikke Meta.</p>
+          </section>
+        )}
         {!sp.status && (
           <section style={{ display: 'grid', gap: 'var(--s3)' }}>
             <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Til handling</h2>

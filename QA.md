@@ -629,3 +629,18 @@ Alt, der kan køres uden Stripe-, Resend- og admin-nøgler, er kørt mod en prod
 | O Tilstande | 404, ugyldigt id, billede uden nøgle, webhook uden signatur, slettet | 404 · 404 · 404 · 400 · bekræftelse på forsiden |
 | §12 | TODO/FIXME/placeholder/example.com/lorem/fake i udgivet kode | 0 i kundetekst (kun kodekommentarer) |
 
+## Repositionering før annoncer, 5. september 2026
+
+Hero = indrammet print på væg, før/efter som første bevis-par, "Sådan gør vi" med AI nævnt, prisanker,
+PreviewShown via CAPI, admin-ratio. Kørt mod en produktionsbygning på 3111.
+
+| Kontrol | Resultat |
+|---|---|
+| `npm run typecheck` · `npm test` | rent · 8/8 |
+| `npm run test:order` · `npm run test:viewport` | 9/9 · 12/12 |
+| "i hånden", "finjust", "håndarbejde" på forsiden | 0 |
+| Hero-billede | `/examples/soldier-girl-mockup.jpg`, 5:4, fetchpriority high |
+| Konsolfejl | ingen |
+| CAPI PreviewShown | kode: sendes fra restaureringsjobbet med ordre-id som event_id; kan ikke køres uden OpenAI-credits og META_CAPI_TOKEN |
+| Admin-ratio | kræver ADMIN_PASSWORD for at vise; beregnes af events-tabellen (PreviewShown → InitiateCheckout, 30 dage) |
+

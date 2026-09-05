@@ -42,7 +42,8 @@ export default async function Page() {
   const examples = getExamples();
   const hero = examples[0] ?? null;
   const stepEx = examples[1] ?? examples[0] ?? null;
-  const gridExamples = examples.slice(1, 7);
+  // the hero photograph's own before/after opens the proof row: the wall above shows where it ended up
+  const gridExamples = examples.slice(0, 6);
   const f = getFounder();
   const showFounder = Boolean(f.portrait && f.why.length > 0);
   const placeholders = examples.some((e) => e.placeholder);
@@ -66,17 +67,20 @@ export default async function Page() {
           <HeroViewContent targetId="hero" />
           <div className="hero-grid">
             <div className="hero-media">
-              {hero ? (
-                <BeforeAfter before={src(hero, 'before', HERO_BEFORE_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} aspect="4 / 3" reveal rest={30} priority />
+              {hero?.mockup ? (
+                <picture>
+                  <source type="image/webp" srcSet={`${hero.mockup.replace(/\.jpg$/, '-800.webp')} 800w`} sizes={HERO_SIZES} />
+                  <img className="hero-img" src={hero.mockup} srcSet={`${hero.mockup.replace(/\.jpg$/, '-480.jpg')} 480w, ${hero.mockup} 1200w`} sizes={HERO_SIZES} alt={`Indrammet ${c.formatLabel} på en væg: ${hero.caption.replace(/\.$/, '')}`} width={1200} height={960} loading="eager" fetchPriority="high" decoding="sync" />
+                </picture>
               ) : (
-                <div className="ba" style={{ aspectRatio: '4 / 3' }} />
+                <div className="ba" style={{ aspectRatio: '5 / 4' }} />
               )}
               {hero && <span className="hero-credit" aria-hidden><Caption text={hero.caption} credit /></span>}
             </div>
             {hero && (
               <div className="hero-side">
-                {hero.mockup && <figure className="hero-mock"><img src={hero.mockup.replace(/\.jpg$/, '-480.jpg')} alt={`Det samme billede indrammet: ${hero.caption.replace(/\.$/, '')}`} width={480} height={384} loading="eager" /><figcaption className="caption">{c.hero.mockCaption}</figcaption></figure>}
-                <p className="hero-caption"><Caption text={hero.caption} credit /></p>
+                <figure className="hero-mock"><img src={src(hero, 'before', HERO_BEFORE_SIZES).src.replace(/\.jpg$/, '-480.jpg')} alt={`Før: ${hero.caption.replace(/\.$/, '')}`} width={480} height={Math.round((480 * hero.height) / hero.width)} loading="eager" /><figcaption className="caption">{c.hero.beforeCaption}</figcaption></figure>
+                <p className="hero-caption"><Caption text={hero.caption} credit /> <span className="caption">· {c.hero.mockCaption}</span></p>
               </div>
             )}
           </div>
@@ -85,7 +89,7 @@ export default async function Page() {
               <p className="eyebrow">{c.hero.eyebrow}</p>
               <h1>{c.hero.h1}</h1>
               <div className="hero-row">
-                {hero?.mockup && <img className="hero-mock-sm" src={hero.mockup.replace(/\.jpg$/, '-480.jpg')} alt="" width={480} height={384} loading="eager" />}
+                {hero && <img className="hero-mock-sm" src={hero.before.replace(/\.jpg$/, '-480.jpg')} alt={c.hero.beforeCaption} width={480} height={Math.round((480 * hero.height) / hero.width)} loading="eager" />}
                 <p className="lead">{c.hero.sub}</p>
               </div>
               <div className="hero-cta">
@@ -213,6 +217,7 @@ export default async function Page() {
               {c.sizes.length > 1 && <p className="price-from">fra</p>}
               <p className="price" aria-label={c.offer.price}>{c.offer.price.replace(' kr.', '')}<small>kr.</small></p>
               <p className="caption price-note">{c.offer.priceNote}</p>
+              {c.offer.anchor && <p className="caption price-note">{c.offer.anchor}</p>}
               {c.offer.priceFrom && <p className="caption price-note">{c.offer.priceFrom}</p>}
               <ul className="guarantee">
                 {c.offer.guarantee.map((g) => <li key={g}>{g}</li>)}

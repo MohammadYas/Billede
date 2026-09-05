@@ -286,6 +286,13 @@ plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are com
 - **The wait.** The bar creeps to 85 % while the model runs (~30–45 s); after 45 s the caption says it is taking longer
   today. If OpenAI is slow for a whole day, that line is what people see — no action needed, but expect calls.
 - **Founder's first name** is used in copy only once the portrait and the three "why" lines exist (see §2).
+- **The price anchor under 599 kr. is your claim, not ours.** *"Til sammenligning: hos en fotograf koster
+  restaureringen alene typisk 300–600 kr. – uden ramme og levering."* is a comparative price statement
+  under markedsføringsloven: keep two or three photographers' price lists (screenshots with dates) so you
+  can document it if asked. To remove the line, set `PRICE_ANCHOR` in `lib/copy.ts` to an empty string.
+- **The test is decided by one number.** `/admin` opens with *Preview → betaling*: of the people who saw
+  their own preview in the last 30 days, the share that went on to payment. Judge the first campaign on
+  that, not on purchases — purchases at 599 kr. from cold traffic come later and in small numbers.
 - **The digital file is delivered on the approval page.** Once the customer taps Godkend, `/godkend/<token>` shows
   "Hent din fil i høj opløsning" (a short signed download of the print final), and the "Dit billede er på vej"
   mail carries the same link. Nothing to do on your side — but the file only exists once you have generated or

@@ -182,7 +182,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         if (!r.ok) throw new Error('status');
         const st = (await r.json()) as Status;
         if (st.status === 'PREVIEW_READY' && st.payload) {
-          track('UploadCompleted', {}); track('PreviewShown', { monochrome: st.payload.isMonochrome });
+          track('UploadCompleted', {}); track('PreviewShown', { monochrome: st.payload.isMonochrome }, { eventId: orderId }); // same event_id as the CAPI copy
           setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'preparing', percent: 100 } : cur));
           router.push(`/p/${orderId}?t=${encodeURIComponent(token)}`);
           return;

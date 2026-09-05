@@ -3,7 +3,7 @@ import type { Order } from '@/lib/db/orders';
 import { CONFIG } from '@/lib/config';
 
 /**
- * Meta Conversions API: the server-side copy of Purchase and InitiateCheckout, deduplicated with the
+ * Meta Conversions API: the server-side copy of Purchase, InitiateCheckout and PreviewShown, deduplicated with the
  * browser pixel through the same event_id (order id / checkout session id). The browser event is lost
  * whenever the buyer finished in another browser (MobilePay app-switch out of the Facebook in-app
  * browser, a saved link on the desktop) or never consented; this one is not. Needs META_CAPI_TOKEN.
@@ -11,7 +11,7 @@ import { CONFIG } from '@/lib/config';
 const sha = (v?: string | null) => (v && v.trim() ? createHash('sha256').update(v.trim().toLowerCase()).digest('hex') : undefined);
 const phoneDigits = (v?: string | null) => { if (!v) return undefined; let d = v.replace(/\D/g, ''); if (d.length === 8) d = `45${d}`; return d || undefined; };
 
-export type ServerEventName = 'Purchase' | 'InitiateCheckout';
+export type ServerEventName = 'Purchase' | 'InitiateCheckout' | 'PreviewShown';
 
 export async function sendServerEvent(name: ServerEventName, opts: { eventId: string; order: Order; sourceUrl: string; ip?: string | null; ua?: string | null }): Promise<void> {
   const pixel = process.env.NEXT_PUBLIC_META_PIXEL_ID;

@@ -30,7 +30,7 @@ export default function Handelsbetingelser() {
         ))}
         <li>Ekstra eksemplar af samme billede i samme størrelse og ramme: {formatDkk(EXTRA_PRINT_DKK[customerFormat()])} pr. stk., op til tre.</li>
       </ul>
-      <p>Restaureringen laves af en automatisk billedmodel og finjusteres manuelt. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p>
+      <p>Restaureringen laves af en automatisk billedmodel (AI) og gennemgås manuelt, før den printes. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p>
 
       <h2>Sådan foregår det</h2>
       <ul>

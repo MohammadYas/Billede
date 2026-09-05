@@ -353,4 +353,22 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   *restaureringen* now. The terms and the privacy page keep naming the model and the provider, because
   there it is a duty, not a pitch. And the line under the button says the whole risk reversal in one
   breath: *Du ser resultatet, før du køber – det koster ikke noget.*
+- **The hero is the product, the slider is the proof.** Before any ad spend the first screen shows the
+  framed 30×40 print on a living-room wall, under *Gaven, de ikke selv kan købe.* and *Det gamle billede
+  af mor og far. Skarpt igen, i ramme, klar til at give.* The damaged original sits beside the one
+  sentence (phone) or beside the wall (desktop), so old → framed reads without a slider; the slider
+  opens the proof row directly below with the same photograph. No staged photo of a son handing a frame
+  to his mother: that would be a person we invented, so the gift lives in the words.
+- **AI is named, hands are not.** *Sådan gør vi*: AI makes a first proposal in about a minute and a half,
+  a person reviews every picture and checks the faces before it is printed. Every *finjusterer i hånden*,
+  *finpudser* and *håndarbejde* is gone from copy, mails and terms — the human step is review and
+  approval, and the site must not imply hand restoration it does not do.
+- **A price anchor, one line, one constant.** *Til sammenligning: hos en fotograf koster restaureringen
+  alene typisk 300–600 kr. – uden ramme og levering.* is the owner's market figure (`PRICE_ANCHOR`);
+  it is a comparative claim under markedsføringsloven, so the owner keeps the evidence for it, and an
+  empty string removes the line.
+- **PreviewShown is the third server-side event**, sent from the restoration job with the order id as
+  event_id — the same id the pixel's copy carries, so Meta counts one. Admin opens with the one number
+  the test is decided on: distinct previews shown → distinct checkouts started, last 30 days, from our
+  own event log.
 

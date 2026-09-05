@@ -55,7 +55,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
   const gift = (o.preview_meta as { gift_note?: string } | null)?.gift_note;
   const html = shell(subject, [
     h1('Tak for din bestilling.'),
-    p(`${esc(navn)} kigger på dit billede inden 24 timer og finjusterer det i hånden.`),
+    p(`${esc(navn)} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne.`),
     p('Inden 48 timer får du en mail med det færdige billede. Du godkender det – eller beder om en ændring – før vi printer noget.'),
     p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`),
     mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">` : '',
@@ -69,7 +69,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     f.email ? p(`Spørgsmål? Skriv til ${esc(kontakt)} på <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a> – eller svar på denne mail. Vi svarer inden 24 timer.`) : '',
     repeatLink(o) ? `<hr style="border:0;border-top:1px solid #D9D1C3;margin:32px 0 20px;">${p(`<strong>Har I flere billeder?</strong> De ligger sjældent alene i skuffen. Har du et mere, kan du sende det ind herfra – samme arbejde, samme godkendelse.`)}${blockButton(repeatLink(o)!, 'Se billede nummer to', true)}` : '',
   ].join(''));
-  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms og fragt · ${orderDescription(o)}${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Send det næste ind her: ${repeatLink(o)}` : ''}`;
+  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms og fragt · ${orderDescription(o)}${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Send det næste ind her: ${repeatLink(o)}` : ''}`;
   return { subject, html, text };
 }
 

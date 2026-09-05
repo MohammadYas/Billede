@@ -23,6 +23,9 @@ export function ctaVariant(): CtaVariant {
 }
 export const primaryCta = () => CTA_VARIANTS[ctaVariant()];
 
+/** "Til sammenligning …" under the price. The owner's own market figure; the owner keeps the evidence for it. */
+export const PRICE_ANCHOR = 'Til sammenligning: hos en fotograf koster restaureringen alene typisk 300–600 kr. – uden ramme og levering.';
+
 export function copy(season: Season = currentSeason()) {
   const f = getFounder();
   const navn = fornavn(); // the first name once the founder is on the page, otherwise "vi"
@@ -54,7 +57,7 @@ export function copy(season: Season = currentSeason()) {
     ['Print', `${lbl} på mat fotopapir, farveægte`],
     ['Ramme', 'Sort eller eg, med passepartout og glas, klar til at hænge op'],
     ['Fil', 'Den restaurerede fil i høj opløsning – din at hente, så snart du har godkendt'],
-    ['Godkendelse', `${cap(navn)} finjusterer billedet i hånden og tjekker ansigterne. Du ser det færdige billede og siger ja, før vi printer`],
+    ['Godkendelse', `${cap(navn)} gennemgår billedet og tjekker ansigterne. Du ser det færdige billede og siger ja, før vi printer`],
     ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder`],
     ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
   ];
@@ -89,14 +92,15 @@ export function copy(season: Season = currentSeason()) {
     variants: { portrait: sizes.map((fmt) => variant(fmt, false)), landscape: sizes.map((fmt) => variant(fmt, true)) },
     sizes: sizes.map((fmt) => [formatLabel(fmt), formatDkk(PRICING[fmt].priceDkk)] as [string, string]),
     hero: {
-      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Dit gamle billede kan blive sådan her.',
-      h1: 'Jeres gamle billede. Skarpt igen, i ramme, hjemme hos dig.',
+      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Gaven, de ikke selv kan købe.',
+      h1: 'Det gamle billede af mor og far. Skarpt igen, i ramme, klar til at give.',
       sub: 'Tag et foto af det med telefonen, og se det restaureret – før du beslutter noget.',
       cta,
       /** the risk reversal, set apart from the price line so it reads before it */
       smallStrong: 'Du ser resultatet, før du køber – det koster ikke noget.',
       small: `Skal det hjem til dig i ramme: ${priceFrom}, fri fragt.`,
-      mockCaption: 'Og sådan hænger det – i ramme, med passepartout og glas.',
+      mockCaption: `${formatLabel(format)} i sort ramme med passepartout og glas. Sådan kommer det.`,
+      beforeCaption: 'Sådan så det ud, før.',
       countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
     },
     gave: {
@@ -115,11 +119,11 @@ export function copy(season: Season = currentSeason()) {
       `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
     ],
     saadan: {
-      h2: 'Sådan fungerer det',
+      h2: 'Sådan gør vi',
       steps: [
         'Tag et foto af billedet med telefonen. Dagslys, ingen blitz – det er nok.',
-        'Se resultatet på skærmen. Det tager omkring halvandet minut.',
-        `Bestil. ${cap(navn)} finjusterer, du godkender på mail, vi printer og sender. Leveret ${levering}.`,
+        'AI laver et første forslag på omkring halvandet minut. Du ser det på skærmen, før du bestiller noget.',
+        `Et menneske gennemgår hvert billede og tjekker ansigterne, før det printes. Du godkender på mail, vi printer og sender. Leveret ${levering}.`,
       ],
       note: 'Papir falmer, og folder bliver ikke glattere med årene. Et foto af billedet, som det er nu, er nok til at redde det.',
     },
@@ -131,7 +135,7 @@ export function copy(season: Season = currentSeason()) {
       sizesTitle: 'Størrelser',
       sizeCards: sizes.map((fmt) => ({ label: formatLabel(fmt), price: formatDkk(PRICING[fmt].priceDkk), hint: hint[fmt] ?? '', recommended: fmt === RECOMMENDED_FORMAT })),
       recommended: 'Anbefalet',
-      sizesNote: `Samme billede og samme håndarbejde i alle tre. ${formatLabel(format)} er sat op på forhånd – du kan skifte, når du har set resultatet.`,
+      sizesNote: `Samme billede og samme kvalitet i alle tre. ${formatLabel(format)} er sat op på forhånd – du kan skifte, når du har set resultatet.`,
       note: `Restaurering, print, ramme, kort med din hilsen, indpakning og fragt – ét beløb per billede.`,
     },
     eksempler: { h2: 'Det kunne være jeres.', lead: 'Bryllupsbilledet, barnet på trappen, bedsteforældrene i haven. Gulnet, ridset eller falmet – tag et foto af det, og se selv, hvad der kan gøres.', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
@@ -139,6 +143,8 @@ export function copy(season: Season = currentSeason()) {
       line: `Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret ${levering}, efter du har godkendt billedet på mail.`,
       deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
       priceNote: 'inkl. moms, ramme og fragt · pengene tilbage, hvis det ikke ligner',
+      /** Comparative price claim supplied by the owner (markedsføringsloven: keep the documentation behind it). Empty string removes the line. */
+      anchor: PRICE_ANCHOR,
       guarantee: [
         'Du ser resultatet, før du bestiller',
         'Du godkender det færdige billede på mail, før vi printer',
@@ -274,7 +280,7 @@ export function copy(season: Season = currentSeason()) {
     preview: {
       h2: 'Her er dit billede.',
       hang: 'Og sådan hænger det hos dig.',
-      next: `Det her er den hurtige første restaurering. Bestiller du, går ${navn} billedet efter i hånden – især ansigterne – og du godkender det færdige billede på mail, før vi printer.`,
+      next: `Det her er AI'ens første forslag. Bestiller du, gennemgår ${navn} billedet – især ansigterne – og du godkender det færdige billede på mail, før vi printer.`,
       headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Vi printer først, når du har set det færdige billede og sagt ja.',
@@ -347,7 +353,7 @@ export function copy(season: Season = currentSeason()) {
       h1: `Tak. ${cap(navn)} kigger på dit billede inden 24 timer.`,
       p: 'Du får det færdige billede til godkendelse på mail inden 48 timer. Vi printer først, når du siger ja.',
       timeline: [
-        ['Inden 24 timer', `${cap(navn)} finjusterer billedet i hånden.`],
+        ['Inden 24 timer', `${cap(navn)} gennemgår billedet og tjekker ansigterne.`],
         ['Inden 48 timer', 'Du får en mail med det færdige billede. Godkend, eller bed om en ændring.'],
         ['Efter dit ja', `Print i den valgte størrelse, ramme og fri fragt – og din fil i høj opløsning til download. Leveret ${levering}.`],
       ] as [string, string][],
