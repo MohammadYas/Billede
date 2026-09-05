@@ -1,5 +1,5 @@
 import LegalPage from '@/components/LegalPage';
-import { getFounder } from '@/lib/founder';
+import { getFounder, missing } from '@/lib/founder';
 import { CONFIG } from '@/lib/config';
 
 export const metadata = { title: 'Privatliv – Genfundet' };
@@ -7,11 +7,11 @@ export const metadata = { title: 'Privatliv – Genfundet' };
 export default function Privatliv() {
   const f = getFounder();
   const ansvarlig = [
-    f.name || '[Udfyld: navn]',
-    f.cvr ? `CVR ${f.cvr}` : '[Udfyld: CVR]',
-    f.address || '[Udfyld: adresse]',
-    f.email || '[Udfyld: e-mail]',
-  ].join(', ');
+    f.name || missing('navn'),
+    f.cvr ? `CVR ${f.cvr}` : missing('CVR'),
+    f.address || missing('adresse'),
+    f.email || missing('e-mail'),
+  ].filter(Boolean).join(', ');
   return (
     <LegalPage title="Sådan behandler vi dine oplysninger" updated="3. september 2026">
       <p>Genfundet restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p>
@@ -48,7 +48,7 @@ export default function Privatliv() {
       </ul>
 
       <h2>Dine rettigheder</h2>
-      <p>Du kan få indsigt i, rettet, slettet eller udleveret dine oplysninger, gøre indsigelse og trække samtykke tilbage. Skriv til {f.email || '[e-mail]'}. Du kan klage til Datatilsynet, Carl Jacobsens Vej 35, 2500 Valby, www.datatilsynet.dk.</p>
+      <p>Du kan få indsigt i, rettet, slettet eller udleveret dine oplysninger, gøre indsigelse og trække samtykke tilbage. Skriv til {f.email || missing('e-mail')}. Du kan klage til Datatilsynet, Carl Jacobsens Vej 35, 2500 Valby, www.datatilsynet.dk.</p>
 
       <h2>Det, vi ikke påstår</h2>
       <p>Vi siger ikke, at dine billeder "aldrig forlader EU", at noget er "100 % sikkert" eller "GDPR-certificeret". Vi siger, hvad vi gør: lagrer i EU, sender billedet til de leverandører, der er nævnt ovenfor, sletter automatisk og deler aldrig med andre.</p>

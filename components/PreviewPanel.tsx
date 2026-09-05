@@ -220,16 +220,13 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   const config = (
     <div className="config">
-      <div className="cfg ready">
-        <p className="cfg-title">{c.preview.readyTitle}</p>
-        <p className="caption measure">{c.preview.readyNote}</p>
-      </div>
       <fieldset className="cfg">
         <legend className="cfg-label"><span className="n">1</span>{c.preview.sizeTitle}</legend>
         <div className="sizes-row">
           {variants.map((x) => (
-            <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}`}>
+            <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}${x.recommended ? ' is-recommended' : ''}`}>
               <input type="radio" name="stoerrelse" value={x.format} checked={x.format === format} onChange={() => pickFormat(x.format)} />
+              {x.recommended && <span className="tag">{c.preview.recommended}</span>}
               <b>{x.label}</b>
               <span className="size-price tabular">{x.price}</span>
               <span className="caption">{x.hint}</span>
@@ -271,6 +268,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       </div>
       <div className="cfg bill">
         <p className="cfg-label"><span className="n">4</span>{c.preview.summaryTitle}</p>
+        <div className="bill-head">
+          <img src={mockup} alt={c.preview.yourPhoto} width={96} height={77} />
+          <p><b>{c.preview.yourPhoto}</b><span>{label} · {frame === 'eg' ? 'egetræsramme' : 'sort ramme'} · {1 + extraPrints} {extraPrints === 0 ? c.preview.copiesOne : c.preview.copiesMany}</span></p>
+        </div>
         <dl className="bill-lines">
           {bill.lines.map((l) => (
             <div key={l.key}>
@@ -334,6 +335,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <p className="caption">{v.mockupCaption}</p>
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
+          <p className="caption measure">{c.produkt.lead}</p>
           <dl className="label small">
             {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
           </dl>

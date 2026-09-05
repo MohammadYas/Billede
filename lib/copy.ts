@@ -1,8 +1,26 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
 import { CONFIG, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
-import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, type Format } from '@/lib/pricing';
+import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, RECOMMENDED_FORMAT, type Format } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
+
+/**
+ * The primary call to action, everywhere it appears on the landing page (hero, price, closing line,
+ * the sticky bar). One string, one switch: NEXT_PUBLIC_CTA_VARIANT=A|B|C picks the wording at build
+ * time, and FlowOpened logs the letter, so two deploys can be compared in the events table without
+ * any testing infrastructure. A is the default until a measurement says otherwise.
+ */
+export const CTA_VARIANTS = {
+  A: 'Se hvad dit billede kan blive til',
+  B: 'Genskab mit billede',
+  C: 'Se hvad mit billede kan blive til',
+} as const;
+export type CtaVariant = keyof typeof CTA_VARIANTS;
+export function ctaVariant(): CtaVariant {
+  const v = process.env.NEXT_PUBLIC_CTA_VARIANT;
+  return v && v in CTA_VARIANTS ? (v as CtaVariant) : 'A';
+}
+export const primaryCta = () => CTA_VARIANTS[ctaVariant()];
 
 export function copy(season: Season = currentSeason()) {
   const f = getFounder();
@@ -20,6 +38,7 @@ export function copy(season: Season = currentSeason()) {
   const skrivTil = personal ? `skriv til ${cap(navn)}` : 'skriv til os';
   const days = daysToCutoff();
   const pay = 'Apple Pay, Google Pay eller kort';
+  const cta = primaryCta();
 
   // Sizes. The landing page quotes the cheapest ("fra 599 kr."); the customer picks on the preview page,
   // and every price-bearing line exists once per size so nothing has to be patched together in the browser.
@@ -48,6 +67,7 @@ export function copy(season: Season = currentSeason()) {
       price: pris,
       priceDkk: PRICING[fmt].priceDkk,
       hint: hint[fmt] ?? '',
+      recommended: fmt === RECOMMENDED_FORMAT,
       extraPrint: formatDkk(EXTRA_PRINT_DKK[fmt]),
       specTitle: `Det får du for ${pris}`,
       cta: `Bestil mit billede – ${pris}`,
@@ -70,11 +90,14 @@ export function copy(season: Season = currentSeason()) {
     variants: { portrait: sizes.map((fmt) => variant(fmt, false)), landscape: sizes.map((fmt) => variant(fmt, true)) },
     sizes: sizes.map((fmt) => [formatLabel(fmt), formatDkk(PRICING[fmt].priceDkk)] as [string, string]),
     hero: {
-      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Gaven, de ikke selv kan købe',
-      h1: 'Mors gamle billede. Skarpt igen, i ramme, hjemme hos dig.',
-      sub: 'Tag et foto af det med telefonen. Halvandet minut senere ser du, hvad det kan blive til – før du beslutter noget.',
-      cta: 'Se hvad dit billede kan blive til',
-      small: `Du ser resultatet, før du køber. Skal det hjem til dig i ramme: ${priceFrom}, fri fragt.`,
+      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Dit gamle billede kan blive sådan her.',
+      h1: 'Jeres gamle billede. Skarpt igen, i ramme, hjemme hos dig.',
+      sub: 'Bryllupsbilledet, dine forældre som unge, dig selv som barn. Tag et foto af det med telefonen, og se det restaureret – før du beslutter noget.',
+      cta,
+      /** the risk reversal, set apart from the price line so it reads before it */
+      smallStrong: 'Du ser resultatet, før du køber.',
+      small: `Skal det hjem til dig i ramme: ${priceFrom}, fri fragt.`,
+      mockCaption: 'Og sådan hænger det – i ramme, med passepartout og glas.',
       countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
     },
     gave: {
@@ -107,8 +130,8 @@ export function copy(season: Season = currentSeason()) {
       lead: 'Restaureret foto, print, ramme og levering. Ét beløb – ingen tillæg.',
       rows: rowsFor(format, formatLabel(format)),
       sizesTitle: 'Størrelser',
-      sizeCards: sizes.map((fmt) => ({ label: formatLabel(fmt), price: formatDkk(PRICING[fmt].priceDkk), hint: hint[fmt] ?? '', standard: fmt === format })),
-      standard: 'Standard',
+      sizeCards: sizes.map((fmt) => ({ label: formatLabel(fmt), price: formatDkk(PRICING[fmt].priceDkk), hint: hint[fmt] ?? '', recommended: fmt === RECOMMENDED_FORMAT })),
+      recommended: 'Anbefalet',
       sizesNote: `Samme billede og samme håndarbejde i alle tre. ${formatLabel(format)} er sat op på forhånd – du kan skifte, når du har set resultatet.`,
       note: `Restaurering, print, ramme, kort med din hilsen, indpakning og fragt – ét beløb per billede.`,
     },
@@ -126,7 +149,7 @@ export function copy(season: Season = currentSeason()) {
       kontaktHref: emailHref,
       price,
       priceFrom: sizes.length > 1 ? `for ${formatLabel(format)} · større: ${sizes.filter((x) => x !== format).map((x) => `${formatLabel(x)} ${formatDkk(PRICING[x].priceDkk)}`).join(' · ')}` : '',
-      cta: 'Se hvad dit billede kan blive til',
+      cta,
       under: 'Du bestiller først, når du har set resultatet.',
     },
     hvem: { h2: 'Hvem står bag' },
@@ -199,8 +222,8 @@ export function copy(season: Season = currentSeason()) {
         },
       ],
     },
-    slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : 'Halvandet minut, så har du set det. Du bestiller først bagefter.', cta: 'Se hvad dit billede kan blive til' },
-    sticky: 'Se hvad dit billede kan blive til',
+    slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : 'Halvandet minut, så har du set det. Du bestiller først bagefter.', cta },
+    sticky: cta,
     upload: {
       camera: 'Tag et foto',
       library: 'Vælg fra kamerarulle',
@@ -256,9 +279,11 @@ export function copy(season: Season = currentSeason()) {
       headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Vi printer først, når du har set det færdige billede og sagt ja.',
-      readyTitle: 'Din bestilling er klar',
-      readyNote: `Du behøver ikke vælge noget: ${formatLabel(format)} i sort ramme er sat op for dig. Vil du have den større, en anden ramme eller et eksemplar mere, så ret det her.`,
       sizeTitle: 'Størrelse',
+      recommended: 'Anbefalet',
+      copiesOne: 'eksemplar',
+      copiesMany: 'eksemplarer',
+      yourPhoto: 'Dit billede',
       sizeNote: 'Ramme, glas, kort med din hilsen og fri fragt er med i alle størrelser.',
       frameTitle: 'Ramme',
       frameSort: 'Sort',
@@ -292,7 +317,7 @@ export function copy(season: Season = currentSeason()) {
       colourLoading: 'Farveversion på vej – ca. ½ minut',
       ctaShort: 'Bestil mit billede',
       under: 'Pengene tilbage, hvis det ikke ligner.',
-      payment: `${pay} · Ingen oprettelse`,
+      payment: `${pay} via Stripe · Ingen oprettelse`,
       gift: 'Er det en gave? Ved betaling kan du skrive en hilsen, som vi lægger ved på et kort.',
       checkoutError: email
         ? `Vi kunne ikke åbne betalingen lige nu. Prøv igen om et øjeblik – eller ${skrivTil} på ${email}, så sender vi et betalingslink. Dit preview er gemt.`

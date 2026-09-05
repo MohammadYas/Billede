@@ -312,4 +312,25 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **The FAQ is ordered by what stops a purchase.** Cost of looking, badly damaged or blurred (with the
   honest limit: sharpness that was never there cannot be invented), does it look artificial, can I
   cancel, delivery, what happens to my photo — before sizes, copies, the file, gifts and payment.
+- **The headline belongs to everyone's photograph.** *Mors gamle billede* made the product sound like a
+  gift for one person; *Jeres gamle billede* is the wedding, the parents when they were young, yourself
+  as a child. The eyebrow says what the ad showed — *Dit gamle billede kan blive sådan her.* — and the
+  gift moves to supporting content. The ninety seconds left the hero: nobody should meet a waiting
+  time before the first tap; the sheet and the steps still say it, after the decision to look.
+- **"Du ser resultatet, før du køber" is the sentence under the button**, set in ink, ahead of the
+  price. It is Genfundet's structural advantage, and it is true.
+- **The primary button is one variable.** `CTA_VARIANTS` in lib/copy.ts, chosen by
+  `NEXT_PUBLIC_CTA_VARIANT` at build time and logged on `FlowOpened`, so two deploys can be compared
+  in the events table. No experimentation framework; a redeploy is the test.
+- **40×50 is marked *Anbefalet*, not *Mest populære*.** A recommendation is an opinion we hold; a
+  popularity claim would be a statistic nobody has. The order still starts on 30×40 at 599 kr., so the
+  landing page's *fra*-price is the price a customer meets, and `test:order` keeps asserting it.
+- **The bill starts with the customer's own picture.** Size, frame and number of copies in one line
+  next to the framed mockup, then the lines and the total — *this is exactly what I am buying*. The
+  "Din bestilling er klar / du behøver ikke vælge noget" block is gone: a selected box says it.
+- **Placeholders cannot reach a customer.** `missing()` prints the bracketed reminder only outside
+  production, the legal pages drop an empty field instead of printing *[Udfyld …]*, and the build
+  guard for name, CVR, address and e-mail is now unconditional — `LEGAL_DRAFT` only controls the
+  *Udkast* stamp. On desktop the hero also shows the same photograph framed: old → restored → on the
+  wall, in the first viewport.
 

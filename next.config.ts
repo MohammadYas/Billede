@@ -38,19 +38,20 @@ if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') {
   }
 }
 
-// The seller's identity on /handelsbetingelser and /privatliv falls back to "[Udfyld: CVR]" when
-// assets/founder/founder.md is incomplete. That is the right thing to show the owner and the worst
-// thing to show a customer checking whether we are a real company — so a production build refuses
-// to ship one. Nothing here invents a value: it fails, and names the file to fill in.
-if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production' && process.env.LEGAL_DRAFT !== 'true') {
+// The seller's identity on /handelsbetingelser and /privatliv comes from assets/founder/founder.md.
+// e-handelsloven §7 requires name, CVR and address on the page, and a customer checking whether we are
+// a real company must never find a gap where they should be — so a production build refuses to run
+// without them. Unconditionally: LEGAL_DRAFT only controls the "Udkast" stamp, it is not a licence to
+// publish without an identity. Nothing here invents a value: it fails, and names the file to fill in.
+if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') {
   const md = existsSync('assets/founder/founder.md') ? readFileSync('assets/founder/founder.md', 'utf8') : '';
   const field = (k: string) => (md.match(new RegExp(`^${k}:\\s*(.+)$`, 'mi'))?.[1] ?? '').trim();
   // lib/founder.ts reads a leading TODO as "not filled in yet"; so does this.
   const missing = ['name', 'cvr', 'address', 'email'].filter((k) => !field(k) || /^todo\b/i.test(field(k)));
   if (missing.length) {
     throw new Error(
-      `assets/founder/founder.md is missing ${missing.join(', ')}, so /handelsbetingelser and /privatliv would publish "[Udfyld: …]" to customers. ` +
-      'Fill the fields in, or set LEGAL_DRAFT=true to publish a draft on purpose.',
+      `assets/founder/founder.md is missing ${missing.join(', ')}, so /handelsbetingelser and /privatliv would go out without the seller's identity. ` +
+      'Fill the fields in before deploying.',
     );
   }
 }

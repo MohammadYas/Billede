@@ -584,3 +584,18 @@ sidste valg, tillid ved knappen), upsell-copy og FAQ-orden. Kørt mod en produkt
 Første forsøg på flytningen klippede eksempel-sektionen midt over (for kort søgemønster) og gav 1.226 px
 vandret overløb ved 390 – fanget af `test:viewport`, rettet, kørt igen.
 
+## Sidste konverteringspas, 5. september 2026
+
+Hero universel og uden ventetid, "Du ser resultatet, før du køber" ved knappen, CTA som variabel,
+40×50 mærket "Anbefalet", opsummering med kundens eget billede før betaling, forklaringsblok fjernet,
+placeholders umulige at udgive. Kørt mod en produktionsbygning på 3111.
+
+| Kontrol | Resultat |
+|---|---|
+| `npm run typecheck` · `npm test` | rent · 8/8 |
+| `npm run test:order` | 9/9 – standardordren er stadig 30×40 · sort · 0 · 599 kr. |
+| `npm run test:viewport` | 12/12 |
+| `[Udfyld` på /handelsbetingelser og /privatliv i produktionsbygningen | 0 forekomster (feltet udelades; buildet nægter at deploye uden det) |
+| "Halvandet minut" i hero-teksten | 0 forekomster |
+| Konsolfejl på alle flader | ingen |
+

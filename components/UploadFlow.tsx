@@ -53,7 +53,8 @@ export default function UploadFlow({ c }: { c: Copy }) {
     } catch { setKeepState('idle'); }
   };
 
-  const open = useCallback(() => { track('FlowOpened', {}, { serverLog: true }); setState({ kind: 'pick' }); }, []);
+  // the CTA wording that was live when the sheet opened (lib/copy.ts CTA_VARIANTS), so two deploys can be compared
+  const open = useCallback(() => { track('FlowOpened', { cta: process.env.NEXT_PUBLIC_CTA_VARIANT ?? 'A' }, { serverLog: true }); setState({ kind: 'pick' }); }, []);
   const runRef = useRef(0); // bumped on every close: an in-flight start() sees it and stops
   const pollRef = useRef<number | null>(null);
   const stopPolling = () => { if (pollRef.current) window.clearTimeout(pollRef.current); pollRef.current = null; };

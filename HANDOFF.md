@@ -20,8 +20,9 @@ Nothing in this list is code. The code is done and verified; each line below is 
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, `STRIPE_SECRET_KEY`,
    `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_REPLY_TO`, `OWNER_EMAIL`, `NEXT_PUBLIC_META_PIXEL_ID`,
    `META_CAPI_TOKEN`, `ADMIN_PASSWORD` (long, random), `JOB_SECRET` (long, random), `CRON_SECRET`, `JOB_RUNNER=netlify`,
-   `NEXT_PUBLIC_SITE_URL=https://genfundet.dk`, `DELIVERY_DAYS_MAX=5`, `LEGAL_DRAFT` (true until the lawyer has read).
-   The build refuses to run without `JOB_SECRET`.
+   `NEXT_PUBLIC_SITE_URL=https://genfundet.dk`, `DELIVERY_DAYS_MAX=5`, `LEGAL_DRAFT` (true until the lawyer has read),
+   `NEXT_PUBLIC_CTA_VARIANT` (A, B or C — the wording of the primary button, see `.env.example`).
+   The build refuses to run without `JOB_SECRET`, and without `city`, `cvr`, `address` and `email` in `founder.md` — `LEGAL_DRAFT` does not bypass that.
 3. Netlify → Site configuration → Functions → Region: an EU region (Frankfurt/Ireland). Supabase is in Ireland.
 4. Domain: genfundet.dk on Netlify, HTTPS on.
 

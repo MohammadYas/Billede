@@ -11,6 +11,12 @@ export const PRICING = {
 export type Format = keyof typeof PRICING;
 export const FORMATS = Object.keys(PRICING) as Format[];
 export const DEFAULT_FORMAT: Format = '30x40';
+/**
+ * The size we recommend, marked "Vores anbefaling" on both pages. It is an opinion, stated as one —
+ * not "mest populære", which would be a statistic nobody has yet. The order still starts on the
+ * default above, so nothing costs more than the price the landing page quotes until the customer picks it.
+ */
+export const RECOMMENDED_FORMAT: Format = '40x50';
 
 export function isFormat(value: unknown): value is Format {
   return typeof value === 'string' && value in PRICING;

@@ -51,3 +51,13 @@ export function fornavn(): string {
   const f = getFounder();
   return f.portrait && f.why.length > 0 && f.firstName ? f.firstName : 'vi';
 }
+
+/**
+ * What a legally required field shows while it is empty. In development the bracketed reminder, so
+ * the owner sees exactly which line of founder.md is missing; in production nothing at all — and the
+ * production build has already refused to run without these values (next.config.ts), so this branch
+ * is the belt behind that suspender. No environment can print "[Udfyld …]" to a customer.
+ */
+export function missing(label: string): string {
+  return process.env.NODE_ENV === 'production' ? '' : `[Udfyld: ${label}]`;
+}

@@ -1,5 +1,5 @@
 import LegalPage from '@/components/LegalPage';
-import { getFounder } from '@/lib/founder';
+import { getFounder, missing } from '@/lib/founder';
 import { CONFIG, formatCutoffDate } from '@/lib/config';
 import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK } from '@/lib/pricing';
 
@@ -12,11 +12,11 @@ export default function Handelsbetingelser() {
   // a partial identity that *looks* complete is the failure mode: name + e-mail alone renders as if
   // nothing were missing.
   const saelger = [
-    f.name || '[Udfyld: navn]',
-    f.cvr ? `CVR ${f.cvr}` : '[Udfyld: CVR]',
-    f.address || '[Udfyld: adresse]',
-    f.email || '[Udfyld: e-mail]',
-  ].join(', ');
+    f.name || missing('navn'),
+    f.cvr ? `CVR ${f.cvr}` : missing('CVR'),
+    f.address || missing('adresse'),
+    f.email || missing('e-mail'),
+  ].filter(Boolean).join(', ');
   return (
     <LegalPage title="Handelsbetingelser" updated="3. september 2026">
       <h2>Sælger</h2>

@@ -73,7 +73,12 @@ export default async function Page() {
               )}
               {hero && <span className="hero-credit" aria-hidden><Caption text={hero.caption} credit /></span>}
             </div>
-            {hero && <p className="hero-caption"><Caption text={hero.caption} credit /></p>}
+            {hero && (
+              <div className="hero-side">
+                {hero.mockup && <figure className="hero-mock"><img src={hero.mockup.replace(/\.jpg$/, '-480.jpg')} alt={`Det samme billede indrammet: ${hero.caption.replace(/\.$/, '')}`} width={480} height={384} loading="eager" /><figcaption className="caption">{c.hero.mockCaption}</figcaption></figure>}
+                <p className="hero-caption"><Caption text={hero.caption} credit /></p>
+              </div>
+            )}
           </div>
           <div className="wrap">
             <div className="container hero-text">
@@ -82,7 +87,7 @@ export default async function Page() {
               <p className="lead">{c.hero.sub}</p>
               <div className="hero-cta">
                 <OpenFlowButton style={{ minWidth: 240 }}>{c.hero.cta}</OpenFlowButton>
-                <span className="caption">{c.hero.small}</span>
+                <span className="caption hero-note"><b>{c.hero.smallStrong}</b> {c.hero.small}</span>
               </div>
             </div>
           </div>
@@ -178,8 +183,8 @@ export default async function Page() {
                 <p className="label small">{c.produkt.sizesTitle}</p>
                 <ul className="size-compare">
                   {c.produkt.sizeCards.map((x) => (
-                    <li key={x.label} className={x.standard ? 'is-standard' : ''}>
-                      {x.standard && <span className="tag">{c.produkt.standard}</span>}
+                    <li key={x.label} className={x.recommended ? 'is-recommended' : ''}>
+                      {x.recommended && <span className="tag">{c.produkt.recommended}</span>}
                       <b>{x.label}</b>
                       <span className="size-price tabular">{x.price}</span>
                       <span className="caption">{x.hint}</span>
