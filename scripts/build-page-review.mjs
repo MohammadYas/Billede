@@ -46,7 +46,7 @@ const PAGES = [
   { g: 'Forsiden', n: '01', t: 'Forside — telefon', p: '/', w: 390, note: 'Det første en kold besøgende fra Meta ser. 90 % af trafikken.' },
   { g: 'Forsiden', n: '02', t: 'Forside — desktop', p: '/', w: 1280, note: 'Samme side, samme rækkefølge, to spalter hvor der er plads.' },
 
-  { g: 'Upload-arket', n: '03', t: 'Arket, tomt', p: '/', w: 390, only: SHEET, act: openSheet, note: 'Det der glider op ved tryk på "Se dit billede nu". Forsiden under det er nr. 01.' },
+  { g: 'Upload-arket', n: '03', t: 'Arket, tomt', p: '/', w: 390, only: SHEET, act: openSheet, note: 'Det der glider op ved tryk på "Se hvad dit billede kan blive til". Forsiden under det er nr. 01.' },
   { g: 'Upload-arket', n: '04', t: 'Billede valgt', p: '/', w: 390, only: SHEET, note: 'Efter kameraet eller kamerarullen. Intet er sendt endnu.',
     act: async (p) => { await openSheet(p); await setPhoto(p, 'work/audit/phone-photo.jpg'); } },
   { g: 'Upload-arket', n: '05', t: 'Forkert filtype', p: '/', w: 390, only: SHEET, note: 'Fejlen står ved feltet, ikke i toppen, og siger hvad man gør i stedet.',

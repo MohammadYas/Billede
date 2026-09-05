@@ -20,7 +20,7 @@ async function main() {
 
   // A — real preview
   await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: 'Se dit billede nu' }).first().click();
+  await page.getByRole('button', { name: 'Se hvad dit billede kan blive til' }).first().click();
   await page.waitForSelector('.sheet');
   const t0 = Date.now();
   const input = page.locator('.sheet input[type=file]').nth(1);
@@ -73,7 +73,7 @@ async function main() {
   if (process.env.ONLY_A) { out.console_errors = consoleErrors; await fs.writeFile('work/journeys-a.json', JSON.stringify(out, null, 2)); console.log(JSON.stringify(out, null, 2)); await browser.close(); return; }
   // B — group photo → fallback
   await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: 'Se dit billede nu' }).first().click();
+  await page.getByRole('button', { name: 'Se hvad dit billede kan blive til' }).first().click();
   await page.waitForSelector('.sheet');
   await page.locator('.sheet input[type=file]').nth(1).setInputFiles('work/pd-originals/battalion.jpg');
   await page.getByRole('button', { name: 'Vis mig resultatet' }).click();
@@ -89,7 +89,7 @@ async function main() {
 
   // B2 — wrong file type
   await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: 'Se dit billede nu' }).first().click();
+  await page.getByRole('button', { name: 'Se hvad dit billede kan blive til' }).first().click();
   await page.waitForSelector('.sheet');
   await page.locator('.sheet input[type=file]').nth(1).setInputFiles({ name: 'x.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') });
   out.B2_wrong_type_msg = await page.locator('.sheet [role=alert]').textContent();

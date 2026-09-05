@@ -289,4 +289,27 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   broken-image icon at the top of the sheet (the browser cannot decode what it uploads perfectly well);
   the sheet shows the file name in a frame instead. "Slet mit billede nu" returned the customer to the
   front page without a word; it now says the deletion happened.
+- **The proof moved up, and the page says why before it says how.** A cold visitor from a before/after
+  ad used to meet the hero, the trust row, three steps and the gift story before the second before/after.
+  The order is now hero → *Det kunne være jeres* (six pairs, swipe on a phone) → *Tæt på* → how it
+  works → what you get → price → the gift → questions. The gift section lost its own button: four
+  identical primary buttons down one page is not a hierarchy. Every remaining primary says the same
+  thing, *Se hvad dit billede kan blive til*, because that is what the button does; the sticky bar
+  carries the same words and fits 390 px exactly.
+- **The hero states the outcome and the risk reversal in one breath.** *Du ser resultatet, før du
+  køber* is true (the preview is free, the order comes after), so it now stands under the button and
+  first in the trust row. The sub-line says what happens: a photo with the phone, ninety seconds, and
+  a decision only afterwards.
+- **The sizes are compared, not listed.** The landing page shows the same three boxes the order page
+  uses, with the default marked *Standard* — the word for what it is, not *Mest populære*, which we have
+  no sales to prove. The order page numbers its decisions 1 Størrelse · 2 Ramme · 3 Ekstra eksemplar ·
+  4 Din bestilling, and the bill now comes *after* the last decision, with the three real promises
+  (approve before print, money back, deleted if you do not order) directly above the button. Two
+  paragraphs between the photograph and the wall mockup were cut; the second copy of the spec text went
+  with them.
+- **The second copy has a reason.** *Én til dig. Én til familien.* — the sister or parent who also
+  remembers — then the price. Still a button, still opt-in, still 349 kr. at every size.
+- **The FAQ is ordered by what stops a purchase.** Cost of looking, badly damaged or blurred (with the
+  honest limit: sharpness that was never there cannot be invented), does it look artificial, can I
+  cancel, delivery, what happens to my photo — before sizes, copies, the file, gifts and payment.
 

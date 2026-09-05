@@ -37,7 +37,6 @@ export function copy(season: Season = currentSeason()) {
     ['Manuelt tjek', `${cap(navn)} finjusterer hvert billede og tjekker ansigterne`],
     ['Godkendelse', 'Du ser det færdige billede og siger ja, før vi printer'],
     ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder`],
-    ['Flere eksemplarer', `Et mere af samme billede for ${formatDkk(EXTRA_PRINT_DKK[fmt])}, uanset størrelse, i samme pakke`],
     ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
   ];
   const variant = (fmt: Format, landscape = false) => {
@@ -73,9 +72,9 @@ export function copy(season: Season = currentSeason()) {
     hero: {
       eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Gaven, de ikke selv kan købe',
       h1: 'Mors gamle billede. Skarpt igen, i ramme, hjemme hos dig.',
-      sub: 'Tag et foto af billedet med telefonen. Halvandet minut efter ser du det restaureret.',
-      cta: 'Se dit billede nu',
-      small: `Det koster ikke noget at se resultatet. Skal det hjem til dig: ${priceFrom} for print, ramme og fri fragt.`,
+      sub: 'Tag et foto af det med telefonen. Halvandet minut senere ser du, hvad det kan blive til – før du beslutter noget.',
+      cta: 'Se hvad dit billede kan blive til',
+      small: `Du ser resultatet, før du køber. Skal det hjem til dig i ramme: ${priceFrom}, fri fragt.`,
       countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
     },
     gave: {
@@ -89,9 +88,9 @@ export function copy(season: Season = currentSeason()) {
       ] as [string, string][],
     },
     tryghed: [
-      `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
+      'Du ser resultatet, før du køber',
       'Du godkender, før vi printer – ellers pengene tilbage',
-      `Bestiller du ikke, slettes billedet efter ${CONFIG.retentionUnpaidDays} dage – eller straks, hvis du beder om det`,
+      `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
     ],
     saadan: {
       h2: 'Sådan fungerer det',
@@ -105,12 +104,15 @@ export function copy(season: Season = currentSeason()) {
     taetPaa: { h2: 'Tæt på', p: 'Det er i detaljerne, man kan se, om det er gjort ordentligt. Øjne, hænder, skrift og stof – ikke udglattet, bare rene.' },
     produkt: {
       h2: `Det får du for ${price}`,
+      lead: 'Restaureret foto, print, ramme og levering. Ét beløb – ingen tillæg.',
       rows: rowsFor(format, formatLabel(format)),
       sizesTitle: 'Størrelser',
-      sizesNote: 'Samme billede og samme håndarbejde i alle tre. Du vælger størrelsen, når du har set resultatet.',
+      sizeCards: sizes.map((fmt) => ({ label: formatLabel(fmt), price: formatDkk(PRICING[fmt].priceDkk), hint: hint[fmt] ?? '', standard: fmt === format })),
+      standard: 'Standard',
+      sizesNote: `Samme billede og samme håndarbejde i alle tre. ${formatLabel(format)} er sat op på forhånd – du kan skifte, når du har set resultatet.`,
       note: `Restaurering, print, ramme, kort med din hilsen, indpakning og fragt – ét beløb per billede.`,
     },
-    eksempler: { h2: 'Eksempler', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
+    eksempler: { h2: 'Det kunne være jeres.', lead: 'Bryllupsbilledet, barnet på trappen, bedsteforældrene i haven. Gulnet, ridset eller falmet – tag et foto af det, og se selv, hvad der kan gøres.', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
     offer: {
       line: `Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret ${levering}, efter du har godkendt billedet på mail.`,
       deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
@@ -124,7 +126,7 @@ export function copy(season: Season = currentSeason()) {
       kontaktHref: emailHref,
       price,
       priceFrom: sizes.length > 1 ? `for ${formatLabel(format)} · større: ${sizes.filter((x) => x !== format).map((x) => `${formatLabel(x)} ${formatDkk(PRICING[x].priceDkk)}`).join(' · ')}` : '',
-      cta: 'Se dit billede nu',
+      cta: 'Se hvad dit billede kan blive til',
       under: 'Du bestiller først, når du har set resultatet.',
     },
     hvem: { h2: 'Hvem står bag' },
@@ -136,37 +138,12 @@ export function copy(season: Season = currentSeason()) {
           a: `Nej. Du tager et foto af billedet, ser det restaureret på skærmen, og først derefter beslutter du, om det skal hjem til dig. Bestiller du ikke, slettes billedet af sig selv efter ${CONFIG.retentionUnpaidDays} dage.`,
         },
         {
+          q: 'Mit billede er meget ødelagt eller sløret – kan I stadig gøre noget?',
+          a: 'Prisen er den samme, uanset hvor beskadiget billedet er. Revner, folder, gulstik, vandskjolder og manglende hjørner er det, vi ser mest af. Sløret er sværere end ridset – skarphed, der aldrig var i billedet, kan vi ikke opfinde – men også det koster ikke noget at prøve. Tag et foto af det og se selv.',
+        },
+        {
           q: 'Ser det kunstigt ud?',
           a: `Det er præcis det, ${navn} tjekker for, før det printes. Hvis AI'en har ændret noget i et ansigt, rettes det tilbage. Og du ser det færdige billede og godkender det, før vi printer.`,
-        },
-        {
-          q: 'Virker det også på farvebilleder fra 70’erne og 80’erne?',
-          a: 'Ja. Falmede farver, gulstik, folder og ridser er det, vi ser mest af. Tag et foto af det, og se selv – det koster ikke noget at kigge.',
-        },
-        {
-          q: 'Jeg har ikke billedet – det ligger hos min mor.',
-          a: 'Tag et foto af det med telefonen, næste gang du er hjemme. Læg det fladt i dagslys, uden blitz. Det er nok i langt de fleste tilfælde. Du kan også få et link på mail, så du har siden ved hånden.',
-          nophoto: true,
-        },
-        {
-          q: 'Skal jeg sende det originale billede til jer?',
-          a: 'Nej. Du tager kun et foto af det med telefonen. Originalen bliver liggende i skuffen hos dig – vi rører den aldrig.',
-        },
-        {
-          q: 'Mit billede er meget ødelagt – kan I stadig gøre noget?',
-          a: 'Prisen er den samme, uanset hvor beskadiget billedet er. Revner, folder, gulstik, vandskjolder og manglende hjørner er det, vi ser mest af. Tag et foto af det og se selv, hvad der kommer ud af det – det koster ikke noget at kigge.',
-        },
-        {
-          q: 'Hvad sker der med mit billede?',
-          a: `Det bruges kun til din bestilling og deles aldrig. Bestiller du ikke, slettes det automatisk efter ${CONFIG.retentionUnpaidDays} dage; bestiller du, ${CONFIG.retentionCompletedDays} dage efter leveringen. Eller straks, hvis du beder om det.`,
-        },
-        {
-          q: 'Hvad er forskellen på det her og en app?',
-          a: `En app giver dig en fil på telefonen. Her får du et rigtigt print i ramme, som hænger på væggen ${levering} – og et menneske, der har tjekket ansigterne, før det blev printet.`,
-        },
-        {
-          q: 'Hvilke størrelser kan jeg få?',
-          a: `${sizes.map((x) => `${formatLabel(x)} for ${formatDkk(PRICING[x].priceDkk)}`).join(', ')} – alle i sort eller egetræsramme, med passepartout, glas og fri fragt. Du vælger størrelsen, når du har set dit billede restaureret. Er billedet liggende, printes det liggende i samme mål.`,
         },
         {
           q: 'Kan jeg fortryde?',
@@ -175,6 +152,27 @@ export function copy(season: Season = currentSeason()) {
         jul
           ? { q: 'Når det frem inden jul?', a: `Ja, hvis du bestiller senest ${dato} og godkender billedet, når mailen kommer (inden 48 timer). Efter ${dato} leverer vi inden ${X} hverdage.` }
           : { q: 'Hvornår får jeg det?', a: `Vi leverer inden ${X} hverdage, efter du har godkendt det færdige billede.` },
+        {
+          q: 'Hvad sker der med mit billede?',
+          a: `Det bruges kun til din bestilling og deles aldrig. Bestiller du ikke, slettes det automatisk efter ${CONFIG.retentionUnpaidDays} dage; bestiller du, ${CONFIG.retentionCompletedDays} dage efter leveringen. Eller straks, hvis du beder om det.`,
+        },
+        {
+          q: 'Skal jeg sende det originale billede til jer?',
+          a: 'Nej. Du tager kun et foto af det med telefonen. Originalen bliver liggende i skuffen hos dig – vi rører den aldrig.',
+        },
+        {
+          q: 'Jeg har ikke billedet – det ligger hos min mor.',
+          a: 'Tag et foto af det med telefonen, næste gang du er hjemme. Læg det fladt i dagslys, uden blitz. Det er nok i langt de fleste tilfælde. Du kan også få et link på mail, så du har siden ved hånden.',
+          nophoto: true,
+        },
+        {
+          q: 'Virker det også på farvebilleder fra 70’erne og 80’erne?',
+          a: 'Ja. Falmede farver, gulstik, folder og ridser er det, vi ser mest af. Tag et foto af det, og se selv – det koster ikke noget at kigge.',
+        },
+        {
+          q: 'Hvilke størrelser kan jeg få?',
+          a: `${sizes.map((x) => `${formatLabel(x)} for ${formatDkk(PRICING[x].priceDkk)}`).join(', ')} – alle i sort eller egetræsramme, med passepartout, glas og fri fragt. Du vælger størrelsen, når du har set dit billede restaureret. Er billedet liggende, printes det liggende i samme mål.`,
+        },
         {
           q: 'Kan jeg få flere eksemplarer af det samme billede?',
           a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling.`,
@@ -195,10 +193,14 @@ export function copy(season: Season = currentSeason()) {
           q: 'Hvordan betaler jeg?',
           a: `${pay}. Du betaler ved bestilling og kan fortryde med fuld refusion, indtil du har godkendt det færdige billede.`,
         },
+        {
+          q: 'Hvad er forskellen på det her og en app?',
+          a: `En app giver dig en fil på telefonen. Her får du et rigtigt print i ramme, som hænger på væggen ${levering} – og et menneske, der har tjekket ansigterne, før det blev printet.`,
+        },
       ],
     },
-    slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : 'Halvandet minut, så har du set det. Du bestiller først bagefter.', cta: 'Se dit billede nu' },
-    sticky: `Se dit billede nu · ${priceFrom}`,
+    slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : 'Halvandet minut, så har du set det. Du bestiller først bagefter.', cta: 'Se hvad dit billede kan blive til' },
+    sticky: 'Se hvad dit billede kan blive til',
     upload: {
       camera: 'Tag et foto',
       library: 'Vælg fra kamerarulle',
@@ -250,7 +252,7 @@ export function copy(season: Season = currentSeason()) {
     },
     preview: {
       h2: 'Her er dit billede.',
-      next: `Det her er den hurtige første restaurering. Derfra går det i hånden: ${navn} finpudser billedet og går især ansigterne efter. Du får det færdige billede på mail og siger ja, før vi printer noget – og så kommer det hjem til dig, printet og indrammet.`,
+      next: `Det her er den hurtige første restaurering. Bestiller du, går ${navn} billedet efter i hånden – især ansigterne – og du godkender det færdige billede på mail, før vi printer.`,
       headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Vi printer først, når du har set det færdige billede og sagt ja.',
@@ -264,13 +266,19 @@ export function copy(season: Season = currentSeason()) {
       frameEg: 'Eg',
       frameEgHint: 'Lyst træ. Varmere til gamle billeder',
       frameNote: 'Begge med passepartout og glas. Samme pris.',
-      extraTitle: 'Skal en anden i familien også have et?',
-      extraLead: 'Samme billede, samme størrelse, i samme pakke.',
+      extraTitle: 'Én til dig. Én til familien.',
+      extraLead: `Samme billede, samme størrelse og ramme, i samme pakke – til den søskende eller forælder, der også husker det. Restaureringen er lavet, så et eksemplar mere koster ${formatDkk(EXTRA_PRINT_DKK[format])}`,
+      extraLabel: 'Ekstra eksemplar',
       extraAdd: 'Tilføj et eksemplar',
       extraOne: 'eksemplar mere',
       extraMany: 'eksemplarer mere',
       extraRemove: 'Fjern',
       summaryTitle: 'Din bestilling',
+      trust: [
+        'Du godkender det færdige billede på mail, før vi printer',
+        'Ligner det ikke, får du hele beløbet tilbage',
+        `Billedet bruges kun til din bestilling – og slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller`,
+      ] as string[],
       shipping: 'Fragt og indpakning',
       shippingFree: 'Inkluderet',
       total: 'I alt',
@@ -278,7 +286,6 @@ export function copy(season: Season = currentSeason()) {
       steps: ['Dit billede', 'Størrelse og ramme', 'Betaling'] as string[],
       zoomIn: 'Se tæt på',
       zoomOut: 'Se hele billedet',
-      zoomHint: 'Restaurering afgøres i ansigterne — se dem tæt på.',
       colourToggle: 'Vis i farver',
       colourHint: 'Til gamle sort-hvide billeder vælger de fleste at beholde det oprindelige udtryk. Vil du se det i farver, kan du prøve begge dele – du bestemmer, hvad vi printer.',
       monoToggle: 'Vis i sort-hvid',

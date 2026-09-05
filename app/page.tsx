@@ -90,45 +90,10 @@ export default async function Page() {
 
         <div className="wrap"><div className="container trust">{c.tryghed.map((t, i) => <span key={i}>{t}</span>)}</div></div>
 
-        {/* Sådan fungerer det — the object at each stage: the damaged print, the restored screen, the frame. */}
-        <section className="wrap section" aria-labelledby="saadan">
-          <div className="container ed">
-            <h2 id="saadan">{c.saadan.h2}</h2>
-            <ol className="steps">
-              {c.saadan.steps.map((s, i) => {
-                // small variants: the step photographs render at 112–160 px
-                const small = (u: string) => u.replace(/\.jpg$/, '-480.jpg');
-                const img = stepEx ? [small(stepEx.before), small(stepEx.after), stepEx.mockup ? small(stepEx.mockup) : small(stepEx.after)][i] : null;
-                return (
-                  <li key={i} className="step">
-                    {img ? <img src={img} alt="" width={160} height={200} loading="lazy" /> : <span className="ph" />}
-                    <p><span className="n">{i + 1}</span>{s}</p>
-                  </li>
-                );
-              })}
-            </ol>
-            <p className="caption measure">{c.saadan.note}</p>
-          </div>
-        </section>
-
-        {/* Gaven — why this is the gift they cannot buy themselves (card with the buyer's greeting is a real Checkout field) */}
-        <section className="wrap section section-quiet" aria-labelledby="gave">
-          <div className="container gift">
-            <div className="gift-head">
-              <h2 id="gave">{c.gave.h2}</h2>
-              <p className="lead" style={{ maxWidth: '24em' }}>{c.gave.lead}</p>
-              <div><OpenFlowButton style={{ minWidth: 240 }}>{c.hero.cta}</OpenFlowButton></div>
-            </div>
-            <dl className="gift-points">
-              {c.gave.points.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
-            </dl>
-          </div>
-        </section>
-
         {/* Eksempler — each pair compared a different way; never the hero photograph again */}
         {gridExamples.length > 0 && (
           <section className="section" aria-labelledby="eksempler">
-            <div className="wrap"><div className="container"><h2 id="eksempler" style={{ marginBottom: 'var(--s5)' }}>{c.eksempler.h2}</h2></div></div>
+            <div className="wrap"><div className="container ed" style={{ marginBottom: 'var(--s6)' }}><h2 id="eksempler">{c.eksempler.h2}</h2><p className="lead" style={{ maxWidth: '26em' }}>{c.eksempler.lead}</p></div></div>
             <div className="container">
               <div className="swipe">
                 {gridExamples.map((e, i) => {
@@ -176,25 +141,53 @@ export default async function Page() {
           </section>
         )}
 
+        {/* Sådan fungerer det — the object at each stage: the damaged print, the restored screen, the frame. */}
+        <section className="wrap section" aria-labelledby="saadan">
+          <div className="container ed">
+            <h2 id="saadan">{c.saadan.h2}</h2>
+            <ol className="steps">
+              {c.saadan.steps.map((s, i) => {
+                // small variants: the step photographs render at 112–160 px
+                const small = (u: string) => u.replace(/\.jpg$/, '-480.jpg');
+                const img = stepEx ? [small(stepEx.before), small(stepEx.after), stepEx.mockup ? small(stepEx.mockup) : small(stepEx.after)][i] : null;
+                return (
+                  <li key={i} className="step">
+                    {img ? <img src={img} alt="" width={160} height={200} loading="lazy" /> : <span className="ph" />}
+                    <p><span className="n">{i + 1}</span>{s}</p>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="caption measure">{c.saadan.note}</p>
+          </div>
+        </section>
+
         {/* Det får du — the object and a gallery label */}
-        <section className="wrap section" aria-labelledby="produkt" style={{ paddingTop: 0 }}>
+        <section className="wrap section" aria-labelledby="produkt">
           <div className="container product">
             <div>
               {productMock ? <img className="mock" src={productMock} alt={`Indrammet ${c.formatLabel} på en væg`} width={1200} height={960} loading="lazy" /> : null}
             </div>
             <div style={{ display: 'grid', gap: 'var(--s5)' }}>
               <h2 id="produkt">{c.produkt.h2}</h2>
+              <p className="lead" style={{ maxWidth: '24em' }}>{c.produkt.lead}</p>
               <dl className="label">
                 {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
               </dl>
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
                 <p className="label small">{c.produkt.sizesTitle}</p>
-                <ul className="size-list">
-                  {c.sizes.map(([l, p]) => <li key={l}><span>{l}</span><span>{p}</span></li>)}
+                <ul className="size-compare">
+                  {c.produkt.sizeCards.map((x) => (
+                    <li key={x.label} className={x.standard ? 'is-standard' : ''}>
+                      {x.standard && <span className="tag">{c.produkt.standard}</span>}
+                      <b>{x.label}</b>
+                      <span className="size-price tabular">{x.price}</span>
+                      <span className="caption">{x.hint}</span>
+                    </li>
+                  ))}
                 </ul>
                 <p className="caption">{c.produkt.sizesNote}</p>
               </div>
-              <p className="compare-note">{c.produkt.note}</p>
             </div>
           </div>
         </section>
@@ -221,6 +214,26 @@ export default async function Page() {
             </div>
           </div>
         </section>
+
+        {/* Gaven — why this is the gift they cannot buy themselves (card with the buyer's greeting is a real Checkout field) */}
+        <section className="wrap section" aria-labelledby="gave">
+          <div className="container gift">
+            <div className="gift-head">
+              <h2 id="gave">{c.gave.h2}</h2>
+              <p className="lead" style={{ maxWidth: '24em' }}>{c.gave.lead}</p>
+            </div>
+            <dl className="gift-points">
+              {c.gave.points.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+            </dl>
+          </div>
+        </section>
+
+
+
+
+
+
+
 
         {showFounder && (
           <section className="wrap section" aria-labelledby="hvem">

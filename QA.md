@@ -568,3 +568,19 @@ ruter svarede 500 i stedet for 404 på et ugyldigt id; hårdkodede "30 dage" og 
 Ikke kørt, og hvorfor: download af den færdige fil kræver en godkendt ordre, og der findes ingen i
 databasen (ingen Stripe-nøgler, ingen OpenAI-credits); ruten er typetjekket og afvisningsstien er kørt.
 
+## Konverteringspas, 5. september 2026
+
+Forsidens rækkefølge, hero-copy, størrelsessammenligning, bestillingssidens trin (1–4, regning efter
+sidste valg, tillid ved knappen), upsell-copy og FAQ-orden. Kørt mod en produktionsbygning på 3111.
+
+| Kontrol | Resultat |
+|---|---|
+| `npm run typecheck` · `npm test` | rent · 8/8 |
+| `npm run test:order` | 9/9 – trin 1–4 ændrer ingen priser, ekstra er stadig opt-in |
+| `npm run test:viewport` | 12/12 – den faste knap "Se hvad dit billede kan blive til" fylder præcis 350 px ved 390 |
+| Konsolfejl på forside, ark, bestilling, /tak, 404, handelsbetingelser | ingen |
+| Sektionsrækkefølge i den byggede forside | hero → Det kunne være jeres → Tæt på → Sådan fungerer det → Det får du → pris → gaven → spørgsmål → afslutning |
+
+Første forsøg på flytningen klippede eksempel-sektionen midt over (for kort søgemønster) og gav 1.226 px
+vandret overløb ved 390 – fanget af `test:viewport`, rettet, kørt igen.
+

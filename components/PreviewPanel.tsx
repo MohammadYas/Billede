@@ -225,7 +225,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="caption measure">{c.preview.readyNote}</p>
       </div>
       <fieldset className="cfg">
-        <legend className="cfg-label">{c.preview.sizeTitle}</legend>
+        <legend className="cfg-label"><span className="n">1</span>{c.preview.sizeTitle}</legend>
         <div className="sizes-row">
           {variants.map((x) => (
             <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}`}>
@@ -240,7 +240,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       </fieldset>
 
       <fieldset className="cfg">
-        <legend className="cfg-label">{c.preview.frameTitle}</legend>
+        <legend className="cfg-label"><span className="n">2</span>{c.preview.frameTitle}</legend>
         <div className="frames-row">
           {([['sort', c.preview.frameSort, c.preview.frameSortHint], ['eg', c.preview.frameEg, c.preview.frameEgHint]] as [Frame, string, string][]).map(([key, name, hint]) => (
             <label key={key} className={`frame${key === frame ? ' is-on' : ''}`}>
@@ -253,22 +253,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="caption">{c.preview.frameNote}</p>
       </fieldset>
 
-      <div className="cfg bill">
-        <p className="cfg-label">{c.preview.summaryTitle}</p>
-        <dl className="bill-lines">
-          {bill.lines.map((l) => (
-            <div key={l.key}>
-              <dt>{l.quantity > 1 ? `${l.quantity} × ` : ''}{l.short}{l.note ? <span className="caption">{l.note}</span> : null}</dt>
-              <dd className="tabular">{formatOere(l.amountOere)}</dd>
-            </div>
-          ))}
-          <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
-        </dl>
-        <p className="bill-total"><span>{c.preview.total}</span> <b><Total oere={bill.totalOere} /></b></p>
-        <p className="caption">{c.preview.vat}</p>
-      </div>
-
       <div className="cfg extra">
+        <p className="cfg-label"><span className="n">3</span>{c.preview.extraLabel}</p>
         <p className="cfg-title">{c.preview.extraTitle}</p>
         <p className="caption measure">{c.preview.extraLead}</p>
         {extraPrints === 0 ? (
@@ -282,6 +268,23 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
             <button type="button" onClick={() => setExtras(extraPrints + 1)} aria-label={c.preview.extraAdd} disabled={extraPrints >= MAX_EXTRA_PRINTS}>+</button>
           </div>
         )}
+      </div>
+      <div className="cfg bill">
+        <p className="cfg-label"><span className="n">4</span>{c.preview.summaryTitle}</p>
+        <dl className="bill-lines">
+          {bill.lines.map((l) => (
+            <div key={l.key}>
+              <dt>{l.quantity > 1 ? `${l.quantity} × ` : ''}{l.short}{l.note ? <span className="caption">{l.note}</span> : null}</dt>
+              <dd className="tabular">{formatOere(l.amountOere)}</dd>
+            </div>
+          ))}
+          <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
+        </dl>
+        <p className="bill-total"><span>{c.preview.total}</span> <b><Total oere={bill.totalOere} /></b></p>
+        <p className="caption">{c.preview.vat}</p>
+        {/* the three promises, where the doubt is: right above the button */}
+        <ul className="guarantee">{c.preview.trust.map((t) => <li key={t}>{t}</li>)}</ul>
+        <p className="caption measure">{c.preview.gift}</p>
       </div>
     </div>
   );
@@ -318,11 +321,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           {data.isMonochrome && <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>}
           {(colourLoading || (data.colour && !colourReady)) && <span className="caption">{c.preview.colourLoading}</span>}
         </div>
-        <p className="caption measure">{data.isMonochrome && colourReady ? c.preview.colourHint : c.preview.zoomHint}</p>
+        {data.isMonochrome && colourReady && <p className="caption measure">{c.preview.colourHint}</p>}
         <p className="caption measure">{c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
         <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>
-        <p className="caption measure">{c.preview.gift}</p>
       </div>
       <div className="pv-right">
         {/* desktop: the decision first, the object and the label under it */}
@@ -331,7 +333,6 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           {/* the object first, then what it is, then the price — the decisions come after the value */}
           <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <p className="caption">{v.mockupCaption}</p>
-          <p className="measure">{v.p}</p>
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <dl className="label small">
             {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
