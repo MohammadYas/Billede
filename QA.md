@@ -612,3 +612,20 @@ dig.", to rækker slået sammen, tre gentagelser fjernet. Kørt mod en produktio
 | `[Udfyld`, TODO, lorem ipsum på forside og juridiske sider | 0 (det ene "TODO"-match er bogstaverne i copy-nøglen noPho*toDo*ne) |
 | Konsolfejl | ingen |
 
+## Pre-launch-pas, 5. september 2026
+
+Alt, der kan køres uden Stripe-, Resend- og admin-nøgler, er kørt mod en produktionsbygning på 3111.
+
+| Trin | Kontrol | Resultat |
+|---|---|---|
+| A Forside | konsolfejl 390/1280, Lighthouse mobil | ingen fejl · perf 91 · a11y 100 · CLS 0 · målt LCP 134 ms |
+| B Upload | ugyldig filtype, for stor fil, HEIC-miniature | 415 · 413 · filnavn i ramme |
+| C Preview | eksisterende PREVIEW_READY-ordre | åbner med delingsnøgle, 404 uden |
+| D–G Størrelse, ramme, ekstra, priser | `npm run test:order` | 9/9 · 599 → 799 → 999 → 1.348 → 1.148 → 948 → 599 |
+| H Checkout-total | samme tal i knap, bjælke og regning | verificeret af samme test |
+| I Stripe | `POST /api/checkout` uden nøgle | 503 "Betaling er ikke sat op endnu" – den rolige fejl på siden |
+| J Afbrudt betaling | `?cancelled=1` | banner "Betalingen blev ikke gennemført. Dit preview er gemt" |
+| K–N Betaling, ordre, mail, admin | – | **ikke kørt: ingen Stripe-, Resend- eller ADMIN_PASSWORD-nøgler** |
+| O Tilstande | 404, ugyldigt id, billede uden nøgle, webhook uden signatur, slettet | 404 · 404 · 404 · 400 · bekræftelse på forsiden |
+| §12 | TODO/FIXME/placeholder/example.com/lorem/fake i udgivet kode | 0 i kundetekst (kun kodekommentarer) |
+

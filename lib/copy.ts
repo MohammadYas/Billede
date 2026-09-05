@@ -94,7 +94,7 @@ export function copy(season: Season = currentSeason()) {
       sub: 'Tag et foto af det med telefonen, og se det restaureret – før du beslutter noget.',
       cta,
       /** the risk reversal, set apart from the price line so it reads before it */
-      smallStrong: 'Du ser resultatet, før du køber.',
+      smallStrong: 'Du ser resultatet, før du køber – det koster ikke noget.',
       small: `Skal det hjem til dig i ramme: ${priceFrom}, fri fragt.`,
       mockCaption: 'Og sådan hænger det – i ramme, med passepartout og glas.',
       countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
@@ -164,7 +164,7 @@ export function copy(season: Season = currentSeason()) {
         },
         {
           q: 'Ser det kunstigt ud?',
-          a: `Det er præcis det, ${navn} tjekker for, før det printes. Hvis AI'en har ændret noget i et ansigt, rettes det tilbage. Og du ser det færdige billede og godkender det, før vi printer.`,
+          a: `Det er præcis det, ${navn} tjekker for, før det printes. Hvis restaureringen har ændret noget i et ansigt, rettes det tilbage. Og du ser det færdige billede og godkender det, før vi printer.`,
         },
         {
           q: 'Kan jeg fortryde?',

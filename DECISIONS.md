@@ -349,4 +349,8 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **The button speaks in the first person.** *Se hvad mit billede kan blive til* is the default
   variant now: the order button already says *Bestil mit billede* and the sheet *Vis mig
   resultatet*, so the funnel has one voice from the first tap. A and B stay one env variable away.
+- **Two words less about technology.** The FAQ said *hvis AI'en har ændret noget i et ansigt*; it says
+  *restaureringen* now. The terms and the privacy page keep naming the model and the provider, because
+  there it is a duty, not a pitch. And the line under the button says the whole risk reversal in one
+  breath: *Du ser resultatet, før du køber – det koster ikke noget.*
 
