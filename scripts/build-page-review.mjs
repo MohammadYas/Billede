@@ -72,7 +72,7 @@ const PAGES = [
   ] : []),
 
   { g: 'Det juridiske', n: '15', t: 'Privatlivspolitik', p: '/privatliv', w: 390, note: '' },
-  { g: 'Det juridiske', n: '16', t: 'Handelsbetingelser', p: '/handelsbetingelser', w: 390, note: 'CVR og adresse står stadig som [Udfyld: …]. Stripe kræver et link hertil, før Checkout åbner.' },
+  { g: 'Det juridiske', n: '16', t: 'Handelsbetingelser', p: '/handelsbetingelser', w: 390, note: 'CVR og adresse mangler i founder.md: feltet udelades i produktion, og buildet nægter at deploye uden det. Stripe kræver et link hertil, før Checkout åbner.' },
 
   { g: 'Admin', n: '17', t: 'Log ind', p: '/admin', w: 390, note: '' },
   ...(ADMIN ? [{ g: 'Admin', n: '18', t: 'Ordrer', p: '/admin', w: 1280, note: 'Tom, fordi ubetalte previews er skjult som standard. Nul betalte ordrer nogensinde.', login: true }] : []),
