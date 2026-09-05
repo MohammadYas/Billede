@@ -56,7 +56,7 @@ Nothing in this list is code. The code is done and verified; each line below is 
     | | 30×40 | 40×50 | 50×70 |
     |---|---|---|---|
     | Billedet, i ramme | 599 kr. | 799 kr. | 999 kr. |
-    | Ekstra eksemplar af samme billede | 349 kr. | 449 kr. | 549 kr. |
+    | Ekstra eksemplar af samme billede | 349 kr. | 349 kr. | 349 kr. |
 
     Everything above includes frame, glass, mount, gift card, packaging and shipping. The extra copy has no restoration
     work in it, only the object — that is why it is cheaper, and why it must still carry the print, the frame and the
@@ -285,6 +285,11 @@ plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are com
 - **The wait.** The bar creeps to 85 % while the model runs (~30–45 s); after 45 s the caption says it is taking longer
   today. If OpenAI is slow for a whole day, that line is what people see — no action needed, but expect calls.
 - **Founder's first name** is used in copy only once the portrait and the three "why" lines exist (see §2).
+- **The digital file is delivered on the approval page.** Once the customer taps Godkend, `/godkend/<token>` shows
+  "Hent din fil i høj opløsning" (a short signed download of the print final), and the "Dit billede er på vej"
+  mail carries the same link. Nothing to do on your side — but the file only exists once you have generated or
+  uploaded the final, which you must do before the approval mail anyway. After the 90-day retention the link says
+  the file is gone.
 
 ## 13. Unverified
 

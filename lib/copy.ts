@@ -33,7 +33,7 @@ export function copy(season: Season = currentSeason()) {
   const rowsFor = (fmt: Format, lbl: string): [string, string][] => [
     ['Print', `${lbl} på mat fotopapir, farveægte`],
     ['Ramme', 'Sort eller eg, med passepartout og glas, klar til at hænge op'],
-    ['Fil', 'Den restaurerede fil i høj opløsning, din for altid'],
+    ['Fil', 'Den restaurerede fil i høj opløsning – din at hente, så snart du har godkendt'],
     ['Manuelt tjek', `${cap(navn)} finjusterer hvert billede og tjekker ansigterne`],
     ['Godkendelse', 'Du ser det færdige billede og siger ja, før vi printer'],
     ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder`],
@@ -132,6 +132,10 @@ export function copy(season: Season = currentSeason()) {
       h2: 'Spørgsmål',
       items: [
         {
+          q: 'Koster det noget at se resultatet?',
+          a: `Nej. Du tager et foto af billedet, ser det restaureret på skærmen, og først derefter beslutter du, om det skal hjem til dig. Bestiller du ikke, slettes billedet af sig selv efter ${CONFIG.retentionUnpaidDays} dage.`,
+        },
+        {
           q: 'Ser det kunstigt ud?',
           a: `Det er præcis det, ${navn} tjekker for, før det printes. Hvis AI'en har ændret noget i et ansigt, rettes det tilbage. Og du ser det færdige billede og godkender det, før vi printer.`,
         },
@@ -162,7 +166,7 @@ export function copy(season: Season = currentSeason()) {
         },
         {
           q: 'Hvilke størrelser kan jeg få?',
-          a: `${sizes.map((x) => `${formatLabel(x)} for ${formatDkk(PRICING[x].priceDkk)}`).join(', ')} – alle med sort ramme, passepartout, glas og fri fragt. Du vælger størrelsen, når du har set dit billede restaureret. Er billedet liggende, printes det liggende i samme mål.`,
+          a: `${sizes.map((x) => `${formatLabel(x)} for ${formatDkk(PRICING[x].priceDkk)}`).join(', ')} – alle i sort eller egetræsramme, med passepartout, glas og fri fragt. Du vælger størrelsen, når du har set dit billede restaureret. Er billedet liggende, printes det liggende i samme mål.`,
         },
         {
           q: 'Kan jeg fortryde?',
@@ -174,6 +178,10 @@ export function copy(season: Season = currentSeason()) {
         {
           q: 'Kan jeg få flere eksemplarer af det samme billede?',
           a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling.`,
+        },
+        {
+          q: 'Får jeg også den digitale fil?',
+          a: `Ja. Når du har godkendt det færdige billede, kan du hente filen i høj opløsning fra godkendelsessiden – og linket kommer igen i mailen, når pakken er sendt. Filen er din. Vores kopi sletter vi ${CONFIG.retentionCompletedDays} dage efter levering.`,
         },
         {
           q: 'Kan jeg sende det direkte til modtageren?',
@@ -243,8 +251,6 @@ export function copy(season: Season = currentSeason()) {
     preview: {
       h2: 'Her er dit billede.',
       next: `Det her er den hurtige første restaurering. Derfra går det i hånden: ${navn} finpudser billedet og går især ansigterne efter. Du får det færdige billede på mail og siger ja, før vi printer noget – og så kommer det hjem til dig, printet og indrammet.`,
-      p: `Du får billedet printet på mat fotopapir, i ramme med passepartout og glas, klar til at hænge op – og den restaurerede fil i høj opløsning. Fri fragt, og du godkender det færdige billede, før vi printer.`,
-      specTitle: `Det får du for ${price}`,
       headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Vi printer først, når du har set det færdige billede og sagt ja.',
@@ -277,7 +283,6 @@ export function copy(season: Season = currentSeason()) {
       colourHint: 'Til gamle sort-hvide billeder vælger de fleste at beholde det oprindelige udtryk. Vil du se det i farver, kan du prøve begge dele – du bestemmer, hvad vi printer.',
       monoToggle: 'Vis i sort-hvid',
       colourLoading: 'Farveversion på vej – ca. ½ minut',
-      cta: `Bestil mit billede – ${price}`,
       ctaShort: 'Bestil mit billede',
       under: 'Pengene tilbage, hvis det ikke ligner.',
       payment: `${pay} · Ingen oprettelse`,
@@ -295,10 +300,10 @@ export function copy(season: Season = currentSeason()) {
       before: 'Før',
       after: 'Efter',
       cancelled: 'Betalingen blev ikke gennemført. Dit preview er gemt – du kan bestille, når du er klar.',
-      mockupCaption: `Sådan hænger det. ${formatLabel(format)}, sort ramme med passepartout, klar til væggen.`,
       landscape: '(liggende)',
       again: 'Vis et andet billede',
       erase: 'Slet mit billede nu',
+      erased: 'Dit billede og dit preview er slettet.',
       eraseConfirm: 'Så sletter vi billedet og dit preview med det samme. Det kan ikke fortrydes.',
     },
     fallback: {
@@ -313,7 +318,7 @@ export function copy(season: Season = currentSeason()) {
       timeline: [
         ['Inden 24 timer', `${cap(navn)} finjusterer billedet i hånden.`],
         ['Inden 48 timer', 'Du får en mail med det færdige billede. Godkend, eller bed om en ændring.'],
-        ['Efter dit ja', `Print i den valgte størrelse, ramme og fri fragt. Leveret ${levering}.`],
+        ['Efter dit ja', `Print i den valgte størrelse, ramme og fri fragt – og din fil i høj opløsning til download. Leveret ${levering}.`],
       ] as [string, string][],
       more: 'Vis et billede mere',
       againH2: 'Har I flere billeder?',
@@ -327,7 +332,7 @@ export function copy(season: Season = currentSeason()) {
     },
     consent: 'Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres, og at printet fremstilles specielt til mig.',
     cookie: {
-      text: 'Vi bruger en enkelt cookie fra Meta til at måle, om annoncerne virker. Ingen andre.',
+      text: 'Ud over de tekniske cookies, siden ikke kan undvære, bruger vi én cookie fra Meta til at måle, om annoncerne virker – kun hvis du siger ok.',
       accept: 'Ok',
       decline: 'Nej tak',
     },

@@ -33,6 +33,7 @@ export default async function Aendring({ params, searchParams }: { params: Promi
             <>
               <h1 style={{ maxWidth: '14em' }}>Billedet er godkendt og på vej i produktion.</h1>
               <p className="lead measure">Skal noget alligevel ændres, så skriv til os med det samme{c.email ? <> på <a href={c.emailHref}>{c.email}</a></> : null} – vi svarer inden 24 timer.</p>
+              {order.final_path && <p><a className="tap" href={`/godkend/${token}`}>Hent din fil i høj opløsning</a></p>}
             </>
           ) : r === 'ok' || order.status === 'CHANGE_REQUESTED' ? (
             <>

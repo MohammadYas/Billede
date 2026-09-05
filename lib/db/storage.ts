@@ -21,9 +21,9 @@ export async function getObject(path: string): Promise<Buffer> {
   return Buffer.from(await data.arrayBuffer());
 }
 
-/** Short-lived signed URL (≤ 15 min). */
-export async function signedUrl(path: string, seconds = CONFIG.signedUrlSeconds): Promise<string> {
-  const { data, error } = await supabaseAdmin().storage.from(BUCKET).createSignedUrl(path, Math.min(seconds, CONFIG.signedUrlSeconds));
+/** Short-lived signed URL (≤ 15 min). With `download`, the browser saves the file under that name instead of showing it. */
+export async function signedUrl(path: string, seconds = CONFIG.signedUrlSeconds, download?: string): Promise<string> {
+  const { data, error } = await supabaseAdmin().storage.from(BUCKET).createSignedUrl(path, Math.min(seconds, CONFIG.signedUrlSeconds), download ? { download } : undefined);
   if (error || !data) throw new Error(`signed url failed: ${error?.message ?? 'no data'}`);
   return data.signedUrl;
 }

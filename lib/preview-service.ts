@@ -99,7 +99,7 @@ export async function repeatSource(ref: string | null | undefined): Promise<stri
   if (!parent || metaOf(parent).share_token !== token) return null;
   const paid: Order['status'][] = ['PAID', 'IN_RETOUCH', 'AWAITING_APPROVAL', 'CHANGE_REQUESTED', 'APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'];
   if (!paid.includes(parent.status)) return null;
-  // a receipt can be forwarded; without a cap a leaked link is a permanent public 100-kr. coupon
+  // a receipt can be forwarded; the cap keeps a leaked link from tagging strangers' orders as one customer's
   const { count } = await supabaseAdmin().from('orders').select('id', { count: 'exact', head: true }).contains('preview_meta', { repeat_of: parent.id });
   return (count ?? 0) < REPEAT_MAX_USES ? parent.id : null;
 }

@@ -301,7 +301,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
             {repeatConfirmed && <p className="small notice" role="status">{c.upload.repeat}</p>}
             {state.thumb ? (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
-                <img src={state.thumb} alt="Dit valgte billede" style={{ maxHeight: '38dvh', width: 'auto', maxWidth: '100%', objectFit: 'contain', justifySelf: 'start' }} />
+                <Thumb src={state.thumb} name={state.file?.name} alt="Dit valgte billede" style={{ maxHeight: '38dvh', width: 'auto', maxWidth: '100%', objectFit: 'contain', justifySelf: 'start' }} />
                 <div style={{ display: 'flex', gap: 'var(--s5)' }}>
                   <label className="link-btn" style={{ display: 'inline-flex', alignItems: 'center' }}>{c.upload.reupload}<input type="file" accept={ACCEPT} hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
                   <button type="button" className="link-btn" onClick={() => setState({ kind: 'pick' })}>{c.upload.remove}</button>
@@ -337,7 +337,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         {state.kind === 'processing' && (
           <div style={{ display: 'grid', gap: 'var(--s4)' }} aria-live="polite" aria-busy="true">
             <div className="proc">
-              <img src={state.thumb} alt="" />
+              <Thumb src={state.thumb} name={state.file.name} alt="" />
               <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={c.processing.stages[state.stage]}>
                 <span style={{ ['--p' as string]: pct / 100, ['--pt' as string]: creep }} />
               </div>
@@ -363,7 +363,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         {state.kind === 'error' && (
           <div style={{ display: 'grid', gap: 'var(--s4)' }}>
             <h2 style={{ maxWidth: '12em' }}>{state.title}</h2>
-            <img src={state.thumb} alt="" style={{ maxHeight: '30dvh', width: 'auto', maxWidth: '100%', justifySelf: 'start' }} />
+            <Thumb src={state.thumb} name={state.file.name} alt="" style={{ maxHeight: '30dvh', width: 'auto', maxWidth: '100%', justifySelf: 'start' }} />
             <p className="measure" role="alert">{state.message}</p>
             <button type="button" className="btn btn-block" onClick={() => start(state.file, state.thumb, state.orderId && state.token ? { orderId: state.orderId, token: state.token } : undefined)}>{c.processing.retry}</button>
             <div style={{ display: 'flex', gap: 'var(--s5)', flexWrap: 'wrap' }}>
@@ -414,6 +414,18 @@ export default function UploadFlow({ c }: { c: Copy }) {
       </Sheet>
     </>
   );
+}
+
+/**
+ * The picked photograph. A HEIC straight from an Android camera roll is a file the browser will upload
+ * but cannot draw, and a broken-image icon at the top of the sheet reads as "it did not work". The
+ * server reads HEIC fine, so the sheet shows the file name in the frame instead and carries on.
+ */
+function Thumb({ src, name, alt, style }: { src: string; name?: string; alt: string; style?: React.CSSProperties }) {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => { setBroken(false); }, [src]);
+  if (broken) return <div className="thumb-fallback" style={style} aria-label={alt || undefined}><span>{name || 'Dit billede'}</span></div>;
+  return <img src={src} alt={alt} style={style} onError={() => setBroken(true)} />;
 }
 
 /**

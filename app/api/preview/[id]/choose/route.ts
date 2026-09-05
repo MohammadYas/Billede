@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
+  if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: 'not found' }, { status: 404 });
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
   if (!order || !ownsOrder(order, sid, req.nextUrl.searchParams.get('t'))) return NextResponse.json({ error: 'not found' }, { status: 404 });
   const body = (await req.json().catch(() => ({}))) as { colour?: boolean; format?: string; frame?: string; extraPrints?: number };

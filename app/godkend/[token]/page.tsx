@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { approveByToken, isOldToken, orderByToken } from '@/lib/approval';
 import { copy } from '@/lib/copy';
-import { deliveryPromise } from '@/lib/config';
+import { CONFIG, deliveryPromise } from '@/lib/config';
 import { orderDescription } from '@/lib/order-summary';
 import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
@@ -50,9 +50,18 @@ export default async function Godkend({ params, searchParams }: { params: Promis
     </>);
   }
   if (order.status !== 'AWAITING_APPROVAL') {
+    // The digital file is part of what was paid for, and the terms say it is delivered on approval:
+    // so it is delivered here, on the page the approval lands on, and again in the shipping mail.
+    const fileReady = Boolean(order.final_path) && ['APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'].includes(order.status);
     return shell(<>
       <h1>Tak. Vi printer og sender.</h1>
-      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}Du får en mail med tracking, når pakken er sendt – leveret {deliveryPromise()}. Ordre {order.id.slice(0, 8)}.</p>
+      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}Du får en mail, når pakken er sendt – leveret {deliveryPromise()}. Ordre {order.id.slice(0, 8)}.</p>
+      {fileReady && (
+        <div style={{ display: 'grid', gap: 'var(--s3)', justifyItems: 'start' }}>
+          <a className="btn" href={`/godkend/${token}/fil`}>Hent din fil i høj opløsning</a>
+          <p className="caption measure">Den restaurerede fil, som vi printer fra. Gem den et sikkert sted – vi sletter vores kopi {CONFIG.retentionCompletedDays} dage efter levering, og så virker linket ikke længere.</p>
+        </div>
+      )}
       <p className="measure small muted">Skal noget alligevel ændres, så skriv til os med det samme{c.email ? <> på <a href={c.emailHref}>{c.email}</a></> : null} – vi svarer inden 24 timer.</p>
     </>);
   }

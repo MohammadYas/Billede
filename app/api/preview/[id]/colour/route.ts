@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 /** Starts the colour job (idempotent); the panel polls GET /api/preview/[id] until `payload.colour` is set. */
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
+  if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: 'not found' }, { status: 404 });
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
   if (!order || !ownsOrder(order, sid, req.nextUrl.searchParams.get('t'))) return NextResponse.json({ error: 'not found' }, { status: 404 });
   if (order.colourised_path) return NextResponse.json({ colour: imageUrl(order, 'colour') }, { headers: { 'cache-control': 'no-store' } });

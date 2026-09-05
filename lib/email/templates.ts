@@ -10,7 +10,7 @@ function shell(title: string, body: string): string {
   const f = getFounder();
   const sig = [f.name || 'Genfundet', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
   return `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(title)}</title></head>
-<body style="margin:0;background:#F6F1E8;color:#1C1A17;font-family:'Instrument Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;">
+<body style="margin:0;background:#F6F1E8;color:#1C1A17;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;">
 <div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
   <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:-0.01em;margin-bottom:32px;">Genfundet</div>
   ${body}
@@ -57,7 +57,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     h1('Tak for din bestilling.'),
     p(`${esc(navn)} kigger på dit billede inden 24 timer og finjusterer det i hånden.`),
     p('Inden 48 timer får du en mail med det færdige billede. Du godkender det – eller beder om en ændring – før vi printer noget.'),
-    p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja.`),
+    p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`),
     mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">` : '',
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
     p(orderLines(o).map((l) => esc(l)).join('<br>') + (amount ? `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt` : '')),
@@ -69,7 +69,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     f.email ? p(`Spørgsmål? Skriv til ${esc(kontakt)} på <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a> – eller svar på denne mail. Vi svarer inden 24 timer.`) : '',
     repeatLink(o) ? `<hr style="border:0;border-top:1px solid #D9D1C3;margin:32px 0 20px;">${p(`<strong>Har I flere billeder?</strong> De ligger sjældent alene i skuffen. Har du et mere, kan du sende det ind herfra – samme arbejde, samme godkendelse.`)}${blockButton(repeatLink(o)!, 'Se billede nummer to', true)}` : '',
   ].join(''));
-  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret inden ${CONFIG.deliveryDaysMax} hverdage efter dit ja.\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms og fragt · ${orderDescription(o)}${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Send det næste ind her: ${repeatLink(o)}` : ''}`;
+  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og finjusterer det i hånden. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms og fragt · ${orderDescription(o)}${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Send det næste ind her: ${repeatLink(o)}` : ''}`;
   return { subject, html, text };
 }
 
@@ -114,18 +114,24 @@ export function approvalRequest(opts: { imageUrl: string; approveUrl: string; ch
   return { subject, html, text };
 }
 
-export function shippedNotice(opts: { trackingNumber: string | null; trackingUrl: string | null }): { subject: string; html: string; text: string } {
+/**
+ * Tracking is printed only when the owner has typed one in; nothing is ever made up. Without one, the
+ * mail says so, so the customer is not left refreshing a page that does not exist.
+ */
+export function shippedNotice(opts: { trackingNumber: string | null; trackingUrl: string | null; fileUrl?: string | null }): { subject: string; html: string; text: string } {
   const subject = 'Dit billede er på vej';
   const track = opts.trackingUrl
     ? `<a href="${opts.trackingUrl}" style="color:#2F4A3A;">${esc(opts.trackingNumber ?? 'Følg pakken')}</a>`
     : esc(opts.trackingNumber ?? '');
+  const noTrack = 'Der er ikke noget sporingsnummer på denne pakke. Hører du ikke fra fragtfirmaet inden for et par hverdage, så svar på denne mail.';
   const html = shell(subject, [
     h1('Dit billede er på vej.'),
     p('Det er printet, indrammet og pakket. Nu er det hos fragtfirmaet.'),
-    track ? p(`Tracking: ${track}`) : '',
+    track ? p(`Tracking: ${track}`) : p(noTrack),
+    opts.fileUrl ? p(`Din digitale fil i høj opløsning: <a href="${opts.fileUrl}" style="color:#2F4A3A;">hent den her</a>. Gem den et sikkert sted – vi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.`) : '',
     p('Er rammen eller glasset beskadiget, når pakken kommer, så tag et foto og svar på denne mail – så sender vi et nyt.'),
   ].join(''));
-  const text = `Dit billede er på vej.\n\nDet er printet, indrammet og pakket.${opts.trackingNumber ? `\nTracking: ${opts.trackingNumber}${opts.trackingUrl ? ` – ${opts.trackingUrl}` : ''}` : ''}\n\nEr noget beskadiget ved levering, så svar på denne mail med et foto, så sender vi et nyt.`;
+  const text = `Dit billede er på vej.\n\nDet er printet, indrammet og pakket.${opts.trackingNumber ? `\nTracking: ${opts.trackingNumber}${opts.trackingUrl ? ` – ${opts.trackingUrl}` : ''}` : `\n${noTrack}`}${opts.fileUrl ? `\n\nDin digitale fil i høj opløsning: ${opts.fileUrl}\nVi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.` : ''}\n\nEr noget beskadiget ved levering, så svar på denne mail med et foto, så sender vi et nyt.`;
   return { subject, html, text };
 }
 

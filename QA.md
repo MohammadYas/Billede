@@ -541,3 +541,30 @@ Ikke kørt, og hvorfor: en rigtig betaling (ingen Stripe-nøgler) og et rigtigt 
 `npm test` 8/8 (24 kombinationer nu, ikke 48 — gentagelsesaksen findes ikke længere), `npm run test:order`
 9/9, `npm run test:viewport` 12/12. Produktionsbygningen indeholder ordet "rabat" ét sted: admin-noten
 "Ingen rabat: et nyt billede koster normal pris."
+
+## Produktionsgennemgang, 5. september 2026
+
+Hele produktet gennemgået som kold Meta-trafik: kode, tilstande, copy, mails, sikkerhed, 390 og 1280 px.
+Kørt mod en produktionsbygning på 3111 før og efter ændringerne.
+
+| Kontrol | Kommando | Resultat |
+|---|---|---|
+| Typer | `npm run typecheck` | rent |
+| Prisregning, standardordre, ingen negative linjer | `npm test` | 8/8 |
+| Priser og CTA'er i browseren, ekstra er opt-in | `npm run test:order` | 9/9 |
+| Overløb, tryk under 44 px, dækket indhold | `npm run test:viewport` | 12/12 |
+| Konsolfejl på forside, ark, bestillingsside, /tak, 404, handelsbetingelser | `work/pass10/shots.mjs` | ingen (404-siden logger sit eget 404) |
+| Ukendt godkendelsesnøgle på `/godkend/<x>/fil` | `curl` | 404 |
+| `/founder.jpg` uden portræt i `founder.md` | `curl` | 404 (ingen brudt billedfil på forsiden) |
+| Fjerde "Send mig linket" til samme adresse på ét døgn | `curl` × 4 mod `/api/lead` | tre "would send" i serverloggen, den fjerde sender intet |
+
+Fundet og rettet: den digitale fil blev lovet fem steder og leveret ingen steder (nu download fra
+godkendelsessiden og fragtmailen); `/founder.jpg` fandtes ikke; forsendelsesmailen tav, når der intet
+sporingsnummer var; to FAQ-svar manglede (koster det noget at se, får jeg filen); størrelses-FAQ'en sagde
+"sort ramme" om alle; handelsbetingelsernes juleløfte var strammere end forsidens; cookiebanneret sagde
+"ingen andre" om cookies; HEIC-miniature på Android; ingen bekræftelse efter "Slet mit billede nu"; tre
+ruter svarede 500 i stedet for 404 på et ugyldigt id; hårdkodede "30 dage" og "under et minut" i to mails.
+
+Ikke kørt, og hvorfor: download af den færdige fil kræver en godkendt ordre, og der findes ingen i
+databasen (ingen Stripe-nøgler, ingen OpenAI-credits); ruten er typetjekket og afvisningsstien er kørt.
+

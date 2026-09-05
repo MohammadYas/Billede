@@ -243,6 +243,7 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 /* Bottom sheet / modal */
 .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(28,26,23,0.45); }
 .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 92dvh; overflow: auto; overscroll-behavior: contain; background: var(--paper); border-radius: 12px 12px 0 0; padding: var(--s2) var(--gutter) calc(var(--s6) + var(--safe-bottom)); will-change: transform; touch-action: pan-y; }
+.thumb-fallback { display: grid; place-items: center; min-height: 96px; width: 144px; padding: var(--s3); background: var(--paper-2); color: var(--ink-2); font-size: 13px; line-height: 1.3; text-align: center; overflow-wrap: anywhere; }
 .sheet .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--hairline); margin: var(--s2) auto var(--s5); }
 .sheet .close { position: absolute; right: calc(var(--gutter) - 10px); top: 2px; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: none; border: 0; color: var(--ink); font-size: 24px; cursor: pointer; }
 @media (min-width: 768px) {
@@ -332,6 +333,8 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 /* where you are: three steps, the current one in ink */
 .pv-steps { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s4); margin: 0; padding: 0; font-family: var(--sans); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hairline-ink, var(--ink-2)); }
 /* no faded step: dimming it below AA contrast is not a hierarchy, it is a bug */
+/* 390 px: three labels on one line, or the third one lands under the first and reads as a mistake */
+@media (max-width: 419px) { .pv-steps { font-size: 11px; letter-spacing: 0.05em; gap: var(--s3); } }
 .pv-steps li { color: var(--ink-2); }
 .pv-steps li.done { color: var(--ink-2); }
 .pv-steps li.now { color: var(--ink); opacity: 1; box-shadow: inset 0 -2px 0 var(--ink); }

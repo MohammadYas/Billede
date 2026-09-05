@@ -13,6 +13,7 @@ import Consent from '@/components/Consent';
 import Footer from '@/components/Footer';
 import MailLine from '@/components/MailLine';
 import Wordmark from '@/components/Wordmark';
+import DeletedNotice from '@/components/DeletedNotice';
 
 // Static, regenerated hourly: an ad click hits the CDN, not a cold function. The ?order= resume lives in UploadFlow.
 export const revalidate = 3600;
@@ -58,6 +59,7 @@ export default async function Page() {
             <span className="caption">{c.priceFrom} · fri fragt</span>
           </div>
         </header>
+        <DeletedNotice text={c.preview.erased} />
 
         {/* Hero — the photograph is the argument. */}
         <section id="hero" aria-label="Eksempel på restaurering">

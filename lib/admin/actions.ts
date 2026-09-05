@@ -4,7 +4,7 @@ import { isAdmin } from './auth';
 import { getOrder, setStatus, updateOrder, type OrderStatus } from '@/lib/db/orders';
 import { isFormat, quote, readAddOns } from '@/lib/pricing';
 import { sendApprovalMail } from '@/lib/approval';
-import { refundNotice, shippedNotice } from '@/lib/email/templates';
+import { refundNotice, shippedNotice, siteUrl } from '@/lib/email/templates';
 import { reconcileOrder } from '@/lib/reconcile';
 import { sendMail } from '@/lib/email/send';
 import { paymentProvider } from '@/lib/payments/stripe';
@@ -23,7 +23,7 @@ export async function actionSetStatus(id: string, formData: FormData) {
     back(id, 'Refunderet via Stripe – kunden har fået besked');
   }
   if (status === 'SHIPPED' && order.customer_email) {
-    const mail = shippedNotice({ trackingNumber: order.tracking_number, trackingUrl: order.tracking_url });
+    const mail = shippedNotice({ trackingNumber: order.tracking_number, trackingUrl: order.tracking_url, fileUrl: order.approval_token && order.final_path ? siteUrl(`/godkend/${order.approval_token}/fil`) : null });
     await sendMail({ to: order.customer_email, ...mail }).catch((e) => console.error(e));
   }
   await setStatus(id, status);

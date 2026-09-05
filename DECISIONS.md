@@ -267,3 +267,26 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   `REPEAT_DISCOUNT_DKK`, the `repeat` flag on the quote, the discount line, its Stripe line-item note and
   four pieces of copy that advertised it are all removed, and a test now asserts that no quote can
   contain a negative line at all.
+- **The digital file is delivered, not just promised.** The landing page, the Stripe line item, the terms
+  and the consent sentence all said a high-resolution file was part of the price — and the terms tie the
+  withdrawal right to the moment it is delivered — but nothing ever handed it to a customer; only admin
+  could download it, for fifteen minutes at a time. `/godkend/<token>/fil` now redirects to a short
+  signed download of the print final once the order is APPROVED or later, the approval page shows
+  "Hent din fil i høj opløsning" the moment the customer has said yes, and the shipping mail carries the
+  same link. The approval token is the key because it is the key the customer already holds. After the
+  90-day retention the link says the file is gone, which is what the privacy page promises.
+- **The two mail-sending endpoints have a ceiling.** "Send mig linket" (no photograph at hand) and
+  "Gem dit preview" both mail whatever address they are given. A few per address and per browser a day
+  is every legitimate use; beyond that the form still says "sent" and sends nothing, so nobody can turn
+  our domain into a way of bothering a stranger. Counted in the database, not in memory, because a
+  function instance remembers nothing.
+- **`/founder.jpg` exists.** The landing page rendered `<img src="/founder.jpg">` the moment
+  `founder.md` named a portrait, and no route served it — the one file the owner is told to add would
+  have put a broken image on the front page. The route normalises the file (HEIC from a phone included)
+  and fits it to 600 px.
+- **What a page says about itself is true at 11 px, too.** The cookie banner said "Ingen andre" about
+  cookies while the site sets three technical ones; it now says so. A HEIC picked on Android drew a
+  broken-image icon at the top of the sheet (the browser cannot decode what it uploads perfectly well);
+  the sheet shows the file name in a frame instead. "Slet mit billede nu" returned the customer to the
+  front page without a word; it now says the deletion happened.
+

@@ -37,7 +37,7 @@ export default function Handelsbetingelser() {
         <li>Du uploader og ser et preview med vandmærke. Prisen er den samme, uanset hvor beskadiget billedet er.</li>
         <li>Du betaler. Inden 48 timer sender vi det færdige billede til godkendelse på mail.</li>
         <li>Du godkender – eller beder om en ændring, så mange gange det er rimeligt. Vi printer først, når du har godkendt.</li>
-        <li>Efter godkendelse printer, indrammer og sender vi. Levering inden {CONFIG.deliveryDaysMax} hverdage. Bestillinger godkendt senest {formatCutoffDate()} leveres inden jul.</li>
+        <li>Efter godkendelse printer, indrammer og sender vi. Levering inden {CONFIG.deliveryDaysMax} hverdage. Bestillinger afgivet senest {formatCutoffDate()} og godkendt inden 48 timer efter godkendelsesmailen leveres inden jul.</li>
       </ul>
 
       <h2>Fortrydelsesret</h2>

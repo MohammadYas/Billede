@@ -5,8 +5,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * "Billede nummer to": is this receipt link real? The sheet asks before it promises the discount,
- * so a refunded, purged or mistyped reference never shows a price the bill will not honour.
+ * "Billede nummer to": is this receipt link real? The sheet asks before it says "billede nummer to",
+ * so a refunded, purged or mistyped reference is treated as an ordinary first visit.
  */
 export async function GET(req: NextRequest) {
   const ref = req.nextUrl.searchParams.get('ref');
