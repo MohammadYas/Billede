@@ -346,4 +346,7 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   three boxes above already do), *Du bestiller først, når du har set resultatet* left the price block
   (the list beside it says the same), *Manuelt tjek* and *Godkendelse* are one row, and the second
   copy's reason is one line with the price on the button.
+- **The button speaks in the first person.** *Se hvad mit billede kan blive til* is the default
+  variant now: the order button already says *Bestil mit billede* and the sheet *Vis mig
+  resultatet*, so the funnel has one voice from the first tap. A and B stay one env variable away.
 

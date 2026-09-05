@@ -8,7 +8,8 @@ import { fornavn, getFounder } from '@/lib/founder';
  * The primary call to action, everywhere it appears on the landing page (hero, price, closing line,
  * the sticky bar). One string, one switch: NEXT_PUBLIC_CTA_VARIANT=A|B|C picks the wording at build
  * time, and FlowOpened logs the letter, so two deploys can be compared in the events table without
- * any testing infrastructure. A is the default until a measurement says otherwise.
+ * any testing infrastructure. C is the default: first person, like "Bestil mit billede" and "Vis mig
+ * resultatet" further down the same funnel — one voice from the first tap to the last.
  */
 export const CTA_VARIANTS = {
   A: 'Se hvad dit billede kan blive til',
@@ -18,7 +19,7 @@ export const CTA_VARIANTS = {
 export type CtaVariant = keyof typeof CTA_VARIANTS;
 export function ctaVariant(): CtaVariant {
   const v = process.env.NEXT_PUBLIC_CTA_VARIANT;
-  return v && v in CTA_VARIANTS ? (v as CtaVariant) : 'A';
+  return v && v in CTA_VARIANTS ? (v as CtaVariant) : 'C';
 }
 export const primaryCta = () => CTA_VARIANTS[ctaVariant()];
 
