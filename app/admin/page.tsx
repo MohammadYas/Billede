@@ -30,7 +30,7 @@ const STATUS_DA: Record<string, string> = {
 const WORK: Record<string, string> = {
   PAID: 'Generér/upload final og send godkendelsesmail',
   CHANGE_REQUESTED: 'Ret efter kundens besked, ny final, ny mail',
-  AWAITING_APPROVAL: 'Venter på kundens ja (ring efter 7 dage)',
+  AWAITING_APPROVAL: 'Venter på kundens ja · påmindelser dag 2, 7 og 14 · automatisk refusion dag 21',
   APPROVED: 'Bestil print hos partneren',
   IN_PRODUCTION: 'Gem tracking og sæt SHIPPED',
   MANUAL_REVIEW: 'Svar kunden inden 24 timer',

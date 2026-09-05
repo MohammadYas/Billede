@@ -6,7 +6,7 @@ import { FORMATS, formatLabel, PRICING } from '@/lib/pricing';
 import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
 import { STATUS_FLOW } from '@/lib/db/orders';
 import { ManualProvider } from '@/lib/fulfillment/manual';
-import { actionCheckPayment, actionFulfillment, actionNote, actionSendApproval, actionSetFormat, actionSetStatus } from '@/lib/admin/actions';
+import { actionCheckPayment, actionFulfillment, actionNote, actionSendApproval, actionSetFormat, actionSetStatus, actionToggleColour } from '@/lib/admin/actions';
 import GenerateFinalButton from '@/components/admin/GenerateFinalButton';
 import FinalUpload from '@/components/admin/FinalUpload';
 import { getJob } from '@/lib/jobs';
@@ -102,6 +102,12 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           <div style={{ display: 'grid', gap: 'var(--s3)' }}>
             <FinalUpload orderId={order.id} />
             <GenerateFinalButton orderId={order.id} />
+            {order.is_monochrome && (
+              <form action={actionToggleColour.bind(null, order.id)}>
+                <button className="btn btn-quiet" type="submit">{order.chosen_colour ? 'Skift til sort-hvid' : 'Skift til farver (kunden har bedt om det)'}</button>
+                <p className="caption">Nulstiller final; generér den igen og send en ny godkendelsesmail.</p>
+              </form>
+            )}
           </div>
 
           <form action={actionSendApproval.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>

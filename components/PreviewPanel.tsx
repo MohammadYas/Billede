@@ -68,10 +68,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const q = token ? `?t=${encodeURIComponent(token)}` : '';
   const [saveEmail, setSaveEmail] = useState('');
   const [saveState, setSaveState] = useState<'idle' | 'sending' | 'done' | 'invalid' | 'failed'>('idle');
-  const [data, setData] = useState(initial);
-  const [showColour, setShowColour] = useState(Boolean(initial.chosenColour && initial.colour));
-  const [colourReady, setColourReady] = useState(Boolean(initial.colour));
-  const [colourLoading, setColourLoading] = useState(Boolean(initial.isMonochrome && !initial.colour));
+  const [data] = useState(initial);
   const [zoom, setZoom] = useState(false);
   const [ordering, setOrdering] = useState(false);
   const [specOpen, setSpecOpen] = useState(false); // phone: the spec is one line until asked
@@ -131,48 +128,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n }).totalOere / 100 }, { serverLog: true });
   };
 
-  // Colour version: requested once, preloaded before the toggle is enabled, so the swap is instant and never shows the damaged original.
-  useEffect(() => {
-    if (!data.isMonochrome) return;
-    let alive = true;
-    if (data.colour) { preload(data.colour).then(() => { if (alive) setColourReady(true); }); return () => { alive = false; }; }
-    // the colour job runs on the server; poll the order until the colour version exists (give up after 3 min)
-    let timer: number | null = null;
-    const deadline = Date.now() + 180_000;
-    const arrive = async (colour: string) => { await preload(colour); if (alive) { setData((d) => ({ ...d, colour })); setColourReady(true); setColourLoading(false); } };
-    const check = async () => {
-      try {
-        const r = await fetch(`/api/preview/${data.orderId}${q}`, { cache: 'no-store' });
-        const st = (await r.json()) as { payload?: { colour?: string | null } | null; job?: { kind: string; state: string } | null };
-        if (st.payload?.colour) { await arrive(st.payload.colour); return; }
-        if ((st.job?.kind === 'colour' && st.job.state === 'failed') || Date.now() > deadline) { if (alive) setColourLoading(false); return; }
-      } catch { /* transient */ }
-      if (alive) timer = window.setTimeout(check, document.visibilityState === 'hidden' ? 15000 : 2500);
-    };
-    fetch(`/api/preview/${data.orderId}/colour${q}`, { method: 'POST' })
-      .then(async (r) => {
-        const j = (await r.json().catch(() => ({}))) as { colour?: string | null; queued?: boolean };
-        if (j.colour) { await arrive(j.colour); return; }
-        if (!r.ok || !j.queued) { if (alive) setColourLoading(false); return; }
-        timer = window.setTimeout(check, 2500);
-      })
-      .catch(() => { if (alive) setColourLoading(false); });
-    return () => { alive = false; if (timer) window.clearTimeout(timer); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.isMonochrome, data.colour, data.orderId]);
-
-  const toggleColour = () => {
-    if (!data.colour || !colourReady) return;
-    const next = !showColour;
-    setShowColour(next);
-    if (next) track('ColourViewed', { ...PRODUCT, content_ids: [format] }, { serverLog: true });
-    fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ colour: next }) }).catch(() => {});
-  };
-
   const order = async () => {
     setOrdering(true); setError(null);
     try {
-      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: showColour, format, frame, extraPrints, t: token }) });
+      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: false, format, frame, extraPrints, t: token }) });
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
@@ -316,14 +275,12 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           {c.preview.steps.map((s, i) => <li key={s} className={i === 0 ? 'done' : i === 1 ? 'now' : ''} aria-current={i === 1 ? 'step' : undefined}>{s}</li>)}
         </ol>
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
-        <BeforeAfter before={data.original} after={showColour && data.colour ? data.colour : data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal zoom={zoom ? 2.2 : 1} />
-        {/* both controls belong to the picture, so they share one row */}
+        <BeforeAfter before={data.original} after={data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal zoom={zoom ? 2.2 : 1} />
         <div className="pv-toggle">
           <button type="button" className="link-btn" onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
-          {data.isMonochrome && <button type="button" className="link-btn" onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>}
-          {(colourLoading || (data.colour && !colourReady)) && <span className="caption">{c.preview.colourLoading}</span>}
         </div>
-        {data.isMonochrome && colourReady && <p className="caption measure">{c.preview.colourHint}</p>}
+        {/* colour is a post-purchase option: offered in the approval mail, produced by a person, no extra charge */}
+        {data.isMonochrome && <p className="caption measure">{c.preview.colourLater}</p>}
         <p className="caption measure">{c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
         <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>

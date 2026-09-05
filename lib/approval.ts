@@ -9,7 +9,7 @@ import { notifyOwner } from '@/lib/email/owner';
  * Every fresh send gets a NEW token, so Tuesday's mail can never approve Thursday's picture:
  * an old token opens a page that says a newer version exists. Reminders reuse the current token.
  */
-export async function sendApprovalMail(order: Order, opts: { reminder?: boolean; second?: boolean } = {}): Promise<void> {
+export async function sendApprovalMail(order: Order, opts: { reminder?: boolean; second?: boolean; final?: boolean } = {}): Promise<void> {
   if (!order.final_path) throw new Error('Ingen færdig fil på ordren endnu.');
   if (!order.customer_email) throw new Error('Ordren har ingen e-mail.');
   const token = opts.reminder && order.approval_token ? order.approval_token : newApprovalToken();
@@ -17,7 +17,7 @@ export async function sendApprovalMail(order: Order, opts: { reminder?: boolean;
   const version = Number(meta.approval_version ?? 0) + (opts.reminder ? 0 : 1);
   // The mail image must outlive a 15-min signed URL: it is served through /godkend/<token>/billede (token-gated).
   const imageUrl = siteUrl(`/godkend/${token}/billede`);
-  const mail = approvalRequest({ imageUrl, approveUrl: siteUrl(`/godkend/${token}`), changeUrl: siteUrl(`/godkend/${token}/aendring`), reminder: opts.reminder, second: opts.second, version });
+  const mail = approvalRequest({ imageUrl, approveUrl: siteUrl(`/godkend/${token}`), changeUrl: siteUrl(`/godkend/${token}/aendring`), reminder: opts.reminder, second: opts.second, final: opts.final, colourOffer: Boolean(order.is_monochrome) && !order.chosen_colour, version });
   await sendMail({ to: order.customer_email, ...mail });
   if (opts.reminder) await updateOrder(order.id, { approval_reminder_sent_at: new Date().toISOString() });
   else {

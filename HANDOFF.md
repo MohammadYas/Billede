@@ -20,7 +20,7 @@ Nothing in this list is code. The code is done and verified; each line below is 
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, `STRIPE_SECRET_KEY`,
    `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_REPLY_TO`, `OWNER_EMAIL`, `NEXT_PUBLIC_META_PIXEL_ID`,
    `META_CAPI_TOKEN`, `ADMIN_PASSWORD` (long, random), `JOB_SECRET` (long, random), `CRON_SECRET`, `JOB_RUNNER=netlify`,
-   `NEXT_PUBLIC_SITE_URL=https://genfundet.dk`, `DELIVERY_DAYS_MAX=5`, `LEGAL_DRAFT` (true until the lawyer has read),
+   `NEXT_PUBLIC_SITE_URL=https://genfundet.dk`, `DELIVERY_DAYS_MAX=10`, `LEGAL_DRAFT` (true until the lawyer has read),
    `NEXT_PUBLIC_CTA_VARIANT` (A, B or C — the wording of the primary button, see `.env.example`).
    The build refuses to run without `JOB_SECRET`, and without `city`, `cvr`, `address` and `email` in `founder.md` — `LEGAL_DRAFT` does not bypass that.
 3. Netlify → Site configuration → Functions → Region: an EU region (Frankfurt/Ireland). Supabase is in Ireland.
@@ -32,13 +32,10 @@ Nothing in this list is code. The code is done and verified; each line below is 
    leak this audience notices first, and since there is no phone number anywhere, that address is now the only way a
    customer can reach you. It is printed on the price block, in the footer, on the 404, on `/tak`, on both approval
    pages and in every mail. The site promises an answer within 24 hours, so the mailbox must be one you read daily.
-5b. **Juridisk gennemgang af to sætninger i handelsbetingelserne.** (a) Klageafsnittet henviser til
-   EU-Kommissionens ODR-portal, `ec.europa.eu/odr`. Den blev lukket i juli 2025, da ODR-forordningen blev
-   ophævet — henvisningen peger altså formentlig på en portal, der ikke længere tager imod klager.
-   Henvisningen til Center for Klageløsning er stadig rigtig. Jeg har markeret stedet i koden og bevidst
-   *ikke* skrevet en erstatning: det er en oplysningspligt, ikke en formulering, og den skal skrives af
-   nogen med juridisk ansvar. (b) Få hele siden læst igennem af en, der kender forbrugeraftaleloven, før
-   den første rigtige kunde betaler. `LEGAL_DRAFT=true` holder udkastmærket på siden indtil da.
+5b. **Juridisk gennemgang af handelsbetingelserne.** ODR-henvisningen er fjernet på din instruks (portalen lukkede
+   20. juli 2025); Center for Klageløsning står. Nyt i teksten: den automatiske refusion efter 21 dage uden
+   godkendelse. Få hele siden læst igennem af en, der kender forbrugeraftaleloven, før den første rigtige kunde
+   betaler. `LEGAL_DRAFT=true` holder udkastmærket på siden indtil da.
 6. Stripe Dashboard: Public details → Terms of service URL `https://genfundet.dk/handelsbetingelser` and Privacy URL
    (Checkout refuses to open without the Terms URL); webhook on `https://genfundet.dk/api/webhooks/stripe` for
    `checkout.session.completed` + `checkout.session.async_payment_succeeded` → copy the signing secret to
@@ -50,7 +47,7 @@ Nothing in this list is code. The code is done and verified; each line below is 
    optimised for the PreviewShown custom conversion, not Purchase.
 9. Supabase: the HEIC bucket update is already applied; keep the project in Ireland; nothing else.
 10. Print partner that ships **framed 30×40, 40×50 and 50×70, in black and in oak**, within 3–4 business days (the site
-    promises "inden 5 hverdage" from the customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold.
+    promises "inden 10 hverdage" from the customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold.
     Before the ads run, write down your cost for six combinations (three sizes × two frames) and for a second copy of the
     same picture, and check it against what the page charges:
 
@@ -290,8 +287,14 @@ plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are com
   mail (`founder.md`), the Resend sender and the default reply-to and owner-notification address. Create
   the mailbox (or a forward to one you read daily), verify the domain in Resend, and set `OWNER_EMAIL`
   if notifications should go elsewhere.
-- **`DELIVERY_DAYS_MAX=5` is your promise to keep.** It is the only place the number lives; check it
-  against the print partner's actual lead time plus shipping before the ads run.
+- **`DELIVERY_DAYS_MAX=10` and `CHRISTMAS_CUTOFF_DATE=2026-12-02` are deliberately cautious.** Shorten them only
+  when the print partner has confirmed a shorter lead time in writing; they are the only place the promise lives.
+- **Orders that are never approved close themselves.** Reminders at day 2 and 7, an owner nudge at 10, a final
+  notice at 14 ("refund in 7 days unless you approve") and an automatic Stripe refund at 21 with the refund mail.
+  Every step is written into the order's internal notes. A new approval version restarts the clock.
+- **Colour is offered after purchase.** The approval mail and page carry "Vil du se det i farver?" for black-and-white
+  photographs; it lands as a change request. In admin, press *Skift til farver*, generate the final again and send a
+  new approval mail. Nothing is charged for it.
 - **The price anchor under 599 kr. is your claim, not ours.** *"Til sammenligning: hos en fotograf koster
   restaureringen alene typisk 300–600 kr. – uden ramme og levering."* is a comparative price statement
   under markedsføringsloven: keep two or three photographers' price lists (screenshots with dates) so you

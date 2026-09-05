@@ -1,7 +1,7 @@
 import { CONFIG, deliveryPromise } from '@/lib/config';
 import { getFounder, fornavn } from '@/lib/founder';
-import { formatLabel, type Format } from '@/lib/pricing';
-import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
+import type { Format } from '@/lib/pricing';
+import { orderDescription, orderLabel, orderLines, repeatLink } from '@/lib/order-summary';
 
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
@@ -57,7 +57,7 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     h1('Tak for din bestilling.'),
     p(`${esc(navn)} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne.`),
     p('Inden 48 timer får du en mail med det færdige billede. Du godkender det – eller beder om en ændring – før vi printer noget.'),
-    p(`Derefter printer vi det i ${esc(formatLabel(o.format))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`),
+    p(`Derefter printer vi det i ${esc(orderLabel(o))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`),
     mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">` : '',
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
     p(orderLines(o).map((l) => esc(l)).join('<br>') + (amount ? `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt` : '')),
@@ -96,21 +96,25 @@ export function refundNotice(opts: { amount: number }): { subject: string; html:
   return { subject, html, text };
 }
 
-export function approvalRequest(opts: { imageUrl: string; approveUrl: string; changeUrl: string; reminder?: boolean; second?: boolean; version?: number }): { subject: string; html: string; text: string } {
+export function approvalRequest(opts: { imageUrl: string; approveUrl: string; changeUrl: string; reminder?: boolean; second?: boolean; final?: boolean; colourOffer?: boolean; version?: number }): { subject: string; html: string; text: string } {
   const f = getFounder();
-  const subject = opts.second ? 'Dit færdige billede venter stadig på dit ja' : opts.reminder ? 'Dit færdige billede venter på dit ja' : 'Dit færdige billede er klar';
+  const subject = opts.final ? 'Sidste påmindelse: dit færdige billede venter' : opts.second ? 'Dit færdige billede venter stadig på dit ja' : opts.reminder ? 'Dit færdige billede venter på dit ja' : 'Dit færdige billede er klar';
+  const colour = opts.colourOffer ? p(`Billedet er sort-hvidt. Vil du hellere have det i farver? <a href="${opts.changeUrl}?farver=1" style="color:#2F4A3A;">Bed om en farveversion</a> – det koster ikke ekstra, og du får et nyt billede til godkendelse.`) : '';
   const buttons = `<div style="margin:0 0 8px;">${blockButton(opts.approveUrl, 'Godkend')}${blockButton(opts.changeUrl, 'Jeg vil have en ændring', true)}</div>`;
   const html = shell(subject, [
-    h1(opts.second ? 'Dit færdige billede venter stadig.' : opts.reminder ? 'Dit færdige billede venter på dit ja.' : 'Dit færdige billede er klar.'),
-    p(opts.second
+    h1(opts.final ? 'Sidste påmindelse: dit færdige billede venter.' : opts.second ? 'Dit færdige billede venter stadig.' : opts.reminder ? 'Dit færdige billede venter på dit ja.' : 'Dit færdige billede er klar.'),
+    p(opts.final
+      ? `Vi har ikke hørt fra dig i 14 dage. Hører vi ikke fra dig inden 7 dage, refunderer vi hele beløbet til dit kort, og bestillingen lukkes. Vil du have billedet, så tryk Godkend – så printer og sender vi det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a>` : ''}.`
+      : opts.second
       ? `Vi har ikke hørt fra dig. Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a>` : ''}.`
       : 'Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen.'),
     buttons,
+    colour,
     `<img src="${opts.imageUrl}" alt="Dit restaurerede billede" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">`,
     buttons,
     p(`<span style="color:#5B554C;font-size:14px;">${opts.version && opts.version > 1 ? `Version ${opts.version}. ` : ''}Du kan også bare svare på denne mail med “ja”. Vi printer ikke, før du har godkendt.</span>`),
   ].join(''));
-  const text = `${subject}\n\nSe dit billede og godkend her: ${opts.approveUrl}\nVil du have en ændring: ${opts.changeUrl}\n\nDu kan også svare på denne mail med "ja". Vi printer ikke, før du har godkendt.`;
+  const text = `${subject}\n\n${opts.final ? 'Vi har ikke hørt fra dig i 14 dage. Hører vi ikke fra dig inden 7 dage, refunderer vi hele beløbet, og bestillingen lukkes.\n\n' : ''}Se dit billede og godkend her: ${opts.approveUrl}\nVil du have en ændring: ${opts.changeUrl}${opts.colourOffer ? `\nVil du have det i farver (uden ekstra beregning): ${opts.changeUrl}?farver=1` : ''}\n\nDu kan også svare på denne mail med "ja". Vi printer ikke, før du har godkendt.`;
   return { subject, html, text };
 }
 

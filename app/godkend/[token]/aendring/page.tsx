@@ -16,9 +16,11 @@ async function requestChange(token: string, formData: FormData) {
   redirect(`/godkend/${token}/aendring?r=${r}`);
 }
 
-export default async function Aendring({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ r?: string; tom?: string }> }) {
+const COLOUR_REQUEST = 'Jeg vil gerne se billedet i farver.';
+
+export default async function Aendring({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ r?: string; tom?: string; farver?: string }> }) {
   const { token } = await params;
-  const { r, tom } = await searchParams;
+  const { r, tom, farver } = await searchParams;
   const order = await orderByToken(token);
   if (!order) notFound();
   const c = copy();
@@ -43,11 +45,12 @@ export default async function Aendring({ params, searchParams }: { params: Promi
             </>
           ) : (
             <>
-              <h1 style={{ maxWidth: '14em' }}>Hvad skal ændres?</h1>
+              <h1 style={{ maxWidth: '14em' }}>{farver === '1' ? 'I farver – uden ekstra beregning.' : 'Hvad skal ændres?'}</h1>
+              {farver === '1' && <p className="lead measure">Send, så laver vi en farveversion og sender dig et nyt billede til godkendelse. Du kan stadig vælge sort-hvid til sidst.</p>}
               <form action={action} style={{ display: 'grid', gap: 'var(--s4)' }}>
                 <div className="field">
                   <label htmlFor="text">Skriv så konkret som muligt – f.eks. “min mors øjne er blevet for mørke” eller “der mangler en knap på jakken”.</label>
-                  <textarea id="text" name="text" rows={6} required maxLength={2000} aria-invalid={Boolean(tom)} />
+                  <textarea id="text" name="text" rows={6} required maxLength={2000} aria-invalid={Boolean(tom)} defaultValue={farver === '1' ? COLOUR_REQUEST : undefined} />
                   {tom && <span className="error" role="alert">Skriv, hvad der skal ændres.</span>}
                 </div>
                 <SubmitButton label="Send ændring" pending="Sender…" />

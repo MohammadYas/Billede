@@ -57,8 +57,8 @@ export function formatLabelFor(format: Format, landscape = false): string {
   return landscape ? `${s.heightCm}×${s.widthCm} cm` : `${s.widthCm}×${s.heightCm} cm`;
 }
 
-export function lineItemName(format: Format): string {
-  return `Restaureret og indrammet familiebillede, ${formatLabel(format)}`;
+export function lineItemName(format: Format, landscape = false): string {
+  return `Restaureret og indrammet familiebillede, ${formatLabelFor(format, landscape)}`;
 }
 
 /* ---------------------------------------------------------------------------
@@ -108,17 +108,18 @@ export function readAddOns(value: unknown): AddOns {
 
 /** `name` is what Stripe and the receipt print; `short` is what the bill on the page shows. */
 export type QuoteLine = { key: string; name: string; short: string; note?: string; quantity: number; unitOere: number; amountOere: number };
-export type Quote = { format: Format; addons: AddOns; lines: QuoteLine[]; totalOere: number };
+export type Quote = { format: Format; /** "30×40 cm" or "40×30 cm" — the frame follows the photograph */ label: string; addons: AddOns; lines: QuoteLine[]; totalOere: number };
 
 /** The one place an order's amount is decided. Input is untrusted; output is always sellable. */
-export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown } = {}): Quote {
+export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown; landscape?: boolean } = {}): Quote {
   const format = sellableFormat(input.format);
   const addons = readAddOns({ frame: input.frame, extraPrints: input.extraPrints });
-  const label = formatLabel(format);
+  const landscape = Boolean(input.landscape);
+  const label = formatLabelFor(format, landscape);
   const lines: QuoteLine[] = [
     {
       key: 'print',
-      name: lineItemName(format),
+      name: lineItemName(format, landscape),
       short: `Restaureret billede, ${label}`,
       note: `${label} · ${addons.frame === 'eg' ? 'egetræsramme' : 'sort ramme'} med passepartout og glas · digital fil i høj opløsning inkluderet · fri fragt`,
       quantity: 1,
@@ -139,7 +140,7 @@ export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: 
     });
   }
   const totalOere = lines.reduce((sum, l) => sum + l.amountOere, 0);
-  return { format, addons, lines, totalOere };
+  return { format, label, addons, lines, totalOere };
 }
 
 export function formatOere(oere: number): string {

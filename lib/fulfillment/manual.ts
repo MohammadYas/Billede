@@ -1,5 +1,6 @@
 import type { Order } from '@/lib/db/orders';
-import { readAddOns, formatLabel } from '@/lib/pricing';
+import { readAddOns } from '@/lib/pricing';
+import { isLandscape, orderLabel } from '@/lib/order-summary';
 import type { FulfillmentJob, FulfillmentProvider } from './provider';
 
 /**
@@ -12,7 +13,7 @@ export class ManualProvider implements FulfillmentProvider {
   readonly name = 'manual';
 
   checklist(order: Order, finalDownloadUrl: string): string[] {
-    const fmt = formatLabel(order.format);
+    const fmt = `${orderLabel(order)}${isLandscape(order) ? ' LIGGENDE – rammen vendes' : ' stående'}`;
     const a = readAddOns(((order.preview_meta ?? {}) as { addons?: unknown }).addons);
     const ramme = a.frame === 'eg' ? 'EG (lys træ)' : 'SORT';
     const antal = 1 + a.extraPrints;

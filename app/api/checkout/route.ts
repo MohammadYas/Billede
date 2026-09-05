@@ -7,6 +7,7 @@ import { signedUrl } from '@/lib/db/storage';
 import { logEvent } from '@/lib/analytics/events';
 import { CONFIG } from '@/lib/config';
 import { quote } from '@/lib/pricing';
+import { isLandscape } from '@/lib/order-summary';
 import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
 
 export const runtime = 'nodejs';
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   const chosen = Boolean(body.colour) && Boolean(order.colourised_path);
   // The page sends a configuration, never a price. The quote is built here from PRICING, and the
   const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
-  const q = quote({ format: body.format ?? order.format, frame: body.frame, extraPrints: body.extraPrints });
+  const q = quote({ format: body.format ?? order.format, frame: body.frame, extraPrints: body.extraPrints, landscape: isLandscape(order) });
   // the lines are stored as they were agreed: /tak, the mails and admin render this snapshot, so a later
   // price change cannot make an old receipt contradict its own total
   const updated = await updateOrder(order.id, { format: q.format, chosen_colour: chosen, amount: q.totalOere, currency: 'dkk', payment_provider: paymentProvider().name, preview_meta: { ...meta, addons: q.addons, quote: { lines: q.lines, totalOere: q.totalOere, at: new Date().toISOString() } } });

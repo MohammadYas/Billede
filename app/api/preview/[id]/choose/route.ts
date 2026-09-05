@@ -3,6 +3,7 @@ import { getOrder, updateOrder } from '@/lib/db/orders';
 import { readSessionId } from '@/lib/session';
 import { ownsOrder } from '@/lib/preview-service';
 import { isFormat, PRICING, quote, readAddOns } from '@/lib/pricing';
+import { isLandscape } from '@/lib/order-summary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (typeof body.colour === 'boolean') patch.chosen_colour = body.colour && Boolean(order.colourised_path);
   const format = isFormat(body.format) && PRICING[body.format].enabled ? body.format : order.format;
   const addons = readAddOns({ frame: body.frame ?? current.frame, extraPrints: body.extraPrints ?? current.extraPrints });
-  const q = quote({ format, ...addons });
+  const q = quote({ format, ...addons, landscape: isLandscape(order) });
   patch.format = q.format;
   patch.amount = q.totalOere;
   patch.preview_meta = { ...meta, addons: q.addons };

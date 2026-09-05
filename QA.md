@@ -658,3 +658,16 @@ PreviewShown via CAPI, admin-ratio. Kørt mod en produktionsbygning på 3111.
 
 Ikke bekræftet: at 5 hverdage matcher printpartnerens reelle leveringstid – det er ejerens tal (`DELIVERY_DAYS_MAX`).
 
+## Levering, orientering, lækage og livscyklus, 5. september 2026
+
+| Punkt | Resultat |
+|---|---|
+| Leveringsløfte | én kilde i `lib/config.ts`; standard 10 hverdage og 2. december; ingen hårdkodede tal i kundeflader |
+| Bestillingsside åbner i toppen | scrollY 0, ingen autofocus, ingen scrollIntoView ved indlæsning |
+| Orientering | `isLandscape(order)` fra output-mål; etiketter i quote, Stripe-metadata, ordrelinjer, mail og tjekliste; mockup vendte allerede |
+| Vandmærke | tiled "GENFUNDET · PREVIEW" 18 % over hele previewet (zoom skalerer samme fil); godkendelsesbillede 1200 px med 10 % mærke |
+| Farver | fjernet fra bestillingssiden (ingen OpenAI-kald før køb); tilbydes i godkendelsesmail og -side; admin kan skifte |
+| Livscyklus | dag 14 sidste påmindelse, dag 21 automatisk Stripe-refusion + refusionsmail + note; atomisk overgang |
+| Handelsbetingelser | ODR fjernet; automatisk refusion efter 21 dage beskrevet |
+| `npm run typecheck` · `npm test` · `test:order` · `test:viewport` | rent · 8/8 · 9/9 · 12/12 – ingen konsolfejl, ingen "Vis i farver" på bestillingssiden, ingen ODR i handelsbetingelserne |
+

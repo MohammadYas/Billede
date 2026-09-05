@@ -77,6 +77,7 @@ export default async function Godkend({ params, searchParams }: { params: Promis
       <SubmitButton label="Godkend" pending="Sender dit ja…" />
       <a href={`/godkend/${token}/aendring`} className="btn btn-block btn-quiet">Jeg vil have en ændring</a>
     </form>
+    {order.is_monochrome && !order.chosen_colour && <p className="small measure">Billedet er sort-hvidt. <a href={`/godkend/${token}/aendring?farver=1`}>Vil du se det i farver?</a> Det koster ikke ekstra, og du får et nyt billede til godkendelse.</p>}
     <p className="caption">{meta.approval_version && meta.approval_version > 1 ? `Version ${meta.approval_version}` : 'Version 1'}{sentAt ? ` · sendt ${sentAt}` : ''}. Du kan også bare svare på mailen med “ja”.</p>
   </>);
 }

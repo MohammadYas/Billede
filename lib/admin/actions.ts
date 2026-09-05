@@ -6,6 +6,7 @@ import { isFormat, quote, readAddOns } from '@/lib/pricing';
 import { sendApprovalMail } from '@/lib/approval';
 import { refundNotice, shippedNotice, siteUrl } from '@/lib/email/templates';
 import { reconcileOrder } from '@/lib/reconcile';
+import { isLandscape } from '@/lib/order-summary';
 import { sendMail } from '@/lib/email/send';
 import { paymentProvider } from '@/lib/payments/stripe';
 
@@ -30,6 +31,14 @@ export async function actionSetStatus(id: string, formData: FormData) {
   back(id, `Status: ${status}`);
 }
 
+/** "Farver" / "Sort-hvid": what the print final is generated as. Set after the customer asks for colour from the approval mail. */
+export async function actionToggleColour(id: string) {
+  await guard();
+  const order = await getOrder(id); if (!order) return;
+  await updateOrder(id, { chosen_colour: !order.chosen_colour, final_path: null } as never);
+  back(id, order.chosen_colour ? 'Sat til sort-hvid – generér final igen' : 'Sat til farver – generér final igen');
+}
+
 export async function actionSetFormat(id: string, formData: FormData) {
   await guard();
   const f = String(formData.get('format'));
@@ -40,7 +49,7 @@ export async function actionSetFormat(id: string, formData: FormData) {
   // format was changed after payment so nobody has to work out why the numbers differ
   const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
   const a = readAddOns(meta.addons);
-  const q = quote({ format: f, frame: a.frame, extraPrints: a.extraPrints });
+  const q = quote({ format: f, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(order) });
   const paid = Boolean(order.paid_at);
   await updateOrder(id, paid
     ? { format: f, internal_notes: `${order.internal_notes ?? ''}\nFormat ændret til ${f} efter betaling; beløbet står uændret.`.trim() }

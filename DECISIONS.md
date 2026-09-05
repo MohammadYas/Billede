@@ -383,4 +383,24 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
 - **The spec is one line on a phone.** Seven rows between the wall mockup and the size choice pushed the
   first decision 2.4 screens down at 390 px; a line and *Se alt, der er med* bring it to 1.8. A desktop
   keeps the rows.
+- **Ten business days and 2 December, until someone signs for less.** The delivery promise has one
+  source (`CONFIG.deliveryDaysMax`, `christmasCutoffDate`) and every surface reads it; the defaults are
+  now the cautious ones. A promise the partner has not confirmed in writing is a refund waiting to happen.
+- **The frame follows the photograph everywhere.** The wall mockup already turned for a landscape
+  picture; the order lines, the Stripe metadata, the confirmation mail and the print checklist still
+  said 30×40 about a 40×30. `isLandscape(order)` reads the restored output's proportions and every
+  label goes through it — same price, and the checklist says *LIGGENDE – rammen vendes* out loud.
+- **The watermark is the whole picture.** One row along the bottom and a corner mark left the faces —
+  the only part anyone screenshots — clean. *GENFUNDET · PREVIEW* now tiles across the preview at 18 %,
+  and because the zoom view scales the same file it is covered too. The approval mail's picture is
+  1200 px with a lighter mark; the file itself is the download after the yes.
+- **Colour is a post-purchase option.** The toggle on the order page ran an OpenAI job for every
+  black-and-white upload before anyone had paid, and was one more thing to decide. The order page now
+  says it in one line; the approval mail and page offer *Vil du se det i farver?*, which lands as a change
+  request, and admin has *Skift til farver* → new final → new approval mail. Nothing is charged.
+- **An order nobody approves closes itself.** Day 14: a final notice (refund in 7 days unless approved).
+  Day 21: the Stripe refund, the existing refund mail, status REFUNDED, a line in the order's notes and a
+  mail to the owner. The transition is atomic, so a yes in the same minute still wins. The terms say it.
+- **The ODR reference is gone** on the owner's instruction (the platform closed 20 July 2025); Center for
+  Klageløsning stays.
 

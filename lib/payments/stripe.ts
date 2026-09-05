@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { CONFIG } from '@/lib/config';
 import type { Order } from '@/lib/db/orders';
-import { formatLabel, type Quote } from '@/lib/pricing';
+import type { Quote } from '@/lib/pricing';
 import type { CheckoutResult, PaymentProvider, VerifiedSession, WebhookOutcome } from './provider';
 
 /**
@@ -75,7 +75,7 @@ export class StripeProvider implements PaymentProvider {
       metadata: {
         order_id: order.id,
         format: order.format,
-        size: formatLabel(opts.quote.format),
+        size: opts.quote.label,
         frame: opts.quote.addons.frame,
         extra_prints: String(opts.quote.addons.extraPrints),
         chosen_colour: String(order.chosen_colour),

@@ -3,12 +3,13 @@
 
 export const CONFIG = {
   /** Max business days from approval to delivery, shown as "inden X hverdage". */
-  deliveryDaysMax: Number(process.env.DELIVERY_DAYS_MAX ?? 5),
+  // 10 until the print partner confirms a shorter lead time in writing; every promise on the site reads this
+  deliveryDaysMax: Number(process.env.DELIVERY_DAYS_MAX ?? 10),
   /** Christmas copy runs from this date … It is a layer on the page (eyebrow, deadline, countdown),
    * never a different page: the headline, the product and the promise are the same all year. */
   christmasStartDate: process.env.CHRISTMAS_START_DATE ?? '2026-11-14',
   /** … until this last order date that is still delivered before Christmas (ISO dates). */
-  christmasCutoffDate: process.env.CHRISTMAS_CUTOFF_DATE ?? '2026-12-10',
+  christmasCutoffDate: process.env.CHRISTMAS_CUTOFF_DATE ?? '2026-12-02',
   /** Retention in days. */
   retentionUnpaidDays: 30,
   retentionCompletedDays: 90,
