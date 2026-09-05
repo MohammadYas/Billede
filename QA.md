@@ -599,3 +599,16 @@ placeholders umulige at udgive. Kørt mod en produktionsbygning på 3111.
 | "Halvandet minut" i hero-teksten | 0 forekomster |
 | Konsolfejl på alle flader | ingen |
 
+## Mikro-konverteringspas, 5. september 2026
+
+Hero i fem lag, indrammet miniature på mobil, billedknapper som tekstlinks, "Og sådan hænger det hos
+dig.", to rækker slået sammen, tre gentagelser fjernet. Kørt mod en produktionsbygning på 3111.
+
+| Kontrol | Resultat |
+|---|---|
+| `npm run typecheck` · `npm test` | rent · 8/8 |
+| `npm run test:order` | 9/9 |
+| `npm run test:viewport` | 12/12 |
+| `[Udfyld`, TODO, lorem ipsum på forside og juridiske sider | 0 (det ene "TODO"-match er bogstaverne i copy-nøglen noPho*toDo*ne) |
+| Konsolfejl | ingen |
+

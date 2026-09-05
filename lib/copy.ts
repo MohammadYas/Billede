@@ -53,8 +53,7 @@ export function copy(season: Season = currentSeason()) {
     ['Print', `${lbl} på mat fotopapir, farveægte`],
     ['Ramme', 'Sort eller eg, med passepartout og glas, klar til at hænge op'],
     ['Fil', 'Den restaurerede fil i høj opløsning – din at hente, så snart du har godkendt'],
-    ['Manuelt tjek', `${cap(navn)} finjusterer hvert billede og tjekker ansigterne`],
-    ['Godkendelse', 'Du ser det færdige billede og siger ja, før vi printer'],
+    ['Godkendelse', `${cap(navn)} finjusterer billedet i hånden og tjekker ansigterne. Du ser det færdige billede og siger ja, før vi printer`],
     ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, pakket så glasset holder`],
     ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
   ];
@@ -71,7 +70,6 @@ export function copy(season: Season = currentSeason()) {
       extraPrint: formatDkk(EXTRA_PRINT_DKK[fmt]),
       specTitle: `Det får du for ${pris}`,
       cta: `Bestil mit billede – ${pris}`,
-      mockupCaption: `Sådan hænger det. ${lbl}, med passepartout og glas, klar til væggen.`,
       p: `Du får billedet printet i ${lbl} på mat fotopapir, i ramme med passepartout og glas, klar til at hænge op – og den restaurerede fil i høj opløsning. Fri fragt, og du godkender det færdige billede, før vi printer.`,
       rows: rowsFor(fmt, lbl),
     };
@@ -92,7 +90,7 @@ export function copy(season: Season = currentSeason()) {
     hero: {
       eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : 'Julen er nået – vi leverer inden 5 hverdage') : 'Dit gamle billede kan blive sådan her.',
       h1: 'Jeres gamle billede. Skarpt igen, i ramme, hjemme hos dig.',
-      sub: 'Bryllupsbilledet, dine forældre som unge, dig selv som barn. Tag et foto af det med telefonen, og se det restaureret – før du beslutter noget.',
+      sub: 'Tag et foto af det med telefonen, og se det restaureret – før du beslutter noget.',
       cta,
       /** the risk reversal, set apart from the price line so it reads before it */
       smallStrong: 'Du ser resultatet, før du køber.',
@@ -111,8 +109,8 @@ export function copy(season: Season = currentSeason()) {
       ] as [string, string][],
     },
     tryghed: [
-      'Du ser resultatet, før du køber',
       'Du godkender, før vi printer – ellers pengene tilbage',
+      `Bestiller du ikke, slettes billedet efter ${CONFIG.retentionUnpaidDays} dage`,
       `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
     ],
     saadan: {
@@ -148,9 +146,8 @@ export function copy(season: Season = currentSeason()) {
       kontakt: email ? `Spørgsmål? ${cap(skrivTil)} på ${email} – vi svarer inden 24 timer.` : '',
       kontaktHref: emailHref,
       price,
-      priceFrom: sizes.length > 1 ? `for ${formatLabel(format)} · større: ${sizes.filter((x) => x !== format).map((x) => `${formatLabel(x)} ${formatDkk(PRICING[x].priceDkk)}`).join(' · ')}` : '',
+      priceFrom: `for ${formatLabel(format)}`,
       cta,
-      under: 'Du bestiller først, når du har set resultatet.',
     },
     hvem: { h2: 'Hvem står bag' },
     spoergsmaal: {
@@ -275,6 +272,7 @@ export function copy(season: Season = currentSeason()) {
     },
     preview: {
       h2: 'Her er dit billede.',
+      hang: 'Og sådan hænger det hos dig.',
       next: `Det her er den hurtige første restaurering. Bestiller du, går ${navn} billedet efter i hånden – især ansigterne – og du godkender det færdige billede på mail, før vi printer.`,
       headNote: 'Fri fragt · pengene tilbage',
       payWhenPre: 'Du betaler',
@@ -292,7 +290,7 @@ export function copy(season: Season = currentSeason()) {
       frameEgHint: 'Lyst træ. Varmere til gamle billeder',
       frameNote: 'Begge med passepartout og glas. Samme pris.',
       extraTitle: 'Én til dig. Én til familien.',
-      extraLead: `Samme billede, samme størrelse og ramme, i samme pakke – til den søskende eller forælder, der også husker det. Restaureringen er lavet, så et eksemplar mere koster ${formatDkk(EXTRA_PRINT_DKK[format])}`,
+      extraLead: 'Samme billede, samme størrelse og ramme, i samme pakke – til den, der også husker det.',
       extraLabel: 'Ekstra eksemplar',
       extraAdd: 'Tilføj et eksemplar',
       extraOne: 'eksemplar mere',

@@ -84,7 +84,10 @@ export default async function Page() {
             <div className="container hero-text">
               <p className="eyebrow">{c.hero.eyebrow}</p>
               <h1>{c.hero.h1}</h1>
-              <p className="lead">{c.hero.sub}</p>
+              <div className="hero-row">
+                {hero?.mockup && <img className="hero-mock-sm" src={hero.mockup.replace(/\.jpg$/, '-480.jpg')} alt="" width={480} height={384} loading="eager" />}
+                <p className="lead">{c.hero.sub}</p>
+              </div>
               <div className="hero-cta">
                 <OpenFlowButton style={{ minWidth: 240 }}>{c.hero.cta}</OpenFlowButton>
                 <span className="caption hero-note"><b>{c.hero.smallStrong}</b> {c.hero.small}</span>
@@ -205,7 +208,6 @@ export default async function Page() {
               <p className="lead" style={{ maxWidth: '22em' }}>{c.offer.line}</p>
               {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}
               <div><OpenFlowButton style={{ minWidth: 240 }}>{c.offer.cta}</OpenFlowButton></div>
-              <p className="caption" style={{ maxWidth: '26em' }}>{c.offer.under}</p>
             </div>
             <div style={{ display: 'grid', gap: 'var(--s2)' }}>
               {c.sizes.length > 1 && <p className="price-from">fra</p>}

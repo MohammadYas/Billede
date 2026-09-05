@@ -333,4 +333,17 @@ One line of reasoning per non-obvious decision. Newest at the bottom.
   guard for name, CVR, address and e-mail is now unconditional — `LEGAL_DRAFT` only controls the
   *Udkast* stamp. On desktop the hero also shows the same photograph framed: old → restored → on the
   wall, in the first viewport.
+- **The hero is five things, in order.** Transformation, headline, one sentence, the button, the risk
+  reversal. The enumerating sentence went (the headline's *Jeres* already carries it), the trust row
+  stopped repeating the line that stands under the button, and on a phone the framed state of the
+  same photograph sits next to the one sentence at 96 px — so the first screen says old → restored →
+  in a frame without a paragraph.
+- **On the result page the only button-shaped thing is the order button.** *Se tæt på* and *Vis i
+  farver* are text links now; they still work, they just no longer compete. Between *Her er dit
+  billede.* and the decisions stands *Og sådan hænger det hos dig.* over the customer's own framed
+  picture — the caption that used to repeat the frame's spec is gone; the rows below say it once.
+- **Fewer repeats.** The price block no longer lists the other two sizes under the big price (the
+  three boxes above already do), *Du bestiller først, når du har set resultatet* left the price block
+  (the list beside it says the same), *Manuelt tjek* and *Godkendelse* are one row, and the second
+  copy's reason is one line with the price on the button.
 

@@ -86,7 +86,6 @@ p + p { margin-top: var(--s4); }
 .btn-quiet:hover { background: var(--paper-2); }
 .btn-quiet:active { background: var(--hairline); }
 .btn-quiet[disabled], .btn-quiet[aria-disabled="true"] { background: transparent; color: var(--ink-2); border-color: var(--hairline); }
-.pv-toggle .btn { white-space: nowrap; }
 .link-btn { background: none; border: 0; padding: 10px 0; margin: -10px 0; color: var(--accent); text-decoration: underline; text-underline-offset: 0.16em; cursor: pointer; min-height: 44px; font-size: var(--fs-body); }
 .link-btn[disabled] { color: var(--ink-2); cursor: default; }
 
@@ -134,6 +133,10 @@ p + p { margin-top: var(--s4); }
 .hero-text { display: grid; gap: var(--s3); padding-top: var(--s2); padding-bottom: var(--s6); }
 .hero-text h1 { max-width: 10em; }
 .hero-text .lead { max-width: 24em; }
+/* the framed state next to the one sentence, phone only (desktop has it beside the slider) */
+.hero-row { display: grid; grid-template-columns: 96px 1fr; gap: var(--s4); align-items: center; }
+.hero-mock-sm { width: 96px; height: auto; }
+@media (min-width: 1024px) { .hero-row { display: contents; } .hero-mock-sm { display: none; } }
 .hero-cta { display: grid; gap: var(--s2); justify-items: start; padding-top: var(--s2); }
 .hero-note { max-width: 26em; }
 .hero-note b { color: var(--ink); font-weight: 600; }
@@ -278,7 +281,8 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
    (Før/Efter, the colour toggle) sit behind the bar on the first screen */
 .pv .ba { max-height: min(70dvh, calc(100dvh - 372px)); margin-inline: auto; }
 @media (min-width: 1024px) { .pv .ba { max-height: 70dvh; } }
-.pv-toggle { display: flex; align-items: center; gap: var(--s4); min-height: 44px; }
+.pv-toggle { display: flex; align-items: center; gap: var(--s5); min-height: 44px; }
+.pv-toggle .link-btn[disabled] { text-decoration: none; }
 .pv-grid { display: grid; gap: var(--s5); }
 .pv-cta { display: grid; gap: var(--s2); }
 

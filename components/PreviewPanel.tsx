@@ -318,8 +318,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <BeforeAfter before={data.original} after={showColour && data.colour ? data.colour : data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal zoom={zoom ? 2.2 : 1} />
         {/* both controls belong to the picture, so they share one row */}
         <div className="pv-toggle">
-          <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
-          {data.isMonochrome && <button type="button" className="btn btn-quiet" style={{ minHeight: 44 }} onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>}
+          <button type="button" className="link-btn" onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
+          {data.isMonochrome && <button type="button" className="link-btn" onClick={toggleColour} disabled={!data.colour || !colourReady} aria-pressed={showColour}>{showColour ? c.preview.monoToggle : c.preview.colourToggle}</button>}
           {(colourLoading || (data.colour && !colourReady)) && <span className="caption">{c.preview.colourLoading}</span>}
         </div>
         {data.isMonochrome && colourReady && <p className="caption measure">{c.preview.colourHint}</p>}
@@ -332,8 +332,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <div className="pv-desktop-cta">{cta}</div>
         <div className="pv-grid">
           {/* the object first, then what it is, then the price — the decisions come after the value */}
+          <h2 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.hang}</h2>
           <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
-          <p className="caption">{v.mockupCaption}</p>
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <p className="caption measure">{c.produkt.lead}</p>
           <dl className="label small">
