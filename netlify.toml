@@ -6,6 +6,8 @@
   # Netlify builds on Ubuntu and runs functions on AWS Lambda (Amazon Linux). If the lockfile was last written on a
   # Windows or macOS machine and lost the Linux entries for sharp, this line puts the linux-x64 binaries back before the build.
   command = "npm install --os=linux --cpu=x64 --no-save sharp && npm run build"
+  # The Next.js plugin wants the build output named; without it the site's publish dir defaults to the repo root and the plugin refuses.
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
