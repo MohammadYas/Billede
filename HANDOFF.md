@@ -215,6 +215,7 @@ one 60 s, and a request body may be at most 6 MB. The restoration takes 30–45 
   keeps the shop tidy. Set up 2026-09-07 via SQL (`create extension pg_cron`, `pg_net`, `vault.create_secret`,
   `cron.schedule`); inspect with `select * from cron.job` and `select * from cron.job_run_details order by start_time desc limit 20`;
 - job state is on the order (`preview_meta.job`) and visible in admin.
+- abuse caps: one network (salted IP hash in `preview_meta.client`) may start 10 restorations and 5 leads per hour (`lib/api/client.ts`); raise `ORDERS_PER_HOUR` if a school or office ever hits it. Paid orders cannot be re-configured through the API.
 
 **Linux, Windows and sharp.** Netlify builds on Ubuntu and runs functions on Amazon Linux — it is Linux, even if you
 develop on Windows. The one thing that bites Windows-developed repos is the image library `sharp`: if `npm install` on

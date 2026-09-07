@@ -13,6 +13,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: 'not found' }, { status: 404 });
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
   if (!order || !ownsOrder(order, sid, req.nextUrl.searchParams.get('t'))) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  // only while the customer is still looking: after payment the configuration is what was paid for
+  if (order.status !== 'PREVIEW_READY') return NextResponse.json({ error: 'state' }, { status: 409 });
   const body = (await req.json().catch(() => ({}))) as { colour?: boolean; format?: string; frame?: string; extraPrints?: number };
   // colour, size, frame and extra copies are "what the customer is looking at". The amount is written
   // here so admin shows the live configuration, but checkout builds the quote again from PRICING,

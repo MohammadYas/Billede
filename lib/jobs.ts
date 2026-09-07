@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { CONFIG } from '@/lib/config';
 import { getOrder, updateOrder, type Order } from '@/lib/db/orders';
 
@@ -41,6 +42,14 @@ export function jobBusy(order: Order, kind: JobKind): boolean {
   if (j.state === 'queued') return age < 60_000;
   if (j.state === 'running') return age < 5 * 60_000;
   return false;
+}
+
+/** Constant-time comparison for the shared secrets; length is checked first so unequal lengths do not throw. */
+export function secretMatches(given: string | null | undefined, expected: string): boolean {
+  if (!given || !expected) return false;
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export function jobSecret(): string {

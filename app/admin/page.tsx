@@ -1,4 +1,5 @@
 import { cookies, headers } from 'next/headers';
+import { clientIp } from '@/lib/api/client';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, recordAttempt } from '@/lib/admin/auth';
 import { listOrders } from '@/lib/db/orders';
@@ -12,7 +13,7 @@ export const metadata = { robots: { index: false, follow: false } };
 async function login(formData: FormData) {
   'use server';
   const h = await headers();
-  const ip = (h.get('x-forwarded-for') ?? 'local').split(',')[0].trim();
+  const ip = clientIp(h) ?? 'local';
   if (rateLimited(ip)) redirect('/admin?fejl=vent');
   const ok = passwordOk(String(formData.get('password') ?? ''));
   recordAttempt(ip, ok);

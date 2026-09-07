@@ -267,6 +267,7 @@ export function copy(season: Season = currentSeason()) {
       tooBig: 'Filen er over 25 MB. Tag et nyt foto, eller vælg et mindre.',
       tooBigNetwork: 'Forbindelsen her kan ikke sende så stor en fil. Prøv på et andet netværk, eller tag et nyt foto af billedet – det behøver ikke være i fuld størrelse.',
       wrongType: 'Vi kan læse JPEG, PNG, HEIC og WebP. Prøv et andet billede.',
+      tooMany: 'Der er sendt mange billeder fra dit netværk lige nu. Vent en time, og prøv igen.',
       noPhoto: 'Jeg har ikke billedet lige nu',
       noPhotoH: 'Ligger billedet hos mor?',
       noPhotoP: 'Skriv din e-mail, så sender vi et link til siden – og ikke andet. Så har du den ved hånden, når du står med billedet.',

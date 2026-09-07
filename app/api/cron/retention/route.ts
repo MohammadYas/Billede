@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reconcilePayments } from '@/lib/reconcile';
 import { runRetention } from '@/lib/retention';
+import { secretMatches } from '@/lib/jobs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');
-  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  if (!process.env.CRON_SECRET || !secretMatches(auth, `Bearer ${process.env.CRON_SECRET}`)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const r = await reconcilePayments();
   const h = await runRetention();
   return NextResponse.json({ ...r, ...h });

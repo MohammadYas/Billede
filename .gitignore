@@ -4,6 +4,8 @@ out/
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
 *.log
 .DS_Store
 work/
@@ -20,3 +22,4 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+.playwright-mcp/

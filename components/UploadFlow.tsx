@@ -256,6 +256,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
       if (cancelled() && !r.ok) return;
       if (r.status === 413) { setState({ kind: 'pick', file, thumb, error: c.upload.tooBig }); return; }
       if (r.status === 415) { setState({ kind: 'pick', error: c.upload.wrongType }); return; }
+      if (r.status === 429) { setState({ kind: 'pick', file, thumb, error: c.upload.tooMany }); return; }
       if (!r.ok) throw new Error('start');
       started = (await r.json()) as typeof started;
     } catch { if (!cancelled()) fail(file, thumb, c.processing.networkError, c.processing.networkTitle); return; }

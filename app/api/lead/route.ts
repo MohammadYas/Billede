@@ -8,6 +8,7 @@ import { esc, siteUrl } from '@/lib/email/templates';
 import { getFounder } from '@/lib/founder';
 import { notifyOwner } from '@/lib/email/owner';
 import { supabaseAdmin } from '@/lib/db/supabase';
+import { clientKey, tooManyOrders, LEADS_PER_HOUR } from '@/lib/api/client';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,12 +22,13 @@ export async function POST(req: NextRequest) {
   const email = String(body.email ?? '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return NextResponse.json({ error: 'email' }, { status: 400 });
   const [{ sid, fresh }, utm] = await Promise.all([ensureSessionId(), readUtm()]);
-  if (await overused(email, sid)) return NextResponse.json({ error: 'send_limit' }, { status: 429 });
+  const client = clientKey(req.headers);
+  if (await overused(email, sid) || await tooManyOrders(client, { max: LEADS_PER_HOUR, windowMs: 3600e3 })) return NextResponse.json({ error: 'send_limit' }, { status: 429 });
   if (body.kind === 'nophoto' && !isEmailConfigured()) return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });
   let order = body.orderId && /^[0-9a-f-]{36}$/.test(body.orderId) ? await getOrder(body.orderId) : null;
   if (order && !ownsOrder(order, sid)) order = null;
   const nophoto = body.kind === 'nophoto';
-  if (!order) order = await createOrder({ status: 'MANUAL_REVIEW', format: customerFormat(), utm, preview_meta: { session_id: sid, note: nophoto ? 'link requested, no photo yet' : 'lead without upload' } });
+  if (!order) order = await createOrder({ status: 'MANUAL_REVIEW', format: customerFormat(), utm, preview_meta: { session_id: sid, ...(client ? { client } : {}), note: nophoto ? 'link requested, no photo yet' : 'lead without upload' } });
   await setStatus(order.id, 'MANUAL_REVIEW', { customer_email: email });
   notifyOwner(nophoto ? `Lead uden billede · ${email}` : `Manuel vurdering – kunden venter · ordre ${order.id.slice(0, 8)}`, [nophoto ? 'Fik et link til siden. Ingen handling nu.' : `${email} har sendt sit billede til manuel vurdering. Svar inden 24 timer.`], order.id).catch(() => {});
   if (nophoto) {

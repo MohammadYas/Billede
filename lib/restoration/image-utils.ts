@@ -20,8 +20,26 @@ export function sniffImageType(buf: Buffer): 'image/jpeg' | 'image/png' | 'image
   return null;
 }
 
+/** The largest size a HEIF file declares (`ispe` boxes: version+flags, width, height). null when none is found. */
+export function heicDimensions(buf: Buffer): Dimensions | null {
+  let best: Dimensions | null = null;
+  let at = buf.indexOf('ispe', 0, 'ascii');
+  while (at >= 0 && at + 12 <= buf.length) {
+    const width = buf.readUInt32BE(at + 8);
+    const height = buf.readUInt32BE(at + 12);
+    if (width > 0 && height > 0 && width < 1e6 && height < 1e6 && (!best || width * height > best.width * best.height)) best = { width, height };
+    at = buf.indexOf('ispe', at + 4, 'ascii');
+  }
+  return best;
+}
+
+/** The same ceiling sharp gets (limitInputPixels), applied before heic-convert inflates the frame in JS. */
+export const MAX_INPUT_PIXELS = 80_000_000;
+
 /** HEIC → JPEG buffer via heic-convert (pure JS, no native deps). */
 export async function heicToJpeg(buf: Buffer): Promise<Buffer> {
+  const declared = heicDimensions(buf);
+  if (declared && declared.width * declared.height > MAX_INPUT_PIXELS) throw new Error('unsupported_image');
   const mod = await import('heic-convert');
   const convert = (mod.default ?? mod) as unknown as (o: { buffer: Buffer; format: 'JPEG'; quality: number }) => Promise<ArrayBuffer>;
   const out = await convert({ buffer: buf, format: 'JPEG', quality: 0.95 });
@@ -36,7 +54,7 @@ export async function normaliseToJpeg(input: Buffer): Promise<{ jpeg: Buffer; di
   const type = sniffImageType(input);
   if (!type) throw new Error('unsupported_image');
   const src = type === 'image/heic' ? await heicToJpeg(input) : input;
-  const pipeline = sharp(src, { failOn: 'error', limitInputPixels: 80_000_000 }).rotate();
+  const pipeline = sharp(src, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS }).rotate();
   const jpeg = await pipeline.jpeg({ quality: 95, mozjpeg: true }).toBuffer();
   const meta = await sharp(jpeg).metadata();
   return { jpeg, dims: { width: meta.width ?? 0, height: meta.height ?? 0 } };
