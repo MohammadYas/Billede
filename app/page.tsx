@@ -7,6 +7,7 @@ import ColourExample from '@/components/ColourExample';
 import Framed from '@/components/Framed';
 import SizePicker from '@/components/SizePicker';
 import Promo from '@/components/Promo';
+import LaunchOffer from '@/components/LaunchOffer';
 import UploadFlow from '@/components/UploadFlow';
 import OpenFlowButton from '@/components/OpenFlowButton';
 import StickyCtaMount from '@/components/StickyCtaMount';
@@ -215,6 +216,7 @@ export default async function Page() {
         {c.offer.kontakt && <div className="wrap" style={{ paddingBottom: 'var(--s6)' }}><div className="container"><MailLine className="caption" text={c.offer.kontakt} email={c.email} href={c.emailHref} /></div></div>}
       </main>
       <Footer />
+      {hero && <LaunchOffer campaign={c.campaign} cta={c.hero.cta} before={src(hero, 'before', '(min-width: 720px) 300px, 100vw')} after={src(hero, 'after', '(min-width: 720px) 300px, 100vw')} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} />}
       <UploadFlow c={c} />
       <StickyCtaMount label={c.sticky} />
       <Consent text={c.cookie.text} accept={c.cookie.accept} decline={c.cookie.decline} />
