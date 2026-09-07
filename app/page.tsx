@@ -71,7 +71,7 @@ export default async function Page() {
             <div className="hero-copy">
               <h1>{c.hero.h1}</h1>
               <p className="lead">{c.hero.sub}</p>
-              <Promo />
+              <Promo campaign={c.campaign} />
               {jul && c.hero.eyebrow && <p className="deadline">{c.hero.eyebrow}</p>}
               <div className="hero-cta">
                 <OpenFlowButton>{c.hero.cta}</OpenFlowButton>
@@ -155,7 +155,7 @@ export default async function Page() {
                 t={{ sizeTitle: c.produkt.sizesTitle, sizeNote: c.produkt.sizesNote, frameTitle: c.preview.frameTitle, frameNote: c.preview.frameNote, recommended: c.produkt.recommended, priceNote: c.offer.priceNote, allIn: c.offer.allIn, carry: c.produkt.carry }}
               />
               <div className="o-promo" style={{ display: 'grid', gap: 'var(--s3)' }}>
-                <Promo />
+                <Promo campaign={c.campaign} />
                 {c.offer.anchor && <p className="caption" style={{ maxWidth: '30em' }}>{c.offer.anchor}</p>}
                 {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}
               </div>

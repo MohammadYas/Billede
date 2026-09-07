@@ -245,7 +245,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="cfg-label"><span className="n">3</span>{c.preview.extraLabel}</p>
         <p className="cfg-title">{c.preview.extraTitle}</p>
         <p className="caption measure">{c.preview.extraLead}</p>
-        <Promo compact />
+        <Promo campaign={c.campaign} compact />
         {extraPrints === 0 ? (
           <button type="button" className="btn btn-quiet extra-add" onClick={() => setExtras(1)}>
             {c.preview.extraAdd} <span className="tabular">+ {c.campaign.active ? '0 kr.' : v.extraPrint}</span>
