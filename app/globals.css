@@ -408,6 +408,7 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .cmp-hold img.before, .cmp-fade img.before { opacity: 0; transition: opacity 260ms ease-out; } /* back out gently */
 .cmp-hold.show-before img.before { opacity: 1; transition-duration: 120ms; } /* in fast: feedback lands on the press */
 .cmp-fade img.before { transition: opacity 1400ms ease-in-out; }
+.cmp-fade.pressed img.before, .cmp-fade.pressed .lbl { transition-duration: 160ms; } /* a press answers at once; the loop keeps its slow dissolve */
 .cmp-fade.show-before img.before { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .cmp-fade img.before, .cmp-fade .lbl { transition: none; } }
 .cmp-hold .lbl.before, .cmp-fade .lbl.before { opacity: 0; transition: opacity 220ms; }

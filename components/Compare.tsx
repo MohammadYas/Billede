@@ -32,7 +32,7 @@ function Pic({ s, className }: { s: Source; className: string }) {
  *   vertical swipe on the photograph still scrolls the page. Release projects the momentum. The
  *   centre is clamped so the whole circle stays inside the photograph — it can never be half cut off.
  * - hold: press to see the original — feedback on pointer-down, 120 ms in, 260 ms back out; space toggles.
- * - fade: a slow dissolve every 3.2 s, paused off-screen and while touched. Under reduced motion the pictures
+ * - fade: a slow dissolve every 3.2 s, paused off-screen; a press holds the original while the finger stays. Under reduced motion the pictures
  *   still alternate (a cut between two stills is not motion), a little slower and without the dissolve.
  */
 export default function Compare({ before, after, alt, aspect, mode, beforeLabel = 'Før', afterLabel = 'Efter', className = '', initialBefore = false, interval = 3200 }: Props) {
@@ -171,7 +171,8 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
         springTo(p.x, p.y, 0.22);
       }
     }
-    if (holdLike) setShowBefore(true);
+    // fade: a press shows the original for as long as the finger stays (the caption promises it), then the loop resumes
+    if (holdLike || mode === 'fade') setShowBefore(true);
     if (mode === 'fade') setPaused(true);
   };
   const onPointerMove = (e: React.PointerEvent) => {
@@ -195,7 +196,7 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
       }
       tap.current = null;
     }
-    if (holdLike) setShowBefore(false);
+    if (holdLike || mode === 'fade') setShowBefore(false);
     if (mode === 'fade') setPaused(false);
   };
   const onKey = (e: React.KeyboardEvent) => {
