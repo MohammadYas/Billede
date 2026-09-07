@@ -78,7 +78,8 @@ p + p { margin-top: var(--s4); }
 .tap { display: inline-block; padding: 12px 0; margin: -12px 0; }
 
 /* Wordmark — one class, always a link home */
-.wordmark { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; line-height: 1; display: inline-block; padding: 10px 0; margin: -10px 0; }
+.wordmark { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; line-height: 1; display: inline-flex; align-items: center; gap: 9px; padding: 10px 0; margin: -10px 0; }
+.wordmark .logo-mark { width: 28px; height: 28px; display: block; }
 .wordmark:hover { text-decoration: none; }
 
 /* Button — the one primary style. Feedback lands on pointer-down (apple-design §1). */

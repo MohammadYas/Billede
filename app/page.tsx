@@ -15,6 +15,7 @@ import Footer from '@/components/Footer';
 import MailLine from '@/components/MailLine';
 import Wordmark from '@/components/Wordmark';
 import DeletedNotice from '@/components/DeletedNotice';
+import JsonLd from '@/components/JsonLd';
 
 // Static, regenerated hourly: an ad click hits the CDN, not a cold function. The ?order= resume lives in UploadFlow.
 export const revalidate = 3600;
@@ -59,6 +60,7 @@ export default async function Page() {
         </div>
       </header>
       <main>
+        <JsonLd />
         <DeletedNotice text={c.preview.erased} />
 
         {/* Hero — the claim, the button, and the proof: a real damaged print turning sharp under the finger. */}

@@ -12,16 +12,24 @@ const sizes = customerFormats().map((f) => formatLabel(f)).join(', ');
 
 export const metadata: Metadata = {
   metadataBase: new URL(CONFIG.siteUrl),
-  title: 'Billedarv – gamle billeder, restaureret og indrammet',
-  description: `Tag et foto af det gamle billede med telefonen, se det restaureret på halvandet minut, og få det hjem i ramme. ${sizes}. Fra ${priceFrom} inkl. fri fragt.`,
+  title: { default: 'Billedarv – restaurering af gamle billeder, leveret i ramme', template: '%s – Billedarv' },
+  description: `Restaurering af gamle familiebilleder: tag et foto af billedet med telefonen, se det restaureret på halvandet minut, og få det hjem som print i ramme. ${sizes}. Fra ${priceFrom} inkl. fri fragt. Du godkender, før vi printer.`,
+  keywords: ['restaurering af gamle billeder', 'gamle fotos restaureret', 'billede i ramme', 'gammelt familiebillede', 'fotorestaurering', 'gave til forældre', 'guldbryllup gave'],
+  applicationName: 'Billedarv',
+  authors: [{ name: 'Billedarv' }],
+  category: 'shopping',
   openGraph: {
     title: 'Billedarv – gamle billeder, restaureret og indrammet',
     description: `Se dit gamle familiebillede restaureret på halvandet minut. I ramme, ${sizes}, fra ${priceFrom} med fri fragt.`,
     locale: 'da_DK',
     type: 'website',
+    siteName: 'Billedarv',
+    url: '/',
     images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Før og efter: restaureret familiebillede' }],
   },
-  icons: { icon: '/favicon.svg' },
+  twitter: { card: 'summary_large_image', title: 'Billedarv – gamle billeder, restaureret og indrammet', description: `Se dit gamle familiebillede restaureret på halvandet minut. I ramme fra ${priceFrom}, fri fragt.`, images: ['/og.jpg'] },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
+  icons: { icon: [{ url: '/favicon.png', type: 'image/png', sizes: '64x64' }, { url: '/favicon.svg', type: 'image/svg+xml' }], apple: '/apple-touch-icon.png' },
   alternates: { canonical: '/' },
 };
 
