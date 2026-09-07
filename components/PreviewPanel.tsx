@@ -5,7 +5,8 @@ import { PRODUCT, track } from '@/lib/analytics/client';
 import MailLine from './MailLine';
 import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
-import { quote, formatOere, MAX_EXTRA_PRINTS, type Format, type Frame } from '@/lib/pricing';
+import { quote, formatOere, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, type Format, type Frame } from '@/lib/pricing';
+import { PICK_KEY } from './SizePicker';
 
 /** Loads an image off-screen so a swap never flashes the wrong picture. */
 const preload = (src: string) => new Promise<void>((resolve) => { const i = new Image(); i.onload = () => resolve(); i.onerror = () => resolve(); i.src = src; });
@@ -124,6 +125,19 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
+  // the size and frame chosen on the landing page: applied once, only while the order still sits on its defaults
+  useEffect(() => {
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(PICK_KEY); localStorage.removeItem(PICK_KEY); } catch { /* private mode */ }
+    if (!raw || paid || cancelled) return;
+    if (data.format !== customerFormat() || data.addons.frame !== 'sort' || data.addons.extraPrints !== 0) return;
+    try {
+      const pick = JSON.parse(raw) as { format?: unknown; frame?: unknown };
+      if (isFormat(pick.format) && pick.format !== format) pickFormat(pick.format);
+      if (isFrame(pick.frame) && pick.frame !== frame) pickFrame(pick.frame);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const setExtras = (next: number) => {
     const n = Math.min(MAX_EXTRA_PRINTS, Math.max(0, next));
     if (n === extraPrints) return;

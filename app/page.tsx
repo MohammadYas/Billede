@@ -5,6 +5,7 @@ import type { Source } from '@/components/BeforeAfter';
 import Compare from '@/components/Compare';
 import ColourExample from '@/components/ColourExample';
 import Framed from '@/components/Framed';
+import SizePicker from '@/components/SizePicker';
 import UploadFlow from '@/components/UploadFlow';
 import OpenFlowButton from '@/components/OpenFlowButton';
 import StickyCtaMount from '@/components/StickyCtaMount';
@@ -144,37 +145,15 @@ export default async function Page() {
               <dl className="label o-rows">
                 {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
               </dl>
-              <div className="o-sizes" style={{ display: 'grid', gap: 'var(--s3)' }}>
-                <p className="small" style={{ fontWeight: 600 }}>{c.produkt.sizesTitle}</p>
-                <ul className="size-compare">
-                  {c.produkt.sizeCards.map((x) => (
-                    <li key={x.label} className={x.recommended ? 'is-recommended' : ''}>
-                      {x.recommended && <span className="tag">{c.produkt.recommended}</span>}
-                      <b>{x.label}</b>
-                      <span className="size-price tabular">{x.price}</span>
-                      <span className="caption">{x.hint}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="caption">{c.produkt.sizesNote}</p>
-              </div>
-              <div className="o-frames" style={{ display: 'grid', gap: 'var(--s3)' }}>
-                <p className="small" style={{ fontWeight: 600 }}>{c.preview.frameTitle}</p>
-                <div className="frames">
-                  <span><span className="swatch swatch-sort" aria-hidden /> {c.preview.frameSort} · {c.preview.frameSortHint}</span>
-                  <span><span className="swatch swatch-eg" aria-hidden /> {c.preview.frameEg} · {c.preview.frameEgHint}</span>
-                </div>
-                <p className="caption">{c.preview.frameNote}</p>
-              </div>
-              <div className="o-price" style={{ display: 'grid', gap: 'var(--s3)' }}>
-                <div className="price-line">
-                  {c.sizes.length > 1 && <span className="caption">fra</span>}
-                  <span className="price tabular">{c.offer.price}</span>
-                  <span className="caption">{c.offer.priceNote}</span>
-                </div>
-                <p className="small" style={{ maxWidth: '30em' }}>{c.offer.allIn}</p>
-                {c.offer.anchor && <p className="caption" style={{ maxWidth: '30em' }}>{c.offer.anchor}</p>}
+              <SizePicker
+                sizes={c.produkt.sizeCards.map((x) => ({ format: x.format, label: x.label, price: x.price, hint: x.hint, recommended: x.recommended }))}
+                frames={[['sort', c.preview.frameSort, c.preview.frameSortHint], ['eg', c.preview.frameEg, c.preview.frameEgHint]]}
+                initialFormat={c.format}
+                t={{ sizeTitle: c.produkt.sizesTitle, sizeNote: c.produkt.sizesNote, frameTitle: c.preview.frameTitle, frameNote: c.preview.frameNote, recommended: c.produkt.recommended, priceNote: c.offer.priceNote, allIn: c.offer.allIn, carry: c.produkt.carry }}
+              />
+              <div className="o-promo" style={{ display: 'grid', gap: 'var(--s3)' }}>
                 {c.campaign.active && <div className="promo"><b>{c.campaign.title}</b><span>{c.campaign.body}</span><span className="caption">{c.campaign.terms}</span></div>}
+                {c.offer.anchor && <p className="caption" style={{ maxWidth: '30em' }}>{c.offer.anchor}</p>}
                 {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}
               </div>
               <ul className="guarantee o-guarantee">
