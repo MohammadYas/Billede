@@ -1,7 +1,8 @@
 import { copy } from '@/lib/copy';
 import { getExamples, type Example } from '@/lib/examples';
 import { exampleSrcSet, GRID_SIZES, HERO_SIZES } from '@/lib/images';
-import BeforeAfter, { type Source } from '@/components/BeforeAfter';
+import type { Source } from '@/components/BeforeAfter';
+import Compare from '@/components/Compare';
 import ColourExample from '@/components/ColourExample';
 import Framed from '@/components/Framed';
 import UploadFlow from '@/components/UploadFlow';
@@ -46,6 +47,7 @@ export default async function Page() {
 
   return (
     <>
+      {c.campaign.active && <div className="announce"><span>{c.campaign.bar}</span></div>}
       <header className="nav wrap">
         <div className="container nav-row">
           <Wordmark />
@@ -65,7 +67,7 @@ export default async function Page() {
             <div className="hero-copy">
               <h1>{c.hero.h1}</h1>
               <p className="lead">{c.hero.sub}</p>
-              {c.campaign.active && <p className="deadline">{c.campaign.short}</p>}
+              {c.campaign.active && <div className="promo"><b>{c.campaign.title}</b><span>{c.campaign.body}</span><span className="caption">{c.campaign.terms}</span></div>}
               {jul && c.hero.eyebrow && <p className="deadline">{c.hero.eyebrow}</p>}
               <div className="hero-cta">
                 <OpenFlowButton>{c.hero.cta}</OpenFlowButton>
@@ -74,7 +76,7 @@ export default async function Page() {
             </div>
             {hero && (
               <figure className="hero-proof">
-                <BeforeAfter before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} aspect="4 / 5" reveal priority rest={50} />
+                <Compare mode="fade" initialBefore before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} aspect="4 / 5" />
                 <figcaption><Caption text={hero.caption} /></figcaption>
               </figure>
             )}
@@ -96,7 +98,7 @@ export default async function Page() {
                     <figure key={e.id}>
                       {e.colour
                         ? <ColourExample before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} colour={e.colour} alt={alt} aspect={aspect} />
-                        : <BeforeAfter before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />}
+                        : <Compare mode="fade" before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />}
                       <figcaption><Caption text={e.caption} /></figcaption>
                     </figure>
                   );
@@ -171,7 +173,7 @@ export default async function Page() {
                   <span className="caption">{c.offer.priceNote}</span>
                 </div>
                 {c.offer.anchor && <p className="caption" style={{ maxWidth: '30em' }}>{c.offer.anchor}</p>}
-                {c.campaign.active && <p className="deadline">{c.campaign.line}</p>}
+                {c.campaign.active && <div className="promo"><b>{c.campaign.title}</b><span>{c.campaign.body}</span><span className="caption">{c.campaign.terms}</span></div>}
                 {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}
               </div>
               <ul className="guarantee o-guarantee">

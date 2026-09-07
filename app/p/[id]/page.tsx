@@ -34,7 +34,7 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
       <link rel="preload" as="image" href={payload.original} />
       <link rel="preload" as="image" href={payload.preview} />
       {/* the price lives in the bill on this page; the header carries the promise instead */}
-      <SiteHeader note={c.preview.headNote} />
+      <SiteHeader note={c.preview.headNote} bar={c.campaign.active ? c.campaign.bar : undefined} />
       <main className="wrap">
         <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} token={t} />
       </main>

@@ -7,6 +7,10 @@ export type CompareMode = 'lens' | 'hold' | 'fade';
 type Props = {
   before: string | Source; after: string | Source; alt: string; aspect: string;
   mode: CompareMode; beforeLabel?: string; afterLabel?: string; className?: string;
+  /** fade: open on the damaged original, so the first thing that happens on screen is the repair */
+  initialBefore?: boolean;
+  /** fade: milliseconds between switches */
+  interval?: number;
 };
 
 const toSource = (s: string | Source): Source => (typeof s === 'string' ? { src: s } : s);
@@ -30,10 +34,10 @@ function Pic({ s, className }: { s: Source; className: string }) {
  * - hold: press to see the original — feedback on pointer-down, 120 ms in, 260 ms back out; space toggles.
  * - fade: a slow dissolve every 4 s, paused off-screen and while touched; hold-like under reduced motion.
  */
-export default function Compare({ before, after, alt, aspect, mode, beforeLabel = 'Før', afterLabel = 'Efter', className = '' }: Props) {
+export default function Compare({ before, after, alt, aspect, mode, beforeLabel = 'Før', afterLabel = 'Efter', className = '', initialBefore = false, interval = 3200 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const b = toSource(before), a = toSource(after);
-  const [showBefore, setShowBefore] = useState(false);
+  const [showBefore, setShowBefore] = useState(mode === 'fade' && initialBefore);
   const [paused, setPaused] = useState(false);
   const [reduce, setReduce] = useState(false);
   const [radius, setRadius] = useState(120);
@@ -63,9 +67,9 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
     let visible = false;
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; });
     io.observe(el);
-    const t = setInterval(() => { if (visible && !paused && document.visibilityState === 'visible') setShowBefore((v) => !v); }, 4000);
+    const t = setInterval(() => { if (visible && !paused && document.visibilityState === 'visible') setShowBefore((v) => !v); }, interval);
     return () => { io.disconnect(); clearInterval(t); };
-  }, [mode, paused, reduce]);
+  }, [mode, paused, reduce, interval]);
 
   /** Keeps the whole circle inside the photograph: the centre can come no closer to an edge than its radius. */
   const clamp = (x: number, y: number) => {
@@ -201,17 +205,19 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
     }
   };
 
-  const hint = mode === 'lens' ? 'Tryk eller træk luppen' : holdLike ? 'Hold for at se før' : 'Overtoner langsomt · rør for at holde';
+  // fade needs no instruction: the picture changes by itself and the label says which side is showing
+  const hint = mode === 'lens' ? 'Tryk eller træk luppen' : holdLike ? 'Hold for at se før' : '';
+  const described = hint || 'Skifter selv mellem før og efter';
   return (
     <div ref={ref} className={`cmp cmp-${mode}${showBefore ? ' show-before' : ''} ${className}`.trim()} style={{ aspectRatio: aspect, ['--lx' as string]: '50%', ['--ly' as string]: '42%', ['--r' as string]: `${radius}px` }}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={release} onPointerCancel={release} onPointerLeave={(e) => { if (mode !== 'lens') release(e); }}
-      onKeyDown={onKey} tabIndex={0} role="img" aria-label={`${alt}. ${hint}.`}>
+      onKeyDown={onKey} tabIndex={0} role="img" aria-label={`${alt}. ${described}.`}>
       <Pic s={a} className="after" />
       <Pic s={b} className="before" />
       {mode === 'lens' && <div className="lens-ring" aria-hidden onPointerDown={onRingDown} onPointerMove={onRingMove} onPointerUp={onRingUp} onPointerCancel={onRingUp} />}
       <span className="lbl before" aria-hidden>{beforeLabel}</span>
       <span className="lbl after" aria-hidden>{afterLabel}</span>
-      <span className="hint" aria-hidden>{hint}</span>
+      {hint && <span className="hint" aria-hidden>{hint}</span>}
     </div>
   );
 }

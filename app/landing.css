@@ -127,3 +127,25 @@
 .label > div:last-child { border-bottom: 1px solid var(--hairline); }
 .label dt { color: var(--ink-2); font-size: var(--fs-small); padding-top: 3px; }
 .label dd { margin: 0; }
+
+/* Announcement bar — the launch offer above the header, the way a shop says it */
+.announce { background: var(--accent); color: var(--accent-ink); text-align: center; padding: var(--s2) var(--gutter); font-size: var(--fs-small); line-height: 1.35; font-weight: 600; }
+.announce span { display: inline-block; max-width: 40em; }
+
+/* Promo box — the offer where the decision is made: beside the button, beside the price */
+.promo { display: grid; gap: var(--s1); padding: var(--s4) var(--s4); background: var(--paper-2); border-radius: 6px; max-width: 30em; }
+.promo b { font-family: var(--display); font-weight: 650; font-size: var(--fs-lead); color: var(--accent); letter-spacing: -0.01em; }
+.promo > span { font-size: var(--fs-body); }
+.promo .caption { padding-top: var(--s1); }
+
+/* Fading pairs on the landing page: the picture changes by itself, one word says which side is showing */
+.hero-proof .cmp { border-radius: 6px; box-shadow: var(--shadow-object); }
+.hero-proof .cmp img { object-position: 50% 28%; }
+.ex-grid .cmp { border-radius: 4px; }
+.cmp-fade .lbl { left: var(--s3); right: auto; bottom: var(--s3); font-size: 15px; padding: 6px 12px; background: var(--ink); color: var(--paper); border-radius: 4px; transition: opacity 320ms ease-out; }
+.cmp-fade .lbl.after { opacity: 1; }
+.cmp-fade .lbl.before { opacity: 0; }
+.cmp-fade.show-before .lbl.before { opacity: 1; }
+.cmp-fade.show-before .lbl.after { opacity: 0; }
+.cmp-fade .lbl.after, .cmp-fade .lbl.before { right: auto; }
+@media (max-width: 479px) { .promo { padding: var(--s3) var(--s4); gap: 2px; } .promo > span { font-size: 15px; } .promo .caption { font-size: 13px; } .promo b { font-size: var(--fs-body); } }
