@@ -10,6 +10,8 @@ import { actionCheckPayment, actionFulfillment, actionNote, actionSendApproval, 
 import GenerateFinalButton from '@/components/admin/GenerateFinalButton';
 import FinalUpload from '@/components/admin/FinalUpload';
 import { getJob } from '@/lib/jobs';
+import { statusDa } from '@/lib/admin/status';
+import AdminBar from '@/components/admin/AdminBar';
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -44,20 +46,18 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
     : null;
 
   return (
-    <main className="wrap admin" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>
+    <main className="wrap admin" style={{ paddingTop: 'var(--s3)', paddingBottom: 'var(--s9)' }}>
       <div className="container" style={{ display: 'grid', gap: 'var(--s6)' }}>
-        <p className="small"><a href="/admin">← Ordrer</a></p>
-        {msg && <p className="small" role="status" style={{ background: 'var(--paper-2)', padding: 'var(--s2) var(--s3)' }}>{msg}</p>}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s4)', alignItems: 'baseline' }}>
-          <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordre {order.id.slice(0, 8)}</h1>
-          <span>{order.status}</span>
-          <span>{orderDescription(order)}</span>
-          <span>{order.amount ? `${(order.amount / 100).toLocaleString('da-DK')} kr.` : ''}</span>
+        <AdminBar title={`Ordre ${order.id.slice(0, 8)}`} />
+        {msg && <p className="small notice" role="status">{msg}</p>}
+        <div style={{ display: 'grid', gap: 'var(--s2)' }}>
+          <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordre {order.id.slice(0, 8)} <span className="adm-status">{statusDa(order.status)}</span></h1>
+          <p className="small">{orderDescription(order)}{order.amount ? ` · ${(order.amount / 100).toLocaleString('da-DK')} kr.` : ''}</p>
         </div>
 
         {next && <p className="notice" style={{ fontWeight: 600 }}>{next}</p>}
         {job && job.state !== 'done' && <p className="small" style={{ color: job.state === 'failed' ? 'var(--error)' : 'var(--ink-2)' }}>Job {job.kind}: {job.state}{job.stage ? ` · ${job.stage}` : ''}{job.reason ? ` · ${job.reason}` : ''}</p>}
-        <section style={{ display: 'grid', gap: 'var(--s2)' }} className="small">
+        <section className="small adm-facts">
           <p><strong>Kunde:</strong> {order.customer_name ?? '—'} · {order.customer_email ?? '—'} · {order.customer_phone ?? '—'}</p>
           <p><strong>Adresse:</strong> {addr ? [addr.line1, addr.line2, `${addr.postal_code ?? ''} ${addr.city ?? ''}`].filter(Boolean).join(', ') : '—'}</p>
           <p><strong>Betaling:</strong> {order.payment_provider ?? '—'} {order.payment_session_id ?? ''} {order.payment_intent ?? ''}{order.payment_session_id && ['NEW', 'PREVIEW_READY', 'ABANDONED'].includes(order.status) ? <form action={actionCheckPayment.bind(null, order.id)} style={{ display: 'inline' }}> <button type="submit" className="link-btn">Tjek betaling hos Stripe</button></form> : null}</p>
@@ -81,51 +81,56 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           ) : null)}
         </section>
 
-        <section style={{ display: 'grid', gap: 'var(--s5)', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-          <form action={actionSetStatus.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
-            <label className="small"><strong>Status</strong></label>
-            <select name="status" defaultValue={order.status} style={{ minHeight: 44, padding: '0 var(--s3)', border: '1px solid var(--hairline)', background: 'var(--paper)' }}>
-              {STATUS_FLOW.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+        <section className="adm-grid">
+          <form action={actionSetStatus.bind(null, order.id)} className="adm-card">
+            <h3>Status</h3>
+            <div className="field"><label htmlFor="status">Ny status</label>
+              <select id="status" name="status" defaultValue={order.status}>
+                {STATUS_FLOW.map((s) => <option key={s} value={s}>{statusDa(s)}</option>)}
+              </select></div>
             <button className="btn" type="submit">Sæt status</button>
-            <p className="caption">SHIPPED sender "Dit billede er på vej" (husk tracking først). REFUNDED refunderer via Stripe.</p>
+            <p className="caption">“Sendt” sender “Dit billede er på vej” (gem tracking først). “Refunderet” refunderer via Stripe og skriver til kunden.</p>
           </form>
 
-          <form action={actionSetFormat.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
-            <label className="small"><strong>Format</strong></label>
-            <select name="format" defaultValue={order.format} style={{ minHeight: 44, padding: '0 var(--s3)', border: '1px solid var(--hairline)', background: 'var(--paper)' }}>
-              {FORMATS.map((f) => <option key={f} value={f}>{formatLabel(f)} · {PRICING[f].priceDkk} kr.{PRICING[f].enabled ? '' : ' (ikke i kundeflow)'}</option>)}
-            </select>
+          <form action={actionSetFormat.bind(null, order.id)} className="adm-card">
+            <h3>Format</h3>
+            <div className="field"><label htmlFor="format">Størrelse</label>
+              <select id="format" name="format" defaultValue={order.format}>
+                {FORMATS.map((f) => <option key={f} value={f}>{formatLabel(f)} · {PRICING[f].priceDkk} kr.{PRICING[f].enabled ? '' : ' (ikke i kundeflow)'}</option>)}
+              </select></div>
             <button className="btn btn-quiet" type="submit">Skift format</button>
           </form>
 
-          <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+          <div className="adm-card">
+            <h3>Færdig fil</h3>
             <FinalUpload orderId={order.id} />
             <GenerateFinalButton orderId={order.id} />
             {order.is_monochrome && (
-              <form action={actionToggleColour.bind(null, order.id)}>
+              <form action={actionToggleColour.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
                 <button className="btn btn-quiet" type="submit">{order.chosen_colour ? 'Skift til sort-hvid' : 'Skift til farver (kunden har bedt om det)'}</button>
-                <p className="caption">Nulstiller final; generér den igen og send en ny godkendelsesmail.</p>
+                <p className="caption">Nulstiller den færdige fil; generér den igen og send en ny godkendelsesmail.</p>
               </form>
             )}
           </div>
 
-          <form action={actionSendApproval.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
-            <p className="small"><strong>Godkendelsesmail</strong> {order.approval_status !== 'NONE' ? `· ${order.approval_status}` : ''}</p>
-            <button className="btn" type="submit" disabled={!order.final_path || !order.customer_email}>Send "Dit færdige billede er klar"</button>
-            {order.approval_token && <p className="caption">Link: /godkend/{order.approval_token}</p>}
+          <form action={actionSendApproval.bind(null, order.id)} className="adm-card">
+            <h3>Godkendelsesmail{order.approval_status !== 'NONE' ? <span className="muted"> · {order.approval_status === 'SENT' ? 'sendt' : order.approval_status === 'APPROVED' ? 'godkendt' : order.approval_status.toLowerCase()}</span> : null}</h3>
+            <button className="btn" type="submit" disabled={!order.final_path || !order.customer_email}>Send “Dit færdige billede er klar”</button>
+            {(!order.final_path || !order.customer_email) && <p className="caption">{!order.final_path ? 'Kræver en færdig fil.' : 'Ordren har ingen e-mail.'}</p>}
+            {order.approval_token && <p className="caption">Kundens link: /godkend/{order.approval_token}</p>}
           </form>
 
-          <form action={actionFulfillment.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
-            <p className="small"><strong>Fulfillment (manuel: CEWE / fotolab)</strong></p>
-            <div className="field"><label htmlFor="reference">Fulfillment-reference</label><input id="reference" name="reference" defaultValue={order.fulfillment_reference ?? ''} /></div>
+          <form action={actionFulfillment.bind(null, order.id)} className="adm-card">
+            <h3>Print og forsendelse</h3>
+            <div className="field"><label htmlFor="reference">Ordrereference hos laboratoriet</label><input id="reference" name="reference" defaultValue={order.fulfillment_reference ?? ''} /></div>
             <div className="field"><label htmlFor="tracking">Tracking-nummer</label><input id="tracking" name="tracking" defaultValue={order.tracking_number ?? ''} /></div>
             <div className="field"><label htmlFor="tracking_url">Tracking-link</label><input id="tracking_url" name="tracking_url" type="url" defaultValue={order.tracking_url ?? ''} /></div>
             <button className="btn btn-quiet" type="submit">Gem</button>
           </form>
 
-          <form action={actionNote.bind(null, order.id)} style={{ display: 'grid', gap: 'var(--s2)' }}>
-            <div className="field"><label htmlFor="notes"><strong>Intern note</strong></label><textarea id="notes" name="notes" rows={5} defaultValue={order.internal_notes ?? ''} /></div>
+          <form action={actionNote.bind(null, order.id)} className="adm-card">
+            <h3>Intern note</h3>
+            <div className="field"><label htmlFor="notes" className="visually-hidden">Note</label><textarea id="notes" name="notes" rows={5} defaultValue={order.internal_notes ?? ''} /></div>
             <button className="btn btn-quiet" type="submit">Gem note</button>
           </form>
         </section>
@@ -134,7 +139,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           <section>
             <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Tjekliste – bestil print</h2>
             <ol className="small" style={{ paddingLeft: '1.2em', display: 'grid', gap: 'var(--s2)', maxWidth: '50em' }}>
-              {checklist.map((c, i) => <li key={i} style={{ wordBreak: 'break-all' }}>{c}</li>)}
+              {checklist.map((c, i) => <li key={i}>{c}</li>)}
             </ol>
           </section>
         )}

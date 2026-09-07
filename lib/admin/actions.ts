@@ -1,6 +1,6 @@
 'use server';
 import { redirect } from 'next/navigation';
-import { isAdmin } from './auth';
+import { ADMIN_COOKIE, isAdmin } from './auth';
 import { getOrder, setStatus, updateOrder, type OrderStatus } from '@/lib/db/orders';
 import { isFormat, quote, readAddOns } from '@/lib/pricing';
 import { sendApprovalMail } from '@/lib/approval';
@@ -9,6 +9,12 @@ import { reconcileOrder } from '@/lib/reconcile';
 import { isLandscape } from '@/lib/order-summary';
 import { sendMail } from '@/lib/email/send';
 import { paymentProvider } from '@/lib/payments/stripe';
+
+export async function actionLogout() {
+  const { cookies } = await import('next/headers');
+  (await cookies()).delete(ADMIN_COOKIE);
+  redirect('/admin');
+}
 
 async function guard() { if (!(await isAdmin())) throw new Error('unauthorized'); }
 const back = (id: string, msg?: string) => redirect(`/admin/orders/${id}${msg ? `?msg=${encodeURIComponent(msg)}` : ''}`);

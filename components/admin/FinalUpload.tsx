@@ -33,7 +33,7 @@ export default function FinalUpload({ orderId }: { orderId: string }) {
   };
   return (
     <div style={{ display: 'grid', gap: 'var(--s2)' }}>
-      <label className="small" htmlFor="final"><strong>Upload færdig fil</strong> (JPEG/PNG/TIFF, printopløsning – går direkte i bucketen, ingen størrelsesgrænse under 25 MB)</label>
+      <label className="small" htmlFor="final">Upload den retoucherede fil (JPEG, PNG eller TIFF i printopløsning, op til 25 MB)</label>
       <input id="final" type="file" accept="image/jpeg,image/png,image/tiff" onChange={(e) => onChange(e.target.files?.[0])} disabled={state === 'uploading'} />
       {state === 'uploading' && <span className="caption">Uploader · {pct} %</span>}
       {state === 'error' && <span className="caption" style={{ color: 'var(--error)' }}>Fejlede ({msg}). Prøv igen.</span>}

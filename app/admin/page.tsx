@@ -6,6 +6,9 @@ import { listOrders } from '@/lib/db/orders';
 import { supabaseAdmin } from '@/lib/db/supabase';
 import { formatLabel } from '@/lib/pricing';
 import { readAddOns } from '@/lib/pricing';
+import { STATUS_DA } from '@/lib/admin/status';
+import AdminBar from '@/components/admin/AdminBar';
+import Wordmark from '@/components/Wordmark';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
@@ -23,11 +26,6 @@ async function login(formData: FormData) {
   redirect('/admin');
 }
 
-const STATUS_DA: Record<string, string> = {
-  NEW: 'Ny', PREVIEW_READY: 'Preview klar', PAID: 'Betalt', IN_RETOUCH: 'I retouch', AWAITING_APPROVAL: 'Venter på godkendelse', CHANGE_REQUESTED: 'Ændring ønsket',
-  APPROVED: 'Godkendt', IN_PRODUCTION: 'I produktion', SHIPPED: 'Sendt', COMPLETED: 'Afsluttet', REFUNDED: 'Refunderet', MANUAL_REVIEW: 'Manuel vurdering', ABANDONED: 'Opgivet',
-};
-
 const WORK: Record<string, string> = {
   PAID: 'Generér/upload final og send godkendelsesmail',
   CHANGE_REQUESTED: 'Ret efter kundens besked, ny final, ny mail',
@@ -44,7 +42,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
     return (
       <main className="wrap admin" style={{ paddingTop: 'var(--s8)' }}>
         <form action={login} className="container" style={{ maxWidth: 360, display: 'grid', gap: 'var(--s4)' }}>
-          <h1 style={{ fontSize: 'var(--fs-h2)' }}>Billedarv admin</h1>
+          <Wordmark />
+          <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordrer og produktion</h1>
+          <p className="small muted">Kun for Billedarv.</p>
           <div className="field"><label htmlFor="pw">Adgangskode</label><input id="pw" name="password" type="password" autoComplete="current-password" required /></div>
           {sp.fejl === 'vent' && <p className="small" style={{ color: 'var(--error)' }}>For mange forsøg. Vent 15 minutter.</p>}
           {sp.fejl === '1' && <p className="small" style={{ color: 'var(--error)' }}>Forkert adgangskode.</p>}
@@ -65,8 +65,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const age = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / 864e5);
   const work = Object.keys(WORK).map((st) => ({ st, rows: orders.filter((o) => o.status === st && !(st === 'MANUAL_REVIEW' && !o.customer_email)) })).filter((g) => g.rows.length);
   return (
-    <main className="wrap admin" style={{ paddingTop: 'var(--s6)', paddingBottom: 'var(--s9)' }}>
+    <main className="wrap admin" style={{ paddingTop: 'var(--s3)', paddingBottom: 'var(--s9)' }}>
       <div className="container" style={{ display: 'grid', gap: 'var(--s5)' }}>
+        <AdminBar />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 'var(--s3)' }}>
           <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordrer</h1>
           <p className="small">
@@ -78,7 +79,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
           <section style={{ display: 'grid', gap: 'var(--s1)', padding: 'var(--s4) 0', borderTop: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)' }}>
             <p className="cfg-label">Preview → betaling · 30 dage</p>
             <p style={{ fontFamily: 'var(--display)', fontSize: 'var(--fs-display)', lineHeight: 1, fontWeight: 300 }} className="tabular">{ratio === null ? '–' : `${ratio} %`}</p>
-            <p className="small muted">{started} af {shown} viste previews gik videre til betaling · {bought} {bought === 1 ? 'køb' : 'køb'}. Kilde: vores egen eventlog (PreviewShown → InitiateCheckout), ikke Meta.</p>
+            <p className="small muted">{started} af {shown} viste previews gik videre til betaling · {bought} køb. Kilde: vores egen eventlog (PreviewShown → InitiateCheckout), ikke Meta.</p>
           </section>
         )}
         {!sp.status && (

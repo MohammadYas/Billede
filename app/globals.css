@@ -375,8 +375,21 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .legal li strong { display: block; }
 
 /* Admin */
+/* Admin: the owner's tool. One bar at the top, facts as a list, every control in its own bordered block; long ids and links wrap. */
+.admin { overflow-wrap: anywhere; }
+.adm-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding: var(--s2) 0; border-bottom: 1px solid var(--hairline); }
+.adm-bar-left { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; }
+.adm-bar .link-btn { min-height: 0; padding: 0; margin: 0; white-space: nowrap; }
+.adm-status { display: inline-block; vertical-align: middle; margin-left: var(--s2); padding: 2px 10px; border: 1px solid var(--hairline); border-radius: 999px; font-family: var(--sans); font-size: var(--fs-small); font-weight: 600; letter-spacing: 0; color: var(--ink-2); }
+.adm-facts { display: grid; gap: var(--s2); }
+.adm-facts p { margin: 0; }
+.adm-grid { display: grid; gap: var(--s4); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
+.adm-card { display: grid; gap: var(--s3); align-content: start; padding: var(--s4); border: 1px solid var(--hairline); border-radius: 4px; }
+.adm-card h3 { margin: 0; font-family: var(--sans); font-size: var(--fs-body); font-weight: 600; }
+.adm-card .btn { width: 100%; }
+.adm-card .caption { margin: 0; }
 .admin table { border-collapse: collapse; width: 100%; font-size: var(--fs-small); }
-.admin th, .admin td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--hairline); vertical-align: top; }
+.admin th, .admin td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--hairline); vertical-align: top; overflow-wrap: normal; white-space: nowrap; }
 .admin th { font-weight: 600; color: var(--ink-2); }
 @media (max-width: 1023px) { .pv-desktop-cta { display: none; } }
 
