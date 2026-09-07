@@ -77,7 +77,7 @@ try {
    await page.locator('input[type=file]').first().setInputFiles({name:'too-big.jpg',mimeType:'image/jpeg',buffer:Buffer.alloc(26*1024*1024)});
    assert.ok(await page.locator('.sheet [role=alert]').count());
    await shot('upload-size-error');
-   await page.locator('input[type=file]').first().setInputFiles({name:'synthetic.jpg',mimeType:'image/jpeg',buffer:await fs.readFile('public/examples/asplund-after-800.jpg')});
+   await page.locator('input[type=file]').first().setInputFiles({name:'synthetic.jpg',mimeType:'image/jpeg',buffer:await fs.readFile('public/examples/bryllup-1954-after-800.jpg')});
    await page.getByRole('button',{name:'Vis mig resultatet',exact:true}).click();await page.locator('#keep-email').waitFor();
    await page.locator('#keep-email').fill('audit@example.invalid');saveOk=true;
    await page.locator('.sheet form button[type=submit]').click();await page.locator('.sheet [role=status]').waitFor();
