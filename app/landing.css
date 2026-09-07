@@ -133,14 +133,18 @@
 .label dd { margin: 0; }
 
 /* Announcement bar — the launch offer above the header, the way a shop says it */
-.announce { background: var(--accent); color: var(--accent-ink); text-align: center; padding: var(--s2) var(--gutter); font-size: var(--fs-small); line-height: 1.35; font-weight: 600; }
-.announce span { display: inline-block; max-width: 40em; }
+.announce { background: var(--accent); color: var(--accent-ink); text-align: center; padding: var(--s3) var(--gutter); font-size: var(--fs-body); line-height: 1.35; font-weight: 600; }
+.announce span { display: inline-block; max-width: 44em; }
 
 /* Promo box — the offer where the decision is made: beside the button, beside the price */
-.promo { display: grid; gap: var(--s1); padding: var(--s4) var(--s4); background: var(--paper-2); border-radius: 6px; max-width: 30em; }
-.promo b { font-family: var(--display); font-weight: 650; font-size: var(--fs-lead); color: var(--accent); letter-spacing: -0.01em; }
+.promo { display: grid; gap: var(--s2); justify-items: start; padding: var(--s4) var(--s5); background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 6px; max-width: 32em; }
+.promo-tag { display: inline-block; padding: 4px 10px; background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.promo b { font-family: var(--display); font-weight: 650; font-size: 22px; line-height: 1.15; color: var(--ink); letter-spacing: -0.01em; text-wrap: balance; }
 .promo > span { font-size: var(--fs-body); }
-.promo .caption { padding-top: var(--s1); }
+.promo-until { font-weight: 700; color: var(--accent); }
+.promo .caption { padding-top: 0; }
+.promo.is-compact { gap: var(--s1); padding: var(--s3) var(--s4); }
+.promo.is-compact b { font-size: var(--fs-lead); }
 
 /* Fading pairs on the landing page: the picture changes by itself, one word says which side is showing */
 .hero-proof .cmp { border-radius: 6px; box-shadow: var(--shadow-object); }
@@ -152,7 +156,7 @@
 .cmp-fade.show-before .lbl.before { opacity: 1; }
 .cmp-fade.show-before .lbl.after { opacity: 0; }
 .cmp-fade .lbl.after, .cmp-fade .lbl.before { right: auto; }
-@media (max-width: 479px) { .promo { padding: var(--s3) var(--s4); gap: 2px; } .promo > span { font-size: 15px; } .promo .caption { font-size: 13px; } .promo b { font-size: var(--fs-body); } }
+@media (max-width: 479px) { .promo { padding: var(--s3) var(--s4); gap: var(--s1); } .promo > span { font-size: 15px; } .promo .caption { font-size: 13px; } .promo b { font-size: var(--fs-lead); } }
 
 /* Steps: a title a reader can act on, then the sentence */
 .step-text { display: grid; gap: var(--s1); }

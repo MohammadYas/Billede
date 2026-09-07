@@ -7,6 +7,7 @@ import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
 import { quote, formatOere, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, type Format, type Frame } from '@/lib/pricing';
 import { PICK_KEY } from './SizePicker';
+import Promo from './Promo';
 
 /** Loads an image off-screen so a swap never flashes the wrong picture. */
 const preload = (src: string) => new Promise<void>((resolve) => { const i = new Image(); i.onload = () => resolve(); i.onerror = () => resolve(); i.src = src; });
@@ -244,7 +245,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="cfg-label"><span className="n">3</span>{c.preview.extraLabel}</p>
         <p className="cfg-title">{c.preview.extraTitle}</p>
         <p className="caption measure">{c.preview.extraLead}</p>
-        {c.campaign.active && <p className="deadline" style={{ fontSize: 'var(--fs-body)' }}>{c.campaign.extra}</p>}
+        <Promo compact />
         {extraPrints === 0 ? (
           <button type="button" className="btn btn-quiet extra-add" onClick={() => setExtras(1)}>
             {c.preview.extraAdd} <span className="tabular">+ {c.campaign.active ? '0 kr.' : v.extraPrint}</span>

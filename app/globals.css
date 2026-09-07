@@ -18,6 +18,7 @@
   --hairline: #e2ddd4;
   --accent: #1f5a3c;
   --accent-ink: #fbfaf7;
+  --accent-soft: #e9f0eb; /* the accent at 8 % on paper: the launch offer's ground */
   --error: #8a3b2e;
 
   --display: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', 'Helvetica Neue', Arial, sans-serif;
@@ -408,7 +409,7 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .cmp-hold.show-before img.before { opacity: 1; transition-duration: 120ms; } /* in fast: feedback lands on the press */
 .cmp-fade img.before { transition: opacity 1400ms ease-in-out; }
 .cmp-fade.show-before img.before { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .cmp-fade img.before { transition: opacity 200ms ease-out; } }
+@media (prefers-reduced-motion: reduce) { .cmp-fade img.before, .cmp-fade .lbl { transition: none; } }
 .cmp-hold .lbl.before, .cmp-fade .lbl.before { opacity: 0; transition: opacity 220ms; }
 .cmp-hold.show-before .lbl.before, .cmp-fade.show-before .lbl.before { opacity: 1; }
 .cmp-hold.show-before .lbl.after, .cmp-fade.show-before .lbl.after { opacity: 0.4; }

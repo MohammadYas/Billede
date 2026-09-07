@@ -32,7 +32,8 @@ function Pic({ s, className }: { s: Source; className: string }) {
  *   vertical swipe on the photograph still scrolls the page. Release projects the momentum. The
  *   centre is clamped so the whole circle stays inside the photograph — it can never be half cut off.
  * - hold: press to see the original — feedback on pointer-down, 120 ms in, 260 ms back out; space toggles.
- * - fade: a slow dissolve every 4 s, paused off-screen and while touched; hold-like under reduced motion.
+ * - fade: a slow dissolve every 3.2 s, paused off-screen and while touched. Under reduced motion the pictures
+ *   still alternate (a cut between two stills is not motion), a little slower and without the dissolve.
  */
 export default function Compare({ before, after, alt, aspect, mode, beforeLabel = 'Før', afterLabel = 'Efter', className = '', initialBefore = false, interval = 3200 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -62,12 +63,12 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
   }, [mode]);
 
   useEffect(() => {
-    if (mode !== 'fade' || reduce) return;
+    if (mode !== 'fade') return;
     const el = ref.current; if (!el) return;
     let visible = false;
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; });
     io.observe(el);
-    const t = setInterval(() => { if (visible && !paused && document.visibilityState === 'visible') setShowBefore((v) => !v); }, interval);
+    const t = setInterval(() => { if (visible && !paused && document.visibilityState === 'visible') setShowBefore((v) => !v); }, reduce ? Math.max(interval, 4500) : interval);
     return () => { io.disconnect(); clearInterval(t); };
   }, [mode, paused, reduce, interval]);
 
@@ -111,7 +112,7 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
   const pct = (cx: number, cy: number) => { const r = ref.current!.getBoundingClientRect(); return { x: ((cx - r.left) / r.width) * 100, y: ((cy - r.top) / r.height) * 100 }; };
   const project = (v: number, d = 0.99) => ((v / 1000) * d) / (1 - d);
 
-  const holdLike = mode === 'hold' || (mode === 'fade' && reduce);
+  const holdLike = mode === 'hold';
 
   /** velocity of the last 100 ms of the gesture, in percent per second */
   const flick = (hist: { t: number; x: number; y: number }[]) => {
@@ -171,7 +172,7 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
       }
     }
     if (holdLike) setShowBefore(true);
-    if (mode === 'fade' && !reduce) setPaused(true);
+    if (mode === 'fade') setPaused(true);
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (mode !== 'lens') return;
@@ -195,7 +196,7 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
       tap.current = null;
     }
     if (holdLike) setShowBefore(false);
-    if (mode === 'fade' && !reduce) setPaused(false);
+    if (mode === 'fade') setPaused(false);
   };
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (mode !== 'lens') setShowBefore((v) => !v); return; }
