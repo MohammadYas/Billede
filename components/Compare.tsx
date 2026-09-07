@@ -32,7 +32,8 @@ function Pic({ s, className }: { s: Source; className: string }) {
  *   vertical swipe on the photograph still scrolls the page. Release projects the momentum. The
  *   centre is clamped so the whole circle stays inside the photograph — it can never be half cut off.
  * - hold: press to see the original — feedback on pointer-down, 120 ms in, 260 ms back out; space toggles.
- * - fade: a slow dissolve every 3.2 s, paused off-screen; a press holds the original while the finger stays. Under reduced motion the pictures
+ * - fade: a slow dissolve every 3.2 s, paused off-screen. A tap flips to the other side and keeps it for a few
+ *   seconds; a hold shows the other side for as long as the finger stays. Under reduced motion the pictures
  *   still alternate (a cut between two stills is not motion), a little slower and without the dissolve.
  */
 export default function Compare({ before, after, alt, aspect, mode, beforeLabel = 'Før', afterLabel = 'Efter', className = '', initialBefore = false, interval = 3200 }: Props) {
@@ -51,6 +52,9 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
   const last = useRef(0);
   const drag = useRef<{ id: number; ox: number; oy: number; catchUp: boolean; hist: { t: number; x: number; y: number }[] } | null>(null);
   const tap = useRef<{ id: number; x: number; y: number; t: number; moved: boolean } | null>(null);
+  // fade: what was showing when the finger came down, and the pause a tap leaves behind
+  const press = useRef<{ t: number; side: boolean } | null>(null);
+  const tapHold = useRef<number | null>(null);
 
   useEffect(() => { setReduce(window.matchMedia('(prefers-reduced-motion: reduce)').matches); }, []);
   // lens radius in px from the rendered width, so the clip and the ring share one geometry
@@ -171,9 +175,14 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
         springTo(p.x, p.y, 0.22);
       }
     }
-    // fade: a press shows the original for as long as the finger stays (the caption promises it), then the loop resumes
-    if (holdLike || mode === 'fade') setShowBefore(true);
-    if (mode === 'fade') setPaused(true);
+    if (holdLike) setShowBefore(true);
+    // fade: a press shows the other side at once; whether it stays is decided on release (tap) or by the finger (hold)
+    if (mode === 'fade') {
+      if (tapHold.current) { window.clearTimeout(tapHold.current); tapHold.current = null; }
+      press.current = { t: performance.now(), side: showBefore };
+      setShowBefore(!showBefore);
+      setPaused(true);
+    }
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (mode !== 'lens') return;
@@ -196,8 +205,19 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
       }
       tap.current = null;
     }
-    if (holdLike || mode === 'fade') setShowBefore(false);
-    if (mode === 'fade') setPaused(false);
+    if (holdLike) setShowBefore(false);
+    if (mode === 'fade') {
+      const p = press.current; press.current = null;
+      if (!p) return;
+      if (performance.now() - p.t < 350) {
+        // a tap: the other side stays long enough to be looked at, then the loop goes on from there
+        tapHold.current = window.setTimeout(() => { tapHold.current = null; setPaused(false); }, 3500);
+      } else {
+        // a hold: back to what was showing, and on with the loop
+        setShowBefore(p.side);
+        setPaused(false);
+      }
+    }
   };
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (mode !== 'lens') setShowBefore((v) => !v); return; }

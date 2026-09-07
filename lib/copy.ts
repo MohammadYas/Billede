@@ -106,7 +106,7 @@ export function copy(season: Season = currentSeason()) {
       mockCaption: `${formatLabel(format)} i sort ramme med passepartout og glas. Sådan kommer det.`,
       beforeCaption: 'Sådan så det ud, før.',
       /** under the fading pair: what the picture is doing, and the one thing a finger can do */
-      fadeHint: 'Billedet skifter selv mellem før og efter. Hold fingeren på det for at se "før" længere.',
+      fadeHint: 'Billedet skifter selv mellem før og efter. Tryk på det, hvis du selv vil skifte.',
       /** the whole path in one line, right under the button */
       howShort: 'Tag et foto af billedet, se resultatet, og bestil kun hvis du vil. Det tager et par minutter.',
       countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
