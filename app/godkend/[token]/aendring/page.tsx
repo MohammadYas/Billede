@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { orderByToken, requestChangeByToken } from '@/lib/approval';
 import { copy } from '@/lib/copy';
 import Footer from '@/components/Footer';
-import Wordmark from '@/components/Wordmark';
+import SiteHeader from '@/components/SiteHeader';
 import SubmitButton from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
@@ -30,9 +30,9 @@ export default async function Aendring({ params, searchParams }: { params: Promi
   const approved = !refunded && order.status !== 'AWAITING_APPROVAL' && order.status !== 'CHANGE_REQUESTED' && order.status !== 'IN_RETOUCH';
   return (
     <>
-      <main className="wrap" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>
+      <SiteHeader />
+      <main className="wrap" style={{ paddingTop: 'var(--s6)', paddingBottom: 'var(--s9)' }}>
         <div className="container" style={{ display: 'grid', gap: 'var(--s5)', maxWidth: 720 }}>
-          <Wordmark />
           {refunded ? (
             <>
               <h1 style={{ maxWidth: '14em' }}>Ordren er refunderet.</h1>

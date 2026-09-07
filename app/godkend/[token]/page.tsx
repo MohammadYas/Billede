@@ -4,7 +4,7 @@ import { copy } from '@/lib/copy';
 import { CONFIG, deliveryPromise } from '@/lib/config';
 import { orderDescription } from '@/lib/order-summary';
 import Footer from '@/components/Footer';
-import Wordmark from '@/components/Wordmark';
+import SiteHeader from '@/components/SiteHeader';
 import SubmitButton from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
@@ -24,9 +24,9 @@ export default async function Godkend({ params, searchParams }: { params: Promis
   const c = copy();
   const shell = (body: React.ReactNode) => (
     <>
-      <main className="wrap" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>
+      <SiteHeader />
+      <main className="wrap" style={{ paddingTop: 'var(--s6)', paddingBottom: 'var(--s9)' }}>
         <div className="container" style={{ display: 'grid', gap: 'var(--s5)', maxWidth: 720 }}>
-          <Wordmark />
           {body}
           {c.email && <p className="small muted">Spørgsmål? Skriv til <a href={c.emailHref}>{c.email}</a> – vi svarer inden 24 timer.</p>}
         </div>

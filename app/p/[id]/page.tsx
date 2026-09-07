@@ -5,7 +5,7 @@ import { readSessionId } from '@/lib/session';
 import { ownsOrder, payloadFor } from '@/lib/preview-service';
 import PreviewPanel from '@/components/PreviewPanel';
 import Footer from '@/components/Footer';
-import Wordmark from '@/components/Wordmark';
+import SiteHeader from '@/components/SiteHeader';
 import Consent from '@/components/Consent';
 import PreviewPending from '@/components/PreviewPending';
 
@@ -25,7 +25,7 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
   if (!payload) {
     if (order.status === 'ABANDONED') notFound();
     const job = (order.preview_meta as { job?: { state?: string } } | null)?.job;
-    return <><main className="wrap"><div className="container"><div className="site-head"><Wordmark /></div><PreviewPending pending={order.status === 'NEW' && job?.state !== 'failed'} email={c.email} /></div></main><Footer /></>;
+    return <><SiteHeader note={c.preview.headNote} /><main className="wrap"><div className="container"><PreviewPending pending={order.status === 'NEW' && job?.state !== 'failed'} email={c.email} /></div></main><Footer /></>;
   }
   const paid = !['NEW', 'PREVIEW_READY', 'MANUAL_REVIEW', 'ABANDONED'].includes(order.status);
   return (
@@ -33,12 +33,9 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
       {/* the slider needs both images before it can say anything: fetch them with the HTML */}
       <link rel="preload" as="image" href={payload.original} />
       <link rel="preload" as="image" href={payload.preview} />
+      {/* the price lives in the bill on this page; the header carries the promise instead */}
+      <SiteHeader note={c.preview.headNote} />
       <main className="wrap">
-        <div className="container site-head">
-          <Wordmark />
-          {/* the price lives in the bill on this page; the header carries the promise instead */}
-          <span className="caption">{c.preview.headNote}</span>
-        </div>
         <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} token={t} />
       </main>
       <Footer />

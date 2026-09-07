@@ -8,7 +8,7 @@ import { readAddOns, formatOere } from '@/lib/pricing';
 import { readSessionId } from '@/lib/session';
 import Footer from '@/components/Footer';
 import MailLine from '@/components/MailLine';
-import Wordmark from '@/components/Wordmark';
+import SiteHeader from '@/components/SiteHeader';
 import PurchaseEvent from '@/components/PurchaseEvent';
 import { headers } from 'next/headers';
 
@@ -52,9 +52,9 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
   const value = (order?.amount ?? 0) / 100;
   return (
     <>
-      <main className="wrap" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>
+      <SiteHeader note={c.preview.headNote} />
+      <main className="wrap" style={{ paddingTop: 'var(--s6)', paddingBottom: 'var(--s9)' }}>
         <div className="container" style={{ display: 'grid', gap: 'var(--s6)' }}>
-          <Wordmark />
           {order ? (
             <div className="ed" style={{ rowGap: 'var(--s6)' }}>
               <div style={{ display: 'grid', gap: 'var(--s4)', alignContent: 'start' }}>

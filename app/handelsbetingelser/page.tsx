@@ -26,7 +26,7 @@ export default function Handelsbetingelser() {
       <p>Restaurering af ét fotografi ud fra det foto, du uploader, leveret som print i ramme med passepartout og glas, samt en digital fil i høj opløsning. Du vælger størrelse og ramme (sort eller eg – samme pris), og du kan lægge ekstra eksemplarer af samme billede til. Alle priser er inkl. moms og fri fragt i Danmark:</p>
       <ul>
         {customerFormats().map((f2) => (
-          <li key={f2}>{formatLabel(f2)}: {formatDkk(PRICING[f2].priceDkk)}.</li>
+          <li key={f2}>{formatLabel(f2)}: {formatDkk(PRICING[f2].priceDkk)}</li>
         ))}
         <li>Ekstra eksemplar af samme billede i samme størrelse og ramme: {formatDkk(EXTRA_PRINT_DKK[customerFormat()])} pr. stk., op til tre.</li>
       </ul>
