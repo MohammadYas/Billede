@@ -172,7 +172,7 @@ export function copy(season: Season = currentSeason()) {
       until: kampagneDato,
       line: `Lanceringstilbud til og med ${kampagneDato}: ét ekstra eksemplar af billedet med i pakken – til den, der også husker det. Værdi ${formatDkk(EXTRA_PRINT_DKK[format])}`,
       short: `Lanceringstilbud: ekstra eksemplar med i pakken til og med ${kampagneDato}.`,
-      bar: `Lanceringstilbud: ét ekstra eksemplar gratis (værdi ${formatDkk(EXTRA_PRINT_DKK[format])}) – til og med ${kampagneDato}`,
+      bar: `Lanceringstilbud: ét ekstra eksemplar gratis · til og med ${kampagneDato}`,
       tag: 'Lanceringstilbud',
       title: `Ét ekstra eksemplar gratis – værdi ${formatDkk(EXTRA_PRINT_DKK[format])}`,
       untilLine: `Gælder til og med ${kampagneDato}`,
