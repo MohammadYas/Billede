@@ -207,7 +207,13 @@ one 60 s, and a request body may be at most 6 MB. The restoration takes 30–45 
   (`netlify/functions/job-background.ts`, 15 min limit); the sheet polls `GET /api/preview/<id>` every 1.5 s;
 - housekeeping runs **hourly** as a scheduled function (`netlify/functions/retention.ts`) that hands the work to the background
   function: Stripe reconciliation of open Checkout sessions, deletion past retention, approval reminders (48 h, 7 d),
-  owner nudge at 10 d, shipped → completed after 14 d;
+  owner nudge at 10 d, shipped → completed after 14 d. The same housekeeping is also triggered from the database:
+  Supabase **pg_cron** job `billedarv-housekeeping` (project xsdgbjheochbneauhado) calls
+  `GET https://billedarv.dk/api/cron/retention` at :30 every hour with `Authorization: Bearer <Vault secret
+  billedarv_cron_secret>`; the app's `CRON_SECRET` must equal that Vault value (it does in `.env.local` — copy it to
+  Netlify). Two triggers an hour, both idempotent; if you ever drop Netlify's scheduled function the database one
+  keeps the shop tidy. Set up 2026-09-07 via SQL (`create extension pg_cron`, `pg_net`, `vault.create_secret`,
+  `cron.schedule`); inspect with `select * from cron.job` and `select * from cron.job_run_details order by start_time desc limit 20`;
 - job state is on the order (`preview_meta.job`) and visible in admin.
 
 **Linux, Windows and sharp.** Netlify builds on Ubuntu and runs functions on Amazon Linux — it is Linux, even if you

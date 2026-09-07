@@ -62,7 +62,7 @@ project in `.env.local`; re-apply with the Supabase SQL editor or the Management
    not for scale. A POD provider (Gelato / Printful / Prodigi) is the intended next `FulfillmentProvider` implementation.
 6. **Refund.** Set status `REFUNDED` on the order page → refund via the Stripe SDK on the payment intent.
 
-Retention: `netlify/functions/retention.ts` (scheduled, 03:00 UTC) or `GET /api/cron/retention` (Bearer `CRON_SECRET`) on other hosts; deletes files for
+Housekeeping: `netlify/functions/retention.ts` (scheduled, hourly at :00) and Supabase pg_cron job `billedarv-housekeeping` → `GET /api/cron/retention` (Bearer `CRON_SECRET`, hourly at :30); reconciles open Stripe sessions, deletes files for
 unpaid orders after 30 days and completed orders after 90 days, logging to `deletion_log`, and sends approval reminders.
 
 ## Enable a second format
