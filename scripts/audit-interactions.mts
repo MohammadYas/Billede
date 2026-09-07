@@ -70,7 +70,7 @@ try {
   checks.push(`${width}: all ${await faq.count()} FAQ items open`);
   await page.getByRole('link',{name:'Handelsbetingelser',exact:true}).click();await page.waitForURL('**/handelsbetingelser');
   await page.getByRole('contentinfo').getByRole('link',{name:'Privatliv',exact:true}).click();await page.waitForURL('**/privatliv');
-  await page.getByRole('link',{name:'Billedarv',exact:true}).first().click();await page.waitForURL(base+'/');
+  await page.getByRole('link',{name:'Billedarv – til forsiden',exact:true}).first().click();await page.waitForURL(base+'/');
   checks.push(`${width}: footer terms/privacy and home links navigated`);
   const begin=async()=>{
    await page.getByRole('button',{name:'Se hvad mit billede kan blive til',exact:true}).first().click();
