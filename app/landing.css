@@ -121,11 +121,6 @@
 /* Deadline line, Christmas window only */
 .deadline { font-family: var(--display); font-weight: 600; font-size: var(--fs-lead); color: var(--accent); max-width: 22em; }
 
-/* Founder */
-.founder { display: grid; gap: var(--s5); }
-.founder img { width: 100%; max-width: 220px; aspect-ratio: 10 / 13; object-fit: cover; border-radius: 4px; }
-@media (min-width: 768px) { .founder { grid-template-columns: 220px 1fr; gap: var(--s7); align-items: start; } .founder.no-portrait { grid-template-columns: 5fr 7fr; } .founder.no-portrait > div { grid-column: 2; } }
-
 /* Gallery label rows (also used on /p) */
 .label { display: grid; margin: 0; }
 .label > div { display: grid; grid-template-columns: 8em 1fr; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--hairline); }

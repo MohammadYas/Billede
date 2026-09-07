@@ -1,6 +1,5 @@
 import { copy } from '@/lib/copy';
 import { getExamples, type Example } from '@/lib/examples';
-import { getFounder } from '@/lib/founder';
 import { exampleSrcSet, GRID_SIZES, HERO_SIZES } from '@/lib/images';
 import BeforeAfter, { type Source } from '@/components/BeforeAfter';
 import ColourExample from '@/components/ColourExample';
@@ -41,9 +40,6 @@ export default async function Page() {
   const examples = getExamples();
   const hero = examples[0] ?? null;
   const grid = examples.slice(1, 7);
-  const f = getFounder();
-  // the section runs on the three lines, the name and the CVR; a portrait joins when there is a real one
-  const showFounder = f.why.length > 0;
   const synthetic = examples.length > 0 && examples.every((e) => /eksempelbillede/i.test(e.caption));
   const placeholders = examples.some((e) => e.placeholder);
   const jul = c.season === 'jul';
@@ -202,23 +198,8 @@ export default async function Page() {
           </div>
         </section>
 
-        {showFounder && (
-          <section className="wrap section" aria-labelledby="hvem">
-            <div className={`container founder${f.portrait ? '' : ' no-portrait'}`}>
-              {f.portrait && <img src="/founder.jpg" alt={f.name} width={220} height={286} loading="lazy" />}
-              <div style={{ display: 'grid', gap: 'var(--s4)' }}>
-                <h2 id="hvem">{c.hvem.h2}</h2>
-                <p className="lead italic" style={{ maxWidth: '24em' }}>{f.why[0]}</p>
-                {f.why.slice(1).map((w, i) => <p key={i} className="measure">{w}</p>)}
-                <p className="caption"><b>{f.name}</b>{f.company ? `, ${f.company}` : ''}{f.city ? `, ${f.city}` : ''}{f.cvr ? ` · CVR ${f.cvr}` : ''}</p>
-                {f.email && <p className="small"><a className="tap" href={`mailto:${f.email}`}>{f.email}</a></p>}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Who answers — a company, an address, a deadline for the answer */}
-        <div className="wrap" style={{ paddingTop: showFounder ? 0 : 'var(--s7)' }}>
+        <div className="wrap" style={{ paddingTop: 'var(--s7)' }}>
           <div className="container strip">
             <span><b>{c.tryghed[2]}</b></span>
             {c.email && <span>Spørgsmål? <a href={c.emailHref}>{c.email}</a></span>}

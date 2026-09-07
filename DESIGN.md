@@ -45,7 +45,7 @@ Strategy: restrained. No gradients, no pure white or black, no purple; photograp
   three size boxes (`.size-compare`, the recommended one outlined), the two frame swatches, the price line, the guarantee list
   and the button. 1 column → 6/5 at ≥1024.
 - **Gift** `.gift` on `--paper-2`; **contact strip** `.strip`; **questions** as the hairline accordion; **closing block** on `--paper-2`
-  with the last button; footer. Founder section renders on the three lines, the name, the company and the CVR (`assets/founder/founder.md`); a portrait joins when one exists.
+  with the last button; footer. No founder section: the company is the sender (contact strip, footer, mail signature); a person is named only where the law requires it (legal pages).
 - Radii: 4 px on buttons and grid images, 6 px on the hero slider, 8 px on quiet blocks, 0 on the framed print (frames are square),
   12 px only on the top corners of the mobile sheet.
 

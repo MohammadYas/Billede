@@ -291,7 +291,7 @@ export function copy(season: Season = currentSeason()) {
     },
     preview: {
       h2: 'Her er dit billede.',
-      hang: 'Og sådan hænger det hos dig.',
+      hang: 'Sådan ser det ud i ramme.',
       specTail: 'ramme med passepartout og glas · digital fil · fri fragt',
       specMore: 'Se alt, der er med',
       specLess: 'Vis mindre',
