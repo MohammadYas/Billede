@@ -66,7 +66,7 @@ try {
   await page.goto(base,{waitUntil:'networkidle'});
   const faq=page.locator('details.q');
   for(let i=0;i<await faq.count();i++){await faq.nth(i).locator('summary').click();assert.equal(await faq.nth(i).getAttribute('open'),'');}
-  await page.getByRole('heading',{name:'Spørgsmål',exact:true}).scrollIntoViewIfNeeded();await shot('faq-expanded');
+  await page.getByRole('heading',{name:'Ofte stillede spørgsmål',exact:true}).scrollIntoViewIfNeeded();await shot('faq-expanded');
   checks.push(`${width}: all ${await faq.count()} FAQ items open`);
   await page.getByRole('link',{name:'Handelsbetingelser',exact:true}).click();await page.waitForURL('**/handelsbetingelser');
   await page.getByRole('contentinfo').getByRole('link',{name:'Privatliv',exact:true}).click();await page.waitForURL('**/privatliv');

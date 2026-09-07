@@ -292,6 +292,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           {c.preview.steps.map((s, i) => <li key={s} className={i === 0 ? 'done' : i === 1 ? 'now' : ''} aria-current={i === 1 ? 'step' : undefined}>{s}</li>)}
         </ol>
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
+        <p className="caption measure">{c.preview.howTo}</p>
         <BeforeAfter before={data.original} after={data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal zoom={zoom ? 2.2 : 1} />
         <div className="pv-toggle">
           <button type="button" className="link-btn" onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>

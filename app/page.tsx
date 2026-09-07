@@ -77,7 +77,7 @@ export default async function Page() {
             {hero && (
               <figure className="hero-proof">
                 <Compare mode="fade" initialBefore before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} aspect="4 / 5" />
-                <figcaption><Caption text={hero.caption} /></figcaption>
+                <figcaption><Caption text={hero.caption} /><span className="caption fade-hint">{c.hero.fadeHint}</span></figcaption>
               </figure>
             )}
           </div>
@@ -85,9 +85,28 @@ export default async function Page() {
 
         <div className="wrap"><div className="container trust">{c.tryghed.map((t, i) => <span key={i}>{t}</span>)}</div></div>
 
+        {/* How it works — the same photograph at each stage */}
+        <section className="wrap section" aria-labelledby="saadan">
+          <div className="container how">
+            <div className="how-head"><h2 id="saadan">{c.saadan.h2}</h2><p className="lead">{c.saadan.note}</p></div>
+            <ol className="steps">
+              {c.saadan.steps.map((s, i) => (
+                <li key={i} className="step">
+                  <div className={`step-media${i === 2 ? ' is-frame' : ''}`} aria-hidden>
+                    {hero && i === 0 && <img src={small(hero.before)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
+                    {hero && i === 1 && <img src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
+                    {hero && i === 2 && <Framed src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} />}
+                  </div>
+                  <div className="step-text"><span className="n">{i + 1}</span><h3>{c.saadan.titles[i]}</h3><p>{s}</p></div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         {/* Examples — six more of the same object */}
         {grid.length > 0 && (
-          <section className="wrap section" aria-labelledby="eksempler">
+          <section className="wrap section" aria-labelledby="eksempler" style={{ paddingTop: 0 }}>
             <div className="container">
               <div className="ex-head"><h2 id="eksempler">{c.eksempler.h2}</h2><p className="lead">{c.eksempler.lead}</p></div>
               <div className="ex-grid">
@@ -108,25 +127,6 @@ export default async function Page() {
             </div>
           </section>
         )}
-
-        {/* How it works — the same photograph at each stage */}
-        <section className="wrap section" aria-labelledby="saadan" style={{ paddingTop: 0 }}>
-          <div className="container how">
-            <div className="how-head"><h2 id="saadan">{c.saadan.h2}</h2><p className="lead">{c.saadan.note}</p></div>
-            <ol className="steps">
-              {c.saadan.steps.map((s, i) => (
-                <li key={i} className="step">
-                  <div className={`step-media${i === 2 ? ' is-frame' : ''}`} aria-hidden>
-                    {hero && i === 0 && <img src={small(hero.before)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
-                    {hero && i === 1 && <img src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
-                    {hero && i === 2 && <Framed src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} />}
-                  </div>
-                  <p><span className="n">{i + 1}</span>{s}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
 
         {/* Offer — the object, the spec, the sizes, the price, the button */}
         <section className="wrap section" aria-labelledby="produkt" style={{ paddingTop: 0 }}>
@@ -172,6 +172,7 @@ export default async function Page() {
                   <span className="price tabular">{c.offer.price}</span>
                   <span className="caption">{c.offer.priceNote}</span>
                 </div>
+                <p className="small" style={{ maxWidth: '30em' }}>{c.offer.allIn}</p>
                 {c.offer.anchor && <p className="caption" style={{ maxWidth: '30em' }}>{c.offer.anchor}</p>}
                 {c.campaign.active && <div className="promo"><b>{c.campaign.title}</b><span>{c.campaign.body}</span><span className="caption">{c.campaign.terms}</span></div>}
                 {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}

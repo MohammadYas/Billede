@@ -30,12 +30,12 @@
 
   --fs-display: 34px; --lh-display: 1.06;
   --fs-h2: 26px; --lh-h2: 1.12;
-  --fs-lead: 18px;
-  --fs-body: 16px; --lh-body: 1.55;
-  --fs-small: 14px;
-  --fs-caption: 14px;
+  --fs-lead: 19px;
+  --fs-body: 17px; --lh-body: 1.55;
+  --fs-small: 15px;
+  --fs-caption: 15px;
 
-  --cta-height: 52px;
+  --cta-height: 56px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --container: 1120px;
   --shadow-object: 0 24px 48px -28px rgba(23, 22, 20, 0.45), 0 2px 6px rgba(23, 22, 20, 0.10);

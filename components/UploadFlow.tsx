@@ -326,6 +326,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         {state.kind === 'pick' && (
           <div style={{ display: 'grid', gap: 'var(--s4)' }}>
             <h2>Vis os billedet.</h2>
+            {!state.thumb && <p className="measure">{c.upload.how}</p>}
             {repeatConfirmed && <p className="small notice" role="status">{c.upload.repeat}</p>}
             {state.thumb ? (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>

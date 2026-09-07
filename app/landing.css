@@ -149,3 +149,12 @@
 .cmp-fade.show-before .lbl.after { opacity: 0; }
 .cmp-fade .lbl.after, .cmp-fade .lbl.before { right: auto; }
 @media (max-width: 479px) { .promo { padding: var(--s3) var(--s4); gap: 2px; } .promo > span { font-size: 15px; } .promo .caption { font-size: 13px; } .promo b { font-size: var(--fs-body); } }
+
+/* Steps: a title a reader can act on, then the sentence */
+.step-text { display: grid; gap: var(--s1); }
+.step-text .n { font-size: var(--fs-lead); }
+.step-text h3 { font-family: var(--display); font-weight: 650; font-size: var(--fs-lead); line-height: 1.25; letter-spacing: -0.01em; }
+.step-text p { font-size: var(--fs-body); color: var(--ink-2); max-width: 24em; }
+/* under the fading pair: what it does, and what a finger can do */
+.hero-proof figcaption { flex-direction: column; align-items: flex-start; gap: var(--s1); }
+.fade-hint { max-width: 30em; }

@@ -105,6 +105,10 @@ export function copy(season: Season = currentSeason()) {
       small: `Skal det hjem til dig i ramme: ${priceFrom}, fri fragt.`,
       mockCaption: `${formatLabel(format)} i sort ramme med passepartout og glas. Sådan kommer det.`,
       beforeCaption: 'Sådan så det ud, før.',
+      /** under the fading pair: what the picture is doing, and the one thing a finger can do */
+      fadeHint: 'Billedet skifter selv mellem før og efter. Hold fingeren på det for at se "før" længere.',
+      /** the whole path in one line, right under the button */
+      howShort: 'Tag et foto af billedet, se resultatet, og bestil kun hvis du vil. Det tager et par minutter.',
       countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
     },
     gave: {
@@ -123,7 +127,8 @@ export function copy(season: Season = currentSeason()) {
       `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
     ],
     saadan: {
-      h2: 'Sådan gør vi',
+      h2: 'Sådan foregår det',
+      titles: ['Tag et foto af billedet', 'Se resultatet på skærmen', 'Godkend – så printer vi og sender'],
       steps: [
         'Tag et foto af billedet med telefonen. Dagslys, ingen blitz – det er nok.',
         'AI laver et første forslag på omkring halvandet minut. Du ser det på skærmen, før du bestiller noget.',
@@ -147,6 +152,7 @@ export function copy(season: Season = currentSeason()) {
       line: `Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret ${levering}, efter du har godkendt billedet på mail.`,
       deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
       priceNote: 'inkl. moms, ramme og fragt · pengene tilbage, hvis det ikke ligner',
+      allIn: 'Det er hele prisen. Restaurering, ramme, glas, den digitale fil og levering er med. Ingen tillæg.',
       /** Comparative price claim supplied by the owner (markedsføringsloven: keep the documentation behind it). Empty string removes the line. */
       anchor: PRICE_ANCHOR,
       guarantee: [
@@ -173,7 +179,7 @@ export function copy(season: Season = currentSeason()) {
     },
     hvem: { h2: 'Hvem står bag' },
     spoergsmaal: {
-      h2: 'Spørgsmål',
+      h2: 'Ofte stillede spørgsmål',
       items: [
         {
           q: 'Koster det noget at se resultatet?',
@@ -244,6 +250,7 @@ export function copy(season: Season = currentSeason()) {
     slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : 'Halvandet minut, så har du set det. Du bestiller først bagefter.', cta },
     sticky: cta,
     upload: {
+      how: 'Læg det gamle billede på bordet i dagslys, og tag et foto af det med telefonen. Eller vælg et foto, du allerede har taget. Om cirka halvandet minut viser vi resultatet.',
       camera: 'Tag et foto',
       library: 'Vælg fra kamerarulle',
       pick: 'Vælg billede',
@@ -295,6 +302,7 @@ export function copy(season: Season = currentSeason()) {
     },
     preview: {
       h2: 'Her er dit billede.',
+      howTo: 'Kig på billedet. Vælg størrelse og ramme. Tryk på Bestil – du betaler i næste trin.',
       hang: 'Sådan ser det ud i ramme.',
       specTail: 'ramme med passepartout og glas · digital fil · fri fragt',
       specMore: 'Se alt, der er med',
