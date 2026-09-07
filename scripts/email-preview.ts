@@ -12,7 +12,7 @@ async function main() {
     confirmation: orderConfirmation({ order: sample }),
     change: changeReceived({ text: 'Min mors øjne er blevet for mørke.' }),
     refund: refundNotice({ amount: 599 }),
-    approval: approvalRequest({ imageUrl: 'file://' + process.cwd() + '/public/examples/olesen-after.jpg', approveUrl: 'https://genfundet.dk/godkend/x', changeUrl: 'https://genfundet.dk/godkend/x/aendring' }),
+    approval: approvalRequest({ imageUrl: 'file://' + process.cwd() + '/public/examples/olesen-after.jpg', approveUrl: 'https://billedarv.dk/godkend/x', changeUrl: 'https://billedarv.dk/godkend/x/aendring' }),
     shipped: shippedNotice({ trackingNumber: '00570123456789', trackingUrl: 'https://tracking.postnord.com/?id=00570123456789' }),
   };
   for (const [k, m] of Object.entries(mails)) await fs.writeFile(`work/emails/${k}.html`, m.html);

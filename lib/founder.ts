@@ -3,6 +3,8 @@ import path from 'node:path';
 
 export type Founder = {
   name: string; firstName: string; city: string; cvr: string; email: string; address: string;
+  /** the registered company behind the CVR number; the seller on the legal pages and in the footer */
+  company: string;
   portrait: string | null; why: string[];
   /** true when every legally required field is filled (no TODO). */
   complete: boolean;
@@ -31,6 +33,7 @@ export function getFounder(): Founder {
   const firstName = get('firstName') || name.split(' ')[0] || '';
   cache = {
     name, firstName, city: get('city'), cvr: get('cvr'), email: get('email'), address: get('address'),
+    company: get('company'),
     portrait, why,
     complete: Boolean(name && get('city') && get('cvr') && get('email') && get('address')),
   };

@@ -25,19 +25,26 @@ export default async function Aendring({ params, searchParams }: { params: Promi
   if (!order) notFound();
   const c = copy();
   const action = requestChange.bind(null, token);
-  const approved = order.status !== 'AWAITING_APPROVAL' && order.status !== 'CHANGE_REQUESTED';
+  const refunded = order.status === 'REFUNDED';
+  const sent = order.status === 'SHIPPED' || order.status === 'COMPLETED';
+  const approved = !refunded && order.status !== 'AWAITING_APPROVAL' && order.status !== 'CHANGE_REQUESTED' && order.status !== 'IN_RETOUCH';
   return (
     <>
       <main className="wrap" style={{ paddingTop: 'var(--s5)', paddingBottom: 'var(--s9)' }}>
         <div className="container" style={{ display: 'grid', gap: 'var(--s5)', maxWidth: 720 }}>
           <Wordmark />
-          {approved ? (
+          {refunded ? (
             <>
-              <h1 style={{ maxWidth: '14em' }}>Billedet er godkendt og på vej i produktion.</h1>
+              <h1 style={{ maxWidth: '14em' }}>Ordren er refunderet.</h1>
+              <p className="lead measure">Beløbet er sendt tilbage til dit kort, og vi printer ikke noget.</p>
+            </>
+          ) : approved ? (
+            <>
+              <h1 style={{ maxWidth: '14em' }}>{sent ? 'Dit billede er sendt.' : 'Billedet er godkendt og på vej i produktion.'}</h1>
               <p className="lead measure">Skal noget alligevel ændres, så skriv til os med det samme{c.email ? <> på <a href={c.emailHref}>{c.email}</a></> : null} – vi svarer inden 24 timer.</p>
               {order.final_path && <p><a className="tap" href={`/godkend/${token}`}>Hent din fil i høj opløsning</a></p>}
             </>
-          ) : r === 'ok' || order.status === 'CHANGE_REQUESTED' ? (
+          ) : r === 'ok' || order.status === 'CHANGE_REQUESTED' || order.status === 'IN_RETOUCH' ? (
             <>
               <h1>Tak. Vi retter det.</h1>
               <p className="lead measure">Du får en ny mail til godkendelse inden 48 timer. Vi printer ikke, før du siger ja – og leveringen tæller først fra dit ja.</p>

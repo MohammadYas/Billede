@@ -110,8 +110,15 @@ export function readAddOns(value: unknown): AddOns {
 export type QuoteLine = { key: string; name: string; short: string; note?: string; quantity: number; unitOere: number; amountOere: number };
 export type Quote = { format: Format; /** "30×40 cm" or "40×30 cm" — the frame follows the photograph */ label: string; addons: AddOns; lines: QuoteLine[]; totalOere: number };
 
+/**
+ * Launch offer (lib/config.ts `campaignEndDate`): while it runs, the first extra copy is in the parcel at 0 kr.
+ * `campaign` is passed in by the caller, never read from the clock here, so the arithmetic stays a pure function
+ * and the server decides the date once, at checkout.
+ */
+export const CAMPAIGN_FREE_EXTRA_COPIES = 1;
+
 /** The one place an order's amount is decided. Input is untrusted; output is always sellable. */
-export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown; landscape?: boolean } = {}): Quote {
+export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown; landscape?: boolean; campaign?: boolean } = {}): Quote {
   const format = sellableFormat(input.format);
   const addons = readAddOns({ frame: input.frame, extraPrints: input.extraPrints });
   const landscape = Boolean(input.landscape);
@@ -129,15 +136,30 @@ export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: 
   ];
   if (addons.extraPrints > 0) {
     const unit = EXTRA_PRINT_DKK[format] * 100;
-    lines.push({
-      key: 'extra_print',
-      name: `Ekstra eksemplar, ${label}`,
-      short: `Ekstra eksemplar, ${label}`,
-      note: 'Samme billede, samme ramme – til en anden i familien',
-      quantity: addons.extraPrints,
-      unitOere: unit,
-      amountOere: unit * addons.extraPrints,
-    });
+    const free = input.campaign ? Math.min(CAMPAIGN_FREE_EXTRA_COPIES, addons.extraPrints) : 0;
+    if (free > 0) {
+      lines.push({
+        key: 'extra_print_free',
+        name: `Ekstra eksemplar, ${label} – lanceringstilbud`,
+        short: `Ekstra eksemplar, ${label}`,
+        note: 'Lanceringstilbud: med i pakken uden beregning',
+        quantity: free,
+        unitOere: 0,
+        amountOere: 0,
+      });
+    }
+    const paid = addons.extraPrints - free;
+    if (paid > 0) {
+      lines.push({
+        key: 'extra_print',
+        name: `Ekstra eksemplar, ${label}`,
+        short: `Ekstra eksemplar, ${label}`,
+        note: 'Samme billede, samme ramme – til en anden i familien',
+        quantity: paid,
+        unitOere: unit,
+        amountOere: unit * paid,
+      });
+    }
   }
   const totalOere = lines.reduce((sum, l) => sum + l.amountOere, 0);
   return { format, label, addons, lines, totalOere };

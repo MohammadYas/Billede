@@ -1,16 +1,16 @@
 [
   {
-    "id": "soldier-girl",
-    "mode": "lens",
+    "id": "bryllup-1954",
+    "mode": "wipe",
     "detail": {
-      "before": "/examples/soldier-girl-detail-before.jpg",
-      "after": "/examples/soldier-girl-detail-after.jpg",
-      "label": "Hendes ansigt"
+      "before": "/examples/bryllup-1954-detail-before.jpg",
+      "after": "/examples/bryllup-1954-detail-after.jpg",
+      "label": "Brudens ansigt"
     },
-    "mockup": "/examples/soldier-girl-mockup.jpg",
-    "before": "/examples/soldier-girl-before.jpg",
-    "after": "/examples/soldier-girl-after.jpg",
-    "width": 1030,
+    "mockup": "/examples/bryllup-1954-mockup.jpg",
+    "before": "/examples/bryllup-1954-before.jpg",
+    "after": "/examples/bryllup-1954-after.jpg",
+    "width": 933,
     "height": 1400,
     "widths": [
       480,
@@ -18,22 +18,89 @@
       1000,
       1400
     ],
-    "caption": "Soldat og ung kvinde, ca. 1916. Arkivfoto, Wikimedia Commons.",
-    "consent": true,
-    "placeholder": true
+    "caption": "Bryllup foran landsbykirken, ca. 1954. Eksempelbillede.",
+    "consent": true
   },
   {
-    "id": "mor-barn-a",
-    "mode": "wipe",
+    "id": "have-1976",
+    "mode": "hold",
     "detail": {
-      "before": "/examples/mor-barn-a-detail-before.jpg",
-      "after": "/examples/mor-barn-a-detail-after.jpg",
+      "before": "/examples/have-1976-detail-before.jpg",
+      "after": "/examples/have-1976-detail-after.jpg",
+      "label": "Kagen og kopperne"
+    },
+    "mockup": "/examples/have-1976-mockup.jpg",
+    "before": "/examples/have-1976-before.jpg",
+    "after": "/examples/have-1976-after.jpg",
+    "width": 933,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Kaffe og jordbærkage i haven, sommeren 1976. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "portraet-1962",
+    "mode": "wipe",
+    "colour": "/examples/portraet-1962-colour.jpg",
+    "detail": {
+      "before": "/examples/portraet-1962-detail-before.jpg",
+      "after": "/examples/portraet-1962-detail-after.jpg",
+      "label": "Øjnene"
+    },
+    "mockup": "/examples/portraet-1962-mockup.jpg",
+    "before": "/examples/portraet-1962-before.jpg",
+    "after": "/examples/portraet-1962-after.jpg",
+    "width": 932,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Portræt fra pungen, ca. 1962. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "familie-1932",
+    "mode": "lens",
+    "colour": "/examples/familie-1932-colour.jpg",
+    "detail": {
+      "before": "/examples/familie-1932-detail-before.jpg",
+      "after": "/examples/familie-1932-detail-after.jpg",
+      "label": "Bedstemors ansigt"
+    },
+    "mockup": "/examples/familie-1932-mockup.jpg",
+    "before": "/examples/familie-1932-before.jpg",
+    "after": "/examples/familie-1932-after.jpg",
+    "width": 932,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Tre generationer hos fotografen, ca. 1932. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "foedselsdag-1985",
+    "mode": "fade",
+    "detail": {
+      "before": "/examples/foedselsdag-1985-detail-before.jpg",
+      "after": "/examples/foedselsdag-1985-detail-after.jpg",
       "label": "Barnets ansigt"
     },
-    "mockup": "/examples/mor-barn-a-mockup.jpg",
-    "before": "/examples/mor-barn-a-before.jpg",
-    "after": "/examples/mor-barn-a-after.jpg",
-    "width": 1028,
+    "mockup": "/examples/foedselsdag-1985-mockup.jpg",
+    "before": "/examples/foedselsdag-1985-before.jpg",
+    "after": "/examples/foedselsdag-1985-after.jpg",
+    "width": 932,
     "height": 1400,
     "widths": [
       480,
@@ -41,22 +108,21 @@
       1000,
       1400
     ],
-    "caption": "Mor og barn, kabinetkort, ca. 1900. Arkivfoto, Museene i Nord-Østerdalen.",
-    "consent": true,
-    "placeholder": true
+    "caption": "Fem år, lagkage og flag i køkkenet, ca. 1985. Eksempelbillede.",
+    "consent": true
   },
   {
-    "id": "familie-trappe",
+    "id": "cykel-1944",
     "mode": "lens",
     "detail": {
-      "before": "/examples/familie-trappe-detail-before.jpg",
-      "after": "/examples/familie-trappe-detail-after.jpg",
-      "label": "Familien"
+      "before": "/examples/cykel-1944-detail-before.jpg",
+      "after": "/examples/cykel-1944-detail-after.jpg",
+      "label": "Ansigtet"
     },
-    "mockup": "/examples/familie-trappe-mockup.jpg",
-    "before": "/examples/familie-trappe-before.jpg",
-    "after": "/examples/familie-trappe-after.jpg",
-    "width": 1052,
+    "mockup": "/examples/cykel-1944-mockup.jpg",
+    "before": "/examples/cykel-1944-before.jpg",
+    "after": "/examples/cykel-1944-after.jpg",
+    "width": 932,
     "height": 1400,
     "widths": [
       480,
@@ -64,22 +130,21 @@
       1000,
       1400
     ],
-    "caption": "Familie på trappen, ca. 1920. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
+    "caption": "Ung mand med cykel foran bindingsværkshuset, ca. 1944. Eksempelbillede.",
+    "consent": true
   },
   {
-    "id": "asplund",
+    "id": "familie-ved-vandet-1948",
     "mode": "hold",
     "detail": {
-      "before": "/examples/asplund-detail-before.jpg",
-      "after": "/examples/asplund-detail-after.jpg",
-      "label": "Bedsteforældrene"
+      "before": "/examples/familie-ved-vandet-1948-detail-before.jpg",
+      "after": "/examples/familie-ved-vandet-1948-detail-after.jpg",
+      "label": "Børnene"
     },
-    "mockup": "/examples/asplund-mockup.jpg",
-    "before": "/examples/asplund-before.jpg",
-    "after": "/examples/asplund-after.jpg",
-    "width": 942,
+    "mockup": "/examples/familie-ved-vandet-1948-mockup.jpg",
+    "before": "/examples/familie-ved-vandet-1948-before.jpg",
+    "after": "/examples/familie-ved-vandet-1948-after.jpg",
+    "width": 932,
     "height": 1400,
     "widths": [
       480,
@@ -87,147 +152,7 @@
       1000,
       1400
     ],
-    "caption": "Familien Asplund, ca. 1910. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "gunhild-barn",
-    "mode": "fade",
-    "detail": {
-      "before": "/examples/gunhild-barn-detail-before.jpg",
-      "after": "/examples/gunhild-barn-detail-after.jpg",
-      "label": "Mor og søn"
-    },
-    "mockup": "/examples/gunhild-barn-mockup.jpg",
-    "before": "/examples/gunhild-barn-before.jpg",
-    "after": "/examples/gunhild-barn-after.jpg",
-    "width": 1400,
-    "height": 953,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Gunhild og Ole Christian, ca. 1935. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "cooper",
-    "mode": "hold",
-    "detail": {
-      "before": "/examples/cooper-detail-before.jpg",
-      "after": "/examples/cooper-detail-after.jpg",
-      "label": "Ansigt og krave"
-    },
-    "mockup": "/examples/cooper-mockup.jpg",
-    "before": "/examples/cooper-before.jpg",
-    "after": "/examples/cooper-after.jpg",
-    "width": 1092,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Anna J. Cooper, ca. 1902. Arkivfoto, Library of Congress.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "feather-hat",
-    "mode": "wipe",
-    "colour": "/examples/feather-hat-colour.jpg",
-    "detail": {
-      "before": "/examples/feather-hat-detail-before.jpg",
-      "after": "/examples/feather-hat-detail-after.jpg",
-      "label": "Hat og ansigt"
-    },
-    "mockup": "/examples/feather-hat-mockup.jpg",
-    "before": "/examples/feather-hat-before.jpg",
-    "after": "/examples/feather-hat-after.jpg",
-    "width": 1073,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Ung kvinde med fjerhat, ca. 1905. Arkivfoto, Grenna Museum.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "pauline-ingeborg",
-    "mode": "wipe",
-    "detail": {
-      "before": "/examples/pauline-ingeborg-detail-before.jpg",
-      "after": "/examples/pauline-ingeborg-detail-after.jpg",
-      "label": "To søstre"
-    },
-    "mockup": "/examples/pauline-ingeborg-mockup.jpg",
-    "before": "/examples/pauline-ingeborg-before.jpg",
-    "after": "/examples/pauline-ingeborg-after.jpg",
-    "width": 850,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Pauline og Ingeborg, ca. 1915. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "lars-marit",
-    "mode": "hold",
-    "detail": {
-      "before": "/examples/lars-marit-detail-before.jpg",
-      "after": "/examples/lars-marit-detail-after.jpg",
-      "label": "Marits ansigt"
-    },
-    "mockup": "/examples/lars-marit-mockup.jpg",
-    "before": "/examples/lars-marit-before.jpg",
-    "after": "/examples/lars-marit-after.jpg",
-    "width": 1056,
-    "height": 1400,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Lars og Marit, ca. 1900. Arkivfoto, Domkirkeodden.",
-    "consent": true,
-    "placeholder": true
-  },
-  {
-    "id": "bryllup-1916",
-    "mode": "fade",
-    "detail": {
-      "before": "/examples/bryllup-1916-detail-before.jpg",
-      "after": "/examples/bryllup-1916-detail-after.jpg",
-      "label": "Brudeparret"
-    },
-    "mockup": "/examples/bryllup-1916-mockup.jpg",
-    "before": "/examples/bryllup-1916-before.jpg",
-    "after": "/examples/bryllup-1916-after.jpg",
-    "width": 1400,
-    "height": 866,
-    "widths": [
-      480,
-      800,
-      1000,
-      1400
-    ],
-    "caption": "Bryllup, 1916. Arkivfoto, Museene i Nord-Østerdalen.",
-    "consent": true,
-    "placeholder": true
+    "caption": "Familien ved vandet, ca. 1948. Eksempelbillede.",
+    "consent": true
   }
 ]

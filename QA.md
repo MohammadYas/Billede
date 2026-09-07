@@ -1,4 +1,4 @@
-# QA — Genfundet
+# QA — Billedarv
 
 Environment: headless Chromium (Playwright) against `next dev` with live OpenAI and Supabase; Stripe and Resend keys
 were not available (see HANDOFF.md §3–4). Screenshots in `checkpoints/`. Date 2026-09-03.
@@ -94,7 +94,7 @@ Screens: `checkpoints/01-hero-390.png`, `01-hero-1440.png`, `breakpoints/landing
 | F1–F2 | No scroll animation / hover-lift | ✓ | grep `IntersectionObserver`: only the one-time reveal and ViewContent timer; no transforms on hover |
 | F3 | Real progress stages | ✓ | NDJSON stages from the server; journey A recorded the stage names actually shown |
 | F4 | One motion, reduced-motion respected | ✓ | `BeforeAfter.tsx` |
-| G1 | Favicon/OG/title | ✓ | `favicon.svg` wordmark G, `og.jpg` before/after, title "Genfundet – gamle billeder, restaureret og indrammet" |
+| G1 | Favicon/OG/title | ✓ | `favicon.svg` wordmark G, `og.jpg` before/after, title "Billedarv – gamle billeder, restaureret og indrammet" |
 | G2 | Phone, mail, CVR | ✓/TODO | phone and mail live; CVR and address render when `founder.md` is completed |
 | G3–G4 | No builder fingerprints, no UI kit | ✓ | hand-written CSS, seven components, no Tailwind/shadcn/Radix/lucide |
 
@@ -648,7 +648,7 @@ PreviewShown via CAPI, admin-ratio. Kørt mod en produktionsbygning på 3111.
 
 | Punkt | Resultat |
 |---|---|
-| Gmail-adresse → hej@genfundet.dk | én kilde (`founder.md`); `git grep` over alle sporede filer: 0 forekomster. Afsender: `Mohammad Yassin · Genfundet <hej@genfundet.dk>` |
+| Gmail-adresse → hej@billedarv.dk | én kilde (`founder.md`); `git grep` over alle sporede filer: 0 forekomster. Afsender: `Mohammad Yassin · Billedarv <hej@billedarv.dk>` |
 | `deliveryDaysMax` fra config | eneste hårdkodede "5 hverdage" var jule-eyebrowens fallback; nu `${X}`. "5–10 hverdage" i refusionsmailen er bankens tid, ikke levering |
 | Upload-arkets privatlivstekst | "Det ligger i EU" fjernet; nu "gemmes i EU og behandles af vores AI-leverandør" med link til Privatliv. FAQ-svaret om billedet ligeså |
 | FAQ "meget ødelagt" og "farvebilleder" | "det, vi ser mest af" → "det, restaureringen er bedst til" |
@@ -665,7 +665,7 @@ Ikke bekræftet: at 5 hverdage matcher printpartnerens reelle leveringstid – d
 | Leveringsløfte | én kilde i `lib/config.ts`; standard 10 hverdage og 2. december; ingen hårdkodede tal i kundeflader |
 | Bestillingsside åbner i toppen | scrollY 0, ingen autofocus, ingen scrollIntoView ved indlæsning |
 | Orientering | `isLandscape(order)` fra output-mål; etiketter i quote, Stripe-metadata, ordrelinjer, mail og tjekliste; mockup vendte allerede |
-| Vandmærke | tiled "GENFUNDET · PREVIEW" 18 % over hele previewet (zoom skalerer samme fil); godkendelsesbillede 1200 px med 10 % mærke |
+| Vandmærke | tiled "BILLEDARV · PREVIEW" 18 % over hele previewet (zoom skalerer samme fil); godkendelsesbillede 1200 px med 10 % mærke |
 | Farver | fjernet fra bestillingssiden (ingen OpenAI-kald før køb); tilbydes i godkendelsesmail og -side; admin kan skifte |
 | Livscyklus | dag 14 sidste påmindelse, dag 21 automatisk Stripe-refusion + refusionsmail + note; atomisk overgang |
 | Handelsbetingelser | ODR fjernet; automatisk refusion efter 21 dage beskrevet |

@@ -9,7 +9,7 @@ import { chromium, devices } from 'playwright';
 const BASE = process.env.BASE ?? 'http://localhost:3111';
 const PURL = process.env.PURL;
 const WIDTHS = [375, 390, 430, 768, 1024, 1280];
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
+const b = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM, args: ['--no-sandbox'] });
 let bad = 0;
 for (const w of WIDTHS) {
   const mobile = w < 768;
@@ -46,6 +46,9 @@ for (const w of WIDTHS) {
         const bb = bar.getBoundingClientRect();
         covered = [...document.querySelectorAll('button,a[href],input,label')].filter((el) => {
           if (bar.contains(el)) return false;
+          // a keyboard-only control (the slider's invisible range input) is not something a finger needs under the bar
+          const ecs = getComputedStyle(el);
+          if (ecs.pointerEvents === 'none' || ecs.opacity === '0') return false;
           const r = el.getBoundingClientRect();
           return r.width > 0 && r.height > 0 && r.bottom > bb.top && r.top < bb.bottom && r.top < innerHeight;
         }).map((el) => `${el.tagName.toLowerCase()} "${(el.textContent || '').trim().slice(0, 24)}"`);

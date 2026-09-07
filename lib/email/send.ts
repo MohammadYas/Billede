@@ -4,11 +4,11 @@ import { getFounder } from '@/lib/founder';
 let resend: Resend | null = null;
 
 export function fromAddress(): string {
-  const domain = process.env.EMAIL_DOMAIN ?? 'genfundet.dk';
-  // the sender is the same address the site prints (hej@genfundet.dk), unless EMAIL_FROM_LOCAL says otherwise
+  const domain = process.env.EMAIL_DOMAIN ?? 'billedarv.dk';
+  // the sender is the same address the site prints (hej@billedarv.dk), unless EMAIL_FROM_LOCAL says otherwise
   const local = (process.env.EMAIL_FROM_LOCAL ?? getFounder().email.split('@')[0] ?? '').toLowerCase().replace(/[^a-z0-9.-]/g, '') || 'hej';
-  const name = getFounder().name || 'Genfundet';
-  return `${name} · Genfundet <${local}@${domain}>`;
+  const name = getFounder().name || 'Billedarv';
+  return `${name} · Billedarv <${local}@${domain}>`;
 }
 
 export function isEmailConfigured(): boolean {

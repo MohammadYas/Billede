@@ -111,6 +111,16 @@ export async function transition(id: string, from: OrderStatus[], to: OrderStatu
   return (data as Order) ?? null;
 }
 
+/**
+ * Claims the one browser-side Purchase for an order: true for exactly one caller, false for every reload
+ * or concurrent render that comes after it (the column is set only while it is still null).
+ */
+export async function claimPurchaseTracking(id: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin().from('orders').update({ purchase_tracked_at: new Date().toISOString() }).eq('id', id).is('purchase_tracked_at', null).select('id').maybeSingle();
+  if (error) throw new Error(`claimPurchaseTracking: ${error.message}`);
+  return Boolean(data);
+}
+
 /** Sets status and stamps the matching transition timestamp. */
 export async function setStatus(id: string, status: OrderStatus, extra: Partial<Order> = {}): Promise<Order> {
   const ts = TRANSITION_TS[status];

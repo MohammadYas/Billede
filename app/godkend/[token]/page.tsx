@@ -42,20 +42,28 @@ export default async function Godkend({ params, searchParams }: { params: Promis
   const sentAt = order.awaiting_approval_at ? new Date(order.awaiting_approval_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' }) : null;
   const approveWithToken = approve.bind(null, token);
 
-  if (order.status === 'CHANGE_REQUESTED') {
+  // the page is what the order actually is right now, not the last thing the customer clicked
+  if (order.status === 'CHANGE_REQUESTED' || order.status === 'IN_RETOUCH') {
     return shell(<>
       <h1 style={{ maxWidth: '14em' }}>Tak, vi retter det.</h1>
       <p className="lead measure">Du får en ny mail til godkendelse inden 48 timer. Vi printer ikke, før du siger ja.</p>
       {order.change_request_text && <p className="measure small notice">Din besked: “{order.change_request_text}”</p>}
     </>);
   }
+  if (order.status === 'REFUNDED') {
+    return shell(<>
+      <h1 style={{ maxWidth: '14em' }}>Ordren er refunderet.</h1>
+      <p className="lead measure">Beløbet er sendt tilbage til dit kort, og vi printer ikke noget. Ordre {order.id.slice(0, 8)}.</p>
+    </>);
+  }
   if (order.status !== 'AWAITING_APPROVAL') {
     // The digital file is part of what was paid for, and the terms say it is delivered on approval:
     // so it is delivered here, on the page the approval lands on, and again in the shipping mail.
     const fileReady = Boolean(order.final_path) && ['APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'].includes(order.status);
+    const sent = order.status === 'SHIPPED' || order.status === 'COMPLETED';
     return shell(<>
-      <h1>Tak. Vi printer og sender.</h1>
-      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}Du får en mail, når pakken er sendt – leveret {deliveryPromise()}. Ordre {order.id.slice(0, 8)}.</p>
+      <h1>{sent ? 'Dit billede er sendt.' : 'Tak. Vi printer og sender.'}</h1>
+      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}{sent ? 'Pakken er på vej til dig.' : <>Du får en mail, når pakken er sendt – leveret {deliveryPromise()}.</>} Ordre {order.id.slice(0, 8)}.</p>
       {fileReady && (
         <div style={{ display: 'grid', gap: 'var(--s3)', justifyItems: 'start' }}>
           <a className="btn" href={`/godkend/${token}/fil`}>Hent din fil i høj opløsning</a>

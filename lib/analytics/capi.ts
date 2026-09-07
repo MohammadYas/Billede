@@ -6,7 +6,9 @@ import { CONFIG } from '@/lib/config';
  * Meta Conversions API: the server-side copy of Purchase, InitiateCheckout and PreviewShown, deduplicated with the
  * browser pixel through the same event_id (order id / checkout session id). The browser event is lost
  * whenever the buyer finished in another browser (MobilePay app-switch out of the Facebook in-app
- * browser, a saved link on the desktop) or never consented; this one is not. Needs META_CAPI_TOKEN.
+ * browser, a saved link on the desktop); this one is not. Needs META_CAPI_TOKEN.
+ * /privatliv promises the server-side copy only with the Meta consent, so it is sent only when the order
+ * carries `preview_meta.consent = 'yes'` (stamped from the gf_consent cookie at upload start and at checkout).
  */
 const sha = (v?: string | null) => (v && v.trim() ? createHash('sha256').update(v.trim().toLowerCase()).digest('hex') : undefined);
 const phoneDigits = (v?: string | null) => { if (!v) return undefined; let d = v.replace(/\D/g, ''); if (d.length === 8) d = `45${d}`; return d || undefined; };
@@ -18,6 +20,7 @@ export async function sendServerEvent(name: ServerEventName, opts: { eventId: st
   const token = process.env.META_CAPI_TOKEN;
   if (!pixel || !token) return;
   const o = opts.order;
+  if ((o.preview_meta as { consent?: unknown } | null)?.consent !== 'yes') return;
   const addr = (o.shipping_address ?? {}) as Record<string, string | null | undefined>;
   const [fn, ...rest] = (o.customer_name ?? addr.name ?? '').trim().split(/\s+/);
   const meta = (o.preview_meta ?? {}) as { session_id?: string | null };

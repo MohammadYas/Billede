@@ -8,6 +8,7 @@ unverified. Items in **bold** block the test.
 Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
 
 **A. Before the first Netlify build**
+-1. **Register billedarv.dk.** genfundet.dk was taken; billedarv.dk answered "No entries found" at DK Hostmaster on 2026-09-07 (reserve: skuffefoto.dk). Register it before anything else on this list: every URL, mail address and legal page already says billedarv.dk. Then rename the Stripe business name and statement descriptor (still the old name) and create the mailbox hej@billedarv.dk.
 0. **OpenAI: put money on the account.** Checked 2026-09-04: the key in `.env.local` authenticates, but
    every call comes back `429 credit_balance_exhausted` — "You have no credits remaining." Nothing on the
    site works without it: the upload succeeds and then every single preview fails, which is the one failure
@@ -20,15 +21,15 @@ Nothing in this list is code. The code is done and verified; each line below is 
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, `STRIPE_SECRET_KEY`,
    `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_REPLY_TO`, `OWNER_EMAIL`, `NEXT_PUBLIC_META_PIXEL_ID`,
    `META_CAPI_TOKEN`, `ADMIN_PASSWORD` (long, random), `JOB_SECRET` (long, random), `CRON_SECRET`, `JOB_RUNNER=netlify`,
-   `NEXT_PUBLIC_SITE_URL=https://genfundet.dk`, `DELIVERY_DAYS_MAX=10`, `LEGAL_DRAFT` (true until the lawyer has read),
+   `NEXT_PUBLIC_SITE_URL=https://billedarv.dk`, `DELIVERY_DAYS_MAX=10`, `LEGAL_DRAFT` (true until the lawyer has read),
    `NEXT_PUBLIC_CTA_VARIANT` (A, B or C — the wording of the primary button, see `.env.example`).
    The build refuses to run without `JOB_SECRET`, and without `city`, `cvr`, `address` and `email` in `founder.md` — `LEGAL_DRAFT` does not bypass that.
 3. Netlify → Site configuration → Functions → Region: an EU region (Frankfurt/Ireland). Supabase is in Ireland.
-4. Domain: genfundet.dk on Netlify, HTTPS on.
+4. Domain: billedarv.dk on Netlify, HTTPS on.
 
 **B. Accounts and identity**
 5. `assets/founder/founder.md`: `city`, `cvr`, `address`, three `why` lines, `portrait.jpg`. **A mailbox on the domain
-   (kontakt@genfundet.dk) as `email`, `EMAIL_REPLY_TO` and `OWNER_EMAIL`** — a Gmail address next to 999 kr. is the trust
+   (hej@billedarv.dk) as `email`, `EMAIL_REPLY_TO` and `OWNER_EMAIL`** — a Gmail address next to 999 kr. is the trust
    leak this audience notices first, and since there is no phone number anywhere, that address is now the only way a
    customer can reach you. It is printed on the price block, in the footer, on the 404, on `/tak`, on both approval
    pages and in every mail. The site promises an answer within 24 hours, so the mailbox must be one you read daily.
@@ -36,12 +37,12 @@ Nothing in this list is code. The code is done and verified; each line below is 
    20. juli 2025); Center for Klageløsning står. Nyt i teksten: den automatiske refusion efter 21 dage uden
    godkendelse. Få hele siden læst igennem af en, der kender forbrugeraftaleloven, før den første rigtige kunde
    betaler. `LEGAL_DRAFT=true` holder udkastmærket på siden indtil da.
-6. Stripe Dashboard: Public details → Terms of service URL `https://genfundet.dk/handelsbetingelser` and Privacy URL
-   (Checkout refuses to open without the Terms URL); webhook on `https://genfundet.dk/api/webhooks/stripe` for
+6. Stripe Dashboard: Public details → Terms of service URL `https://billedarv.dk/handelsbetingelser` and Privacy URL
+   (Checkout refuses to open without the Terms URL); webhook on `https://billedarv.dk/api/webhooks/stripe` for
    `checkout.session.completed` + `checkout.session.async_payment_succeeded` → copy the signing secret to
    `STRIPE_WEBHOOK_SECRET` → "Send test event" → a 200 in Netlify → Functions log; live keys when you go live.
    Payment methods are chosen in the Stripe Dashboard, not in the code.
-7. Resend: domain genfundet.dk verified (SPF, DKIM, DMARC `p=none`), `RESEND_API_KEY`.
+7. Resend: domain billedarv.dk verified (SPF, DKIM, DMARC `p=none`), `RESEND_API_KEY`.
 8. Meta: domain verified in Business Manager; pixel id; Conversions API token (`META_CAPI_TOKEN`); Aggregated Event
    Measurement priorities Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent; first campaign
    optimised for the PreviewShown custom conversion, not Purchase.
@@ -66,7 +67,7 @@ Nothing in this list is code. The code is done and verified; each line below is 
     replace the archive examples (§1).
 
 **C. After the first deploy, on a real iPhone**
-13. Meta Sharing Debugger → re-scrape `https://genfundet.dk/` (link card with the before/after image).
+13. Meta Sharing Debugger → re-scrape `https://billedarv.dk/` (link card with the before/after image).
 14. One upload from "Vælg fra kamerarulle" (a HEIC) and one from "Tag et foto"; both must land on `/p/<id>?t=…`.
     Netlify → Functions → `job-background` → logs shows the run.
 15. One test purchase in Stripe test mode from the Facebook in-app browser: `/tak`, the ordrebekræftelse, the owner mail,
@@ -84,8 +85,8 @@ do not start paid traffic before day 5 is green, because a broken checkout costs
 
 | Day | What must be true when the day ends |
 | --- | --- |
-| 1 | The site is on Netlify at genfundet.dk with HTTPS, every environment variable from §0 A2 set, functions in an EU region. Open the front page on your own phone. |
-| 2 | kontakt@genfundet.dk exists and is on your phone; `founder.md` filled in (city, CVR, address, three lines, portrait); Resend domain verified; a test mail from `/admin` arrives and is not in spam. |
+| 1 | The site is on Netlify at billedarv.dk with HTTPS, every environment variable from §0 A2 set, functions in an EU region. Open the front page on your own phone. |
+| 2 | hej@billedarv.dk exists and is on your phone; `founder.md` filled in (city, CVR, address, three lines, portrait); Resend domain verified; a test mail from `/admin` arrives and is not in spam. |
 | 3 | Print partner confirmed for all three sizes with a price per size, and one test print of your own photo ordered so you have seen the paper, the frame and the packaging before a customer does. |
 | 4 | Stripe live: Terms URL and Privacy URL filled in, webhook created and its secret in Netlify, one 1 kr. live purchase made and refunded by you. The lawyer has read the two legal pages, or you accept `LEGAL_DRAFT=true` while they read. |
 | 5 | On a real iPhone, from the Facebook in-app browser: upload → preview → pick a size → pay → `/tak` → the order mail → the order in `/admin` → the approval mail → Godkend. Meta Events Manager shows ViewContent, InitiateCheckout and Purchase once each, not twice. |
@@ -137,8 +138,8 @@ Your Stripe account is `business_type: individual` — if you have no CVR yet, g
 
 ## 3. Stripe go-live (blocks the test)
 
-Read via Composio on 2026-09-03 from account `acct_1UBgmTJNJnc6lpkL` (genfundet.dk): country DK, currency DKK,
-charges and payouts enabled, statement descriptor GENFUNDET.DK, payout schedule manual (7 days), no products,
+Read via Composio on 2026-09-03 from account `acct_1UBgmTJNJnc6lpkL` (billedarv.dk): country DK, currency DKK,
+charges and payouts enabled, statement descriptor BILLEDARV.DK, payout schedule manual (7 days), no products,
 no prices, no webhooks yet.
 
 **Payment methods are Stripe's to choose.** The Checkout session no longer names a method list, so Stripe shows
@@ -148,8 +149,8 @@ in the code has to change. The page says "Apple Pay, Google Pay eller kort", whi
 phone.
 
 Then, in order (§13 of the spec):
-1. `STRIPE_SECRET_KEY` (live) and `NEXT_PUBLIC_SITE_URL=https://genfundet.dk` in the hosting env.
-2. Register the webhook: `https://genfundet.dk/api/webhooks/stripe`, event `checkout.session.completed`
+1. `STRIPE_SECRET_KEY` (live) and `NEXT_PUBLIC_SITE_URL=https://billedarv.dk` in the hosting env.
+2. Register the webhook: `https://billedarv.dk/api/webhooks/stripe`, event `checkout.session.completed`
    (and `checkout.session.async_payment_succeeded`). Put the signing secret in `STRIPE_WEBHOOK_SECRET`.
 3. Buy one 599 kr. order with your own card through the real site. Verify: `PAID` in Supabase (`orders`),
    the `Purchase` event in Meta Events Manager, the confirmation mail in your inbox. Then set the order to
@@ -161,30 +162,30 @@ Until then the code runs against Stripe test keys (`sk_test_…`, card 4242 4242
 keys, so journey A stops at "Stripe Checkout opens" — see QA.md.
 
 ### 3b. Before the first ad: three Stripe Dashboard settings (Checkout will not open without the first)
-- **Public details → Terms of service URL** = `https://genfundet.dk/handelsbetingelser` (and the privacy URL). Checkout requires it because we ask for consent to the terms.
-- **Webhook** on `https://genfundet.dk/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`; then "Send test event" and confirm a 200 in the Netlify function log. The hourly housekeeping job also asks Stripe about every open session from the last 7 days and marks paid orders (so a broken webhook cannot hide a payment), and admin has "Tjek betaling hos Stripe" on an order.
+- **Public details → Terms of service URL** = `https://billedarv.dk/handelsbetingelser` (and the privacy URL). Checkout requires it because we ask for consent to the terms.
+- **Webhook** on `https://billedarv.dk/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`; then "Send test event" and confirm a 200 in the Netlify function log. The hourly housekeeping job also asks Stripe about every open session from the last 7 days and marks paid orders (so a broken webhook cannot hide a payment), and admin has "Tjek betaling hos Stripe" on an order.
 - **Customer receipts** in Stripe on, until you trust our own ordrebekræftelse.
 
 ## 4. E-mail (Resend) — DNS
 
-Resend is not connected in Composio, so domain status could not be checked. Create the domain `genfundet.dk` in
+Resend is not connected in Composio, so domain status could not be checked. Create the domain `billedarv.dk` in
 Resend and add the records it shows (typically):
 
 | Type | Name | Value |
 |---|---|---|
-| TXT | `resend._domainkey.genfundet.dk` | the DKIM key Resend shows |
-| MX | `send.genfundet.dk` | `feedback-smtp.eu-west-1.amazonses.com` (priority 10) — use the **EU region** |
-| TXT | `send.genfundet.dk` | `v=spf1 include:amazonses.com ~all` |
-| TXT | `_dmarc.genfundet.dk` | `v=DMARC1; p=none; rua=mailto:<your mail>` |
+| TXT | `resend._domainkey.billedarv.dk` | the DKIM key Resend shows |
+| MX | `send.billedarv.dk` | `feedback-smtp.eu-west-1.amazonses.com` (priority 10) — use the **EU region** |
+| TXT | `send.billedarv.dk` | `v=spf1 include:amazonses.com ~all` |
+| TXT | `_dmarc.billedarv.dk` | `v=DMARC1; p=none; rua=mailto:<your mail>` |
 
-Then `RESEND_API_KEY`, `EMAIL_DOMAIN=genfundet.dk`, `EMAIL_FROM_LOCAL=mohammad` (mails come from `mohammad@genfundet.dk`).
+Then `RESEND_API_KEY`, `EMAIL_DOMAIN=billedarv.dk`, `EMAIL_FROM_LOCAL=mohammad` (mails come from `mohammad@billedarv.dk`).
 Send yourself a test order confirmation from `/admin` by completing a test purchase.
 
 ## 5. Meta Pixel and Conversions API
 
 - `NEXT_PUBLIC_META_PIXEL_ID` loads the pixel after consent, on every page. Events: PageView, ViewContent (hero and preview), UploadStarted, UploadCompleted, PreviewShown, PreviewFallback (custom), InitiateCheckout, Purchase — all with the same product parameters. Events that happen before the visitor answers the banner are kept in the tab and replayed on "Ok".
 - `META_CAPI_TOKEN` (Events Manager → Conversions API → Generate access token) sends **Purchase and InitiateCheckout from the server** too, with the same event ids as the browser (deduplicated) and hashed e-mail/phone/name/postcode + the click id. That is the copy Meta gets when the buyer paid in another browser (a wallet app-switch out of the Facebook browser) or never consented. `META_TEST_EVENT_CODE` shows them in the Test events tab while you check.
-- In Business Manager: verify genfundet.dk, prioritise Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent for iOS, create the custom conversion on `PreviewShown`, and run the first campaign optimised for that (1.500 kr. will not produce enough purchases to leave learning).
+- In Business Manager: verify billedarv.dk, prioritise Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent for iOS, create the custom conversion on `PreviewShown`, and run the first campaign optimised for that (1.500 kr. will not produce enough purchases to leave learning).
 
 Create the pixel in Events Manager, set `NEXT_PUBLIC_META_PIXEL_ID`. Events fired: PageView, ViewContent (hero ≥3 s),
 UploadStarted, UploadCompleted, PreviewShown, PreviewFallback, InitiateCheckout, Purchase (value 599, DKK, once,
@@ -216,8 +217,8 @@ restoration fails. `netlify.toml` therefore runs `npm install --os=linux --cpu=x
 and `NODE_VERSION=22` is pinned. Commit `package-lock.json` as it is in the repo; do not delete it.
 
 **Env vars to set in Netlify** — set `JOB_RUNNER=netlify` explicitly, and the build fails on purpose if `JOB_SECRET` is missing in production; set the **functions region to an EU region** (Site configuration → Functions), otherwise every request hops Ohio → Ireland for the database (Site configuration → Environment variables), from `.env.example`: the OpenAI, Supabase,
-Stripe, Resend and Meta keys, `NEXT_PUBLIC_SITE_URL=https://genfundet.dk` (the job runner calls itself on this URL),
-`JOB_SECRET` (any long random string), `CRON_SECRET`, `ADMIN_PASSWORD`, `LEGAL_DRAFT`, `META_CAPI_TOKEN`, `OWNER_EMAIL` (where the "ny betaling / ændring ønsket / godkendt" mails go; defaults to founder.md's e-mail), `EMAIL_REPLY_TO` (kontakt@genfundet.dk once it exists). `JOB_RUNNER` may stay empty
+Stripe, Resend and Meta keys, `NEXT_PUBLIC_SITE_URL=https://billedarv.dk` (the job runner calls itself on this URL),
+`JOB_SECRET` (any long random string), `CRON_SECRET`, `ADMIN_PASSWORD`, `LEGAL_DRAFT`, `META_CAPI_TOKEN`, `OWNER_EMAIL` (where the "ny betaling / ændring ønsket / godkendt" mails go; defaults to founder.md's e-mail), `EMAIL_REPLY_TO` (hej@billedarv.dk once it exists). `JOB_RUNNER` may stay empty
 (Netlify sets `NETLIFY=true`; on any other Node host set `JOB_RUNNER=inline`).
 
 **HEIC:** the bucket accepts image/heic and image/heif (migration 0003, applied). Test one upload from an iPhone camera roll before spending.
@@ -239,6 +240,7 @@ they are read with `fs` at runtime.
 - **Gavehilsen.** Checkout has an optional 200-character field; the text lands on the order (`preview_meta.gift_note`),
   in the owner mail, the ordrebekræftelse, the admin page and the print checklist — you write it on a card and put it in
   the parcel. It is promised on the page, so do it.
+- `CAMPAIGN_END_DATE` (default **2026-09-30**) — the launch offer: the first extra copy of the same photograph is in the parcel at 0 kr. for orders placed up to and including that date. It is printed in the hero, on the price block, on the order page and in the FAQ, and it is a line on the receipt, so **you print and pack the extra copy** (admin shows "1 ekstra eksemplar"). Move the date with the env var; an empty value switches the offer off everywhere at once. Never replace it with a struck-through "før-pris": a reference price that was never charged is illegal under markedsføringsloven.
 - `LEGAL_DRAFT=false` once the lawyer has reviewed `/privatliv` and `/handelsbetingelser` (removes the "Udkast" line).
 - `DELIVERY_DAYS_MAX` (default **5**, your decision) — the promise "inden 5 hverdage" counts from the customer's approval.
   CEWE's own promise is 6–11 business days, so 5 needs a print partner that ships a framed 30×40 within 3–4 days
@@ -283,7 +285,7 @@ plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are com
 - **The wait.** The bar creeps to 85 % while the model runs (~30–45 s); after 45 s the caption says it is taking longer
   today. If OpenAI is slow for a whole day, that line is what people see — no action needed, but expect calls.
 - **Founder's first name** is used in copy only once the portrait and the three "why" lines exist (see §2).
-- **hej@genfundet.dk must exist before the first ad.** It is now the only address on the site and in every
+- **hej@billedarv.dk must exist before the first ad.** It is now the only address on the site and in every
   mail (`founder.md`), the Resend sender and the default reply-to and owner-notification address. Create
   the mailbox (or a forward to one you read daily), verify the domain in Resend, and set `OWNER_EMAIL`
   if notifications should go elsewhere.

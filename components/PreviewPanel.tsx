@@ -73,13 +73,17 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const [ordering, setOrdering] = useState(false);
   const [specOpen, setSpecOpen] = useState(false); // phone: the spec is one line until asked
   const [error, setError] = useState<string | null>(null);
+  const [erasing, setErasing] = useState(false);
+  const [eraseError, setEraseError] = useState<string | null>(null);
+  const eraseBusy = useRef(false);
+  const orderBusy = useRef(false);
 
   // The configuration. `quote()` is the same pure function the server runs before Stripe sees anything,
   // so the total under the finger and the amount on the card are one piece of arithmetic, not two guesses.
   const [format, setFormat] = useState<Format>(data.format);
   const [frame, setFrame] = useState<Frame>(data.addons.frame);
   const [extraPrints, setExtraPrints] = useState(data.addons.extraPrints);
-  const bill = quote({ format, frame, extraPrints });
+  const bill = quote({ format, frame, extraPrints, campaign: c.campaign.active });
 
   // landscape photographs are printed landscape: "40×30 cm (liggende)"
   const landscape = data.width > data.height;
@@ -103,7 +107,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     document.body.classList.add('has-pv-bar');
     if (!viewed.current) { // one view per visit, whatever the runtime does with effects
       viewed.current = true;
-      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints }).totalOere / 100 });
+      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints, campaign: c.campaign.active }).totalOere / 100 });
     }
     return () => document.body.classList.remove('has-pv-bar');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,7 +121,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (next === format) return;
     setFormat(next); persist({ format: next });
     // the size is the price ladder: this is the real AddToCart, and it was the one step nobody measured
-    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints }).totalOere / 100 }, { serverLog: true });
+    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   const setExtras = (next: number) => {
@@ -125,10 +129,12 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (n === extraPrints) return;
     const up = n > extraPrints;
     setExtraPrints(n); persist({ extraPrints: n });
-    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n }).totalOere / 100 }, { serverLog: true });
+    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
 
   const order = async () => {
+    if (orderBusy.current || paid) return;
+    orderBusy.current = true;
     setOrdering(true); setError(null);
     try {
       const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: false, format, frame, extraPrints, t: token }) });
@@ -140,19 +146,29 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     } catch {
       // never a server string: one calm message with a second door (e-mail)
       setOrdering(false);
+      orderBusy.current = false;
       setError(c.preview.checkoutError);
     }
   };
 
   /** "Slet mit billede nu": the deletion promise, as a button rather than a sentence. */
   const erase = async () => {
+    if (eraseBusy.current) return;
     if (!window.confirm(c.preview.eraseConfirm)) return;
-    try { await fetch(`/api/preview/${data.orderId}/cancel${q}`, { method: 'POST' }); } catch { /* it is deleted by retention anyway */ }
-    window.location.assign('/?slettet=1');
+    eraseBusy.current = true; setErasing(true); setEraseError(null);
+    try {
+      const r = await fetch(`/api/preview/${data.orderId}/cancel${q}`, { method: 'POST' });
+      if (!r.ok) throw new Error('delete');
+      window.location.assign('/?slettet=1');
+    } catch {
+      setEraseError('Billedet blev ikke slettet. Prøv igen om lidt, eller skriv til os.');
+      eraseBusy.current = false; setErasing(false);
+    }
   };
 
   const saveLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saveState === 'sending') return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(saveEmail.trim())) { setSaveState('invalid'); return; }
     setSaveState('sending');
     try {
@@ -214,9 +230,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="cfg-label"><span className="n">3</span>{c.preview.extraLabel}</p>
         <p className="cfg-title">{c.preview.extraTitle}</p>
         <p className="caption measure">{c.preview.extraLead}</p>
+        {c.campaign.active && <p className="deadline" style={{ fontSize: 'var(--fs-body)' }}>{c.campaign.extra}</p>}
         {extraPrints === 0 ? (
           <button type="button" className="btn btn-quiet extra-add" onClick={() => setExtras(1)}>
-            {c.preview.extraAdd} <span className="tabular">+ {v.extraPrint}</span>
+            {c.preview.extraAdd} <span className="tabular">+ {c.campaign.active ? '0 kr.' : v.extraPrint}</span>
           </button>
         ) : (
           <div className="stepper" role="group" aria-label={c.preview.extraTitle}>
@@ -256,13 +273,13 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       <form onSubmit={saveLink} noValidate style={{ display: 'grid', gap: 'var(--s3)', paddingTop: 'var(--s3)' }}>
       <p className="small muted">{c.preview.saveP}</p>
       {saveState === 'done' ? <p className="small" role="status">{c.preview.saveDone}</p> : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 'var(--s2)' }}>
-          <div className="field"><label htmlFor="save-email" className="visually-hidden">{c.preview.saveEmail}</label><input id="save-email" type="email" inputMode="email" autoComplete="email" placeholder={c.preview.saveEmail} value={saveEmail} onChange={(e) => setSaveEmail(e.target.value)} aria-invalid={saveState === 'invalid'} /></div>
+        <div className="email-row">
+          <div className="field"><label htmlFor="save-email">{c.preview.saveEmail}</label><input id="save-email" type="email" inputMode="email" autoComplete="email" maxLength={200} disabled={saveState === 'sending'} value={saveEmail} onChange={(e) => setSaveEmail(e.target.value)} aria-invalid={saveState === 'invalid'} aria-describedby={saveState === 'invalid' || saveState === 'failed' ? 'save-error' : undefined} /></div>
           <button type="submit" className="btn btn-quiet" disabled={saveState === 'sending'}>{c.preview.saveCta}</button>
         </div>
       )}
-      {saveState === 'invalid' && <p className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveInvalid}</p>}
-      {saveState === 'failed' && <p className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveFailed}</p>}
+      {saveState === 'invalid' && <p id="save-error" className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveInvalid}</p>}
+      {saveState === 'failed' && <p id="save-error" className="small" style={{ color: 'var(--error)' }} role="alert">{c.preview.saveFailed}</p>}
       </form>
     </details>
   );
@@ -308,8 +325,9 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         {!paid && save}
         <p className="small" style={{ display: 'flex', gap: 'var(--s5)', flexWrap: 'wrap' }}>
           <a className="tap" href="/">{c.preview.again}</a>
-          {!paid && <button type="button" className="link-btn" onClick={erase}>{c.preview.erase}</button>}
+          {!paid && <button type="button" className="link-btn" onClick={erase} disabled={erasing}>{erasing ? 'Sletter…' : c.preview.erase}</button>}
         </p>
+        {eraseError && <p role="alert" className="small" style={{ color: 'var(--error)' }}>{eraseError} {c.email && <a href={c.emailHref}>{c.email}</a>}</p>}
       </div>
       <div className="pv-cta-bar">
         {errorLine}

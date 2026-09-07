@@ -1,31 +1,35 @@
-/* Genfundet — tokens and base. See DESIGN.md. */
+/* Billedarv — tokens and base. See DESIGN.md. */
 @font-face { font-family: 'Newsreader'; src: url('/fonts/Newsreader-normal.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Newsreader'; src: url('/fonts/Newsreader-italic.woff2') format('woff2'); font-weight: 300 700; font-style: italic; font-display: swap; }
 @font-face { font-family: 'Public Sans'; src: url('/fonts/PublicSans-normal.woff2') format('woff2'); font-weight: 400 700; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Public Sans'; src: url('/fonts/PublicSans-italic.woff2') format('woff2'); font-weight: 400 700; font-style: italic; font-display: swap; }
 /* Metric-compatible fallbacks so the swap does not reflow (Lighthouse showed 0.009 CLS from font swap). */
+@font-face { font-family: 'Schibsted Grotesk'; src: url('/fonts/SchibstedGrotesk-normal.woff2') format('woff2'); font-weight: 400 900; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Newsreader Fallback'; src: local('Georgia'); size-adjust: 96%; ascent-override: 92%; descent-override: 24%; line-gap-override: 0%; }
 @font-face { font-family: 'Public Sans Fallback'; src: local('Arial'); size-adjust: 101%; ascent-override: 93%; descent-override: 23%; line-gap-override: 0%; }
+@font-face { font-family: 'Schibsted Grotesk Fallback'; src: local('Arial'); size-adjust: 104%; ascent-override: 92%; descent-override: 22%; line-gap-override: 0%; }
 
 :root {
-  --paper: #f6f1e8;
-  --paper-2: #efe8db;
-  --ink: #1c1a17;
-  --ink-2: #5b554c;
-  --hairline: #d9d1c3;
-  --accent: #2f4a3a;
-  --accent-ink: #f6f1e8;
+  /* Warm white ground, near-black ink, one deep green. Photographs supply every other colour. */
+  --paper: #fbfaf7;
+  --paper-2: #f1eee7;
+  --ink: #171614;
+  --ink-2: #5d5953;
+  --hairline: #e2ddd4;
+  --accent: #1f5a3c;
+  --accent-ink: #fbfaf7;
   --error: #8a3b2e;
 
-  --display: 'Newsreader', 'Newsreader Fallback', 'Iowan Old Style', Georgia, serif;
+  --display: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', 'Helvetica Neue', Arial, sans-serif;
+  --serif: 'Newsreader', 'Newsreader Fallback', 'Iowan Old Style', Georgia, serif;
   --sans: 'Public Sans', 'Public Sans Fallback', 'Helvetica Neue', Arial, sans-serif;
 
   --measure: 34em;
   --gutter: 20px;
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px; --s10: 128px;
 
-  --fs-display: 36px; --lh-display: 1.02;
-  --fs-h2: 28px; --lh-h2: 1.1;
+  --fs-display: 34px; --lh-display: 1.06;
+  --fs-h2: 26px; --lh-h2: 1.12;
   --fs-lead: 18px;
   --fs-body: 16px; --lh-body: 1.55;
   --fs-small: 14px;
@@ -34,10 +38,11 @@
   --cta-height: 52px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --container: 1120px;
+  --shadow-object: 0 24px 48px -28px rgba(23, 22, 20, 0.45), 0 2px 6px rgba(23, 22, 20, 0.10);
   color-scheme: light;
 }
-@media (min-width: 768px) { :root { --gutter: 32px; --fs-display: 48px; --fs-h2: 32px; --fs-lead: 19px; } }
-@media (min-width: 1024px) { :root { --gutter: 48px; --fs-display: 60px; --fs-h2: 38px; --fs-lead: 20px; --fs-body: 17px; } }
+@media (min-width: 768px) { :root { --gutter: 32px; --fs-display: 46px; --fs-h2: 30px; --fs-lead: 19px; } }
+@media (min-width: 1024px) { :root { --gutter: 48px; --fs-display: 52px; --fs-h2: 36px; --fs-lead: 20px; --fs-body: 17px; } }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; background: var(--paper); }
@@ -50,9 +55,9 @@ a:hover { text-decoration-thickness: 2px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 input, textarea { caret-color: var(--accent); }
 
-h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 400; font-optical-sizing: auto; text-wrap: balance; }
-h1 { font-size: var(--fs-display); line-height: var(--lh-display); letter-spacing: -0.025em; }
-h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: -0.015em; }
+h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 650; font-optical-sizing: auto; text-wrap: balance; }
+h1 { font-size: var(--fs-display); line-height: var(--lh-display); letter-spacing: -0.03em; }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: -0.02em; }
 h3 { font-size: var(--fs-lead); line-height: 1.3; font-family: var(--sans); font-weight: 600; }
 p { margin: 0; }
 p + p { margin-top: var(--s4); }
@@ -66,20 +71,21 @@ p + p { margin-top: var(--s4); }
 .container { max-width: var(--container); margin-left: auto; margin-right: auto; }
 .tabular { font-variant-numeric: tabular-nums; }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.italic { font-family: var(--display); font-style: italic; font-weight: 400; }
+.italic { font-family: var(--serif); font-style: italic; font-weight: 400; }
 
 /* Inline links that must still be 44 px tall to tap (footer, contact) */
 /* 44 px of tappable height without changing where the text sits */
 .tap { display: inline-block; padding: 12px 0; margin: -12px 0; }
 
 /* Wordmark — one class, always a link home */
-.wordmark { font-family: var(--display); font-size: 24px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; line-height: 1; display: inline-block; padding: 10px 0; margin: -10px 0; }
+.wordmark { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); text-decoration: none; line-height: 1; display: inline-block; padding: 10px 0; margin: -10px 0; }
 .wordmark:hover { text-decoration: none; }
 
 /* Button — the one primary style. Feedback lands on pointer-down (apple-design §1). */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--cta-height); padding: 0 var(--s5); background: var(--ink); color: var(--paper); border: 0; border-radius: 2px; cursor: pointer; font-family: var(--sans); font-weight: 600; font-size: var(--fs-body); letter-spacing: 0.005em; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background-color 100ms ease-out; }
-.btn:hover { background: #2a2724; text-decoration: none; }
-.btn:active { background: #0f0e0c; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--cta-height); padding: 0 var(--s5); background: var(--ink); color: var(--paper); border: 0; border-radius: 4px; cursor: pointer; font-family: var(--display); font-weight: 600; font-size: var(--fs-body); letter-spacing: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background-color 100ms ease-out, transform 100ms ease-out; }
+.btn:hover { background: #2a2825; text-decoration: none; }
+.btn:active { background: #0f0e0c; transform: scale(0.985); }
+.btn-sm { min-height: 44px; padding: 0 var(--s4); font-size: var(--fs-small); }
 .btn[disabled], .btn[aria-disabled="true"] { background: var(--ink-2); cursor: default; }
 .btn-block { width: 100%; }
 .btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
@@ -95,6 +101,10 @@ p + p { margin-top: var(--s4); }
 .field input, .field textarea, .field select { width: 100%; min-height: 48px; padding: var(--s3) var(--s4); background: var(--paper); border: 1px solid var(--hairline); border-bottom-color: var(--ink-2); border-radius: 2px; font-size: max(16px, var(--fs-body)); }
 .field input:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 .field .error { color: var(--error); font-size: var(--fs-small); }
+.email-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--s2); }
+.email-row .field { min-width: 0; }
+@media (max-width: 479px) { .email-row { grid-template-columns: minmax(0, 1fr); } }
+.sheet label:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
 .field input[aria-invalid="true"], .field textarea[aria-invalid="true"] { border-color: var(--error); }
 .notice { background: var(--paper-2); padding: var(--s3) var(--s4); border-left: 0; }
 
@@ -106,51 +116,6 @@ p + p { margin-top: var(--s4); }
 /* Editorial two-column at ≥1024: heading in a 5/12 column, content in 7/12. */
 .ed { display: grid; gap: var(--s5); }
 @media (min-width: 1024px) { .ed { grid-template-columns: 5fr 7fr; gap: var(--s8); align-items: start; } .ed > h2, .ed > .ed-head { position: sticky; top: var(--s6); } }
-
-/* Header */
-.site-head { display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: space-between; align-items: baseline; padding-top: var(--s2); padding-bottom: var(--s2); }
-
-/* Hero — photo-book spread. 4:3 on every width so the first screen on a phone still holds the offer and the button; on desktop the photo is left-set and the caption column sits at its bottom edge. */
-.hero-grid { display: grid; gap: var(--s2); }
-.hero-media .ba { aspect-ratio: 4 / 3; }
-.hero-media .ba img { object-position: 50% 16%; } /* portrait originals: keep the faces in a 4:3 crop */
-/* the product on the wall, full bleed on a phone; 5:4 is the mockup's own proportion, so nothing is cropped */
-.hero-img { display: block; width: 100%; aspect-ratio: 5 / 4; object-fit: cover; background: var(--paper-2); }
-.hero-caption { padding: var(--s2) var(--gutter) 0; }
-.hero-credit { position: absolute; left: 50%; bottom: var(--s3); transform: translateX(-50%); z-index: 2; font-size: 12px; padding: 4px 9px; background: rgba(246,241,232,0.86); color: var(--ink-2); border-radius: 2px; white-space: nowrap; pointer-events: none; }
-.hero-credit .caption { font-size: 12px; color: var(--ink-2); }
-.hero-credit .caption b { color: var(--ink); }
-@media (max-width: 767px) { .hero-caption { display: none; } }
-@media (min-width: 768px) { .hero-credit { display: none; } }
-.hero-media { position: relative; }
-@media (min-width: 1024px) {
-  .hero-grid { grid-template-columns: minmax(0, min(calc(var(--container) - 240px), calc(58vh * 4 / 3))) 1fr; gap: var(--s5); align-items: end; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
-  .hero-media .ba, .hero-img { max-height: 80vh; }
-  .hero-caption { padding: 0 0 var(--s2); max-width: 16em; }
-  .hero-side { display: grid; gap: var(--s4); align-content: end; }
-  .hero-mock { display: grid; gap: var(--s2); max-width: 200px; }
-  .hero-mock img { width: 100%; height: auto; outline: 1px solid var(--hairline); outline-offset: -1px; }
-  .hero-mock .caption { max-width: 16em; }
-}
-.hero-text { display: grid; gap: var(--s3); padding-top: var(--s2); padding-bottom: var(--s6); }
-.hero-text h1 { max-width: 10em; }
-.hero-text .lead { max-width: 24em; }
-/* the framed state next to the one sentence, phone only (desktop has it beside the slider) */
-.hero-row { display: grid; grid-template-columns: 96px 1fr; gap: var(--s4); align-items: center; }
-.hero-mock-sm { width: 96px; height: auto; outline: 1px solid var(--hairline); outline-offset: -1px; }
-@media (min-width: 1024px) { .hero-row { display: contents; } .hero-mock-sm { display: none; } }
-.hero-cta { display: grid; gap: var(--s2); justify-items: start; padding-top: var(--s2); }
-.hero-note { max-width: 26em; }
-.hero-note b { color: var(--ink); font-weight: 600; }
-/* the framed state of the same photograph, desktop only: on a phone the first screen is the slider and the button */
-@media (max-width: 1023px) { .hero-mock { display: none; } }
-.hero-mock { margin: 0; }
-@media (min-width: 1024px) { .hero-text { grid-template-columns: 7fr 5fr; gap: var(--s6); align-items: end; padding-top: var(--s6); padding-bottom: var(--s8); } .hero-text h1 { grid-column: 1; max-width: 11em; } .hero-text .lead { grid-column: 1; } .hero-cta { grid-column: 2; grid-row: 1 / span 2; justify-self: end; align-self: end; } }
-
-/* Eyebrow above the headline: the season and the deadline, in the display face, never a badge */
-.eyebrow { font-family: var(--display); font-style: normal; font-size: var(--fs-body); line-height: 1.3; color: var(--accent); letter-spacing: 0; max-width: 24em; }
-.countdown { font-family: var(--sans); font-size: var(--fs-small); font-weight: 600; color: var(--accent); }
-.deadline { font-family: var(--display); font-size: var(--fs-lead); color: var(--accent); max-width: 22em; }
 
 /* Gaven — head on the left, four hairline rows on the right */
 .gift { display: grid; gap: var(--s6); }
@@ -168,30 +133,6 @@ p + p { margin-top: var(--s4); }
 /* on a phone the longest promise is wider than the screen, and a horizontal scrollbar on the first
    screen of a paid landing page is worse than a wrapped line */
 @media (max-width: 767px) { .trust span { white-space: normal; } }
-
-/* Steps — three sentences with photographs that show the object at each stage */
-.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s6); }
-.step { display: grid; grid-template-columns: 112px 1fr; gap: var(--s4); align-items: start; }
-.step img, .step .ph { width: 112px; aspect-ratio: 4 / 5; object-fit: cover; }
-.step .ph { background: var(--paper-2); }
-.step p { font-size: var(--fs-lead); line-height: 1.4; max-width: 22em; }
-.step .n { font-family: var(--display); font-size: 14px; color: var(--ink-2); display: block; margin-bottom: var(--s1); font-variant-numeric: oldstyle-nums; }
-@media (min-width: 768px) { .step { grid-template-columns: 160px 1fr; gap: var(--s5); } .step img, .step .ph { width: 160px; } }
-
-/* Examples — horizontal swipe on mobile, offset editorial grid on desktop */
-.swipe { display: flex; align-items: flex-start; gap: var(--s4); overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 var(--gutter); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.swipe::-webkit-scrollbar { display: none; }
-.swipe > * { scroll-snap-align: start; flex: 0 0 82%; }
-.swipe .ba, .swipe .cmp { outline: 1px solid var(--hairline); outline-offset: -1px; }
-@media (min-width: 768px) { .swipe { display: grid; grid-template-columns: 1.25fr 1fr; gap: var(--s7) var(--s6); overflow: visible; padding: 0; } .swipe > * { flex: none; } .swipe > :nth-child(2) { margin-top: var(--s8); } .swipe > :nth-child(4) { margin-top: var(--s8); } }
-
-/* Offer — the price is an object */
-.offer { display: grid; gap: var(--s5); }
-.price { font-family: var(--display); font-weight: 300; font-size: clamp(88px, 24vw, 168px); line-height: 0.9; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: lining-nums; }
-.price small { font-size: 0.32em; letter-spacing: 0; font-weight: 400; margin-left: 0.15em; }
-/* On a phone the price comes before the button: read the number, then act. */
-.offer > .offer-act { order: 2; }
-@media (min-width: 1024px) { .offer { grid-template-columns: 1fr auto; align-items: end; gap: var(--s8); } .offer > .offer-act { order: 0; } .price, .price-note { text-align: right; } }
 
 /* Founder */
 .founder { display: grid; gap: var(--s5); }
@@ -465,13 +406,3 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .detail figcaption { grid-column: 1 / -1; background: var(--paper); padding: var(--s2) 0 0; }
 @media (min-width: 768px) { .details { grid-template-columns: repeat(2, 1fr); gap: var(--s6) var(--s5); } }
 @media (min-width: 1024px) { .details { grid-template-columns: repeat(3, 1fr); } }
-
-/* Product — "Det får du": the object, a gallery label */
-.product { display: grid; gap: var(--s6); }
-.product .mock { width: 100%; }
-.label { display: grid; margin: 0; }
-.label > div { display: grid; grid-template-columns: 9em 1fr; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--hairline); }
-.label > div:last-child { border-bottom: 1px solid var(--hairline); }
-.label dt { color: var(--ink-2); font-size: var(--fs-small); padding-top: 3px; }
-.label dd { margin: 0; }
-@media (min-width: 1024px) { .product { grid-template-columns: 7fr 5fr; gap: var(--s8); align-items: start; } }

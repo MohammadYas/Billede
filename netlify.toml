@@ -1,4 +1,4 @@
-# Genfundet on Netlify: connect the GitHub repo, set the env vars from .env.example, deploy.
+# Billedarv on Netlify: connect the GitHub repo, set the env vars from .env.example, deploy.
 # The Next.js runtime (OpenNext adapter) is picked up automatically; the two functions in netlify/functions are the
 # only things outside Next: the background job runner and the hourly housekeeping schedule.
 

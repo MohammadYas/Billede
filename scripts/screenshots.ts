@@ -12,7 +12,7 @@ const widths = [375, 390, 430, 768, 1024, 1440];
 
 async function main() {
   await fs.mkdir(`${OUT}/breakpoints`, { recursive: true });
-  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium', args: ['--no-sandbox'], proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' } : undefined });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM, args: ['--no-sandbox'], proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' } : undefined });
   const report: string[] = [];
   for (const w of widths) {
     const mobile = w < 768;

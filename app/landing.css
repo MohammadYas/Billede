@@ -1,0 +1,134 @@
+/* Landing page (/) — the product page of a single product. Tokens in globals.css. */
+
+/* Header: wordmark, the price line, and on a wide screen the one button. Solid paper, one hairline. */
+.nav { position: relative; z-index: 20; background: var(--paper); border-bottom: 1px solid var(--hairline); }
+@media (min-width: 768px) { .nav { position: sticky; top: 0; } }
+.nav-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); min-height: 60px; }
+.nav-right { display: flex; align-items: center; gap: var(--s5); }
+.nav-right .caption { white-space: nowrap; }
+.nav-cta { display: none; }
+@media (min-width: 768px) { .nav-cta { display: inline-flex; } .nav-row { min-height: 68px; } }
+
+/* Hero: the claim and the button first on a phone, the proof beside them on a desk. */
+.hero { display: grid; gap: var(--s6); padding-top: var(--s6); padding-bottom: var(--s7); }
+.hero-copy { display: grid; gap: var(--s4); align-content: center; }
+.hero-copy h1 { max-width: 11em; }
+.hero-copy .lead { max-width: 26em; color: var(--ink-2); }
+.hero-cta { display: grid; gap: var(--s3); justify-items: start; padding-top: var(--s2); }
+.hero-cta .btn { min-width: 260px; }
+.hero-note { max-width: 28em; }
+.hero-note b { color: var(--ink); font-weight: 600; }
+.hero-proof { display: grid; gap: var(--s2); margin: 0; }
+.hero-proof .ba { border-radius: 6px; box-shadow: var(--shadow-object); }
+.hero-proof .ba img { object-position: 50% 28%; }
+.hero-proof figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); }
+.hero-proof figcaption .hint { white-space: nowrap; flex: none; }
+@media (min-width: 768px) and (max-width: 1023px) { .hero-proof { max-width: 520px; } }
+@media (min-width: 1024px) {
+  .hero { grid-template-columns: 6fr 5fr; gap: var(--s8); align-items: center; padding-top: var(--s8); padding-bottom: var(--s9); min-height: calc(100vh - 68px); }
+  .hero-copy { order: 0; }
+  .hero-proof { order: 1; }
+  .hero-copy h1 { max-width: 12.5em; }
+}
+
+/* Trust row — one hairline row, the four promises the visitor is about to test */
+.trust { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); padding: var(--s4) 0; display: grid; gap: var(--s2); font-size: var(--fs-small); color: var(--ink-2); }
+.trust span { padding-left: 1.1em; position: relative; }
+.trust span::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--accent); }
+@media (min-width: 768px) { .trust { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); } }
+@media (min-width: 1024px) { .trust { justify-content: space-between; } }
+
+/* Examples — a grid of the same object, each pair a slider at its own proportions */
+.ex-head { display: grid; gap: var(--s3); margin-bottom: var(--s6); }
+.ex-head .lead { max-width: 30em; color: var(--ink-2); }
+/* two across even on a phone: six tall prints in one column made the page twice as long as the argument */
+.ex-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s5) var(--s3); }
+.ex-grid figure { margin: 0; display: grid; gap: var(--s2); }
+.ex-grid .ba { border-radius: 4px; }
+.ex-grid .caption { font-size: 13px; }
+.ex-note { padding-top: var(--s5); max-width: 44em; }
+@media (min-width: 640px) { .ex-grid { gap: var(--s6) var(--s5); } .ex-grid .caption { font-size: var(--fs-caption); } }
+@media (min-width: 1024px) { .ex-grid { grid-template-columns: repeat(3, 1fr); gap: var(--s7) var(--s6); } }
+
+/* How it works — three stages of the same photograph, numbered because the order is the product */
+.how { display: grid; gap: var(--s6); }
+.how-head { display: grid; gap: var(--s3); }
+.how-head .lead { max-width: 30em; color: var(--ink-2); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s5); counter-reset: step; }
+.step { display: grid; grid-template-columns: 96px 1fr; gap: var(--s4); align-items: start; padding-top: var(--s4); border-top: 1px solid var(--hairline); }
+.step-media { display: grid; place-items: center; width: 96px; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 4px; background: var(--paper-2); }
+.step-media > img { width: 100%; height: 100%; object-fit: cover; }
+/* the framed stage sits on the quiet block at the same visual size as the two prints before it */
+.step-media.is-frame { padding: 7%; }
+.step-media .framed { width: 100%; }
+.step p { font-size: var(--fs-lead); line-height: 1.4; max-width: 22em; }
+.step .n { display: block; font-family: var(--display); font-weight: 650; font-size: var(--fs-small); color: var(--accent); margin-bottom: var(--s2); letter-spacing: 0; }
+@media (min-width: 768px) {
+  .steps { grid-template-columns: repeat(3, 1fr); gap: var(--s6); }
+  .step { grid-template-columns: 1fr; gap: var(--s4); padding-top: var(--s5); }
+  .step-media { width: 100%; max-width: 260px; }
+}
+
+/* The framed print as a product shot: moulding, mount, glass edge, a real shadow. No wall. */
+.framed { display: block; padding: 6%; background: var(--frame, #161412); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), var(--shadow-object); }
+.framed.eg { --frame: #8a6a46; }
+.framed .mat { display: block; padding: 9%; background: #f7f5f0; box-shadow: inset 0 0 0 1px rgba(23,22,20,0.10), inset 0 1px 2px rgba(23,22,20,0.18); }
+.framed img { display: block; width: 100%; height: auto; }
+
+/* Offer — the object on a quiet block, then the spec, the sizes and the price */
+.offer { display: grid; gap: var(--s7); }
+.offer-shot { display: grid; place-items: center; padding: var(--s6) var(--s5); background: var(--paper-2); border-radius: 8px; }
+/* the photographed wall carries its own light: no block, no padding, the picture is the surface */
+.offer-shot.is-wall { padding: 0; min-height: 0; background: none; border-radius: 8px; overflow: hidden; }
+.offer-shot.is-wall img { width: 100%; height: auto; display: block; }
+.offer-shot .framed { width: min(100%, 260px); }
+@media (min-width: 640px) { .offer-shot .framed { width: min(100%, 360px); } }
+.offer-spec { display: grid; gap: var(--s5); }
+.offer-spec .lead { max-width: 24em; color: var(--ink-2); }
+/* on a phone the price, the sizes and the button come before the spec rows; on a desk the rows read first */
+.offer-spec > .o-head { order: 0; }
+.offer-spec > .o-price { order: 1; }
+.offer-spec > .o-sizes { order: 2; }
+.offer-spec > .o-guarantee { order: 3; }
+.offer-spec > .o-cta { order: 4; }
+.offer-spec > .o-rows { order: 5; }
+.offer-spec > .o-frames { order: 6; }
+@media (min-width: 1024px) { .offer-spec > .o-rows { order: 1; } .offer-spec > .o-sizes { order: 2; } .offer-spec > .o-frames { order: 3; } .offer-spec > .o-price { order: 4; } .offer-spec > .o-guarantee { order: 5; } .offer-spec > .o-cta { order: 6; } }
+.frames { display: flex; gap: var(--s4); flex-wrap: wrap; }
+.frames > span { display: inline-flex; align-items: center; gap: var(--s3); font-size: var(--fs-small); }
+.frames .swatch { width: 26px; height: 32px; background: #f7f5f0; }
+.price-line { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; padding-top: var(--s2); }
+.price-line .price { font-family: var(--display); font-weight: 650; font-size: 44px; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums lining-nums; }
+.price-line .caption { max-width: 22em; }
+.offer-cta { display: grid; gap: var(--s3); justify-items: start; }
+.offer-cta .btn { min-width: 260px; }
+@media (min-width: 1024px) {
+  .offer { grid-template-columns: 6fr 5fr; gap: var(--s9); align-items: start; }
+  .offer-shot { position: sticky; top: calc(68px + var(--s6)); min-height: 560px; padding: var(--s8); }
+  .offer-shot .framed { width: min(100%, 420px); }
+  .price-line .price { font-size: 56px; }
+}
+
+/* Contact strip before the questions: a company, an address for questions, an answer within a day */
+.strip { display: grid; gap: var(--s2); padding: var(--s5) 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); font-size: var(--fs-small); color: var(--ink-2); }
+.strip b { color: var(--ink); font-weight: 600; }
+@media (min-width: 768px) { .strip { grid-template-columns: 1fr 1fr 1fr; gap: var(--s6); } }
+
+/* Closing block — the last button on a quiet block, wide */
+.close-block { display: grid; gap: var(--s5); justify-items: start; padding: var(--s7) var(--s5); background: var(--paper-2); border-radius: 8px; }
+@media (min-width: 768px) { .close-block { grid-template-columns: 1fr auto; align-items: center; padding: var(--s7) var(--s7); } }
+
+/* Deadline line, Christmas window only */
+.deadline { font-family: var(--display); font-weight: 600; font-size: var(--fs-lead); color: var(--accent); max-width: 22em; }
+
+/* Founder */
+.founder { display: grid; gap: var(--s5); }
+.founder img { width: 100%; max-width: 220px; aspect-ratio: 10 / 13; object-fit: cover; border-radius: 4px; }
+@media (min-width: 768px) { .founder { grid-template-columns: 220px 1fr; gap: var(--s7); align-items: start; } .founder.no-portrait { grid-template-columns: 5fr 7fr; } .founder.no-portrait > div { grid-column: 2; } }
+
+/* Gallery label rows (also used on /p) */
+.label { display: grid; margin: 0; }
+.label > div { display: grid; grid-template-columns: 8em 1fr; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--hairline); }
+.label > div:last-child { border-bottom: 1px solid var(--hairline); }
+.label dt { color: var(--ink-2); font-size: var(--fs-small); padding-top: 3px; }
+.label dd { margin: 0; }

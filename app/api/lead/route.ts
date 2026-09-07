@@ -3,7 +3,7 @@ import { getOrder, setStatus, createOrder } from '@/lib/db/orders';
 import { ensureSessionId, readUtm, sessionCookie } from '@/lib/session';
 import { ownsOrder } from '@/lib/preview-service';
 import { customerFormat } from '@/lib/pricing';
-import { sendMail } from '@/lib/email/send';
+import { isEmailConfigured, sendMail } from '@/lib/email/send';
 import { esc, siteUrl } from '@/lib/email/templates';
 import { getFounder } from '@/lib/founder';
 import { notifyOwner } from '@/lib/email/owner';
@@ -21,10 +21,8 @@ export async function POST(req: NextRequest) {
   const email = String(body.email ?? '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return NextResponse.json({ error: 'email' }, { status: 400 });
   const [{ sid, fresh }, utm] = await Promise.all([ensureSessionId(), readUtm()]);
-  // This endpoint sends a mail to whatever address it is given. A handful per address and per browser
-  // a day is every legitimate use; more than that is someone using our domain to bother a stranger,
-  // and the answer is a quiet "ok" that sends nothing.
-  if (await overused(email, sid)) return NextResponse.json({ ok: true });
+  if (await overused(email, sid)) return NextResponse.json({ error: 'send_limit' }, { status: 429 });
+  if (body.kind === 'nophoto' && !isEmailConfigured()) return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });
   let order = body.orderId && /^[0-9a-f-]{36}$/.test(body.orderId) ? await getOrder(body.orderId) : null;
   if (order && !ownsOrder(order, sid)) order = null;
   const nophoto = body.kind === 'nophoto';
@@ -34,15 +32,19 @@ export async function POST(req: NextRequest) {
   if (nophoto) {
     const f = getFounder();
     const link = siteUrl('/');
-    const html = `<!doctype html><html lang="da"><body style="margin:0;background:#F6F1E8;color:#1C1A17;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;"><div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
-<div style="font-family:Georgia,serif;font-size:22px;margin-bottom:32px;">Genfundet</div>
+    const html = `<!doctype html><html lang="da"><body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;"><div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
+<div style="font-family:Georgia,serif;font-size:22px;margin-bottom:32px;">Billedarv</div>
 <h1 style="font-family:Georgia,serif;font-weight:500;font-size:28px;line-height:1.1;margin:0 0 20px;">Til når du står med billedet.</h1>
 <p style="margin:0 0 16px;">Læg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut, og det koster ikke noget at se resultatet.</p>
-<p style="margin:0 0 24px;"><a href="${link}" style="display:inline-block;padding:14px 22px;border-radius:2px;background:#1C1A17;color:#F6F1E8;text-decoration:none;font-weight:600;">Se dit billede nu</a></p>
-<p style="margin:0;font-size:14px;color:#5B554C;">${esc(f.name || 'Genfundet')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
+<p style="margin:0 0 24px;"><a href="${link}" style="display:inline-block;padding:14px 22px;border-radius:2px;background:#171614;color:#FBFAF7;text-decoration:none;font-weight:600;">Se dit billede nu</a></p>
+<p style="margin:0;font-size:14px;color:#5D5953;">${esc(f.name || 'Billedarv')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
     try {
-      await sendMail({ to: email, subject: 'Dit link til Genfundet', html, text: `Til når du står med billedet: ${link}\n\nLæg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut.` });
-    } catch (e) { console.error('nophoto mail failed', e); }
+      const receipt = await sendMail({ to: email, subject: 'Dit link til Billedarv', html, text: `Til når du står med billedet: ${link}\n\nLæg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut.` });
+      if (!receipt) return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });
+    } catch {
+      console.error('nophoto mail failed');
+      return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });
+    }
   }
   const res = NextResponse.json({ ok: true });
   if (fresh) res.headers.append('set-cookie', sessionCookie(sid, req.nextUrl.protocol === 'https:'));

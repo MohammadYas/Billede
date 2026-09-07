@@ -37,36 +37,51 @@ export default function UploadFlow({ c }: { c: Copy }) {
   const [phase, setPhase] = useState(0); // 0–2: the wait sentence rotates at 15 s and 30 s
 
   const [keepEmail, setKeepEmail] = useState('');
-  const [keepState, setKeepState] = useState<'idle' | 'sending' | 'done'>('idle');
+  const [keepState, setKeepState] = useState<'idle' | 'sending' | 'done' | 'invalid' | 'failed'>('idle');
+  const keepSaved = useRef(false);
+  const keepSending = useRef(false);
+  useEffect(() => {
+    if (keepState === 'invalid' || keepState === 'failed') document.getElementById('keep-error')?.scrollIntoView({ block: 'nearest' });
+  }, [keepState]);
   const keepLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (keepSending.current) return;
     const email = keepEmail.trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return;
-    setKeepState('sending');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setKeepState('invalid'); return; }
     const st = stateRef.current;
     const id = st.kind === 'processing' ? st.orderId : null;
     const tok = st.kind === 'processing' ? st.token : null;
     if (!id) { setKeepState('idle'); return; }
+    const myRun = runRef.current;
+    keepSending.current = true;
+    setKeepState('sending');
     try {
-      await fetch(`/api/preview/${id}/save${tok ? `?t=${encodeURIComponent(tok)}` : ''}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
+      const r = await fetch(`/api/preview/${id}/save${tok ? `?t=${encodeURIComponent(tok)}` : ''}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
+      if (myRun !== runRef.current) return;
+      if (!r.ok) throw new Error('save');
+      keepSaved.current = true;
       setKeepState('done');
-    } catch { setKeepState('idle'); }
+    } catch { if (myRun === runRef.current) setKeepState('failed'); }
+    finally { if (myRun === runRef.current) keepSending.current = false; }
   };
 
   // the CTA wording that was live when the sheet opened (lib/copy.ts CTA_VARIANTS), so two deploys can be compared
-  const open = useCallback(() => { track('FlowOpened', { cta: process.env.NEXT_PUBLIC_CTA_VARIANT ?? 'C' }, { serverLog: true }); setState({ kind: 'pick' }); }, []);
+  const open = useCallback(() => {
+    keepSaved.current = false; keepSending.current = false; setKeepState('idle'); setKeepEmail('');
+    track('FlowOpened', { cta: process.env.NEXT_PUBLIC_CTA_VARIANT ?? 'C' }, { serverLog: true }); setState({ kind: 'pick' });
+  }, []);
   const runRef = useRef(0); // bumped on every close: an in-flight start() sees it and stops
   const pollRef = useRef<number | null>(null);
   const stopPolling = () => { if (pollRef.current) window.clearTimeout(pollRef.current); pollRef.current = null; };
-  const close = useCallback(() => {
+  const closeFlow = useCallback((cancelSaved = false) => {
     runRef.current += 1;
     xhrRef.current?.abort(); stopPolling();
-    setState((st) => {
-      // "Afbryd (billedet slettes)": tell the server to drop the upload and the order
-      if (st.kind === 'processing' && st.orderId) fetch(`/api/preview/${st.orderId}/cancel${st.token ? `?t=${encodeURIComponent(st.token)}` : ''}`, { method: 'POST' }).catch(() => {});
-      return { kind: 'closed' };
-    });
+    const st = stateRef.current;
+    // A saved link survives dismissal; the explicit cancel still requests deletion.
+    if (st.kind === 'processing' && st.orderId && (cancelSaved || !keepSaved.current)) fetch(`/api/preview/${st.orderId}/cancel${st.token ? `?t=${encodeURIComponent(st.token)}` : ''}`, { method: 'POST' }).catch(() => {});
+    setState({ kind: 'closed' });
   }, []);
+  const close = useCallback(() => closeFlow(), [closeFlow]);
 
   useEffect(() => { setCoarse(window.matchMedia('(pointer: coarse)').matches); }, []);
   useEffect(() => {
@@ -176,11 +191,14 @@ export default function UploadFlow({ c }: { c: Copy }) {
   /** The job runs on the server (background function); the sheet polls the order every 1.5 s. */
   const poll = (orderId: string, token: string, file: File, thumb: string) => {
     stopPolling();
+    const myRun = runRef.current;
     const tick = async () => {
+      if (myRun !== runRef.current) return;
       try {
         const r = await fetch(`/api/preview/${orderId}?t=${encodeURIComponent(token)}`, { cache: 'no-store' });
         if (!r.ok) throw new Error('status');
         const st = (await r.json()) as Status;
+        if (myRun !== runRef.current) return;
         if (st.status === 'PREVIEW_READY' && st.payload) {
           track('UploadCompleted', {}); track('PreviewShown', { monochrome: st.payload.isMonochrome }, { eventId: orderId }); // same event_id as the CAPI copy
           setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'preparing', percent: 100 } : cur));
@@ -197,6 +215,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         }
         if (st.job?.stage) setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: st.job?.stage === 'preparing' ? 'preparing' : 'sending', percent: 100 } : cur));
       } catch { /* transient: keep polling */ }
+      if (myRun !== runRef.current) return;
       if (Date.now() - t0 > 150_000) { fail(file, thumb, c.processing.timeout, c.processing.timeoutTitle, orderId, token); return; }
       pollRef.current = window.setTimeout(tick, Date.now() - t0 > 60_000 ? 4000 : 2000);
     };
@@ -227,13 +246,14 @@ export default function UploadFlow({ c }: { c: Copy }) {
     setState({ kind: 'processing', stage: 'uploading', percent: resume ? 100 : 0, file, thumb, orderId: resume?.orderId, token: resume?.token });
     if (resume) {
       try { if (cancelled()) return; await run(resume.orderId, resume.token, file, thumb); return; }
-      catch (e) { if ((e as Error).message !== 'no_file') { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, resume.orderId, resume.token); return; } }
+      catch (e) { if (cancelled()) return; if ((e as Error).message !== 'no_file') { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, resume.orderId, resume.token); return; } }
       // the upload never landed: start over
     }
     track('UploadStarted', { bytes: file.size, type: file.type });
     let started: { orderId: string; token: string; uploadUrl: string };
     try {
       const r = await fetch('/api/preview/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ size: file.size, type: file.type, name: file.name, igen: igenRef.current }) });
+      if (cancelled() && !r.ok) return;
       if (r.status === 413) { setState({ kind: 'pick', file, thumb, error: c.upload.tooBig }); return; }
       if (r.status === 415) { setState({ kind: 'pick', error: c.upload.wrongType }); return; }
       if (!r.ok) throw new Error('start');
@@ -269,20 +289,27 @@ export default function UploadFlow({ c }: { c: Copy }) {
     }
     if (aborted || cancelled()) return;
     try { await run(started.orderId, started.token, file, thumb); }
-    catch { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token); }
+    catch { if (!cancelled()) fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token); }
   };
 
   const sendLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (state.kind !== 'fallback' && state.kind !== 'nophoto') return;
+    if (state.sending) return;
+    const myRun = runRef.current;
     const email = state.email.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setState({ ...state, error: 'Skriv en e-mail, vi kan svare på.' }); return; }
     setState({ ...state, sending: true, error: undefined });
     try {
       const r = await fetch('/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: state.kind === 'fallback' ? state.orderId : null, email, kind: state.kind === 'nophoto' ? 'nophoto' : undefined }) });
-      if (!r.ok) throw new Error('lead');
-      setState({ ...state, sending: false, sent: true });
-    } catch { setState({ ...state, sending: false, error: 'Det lykkedes ikke at sende. Prøv igen.' }); }
+      if (!r.ok) throw new Error(String(r.status));
+      if (myRun === runRef.current) setState(cur => cur.kind === state.kind && cur.sending ? { ...cur, sending: false, sent: true } : cur);
+    } catch (e) {
+      // 429 on the no-photo link is the daily send limit, not a glitch: "try again" would be a lie
+      const limited = (e as Error).message === '429' && state.kind === 'nophoto';
+      const error = limited ? 'Vi har allerede sendt linket til den adresse flere gange i dag. Tjek indbakken og spam – eller skriv til os.' : 'Det lykkedes ikke at sende. Prøv igen.';
+      if (myRun === runRef.current) setState(cur => cur.kind === state.kind && cur.sending ? { ...cur, sending: false, error } : cur);
+    }
   };
 
   if (state.kind === 'closed') return null;
@@ -304,7 +331,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
                 <Thumb src={state.thumb} name={state.file?.name} alt="Dit valgte billede" style={{ maxHeight: '38dvh', width: 'auto', maxWidth: '100%', objectFit: 'contain', justifySelf: 'start' }} />
                 <div style={{ display: 'flex', gap: 'var(--s5)' }}>
-                  <label className="link-btn" style={{ display: 'inline-flex', alignItems: 'center' }}>{c.upload.reupload}<input type="file" accept={ACCEPT} hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+                  <label className="link-btn" style={{ display: 'inline-flex', alignItems: 'center' }}>{c.upload.reupload}<input type="file" accept={ACCEPT} className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
                   <button type="button" className="link-btn" onClick={() => setState({ kind: 'pick' })}>{c.upload.remove}</button>
                 </div>
                 <p className="caption">{c.upload.check}</p>
@@ -314,15 +341,15 @@ export default function UploadFlow({ c }: { c: Copy }) {
             ) : coarse ? (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}>
                 <p className="caption">{c.upload.free}</p>
-                <label className="btn btn-block" style={{ cursor: 'pointer' }}>{c.upload.camera}<input type="file" accept="image/*" capture="environment" hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
-                <label className="btn btn-block btn-quiet" style={{ cursor: 'pointer' }}>{c.upload.library}<input type="file" accept={ACCEPT} hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+                <label className="btn btn-block" style={{ cursor: 'pointer' }}>{c.upload.camera}<input type="file" accept="image/*" capture="environment" className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+                <label className="btn btn-block btn-quiet" style={{ cursor: 'pointer' }}>{c.upload.library}<input type="file" accept={ACCEPT} className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
               </div>
             ) : (
               <div style={{ display: 'grid', gap: 'var(--s3)' }}
                 onDragOver={(e) => { e.preventDefault(); if (!state.over) setState({ ...state, over: true }); }}
                 onDragLeave={() => setState({ ...state, over: false })}
                 onDrop={(e) => { e.preventDefault(); pickFile(e.dataTransfer.files?.[0]); }}>
-                <label className="btn btn-block" style={{ cursor: 'pointer' }}>{c.upload.pick}<input type="file" accept={ACCEPT} hidden onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+                <label className="btn btn-block" style={{ cursor: 'pointer' }}>{c.upload.pick}<input type="file" accept={ACCEPT} className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
                 <div className={`drop${state.over ? ' over' : ''}`}>{c.upload.drop}</div>
               </div>
             )}
@@ -350,14 +377,15 @@ export default function UploadFlow({ c }: { c: Copy }) {
               keepState === 'done' ? <p className="small" role="status">{c.processing.keepDone}</p> : (
                 <form onSubmit={keepLink} noValidate style={{ display: 'grid', gap: 'var(--s2)', paddingTop: 'var(--s3)', borderTop: '1px solid var(--hairline)' }}>
                   <p className="small"><b style={{ fontWeight: 600 }}>{c.processing.keepTitle}</b><br /><span className="muted">{c.processing.keepP}</span></p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 'var(--s2)' }}>
-                    <div className="field"><label htmlFor="keep-email" className="visually-hidden">{c.processing.keepEmail}</label><input id="keep-email" type="email" inputMode="email" autoComplete="email" placeholder={c.processing.keepEmail} value={keepEmail} onChange={(e) => setKeepEmail(e.target.value)} /></div>
+                  <div className="email-row">
+                    <div className="field"><label htmlFor="keep-email">{c.processing.keepEmail}</label><input id="keep-email" type="email" inputMode="email" autoComplete="email" maxLength={200} disabled={keepState === 'sending'} aria-invalid={keepState === 'invalid'} aria-describedby={keepState === 'invalid' || keepState === 'failed' ? 'keep-error' : undefined} value={keepEmail} onChange={(e) => setKeepEmail(e.target.value)} /></div>
                     <button type="submit" className="btn btn-quiet" disabled={keepState === 'sending'}>{c.processing.keepCta}</button>
                   </div>
+                  {(keepState === 'invalid' || keepState === 'failed') && <p id="keep-error" className="small" style={{ color: 'var(--error)' }} role="alert">{keepState === 'invalid' ? c.preview.saveInvalid : c.processing.keepFailed}</p>}
                 </form>
               )
             )}
-            <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={close}>{c.processing.cancel}</button>
+            <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={() => closeFlow(true)}>{c.processing.cancel}</button>
           </div>
         )}
 
@@ -437,6 +465,31 @@ function Thumb({ src, name, alt, style }: { src: string; name?: string; alt: str
  */
 const Sheet = forwardRef<HTMLDivElement, { children: ReactNode; onDismiss?: () => void; label: string }>(function Sheet({ children, onDismiss, label }, ref) {
   const el = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const dialog = el.current;
+    if (!dialog) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const siblings = [...document.body.children].filter((n): n is HTMLElement => n instanceof HTMLElement && !n.contains(dialog) && !n.classList.contains('scrim') && n.tagName !== 'SCRIPT');
+    const inert = siblings.map(n => n.inert);
+    siblings.forEach(n => { n.inert = true; });
+    // focus the dialog here, after the page behind it is inert: a StrictMode re-run of this effect restores
+    // focus to the trigger in its cleanup, and only the effect that runs last decides where focus ends up
+    dialog.focus({ preventScroll: true });
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const controls = [...dialog.querySelectorAll<HTMLElement>('a[href],button:not(:disabled),input:not(:disabled):not([hidden]),textarea:not(:disabled),select:not(:disabled),[tabindex="0"]')].filter(n => n.getClientRects().length && getComputedStyle(n).visibility !== 'hidden');
+      const first = controls[0], last = controls[controls.length - 1];
+      if (!first) { e.preventDefault(); dialog.focus(); return; }
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog || !dialog.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onTab);
+    return () => {
+      document.removeEventListener('keydown', onTab);
+      siblings.forEach((n, i) => { n.inert = inert[i]; });
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, []);
   const drag = useRef<{ startY: number; startX: number; y: number; t: number; vy: number; active: boolean; committed: boolean; id: number }>({ startY: 0, startX: 0, y: 0, t: 0, vy: 0, active: false, committed: false, id: -1 });
   const setRefs = (n: HTMLDivElement | null) => { el.current = n; if (typeof ref === 'function') ref(n); else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = n; };
   const isMobile = () => window.matchMedia('(max-width: 767px)').matches;

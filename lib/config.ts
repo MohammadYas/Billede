@@ -10,6 +10,10 @@ export const CONFIG = {
   christmasStartDate: process.env.CHRISTMAS_START_DATE ?? '2026-11-14',
   /** … until this last order date that is still delivered before Christmas (ISO dates). */
   christmasCutoffDate: process.env.CHRISTMAS_CUTOFF_DATE ?? '2026-12-02',
+  /** Launch offer: the first extra copy of the same photograph is in the parcel at no charge, for orders placed
+   *  up to and including this date (Europe/Copenhagen). A real, dated offer — never a struck-through price that was
+   *  never charged (markedsføringsloven). Set the env var to move it; an empty string turns it off. */
+  campaignEndDate: process.env.CAMPAIGN_END_DATE ?? '2026-09-30',
   /** Retention in days. */
   retentionUnpaidDays: 30,
   retentionCompletedDays: 90,
@@ -23,7 +27,7 @@ export const CONFIG = {
    *  URLs. Netlify sets URL and DEPLOY_PRIME_URL itself, so a forgotten variable still cannot put
    *  localhost into somebody's inbox. */
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? process.env.DEPLOY_PRIME_URL ?? 'http://localhost:3000',
-  siteName: 'Genfundet',
+  siteName: 'Billedarv',
 } as const;
 
 if (process.env.NODE_ENV === 'production' && CONFIG.siteUrl.includes('localhost')) {
@@ -52,6 +56,13 @@ export function daysToCutoff(now: Date = new Date()): number {
   const [y, m, d] = CONFIG.christmasCutoffDate.split('-').map(Number);
   const [ty, tm, td] = today.split('-').map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 864e5);
+}
+
+/** Is the launch offer (one extra copy in the parcel) on today? */
+export function campaignActive(now: Date = new Date()): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(CONFIG.campaignEndDate)) return false;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now);
+  return today <= CONFIG.campaignEndDate;
 }
 
 /** "inden jul" or "inden N hverdage" (N = deliveryDaysMax), depending on season. */

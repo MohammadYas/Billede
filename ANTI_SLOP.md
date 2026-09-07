@@ -1,4 +1,4 @@
-# ANTI_SLOP — forbid-list for Genfundet
+# ANTI_SLOP — forbid-list for Billedarv
 
 Research summary (2026-09): every AI site-builder (Lovable, v0, Bolt, Cursor defaults) converges on the
 statistical average of Tailwind tutorials and shadcn/ui: Inter, indigo-to-violet gradients, a centred hero
@@ -9,12 +9,12 @@ Sources: DEV Community ("Why AI websites all look the same", "Blame Tailwind's i
 Publishd. The opposite of slop is not "more design" — it is fewer, specific, physical decisions.
 
 Every line below is audited pass/fail in QA.md §Anti-slop audit with a screenshot reference.
-"Opposite" is what Genfundet does instead.
+"Opposite" is what Billedarv does instead.
 
 ## A. Typography
-| # | Forbidden | Opposite on Genfundet |
+| # | Forbidden | Opposite on Billedarv |
 |---|---|---|
-| A1 | Inter / Roboto / Poppins / Manrope / Space Grotesk / Plus Jakarta / Geist, and per impeccable's 2026 detector also Fraunces and Instrument Sans, as display or body | Newsreader (display, optical size on) + Public Sans (UI/body), self-hosted |
+| A1 | Inter / Roboto / Poppins / Manrope / Space Grotesk / Plus Jakarta / Geist, and per impeccable's 2026 detector also Fraunces and Instrument Sans, as display or body | Schibsted Grotesk (display, buttons) + Public Sans (body), Newsreader only in the wordmark, all self-hosted |
 | A2 | Default Tailwind type scale (text-xl/2xl/4xl steps) | Hand-set scale, tight display leading (1.02–1.08), generous body leading (1.55) |
 | A3 | Gradient text, single italic serif accent word inside a sans headline | Plain ink on paper; italics only for real emphasis or captions |
 | A4 | All-caps section labels / eyebrow / kicker above the H1, "badge above H1" | Headings carry their own weight. No eyebrow anywhere |
@@ -24,7 +24,7 @@ Every line below is audited pass/fail in QA.md §Anti-slop audit with a screensh
 ## B. Colour and surface
 | # | Forbidden | Opposite |
 |---|---|---|
-| B1 | Purple / indigo / violet / lavender anywhere | Warm paper `#F6F1E8`, ink `#1C1A17`, one deep green `#2F4A3A`, hairline `#D9D1C3` |
+| B1 | Purple / indigo / violet / lavender anywhere | Warm white paper `#FBFAF7`, ink `#171614`, one deep green `#1F5A3C`, hairline `#E2DDD4` |
 | B2 | Multi-stop gradients, animated gradients, glowing colored box-shadows, neon on dark | Flat surfaces; the only "glow" is daylight in a photograph |
 | B3 | Glassmorphism, frosted cards, `backdrop-filter` as decoration | Opaque paper. The only blur is `prefers-reduced-transparency`-safe: none |
 | B4 | Pure white `#FFF` or pure black `#000` as surfaces/text | Off-white paper and warm near-black ink only |
@@ -47,7 +47,7 @@ Every line below is audited pass/fail in QA.md §Anti-slop audit with a screensh
 | # | Forbidden | Opposite |
 |---|---|---|
 | D1 | Emoji, sparkle icons, generic thin-line icons as bullets or as "features" | No icon system on the landing page. Real photographs do the pointing |
-| D2 | Stock photography of people, AI-generated "old photos", illustrated blobs, abstract 3D shapes, `feTurbulence` grain | Only real restored photographs from `assets/originals` with consent; captions name provenance |
+| D2 | Stock photography of people, AI-generated *results*, illustrated blobs, abstract 3D shapes, `feTurbulence` grain | Restorations shown are always the real pipeline's output. Originals are consented family photographs, or generated damaged prints made only to show the process and labelled "Eksempelbillede" with a line under the grid saying so (DECISIONS 2026-09-07) |
 | D3 | Checkmark feature lists | Prose |
 | D4 | Floating device mockups, tilted 3D frames, glossy renders | A frame mockup composed from a real wall photo by code, soft natural shadow |
 
@@ -70,7 +70,7 @@ Every line below is audited pass/fail in QA.md §Anti-slop audit with a screensh
 ## G. Structure and meta
 | # | Forbidden | Opposite |
 |---|---|---|
-| G1 | Framework favicon, missing OG image, generic `<title>` | Wordmark favicon, OG image = a real before/after, title "Genfundet – gamle billeder, restaureret og indrammet" |
+| G1 | Framework favicon, missing OG image, generic `<title>` | Wordmark favicon, OG image = a real before/after, title "Billedarv – gamle billeder, restaureret og indrammet" |
 | G2 | Empty About / Contact, no phone, no CVR | Founder section with live phone and mail, CVR in footer |
 | G3 | Builder fingerprints (lovable.app, bolt, "vibe" in class names) | Own domain, own CSS, no default components |
 | G4 | shadcn/ui, Radix, lucide defaults left untouched | No UI kit. Seven hand-written components |

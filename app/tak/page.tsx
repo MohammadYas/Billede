@@ -1,6 +1,6 @@
 import { copy } from '@/lib/copy';
 import { paymentProvider } from '@/lib/payments/stripe';
-import { getOrderByField, latestOrderForSession, updateOrder, type Order } from '@/lib/db/orders';
+import { claimPurchaseTracking, getOrderByField, latestOrderForSession, type Order } from '@/lib/db/orders';
 import { markPaid } from '@/lib/payments/fulfil-paid';
 import { imageUrl } from '@/lib/preview-service';
 import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
@@ -28,10 +28,8 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
       if (verified.paid && verified.orderId) {
         const h = await headers();
         order = await markPaid(verified.orderId, verified, { ip: (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || null, ua: h.get('user-agent') });
-        if (order && !(order as unknown as { purchase_tracked_at?: string | null }).purchase_tracked_at) {
-          await updateOrder(order.id, { purchase_tracked_at: new Date().toISOString() } as never);
-          firePurchase = true;
-        }
+        // one conditional update, not read-then-write: two tabs or a reload cannot both fire the browser Purchase
+        if (order && (await claimPurchaseTracking(order.id))) firePurchase = true;
       }
     } catch (e) { console.error('tak verify failed', e); }
   } else if (session_id) {

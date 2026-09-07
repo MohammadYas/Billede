@@ -2,19 +2,19 @@ import LegalPage from '@/components/LegalPage';
 import { getFounder, missing } from '@/lib/founder';
 import { CONFIG } from '@/lib/config';
 
-export const metadata = { title: 'Privatliv – Genfundet' };
+export const metadata = { title: 'Privatliv – Billedarv' };
 
 export default function Privatliv() {
   const f = getFounder();
   const ansvarlig = [
-    f.name || missing('navn'),
+    f.company ? `${f.company} v/ ${f.name}` : f.name || missing('navn'),
     f.cvr ? `CVR ${f.cvr}` : missing('CVR'),
     f.address || missing('adresse'),
     f.email || missing('e-mail'),
   ].filter(Boolean).join(', ');
   return (
     <LegalPage title="Sådan behandler vi dine oplysninger" updated="3. september 2026">
-      <p>Genfundet restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p>
+      <p>Billedarv restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p>
 
       <h2>Dataansvarlig</h2>
       <p>{ansvarlig}.</p>

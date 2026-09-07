@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureSessionId, readUtm, sessionCookie } from '@/lib/session';
+import { ensureSessionId, readConsent, readUtm, sessionCookie } from '@/lib/session';
 import { beginUpload, repeatSource } from '@/lib/preview-service';
 import { CONFIG } from '@/lib/config';
 
@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
   const type = String(body.type ?? '');
   if (!size || size > CONFIG.maxUploadBytes) return NextResponse.json({ error: 'too_large' }, { status: 413 });
   if (!TYPES.test(type)) return NextResponse.json({ error: 'type' }, { status: 415 });
-  const [{ sid, fresh }, utm, repeatOf] = await Promise.all([ensureSessionId(), readUtm(), repeatSource(body.igen)]);
+  const [{ sid, fresh }, utm, repeatOf, consent] = await Promise.all([ensureSessionId(), readUtm(), repeatSource(body.igen), readConsent()]);
   try {
-    const started = await beginUpload({ sessionId: sid, utm, size, type, repeatOf });
+    const started = await beginUpload({ sessionId: sid, utm, size, type, repeatOf, consent });
     // the sheet only says "billede nummer to" once this has confirmed the reference
     Object.assign(started as Record<string, unknown>, { repeat: Boolean(repeatOf) });
     const res = NextResponse.json(started, { headers: { 'cache-control': 'no-store' } });

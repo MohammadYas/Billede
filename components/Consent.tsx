@@ -16,11 +16,11 @@ export default function Consent({ text, accept, decline }: { text: string; accep
     // only after the first scroll: the visitor who taps the button straight away is never interrupted (nothing is tracked before consent anyway)
     const reveal = () => { setShow(true); window.removeEventListener('scroll', onScroll); window.clearTimeout(timer); };
     const onScroll = () => { if (window.scrollY > 120) reveal(); };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
     // a visitor who taps the button straight from the first screen never scrolls — and would never be
     // asked, so nothing they do could ever be measured
     const timer = window.setTimeout(reveal, 6000);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
     return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(timer); };
   }, []);
   if (!show) return null;

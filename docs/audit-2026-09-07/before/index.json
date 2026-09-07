@@ -1,0 +1,485 @@
+[
+  {
+    "route": "/",
+    "width": 390,
+    "state": "full",
+    "file": "landing-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "first viewport",
+    "file": "landing-first-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/privatliv",
+    "width": 390,
+    "state": "full",
+    "file": "privacy-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/handelsbetingelser",
+    "width": 390,
+    "state": "full",
+    "file": "terms-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/tak",
+    "width": 390,
+    "state": "full",
+    "file": "thanks-unverified-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/p/invalid",
+    "width": 390,
+    "state": "full",
+    "file": "preview-invalid-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/godkend/invalid",
+    "width": 390,
+    "state": "full",
+    "file": "approval-invalid-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/godkend/invalid/aendring",
+    "width": 390,
+    "state": "full",
+    "file": "change-invalid-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-missing",
+    "width": 390,
+    "state": "full",
+    "file": "not-found-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-preview",
+    "width": 390,
+    "state": "full",
+    "file": "preview-fixture-390.png",
+    "synthetic": true
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "upload dialog",
+    "file": "upload-empty-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "empty email validation",
+    "file": "email-invalid-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "synthetic 503; input retained",
+    "file": "email-network-error-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "unsupported file",
+    "file": "upload-type-error-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "selected archive image; not submitted externally",
+    "file": "upload-selected-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "synthetic 503; photo retained",
+    "file": "upload-network-error-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "synthetic running restoration",
+    "file": "processing-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "empty email while processing",
+    "file": "keep-invalid-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "synthetic save 503",
+    "file": "keep-error-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "closed during synthetic delayed response",
+    "file": "late-response-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-preview",
+    "width": 390,
+    "state": "50x70 plus extra copy; synthetic",
+    "file": "preview-extras-390.png",
+    "synthetic": true
+  },
+  {
+    "route": "/audit-preview",
+    "width": 390,
+    "state": "synthetic 503; selection retained",
+    "file": "checkout-error-390.png",
+    "synthetic": true
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "state": "synthetic deletion 503",
+    "file": "delete-error-390.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "full",
+    "file": "landing-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "first viewport",
+    "file": "landing-first-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/privatliv",
+    "width": 768,
+    "state": "full",
+    "file": "privacy-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/handelsbetingelser",
+    "width": 768,
+    "state": "full",
+    "file": "terms-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/tak",
+    "width": 768,
+    "state": "full",
+    "file": "thanks-unverified-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/p/invalid",
+    "width": 768,
+    "state": "full",
+    "file": "preview-invalid-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/godkend/invalid",
+    "width": 768,
+    "state": "full",
+    "file": "approval-invalid-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/godkend/invalid/aendring",
+    "width": 768,
+    "state": "full",
+    "file": "change-invalid-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-missing",
+    "width": 768,
+    "state": "full",
+    "file": "not-found-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-preview",
+    "width": 768,
+    "state": "full",
+    "file": "preview-fixture-768.png",
+    "synthetic": true
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "upload dialog",
+    "file": "upload-empty-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "empty email validation",
+    "file": "email-invalid-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "synthetic 503; input retained",
+    "file": "email-network-error-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "unsupported file",
+    "file": "upload-type-error-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "selected archive image; not submitted externally",
+    "file": "upload-selected-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "synthetic 503; photo retained",
+    "file": "upload-network-error-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "synthetic running restoration",
+    "file": "processing-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "empty email while processing",
+    "file": "keep-invalid-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "synthetic save 503",
+    "file": "keep-error-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "closed during synthetic delayed response",
+    "file": "late-response-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-preview",
+    "width": 768,
+    "state": "50x70 plus extra copy; synthetic",
+    "file": "preview-extras-768.png",
+    "synthetic": true
+  },
+  {
+    "route": "/audit-preview",
+    "width": 768,
+    "state": "synthetic 503; selection retained",
+    "file": "checkout-error-768.png",
+    "synthetic": true
+  },
+  {
+    "route": "/",
+    "width": 768,
+    "state": "synthetic deletion 503",
+    "file": "delete-error-768.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "full",
+    "file": "landing-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "first viewport",
+    "file": "landing-first-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/privatliv",
+    "width": 1440,
+    "state": "full",
+    "file": "privacy-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/handelsbetingelser",
+    "width": 1440,
+    "state": "full",
+    "file": "terms-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/tak",
+    "width": 1440,
+    "state": "full",
+    "file": "thanks-unverified-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/p/invalid",
+    "width": 1440,
+    "state": "full",
+    "file": "preview-invalid-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/godkend/invalid",
+    "width": 1440,
+    "state": "full",
+    "file": "approval-invalid-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/godkend/invalid/aendring",
+    "width": 1440,
+    "state": "full",
+    "file": "change-invalid-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-missing",
+    "width": 1440,
+    "state": "full",
+    "file": "not-found-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-preview",
+    "width": 1440,
+    "state": "full",
+    "file": "preview-fixture-1440.png",
+    "synthetic": true
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "upload dialog",
+    "file": "upload-empty-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "empty email validation",
+    "file": "email-invalid-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "synthetic 503; input retained",
+    "file": "email-network-error-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "unsupported file",
+    "file": "upload-type-error-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "selected archive image; not submitted externally",
+    "file": "upload-selected-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "synthetic 503; photo retained",
+    "file": "upload-network-error-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "synthetic running restoration",
+    "file": "processing-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "empty email while processing",
+    "file": "keep-invalid-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "synthetic save 503",
+    "file": "keep-error-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "closed during synthetic delayed response",
+    "file": "late-response-1440.png",
+    "synthetic": false
+  },
+  {
+    "route": "/audit-preview",
+    "width": 1440,
+    "state": "50x70 plus extra copy; synthetic",
+    "file": "preview-extras-1440.png",
+    "synthetic": true
+  },
+  {
+    "route": "/audit-preview",
+    "width": 1440,
+    "state": "synthetic 503; selection retained",
+    "file": "checkout-error-1440.png",
+    "synthetic": true
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "state": "synthetic deletion 503",
+    "file": "delete-error-1440.png",
+    "synthetic": false
+  }
+]

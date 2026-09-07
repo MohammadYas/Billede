@@ -43,7 +43,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
     return (
       <main className="wrap admin" style={{ paddingTop: 'var(--s8)' }}>
         <form action={login} className="container" style={{ maxWidth: 360, display: 'grid', gap: 'var(--s4)' }}>
-          <h1 style={{ fontSize: 'var(--fs-h2)' }}>Genfundet admin</h1>
+          <h1 style={{ fontSize: 'var(--fs-h2)' }}>Billedarv admin</h1>
           <div className="field"><label htmlFor="pw">Adgangskode</label><input id="pw" name="password" type="password" autoComplete="current-password" required /></div>
           {sp.fejl === 'vent' && <p className="small" style={{ color: 'var(--error)' }}>For mange forsøg. Vent 15 minutter.</p>}
           {sp.fejl === '1' && <p className="small" style={{ color: 'var(--error)' }}>Forkert adgangskode.</p>}

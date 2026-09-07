@@ -105,9 +105,10 @@ export async function repeatSource(ref: string | null | undefined): Promise<stri
   return (count ?? 0) < REPEAT_MAX_USES ? parent.id : null;
 }
 
-export async function beginUpload(ctx: { sessionId: string | null; utm: Utm | null; size: number; type: string; repeatOf?: string | null }): Promise<{ orderId: string; token: string; uploadUrl: string; path: string }> {
+export async function beginUpload(ctx: { sessionId: string | null; utm: Utm | null; size: number; type: string; repeatOf?: string | null; consent?: 'yes' | 'no' | null }): Promise<{ orderId: string; token: string; uploadUrl: string; path: string }> {
   const token = randomBytes(18).toString('base64url');
-  const order = await createOrder({ status: 'NEW', format: customerFormat(), utm: ctx.utm ?? null, preview_meta: { session_id: ctx.sessionId, share_token: token, upload_type: ctx.type, upload_size: ctx.size, ...(ctx.repeatOf ? { repeat_of: ctx.repeatOf } : {}) } });
+  // the Meta consent travels with the order: the background job and the webhook have no cookie to read (lib/analytics/capi.ts)
+  const order = await createOrder({ status: 'NEW', format: customerFormat(), utm: ctx.utm ?? null, preview_meta: { session_id: ctx.sessionId, share_token: token, upload_type: ctx.type, upload_size: ctx.size, ...(ctx.consent ? { consent: ctx.consent } : {}), ...(ctx.repeatOf ? { repeat_of: ctx.repeatOf } : {}) } });
   const path = objectPath(order.id, 'upload');
   const { signedUrl } = await createSignedUpload(path);
   await updateOrder(order.id, { preview_meta: { ...metaOf(order), upload_path: path } });

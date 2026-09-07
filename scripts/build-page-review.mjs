@@ -195,7 +195,7 @@ fs.writeFileSync(OUT, `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Genfundet — alle sider</title>
+<title>Billedarv — alle sider</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;600&display=swap">
 <style>
 ${css}
@@ -204,7 +204,7 @@ ${review}
 </head>
 <body>
 <div class="rv-index">
-  <h1>Genfundet — alle skærme</h1>
+  <h1>Billedarv — alle skærme</h1>
   <p>Ægte markup og det rigtige stylesheet, som browseren har det: klientkomponenterne står i den
   tilstand, navnet siger. Telefonskærmene er 390 px, desktop 1280 px, mails 600 px. Fotografierne er
   grå felter i den rigtige form, så filen ikke indeholder billeddata — og hverken signerede

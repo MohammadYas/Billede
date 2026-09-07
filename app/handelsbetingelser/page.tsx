@@ -3,7 +3,7 @@ import { getFounder, missing } from '@/lib/founder';
 import { CONFIG, formatCutoffDate } from '@/lib/config';
 import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK } from '@/lib/pricing';
 
-export const metadata = { title: 'Handelsbetingelser – Genfundet' };
+export const metadata = { title: 'Handelsbetingelser – Billedarv' };
 
 export default function Handelsbetingelser() {
   const f = getFounder();
@@ -12,7 +12,7 @@ export default function Handelsbetingelser() {
   // a partial identity that *looks* complete is the failure mode: name + e-mail alone renders as if
   // nothing were missing.
   const saelger = [
-    f.name || missing('navn'),
+    f.company ? `${f.company} v/ ${f.name}` : f.name || missing('navn'),
     f.cvr ? `CVR ${f.cvr}` : missing('CVR'),
     f.address || missing('adresse'),
     f.email || missing('e-mail'),

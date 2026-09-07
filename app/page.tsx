@@ -1,10 +1,10 @@
 import { copy } from '@/lib/copy';
 import { getExamples, type Example } from '@/lib/examples';
 import { getFounder } from '@/lib/founder';
-import { exampleSrcSet, GRID_SIZES, HERO_SIZES, HERO_BEFORE_SIZES } from '@/lib/images';
+import { exampleSrcSet, GRID_SIZES, HERO_SIZES } from '@/lib/images';
 import BeforeAfter, { type Source } from '@/components/BeforeAfter';
-import Compare from '@/components/Compare';
 import ColourExample from '@/components/ColourExample';
+import Framed from '@/components/Framed';
 import UploadFlow from '@/components/UploadFlow';
 import OpenFlowButton from '@/components/OpenFlowButton';
 import StickyCtaMount from '@/components/StickyCtaMount';
@@ -24,170 +24,130 @@ const src = (e: Example, side: 'before' | 'after', sizes: string): Source => ({
   srcSetWebp: exampleSrcSet(e, side, 'webp'),
   sizes,
 });
+const small = (u: string) => u.replace(/\.jpg$/, '-480.jpg');
 
 /**
- * "Soldat og ung kvinde, ca. 1916. Arkivfoto, …" → subject in ink, date in ink-2, credit to title.
- * A found snapshot usually has no date at all; "årstal ukendt" is the honest half of that pair, and
- * inventing a decade to make the caption look tidier would be inventing provenance.
+ * "Bryllup foran landsbykirken, ca. 1954. Eksempelbillede." → subject in ink, year in ink-2. The trailing
+ * provenance goes to the title attribute; the section below the grid says out loud what the examples are.
  */
-function Caption({ text, credit = false }: { text: string; credit?: boolean }) {
-  const m = text.match(/^(.+?),\s*(ca\.\s*\d{4}|\d{4}|årstal ukendt)\.\s*(.*)$/);
+function Caption({ text }: { text: string }) {
+  const m = text.match(/^(.+?),\s*(ca\.\s*\d{4}|\d{4}|sommeren \d{4}|årstal ukendt)\.\s*(.*)$/);
   if (!m) return <span className="caption">{text}</span>;
-  // the hero says "arkivfoto" out loud so nobody reads Gunhild as a customer; the grid keeps the credit in the title
-  return <span className="caption" title={m[3] || undefined}><b>{m[1]}</b>, {m[2]}{credit && m[3] ? ' · arkivfoto' : '.'}</span>;
+  return <span className="caption" title={m[3] || undefined}><b>{m[1]}</b>, {m[2]}</span>;
 }
 
 export default async function Page() {
   const c = copy();
   const examples = getExamples();
   const hero = examples[0] ?? null;
-  const stepEx = examples[1] ?? examples[0] ?? null;
-  // the hero photograph's own before/after opens the proof row: the wall above shows where it ended up
-  const gridExamples = examples.slice(0, 6);
+  const grid = examples.slice(1, 7);
   const f = getFounder();
-  const showFounder = Boolean(f.portrait && f.why.length > 0);
+  // the section runs on the three lines, the name and the CVR; a portrait joins when there is a real one
+  const showFounder = f.why.length > 0;
+  const synthetic = examples.length > 0 && examples.every((e) => /eksempelbillede/i.test(e.caption));
   const placeholders = examples.some((e) => e.placeholder);
-  // "Tæt på" must open with a pair where the difference is unmistakable, so the (soft) hero pair goes last
-  const details = [...examples.filter((e) => e.detail && e.id !== hero?.id), ...examples.filter((e) => e.detail && e.id === hero?.id)].slice(0, 6);
-  const productMock = (examples.find((e) => e.mockup && e.id !== hero?.id) ?? hero)?.mockup ?? null;
+  const jul = c.season === 'jul';
 
   return (
     <>
-      <main>
-        <header className="wrap">
-          <div className="container site-head">
-            <Wordmark />
+      <header className="nav wrap">
+        <div className="container nav-row">
+          <Wordmark />
+          <div className="nav-right">
             <span className="caption">{c.priceFrom} · fri fragt</span>
+            <OpenFlowButton className="btn btn-sm nav-cta">{c.hero.cta}</OpenFlowButton>
           </div>
-        </header>
+        </div>
+      </header>
+      <main>
         <DeletedNotice text={c.preview.erased} />
 
-        {/* Hero — the photograph is the argument. */}
-        <section id="hero" aria-label="Eksempel på restaurering">
+        {/* Hero — the claim, the button, and the proof: a real damaged print turning sharp under the finger. */}
+        <section id="hero" className="wrap" aria-label="Se hvad restaureringen gør">
           <HeroViewContent targetId="hero" />
-          <div className="hero-grid">
-            <div className="hero-media">
-              {hero?.mockup ? (
-                <picture>
-                  <source type="image/webp" srcSet={`${hero.mockup.replace(/\.jpg$/, '-800.webp')} 800w`} sizes={HERO_SIZES} />
-                  <img className="hero-img" src={hero.mockup} srcSet={`${hero.mockup.replace(/\.jpg$/, '-480.jpg')} 480w, ${hero.mockup} 1200w`} sizes={HERO_SIZES} alt={`Indrammet ${c.formatLabel} på en væg: ${hero.caption.replace(/\.$/, '')}`} width={1200} height={960} loading="eager" fetchPriority="high" decoding="sync" />
-                </picture>
-              ) : (
-                <div className="ba" style={{ aspectRatio: '5 / 4' }} />
-              )}
-              {hero && <span className="hero-credit" aria-hidden><Caption text={hero.caption} credit /></span>}
-            </div>
-            {hero && (
-              <div className="hero-side">
-                <figure className="hero-mock"><img src={src(hero, 'before', HERO_BEFORE_SIZES).src.replace(/\.jpg$/, '-480.jpg')} alt={`Før: ${hero.caption.replace(/\.$/, '')}`} width={480} height={Math.round((480 * hero.height) / hero.width)} loading="eager" /><figcaption className="caption">{c.hero.beforeCaption}</figcaption></figure>
-                <p className="hero-caption"><Caption text={hero.caption} credit /> <span className="caption">· {c.hero.mockCaption}</span></p>
-              </div>
-            )}
-          </div>
-          <div className="wrap">
-            <div className="container hero-text">
-              <p className="eyebrow">{c.hero.eyebrow}</p>
+          <div className="container hero">
+            <div className="hero-copy">
               <h1>{c.hero.h1}</h1>
-              <div className="hero-row">
-                {hero && <img className="hero-mock-sm" src={hero.before.replace(/\.jpg$/, '-480.jpg')} alt={c.hero.beforeCaption} width={480} height={Math.round((480 * hero.height) / hero.width)} loading="eager" />}
-                <p className="lead">{c.hero.sub}</p>
-              </div>
+              <p className="lead">{c.hero.sub}</p>
+              {c.campaign.active && <p className="deadline">{c.campaign.short}</p>}
+              {jul && c.hero.eyebrow && <p className="deadline">{c.hero.eyebrow}</p>}
               <div className="hero-cta">
-                <OpenFlowButton style={{ minWidth: 240 }}>{c.hero.cta}</OpenFlowButton>
+                <OpenFlowButton>{c.hero.cta}</OpenFlowButton>
                 <span className="caption hero-note"><b>{c.hero.smallStrong}</b> {c.hero.small}</span>
               </div>
             </div>
+            {hero && (
+              <figure className="hero-proof">
+                <BeforeAfter before={src(hero, 'before', HERO_SIZES)} after={src(hero, 'after', HERO_SIZES)} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} aspect="4 / 5" reveal priority rest={50} />
+                <figcaption><Caption text={hero.caption} /></figcaption>
+              </figure>
+            )}
           </div>
         </section>
 
         <div className="wrap"><div className="container trust">{c.tryghed.map((t, i) => <span key={i}>{t}</span>)}</div></div>
 
-        {/* Eksempler — each pair compared a different way; never the hero photograph again */}
-        {gridExamples.length > 0 && (
-          <section className="section" aria-labelledby="eksempler">
-            <div className="wrap"><div className="container ed" style={{ marginBottom: 'var(--s6)' }}><h2 id="eksempler">{c.eksempler.h2}</h2><p className="lead" style={{ maxWidth: '26em' }}>{c.eksempler.lead}</p></div></div>
+        {/* Examples — six more of the same object */}
+        {grid.length > 0 && (
+          <section className="wrap section" aria-labelledby="eksempler">
             <div className="container">
-              <div className="swipe">
-                {gridExamples.map((e, i) => {
-                  const mode = e.mode ?? (['wipe', 'lens', 'hold', 'fade', 'wipe', 'lens'] as const)[i % 6];
+              <div className="ex-head"><h2 id="eksempler">{c.eksempler.h2}</h2><p className="lead">{c.eksempler.lead}</p></div>
+              <div className="ex-grid">
+                {grid.map((e) => {
                   const aspect = `${e.width} / ${e.height}`;
-                  // the caption ends in a full stop and BeforeAfter appends its own hint sentence
                   const alt = `Før og efter: ${e.caption.replace(/\.$/, '')}`;
                   return (
-                    <figure key={e.id} style={{ margin: 0 }}>
-                      {e.colour ? (
-                        <ColourExample before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} colour={e.colour} alt={alt} aspect={aspect} />
-                      ) : mode === 'wipe' ? (
-                        <BeforeAfter before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />
-                      ) : (
-                        <Compare mode={mode} before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />
-                      )}
-                      <figcaption style={{ paddingTop: 'var(--s2)' }}><Caption text={e.caption} /></figcaption>
+                    <figure key={e.id}>
+                      {e.colour
+                        ? <ColourExample before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} colour={e.colour} alt={alt} aspect={aspect} />
+                        : <BeforeAfter before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />}
+                      <figcaption><Caption text={e.caption} /></figcaption>
                     </figure>
                   );
                 })}
               </div>
-              {placeholders && <p className="wrap caption" style={{ paddingTop: 'var(--s5)', maxWidth: '44em' }}>{c.eksempler.placeholderNote}</p>}
+              {placeholders ? <p className="caption ex-note">{c.eksempler.placeholderNote}</p> : synthetic ? <p className="caption ex-note">{c.eksempler.syntheticNote}</p> : null}
             </div>
           </section>
         )}
 
-        {/* Tæt på — 2× detail crops: where restoration is judged */}
-        {details.length > 0 && (
-          <section className="wrap section" aria-labelledby="taetpaa" style={{ paddingTop: 0 }}>
-            <div className="container" style={{ display: 'grid', gap: 'var(--s6)' }}>
-              <div className="ed">
-                <h2 id="taetpaa">{c.taetPaa.h2}</h2>
-                <p className="lead" style={{ maxWidth: '26em' }}>{c.taetPaa.p}</p>
-              </div>
-              <div className="details">
-                {details.map((e) => (
-                  <figure key={e.id} className="detail">
-                    <img src={e.detail!.before} alt={`Før, udsnit: ${e.caption}`} width={700} height={700} loading="lazy" />
-                    <img src={e.detail!.after} alt={`Efter, udsnit: ${e.caption}`} width={700} height={700} loading="lazy" />
-                    <figcaption><Caption text={e.detail!.label ? `${e.detail!.label} – ${e.caption}` : e.caption} /></figcaption>
-                  </figure>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Sådan fungerer det — the object at each stage: the damaged print, the restored screen, the frame. */}
-        <section className="wrap section" aria-labelledby="saadan">
-          <div className="container ed">
-            <h2 id="saadan">{c.saadan.h2}</h2>
+        {/* How it works — the same photograph at each stage */}
+        <section className="wrap section" aria-labelledby="saadan" style={{ paddingTop: 0 }}>
+          <div className="container how">
+            <div className="how-head"><h2 id="saadan">{c.saadan.h2}</h2><p className="lead">{c.saadan.note}</p></div>
             <ol className="steps">
-              {c.saadan.steps.map((s, i) => {
-                // small variants: the step photographs render at 112–160 px
-                const small = (u: string) => u.replace(/\.jpg$/, '-480.jpg');
-                const img = stepEx ? [small(stepEx.before), small(stepEx.after), stepEx.mockup ? small(stepEx.mockup) : small(stepEx.after)][i] : null;
-                return (
-                  <li key={i} className="step">
-                    {img ? <img src={img} alt="" width={160} height={200} loading="lazy" /> : <span className="ph" />}
-                    <p><span className="n">{i + 1}</span>{s}</p>
-                  </li>
-                );
-              })}
+              {c.saadan.steps.map((s, i) => (
+                <li key={i} className="step">
+                  <div className={`step-media${i === 2 ? ' is-frame' : ''}`} aria-hidden>
+                    {hero && i === 0 && <img src={small(hero.before)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
+                    {hero && i === 1 && <img src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
+                    {hero && i === 2 && <Framed src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} />}
+                  </div>
+                  <p><span className="n">{i + 1}</span>{s}</p>
+                </li>
+              ))}
             </ol>
-            <p className="caption measure">{c.saadan.note}</p>
           </div>
         </section>
 
-        {/* Det får du — the object and a gallery label */}
-        <section className="wrap section" aria-labelledby="produkt">
-          <div className="container product">
-            <div>
-              {productMock ? <img className="mock" src={productMock} alt={`Indrammet ${c.formatLabel} på en væg`} width={1200} height={960} loading="lazy" /> : null}
+        {/* Offer — the object, the spec, the sizes, the price, the button */}
+        <section className="wrap section" aria-labelledby="produkt" style={{ paddingTop: 0 }}>
+          <div className="container offer">
+            <div className={`offer-shot${hero?.mockup ? ' is-wall' : ''}`}>
+              {hero?.mockup
+                ? <img src={hero.mockup} srcSet={`${hero.mockup.replace(/\.jpg$/, '-480.jpg')} 480w, ${hero.mockup} 1200w`} sizes="(min-width: 1024px) 560px, 100vw" alt={`Indrammet ${c.formatLabel} på en væg: ${hero.caption.replace(/\.$/, '')}`} width={1200} height={960} loading="lazy" />
+                : hero && <Framed src={hero.after.replace(/\.jpg$/, '-800.jpg')} alt={`Indrammet ${c.formatLabel}: ${hero.caption.replace(/\.$/, '')}`} width={800} height={Math.round((800 * hero.height) / hero.width)} />}
             </div>
-            <div style={{ display: 'grid', gap: 'var(--s5)' }}>
-              <h2 id="produkt">{c.produkt.h2}</h2>
-              <p className="lead" style={{ maxWidth: '24em' }}>{c.produkt.lead}</p>
-              <dl className="label">
+            <div className="offer-spec">
+              <div className="o-head" style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <h2 id="produkt">{c.produkt.h2}</h2>
+                <p className="lead">{c.produkt.lead}</p>
+              </div>
+              <dl className="label o-rows">
                 {c.produkt.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
               </dl>
-              <div style={{ display: 'grid', gap: 'var(--s3)' }}>
-                <p className="label small">{c.produkt.sizesTitle}</p>
+              <div className="o-sizes" style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <p className="small" style={{ fontWeight: 600 }}>{c.produkt.sizesTitle}</p>
                 <ul className="size-compare">
                   {c.produkt.sizeCards.map((x) => (
                     <li key={x.label} className={x.recommended ? 'is-recommended' : ''}>
@@ -200,35 +160,37 @@ export default async function Page() {
                 </ul>
                 <p className="caption">{c.produkt.sizesNote}</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Offer — one price, set like an object */}
-        <section className="wrap section section-quiet" aria-labelledby="tilbud">
-          <div className="container offer">
-            <h2 id="tilbud" className="visually-hidden">Pris</h2>
-            <div className="offer-act" style={{ display: 'grid', gap: 'var(--s4)', alignContent: 'end' }}>
-              <p className="lead" style={{ maxWidth: '22em' }}>{c.offer.line}</p>
-              {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}
-              <div><OpenFlowButton style={{ minWidth: 240 }}>{c.offer.cta}</OpenFlowButton></div>
-            </div>
-            <div style={{ display: 'grid', gap: 'var(--s2)' }}>
-              {c.sizes.length > 1 && <p className="price-from">fra</p>}
-              <p className="price" aria-label={c.offer.price}>{c.offer.price.replace(' kr.', '')}<small>kr.</small></p>
-              <p className="caption price-note">{c.offer.priceNote}</p>
-              {c.offer.anchor && <p className="caption price-note">{c.offer.anchor}</p>}
-              {c.offer.priceFrom && <p className="caption price-note">{c.offer.priceFrom}</p>}
-              <ul className="guarantee">
+              <div className="o-frames" style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <p className="small" style={{ fontWeight: 600 }}>{c.preview.frameTitle}</p>
+                <div className="frames">
+                  <span><span className="swatch swatch-sort" aria-hidden /> {c.preview.frameSort} · {c.preview.frameSortHint}</span>
+                  <span><span className="swatch swatch-eg" aria-hidden /> {c.preview.frameEg} · {c.preview.frameEgHint}</span>
+                </div>
+                <p className="caption">{c.preview.frameNote}</p>
+              </div>
+              <div className="o-price" style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <div className="price-line">
+                  {c.sizes.length > 1 && <span className="caption">fra</span>}
+                  <span className="price tabular">{c.offer.price}</span>
+                  <span className="caption">{c.offer.priceNote}</span>
+                </div>
+                {c.offer.anchor && <p className="caption" style={{ maxWidth: '30em' }}>{c.offer.anchor}</p>}
+                {c.campaign.active && <p className="deadline">{c.campaign.line}</p>}
+                {c.offer.deadline && <p className="deadline">{c.offer.deadline}{c.hero.countdown ? ` ${c.hero.countdown}.` : ''}</p>}
+              </div>
+              <ul className="guarantee o-guarantee">
                 {c.offer.guarantee.map((g) => <li key={g}>{g}</li>)}
               </ul>
-              {c.offer.kontakt && <MailLine className="caption price-note" text={c.offer.kontakt} email={c.email} href={c.emailHref} />}
+              <div className="offer-cta o-cta">
+                <OpenFlowButton>{c.offer.cta}</OpenFlowButton>
+                <span className="caption"><b style={{ color: 'var(--ink)', fontWeight: 600 }}>{c.hero.smallStrong}</b></span>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Gaven — why this is the gift they cannot buy themselves (card with the buyer's greeting is a real Checkout field) */}
-        <section className="wrap section" aria-labelledby="gave">
+        {/* Gaven — why this is the gift they cannot buy themselves */}
+        <section className="wrap section section-quiet" aria-labelledby="gave">
           <div className="container gift">
             <div className="gift-head">
               <h2 id="gave">{c.gave.h2}</h2>
@@ -240,29 +202,31 @@ export default async function Page() {
           </div>
         </section>
 
-
-
-
-
-
-
-
         {showFounder && (
           <section className="wrap section" aria-labelledby="hvem">
-            <div className="container founder">
-              <img src="/founder.jpg" alt={f.name} width={220} height={286} loading="lazy" />
+            <div className={`container founder${f.portrait ? '' : ' no-portrait'}`}>
+              {f.portrait && <img src="/founder.jpg" alt={f.name} width={220} height={286} loading="lazy" />}
               <div style={{ display: 'grid', gap: 'var(--s4)' }}>
                 <h2 id="hvem">{c.hvem.h2}</h2>
                 <p className="lead italic" style={{ maxWidth: '24em' }}>{f.why[0]}</p>
                 {f.why.slice(1).map((w, i) => <p key={i} className="measure">{w}</p>)}
-                <p className="caption"><b>{f.name}</b>{f.city ? `, ${f.city}` : ''}{f.cvr ? ` · CVR ${f.cvr}` : ''}</p>
+                <p className="caption"><b>{f.name}</b>{f.company ? `, ${f.company}` : ''}{f.city ? `, ${f.city}` : ''}{f.cvr ? ` · CVR ${f.cvr}` : ''}</p>
                 {f.email && <p className="small"><a className="tap" href={`mailto:${f.email}`}>{f.email}</a></p>}
               </div>
             </div>
           </section>
         )}
 
-        <section className="wrap section" aria-labelledby="spoergsmaal" style={{ paddingTop: showFounder ? 0 : undefined }}>
+        {/* Who answers — a company, an address, a deadline for the answer */}
+        <div className="wrap" style={{ paddingTop: showFounder ? 0 : 'var(--s7)' }}>
+          <div className="container strip">
+            <span><b>{c.tryghed[2]}</b></span>
+            {c.email && <span>Spørgsmål? <a href={c.emailHref}>{c.email}</a></span>}
+            <span>Vi svarer på mail inden 24 timer.</span>
+          </div>
+        </div>
+
+        <section className="wrap section" aria-labelledby="spoergsmaal">
           <div className="container ed">
             <h2 id="spoergsmaal">{c.spoergsmaal.h2}</h2>
             <div style={{ maxWidth: '40em' }}>
@@ -276,12 +240,13 @@ export default async function Page() {
           </div>
         </section>
 
-        <section className="wrap" aria-label="Afslutning" style={{ paddingTop: 'var(--s6)', paddingBottom: 'var(--s10)' }}>
-          <div className="container ed">
+        <section className="wrap" aria-label="Afslutning" style={{ paddingBottom: 'var(--s9)' }}>
+          <div className="container close-block">
             <p className="closing">{c.slut.line}</p>
-            <div><OpenFlowButton style={{ minWidth: 240 }}>{c.slut.cta}</OpenFlowButton></div>
+            <OpenFlowButton style={{ minWidth: 260 }}>{c.slut.cta}</OpenFlowButton>
           </div>
         </section>
+        {c.offer.kontakt && <div className="wrap" style={{ paddingBottom: 'var(--s6)' }}><div className="container"><MailLine className="caption" text={c.offer.kontakt} email={c.email} href={c.emailHref} /></div></div>}
       </main>
       <Footer />
       <UploadFlow c={c} />

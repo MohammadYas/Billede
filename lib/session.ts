@@ -24,6 +24,13 @@ export function sessionCookie(sid: string, secure: boolean): string {
   return `${SESSION_COOKIE}=${sid}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}`;
 }
 
+/** The banner's answer, as the browser sent it; null when the visitor has not answered. */
+export async function readConsent(): Promise<'yes' | 'no' | null> {
+  const c = await cookies();
+  const v = c.get(CONSENT_COOKIE)?.value;
+  return v === 'yes' || v === 'no' ? v : null;
+}
+
 export async function readUtm(): Promise<Utm | null> {
   const c = await cookies();
   const raw = c.get(UTM_COOKIE)?.value;

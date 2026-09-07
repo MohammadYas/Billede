@@ -7,6 +7,7 @@ import PreviewPanel from '@/components/PreviewPanel';
 import Footer from '@/components/Footer';
 import Wordmark from '@/components/Wordmark';
 import Consent from '@/components/Consent';
+import PreviewPending from '@/components/PreviewPending';
 
 export const metadata = { robots: { index: false, follow: false }, alternates: { canonical: '/' } };
 
@@ -20,8 +21,12 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
   const [order, sid] = await Promise.all([getOrder(id), readSessionId()]);
   if (!order || !ownsOrder(order, sid, t ?? null)) notFound();
   const payload = await payloadFor(order);
-  if (!payload) notFound();
   const c = copy();
+  if (!payload) {
+    if (order.status === 'ABANDONED') notFound();
+    const job = (order.preview_meta as { job?: { state?: string } } | null)?.job;
+    return <><main className="wrap"><div className="container"><div className="site-head"><Wordmark /></div><PreviewPending pending={order.status === 'NEW' && job?.state !== 'failed'} email={c.email} /></div></main><Footer /></>;
+  }
   const paid = !['NEW', 'PREVIEW_READY', 'MANUAL_REVIEW', 'ABANDONED'].includes(order.status);
   return (
     <>

@@ -1,6 +1,6 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
-import { CONFIG, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
+import { CONFIG, campaignActive, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
 import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, RECOMMENDED_FORMAT, type Format } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
 
@@ -43,6 +43,10 @@ export function copy(season: Season = currentSeason()) {
   const days = daysToCutoff();
   const pay = 'Apple Pay, Google Pay eller kort';
   const cta = primaryCta();
+  // Launch offer (lib/config.ts campaignEndDate): a dated, real offer, worded the same everywhere it appears
+  const kampagne = campaignActive();
+  const kampagneDato = formatCutoffDate(CONFIG.campaignEndDate || '2000-01-01');
+  const kampagneFaq = kampagne ? ` Til og med ${kampagneDato} er det første ekstra eksemplar med i pakken uden beregning – det er vores lanceringstilbud.` : '';
 
   // Sizes. The landing page quotes the cheapest ("fra 599 kr."); the customer picks on the preview page,
   // and every price-bearing line exists once per size so nothing has to be patched together in the browser.
@@ -138,7 +142,7 @@ export function copy(season: Season = currentSeason()) {
       sizesNote: `Samme billede og samme kvalitet i alle tre. ${formatLabel(format)} er sat op på forhånd – du kan skifte, når du har set resultatet.`,
       note: `Restaurering, print, ramme, kort med din hilsen, indpakning og fragt – ét beløb per billede.`,
     },
-    eksempler: { h2: 'Det kunne være jeres.', lead: 'Bryllupsbilledet, barnet på trappen, bedsteforældrene i haven. Gulnet, ridset eller falmet – tag et foto af det, og se selv, hvad der kan gøres.', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
+    eksempler: { h2: 'Det kunne være jeres.', lead: 'Bryllupsbilledet, barnet på trappen, bedsteforældrene i haven. Gulnet, ridset eller falmet – tag et foto af det, og se selv, hvad der kan gøres.', syntheticNote: 'Eksemplerne er ikke kundebilleder. Originalerne er fremstillet til at vise, hvad restaureringen gør ved folder, pletter og falmede farver – og selve restaureringen er kørt gennem præcis den samme proces som dit billede.', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
     offer: {
       line: `Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret ${levering}, efter du har godkendt billedet på mail.`,
       deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
@@ -155,6 +159,13 @@ export function copy(season: Season = currentSeason()) {
       price,
       priceFrom: `for ${formatLabel(format)}`,
       cta,
+    },
+    campaign: {
+      active: kampagne,
+      until: kampagneDato,
+      line: `Lanceringstilbud til og med ${kampagneDato}: ét ekstra eksemplar af billedet med i pakken – til den, der også husker det. Værdi ${formatDkk(EXTRA_PRINT_DKK[format])}`,
+      short: `Lanceringstilbud: ekstra eksemplar med i pakken til og med ${kampagneDato}.`,
+      extra: `Lanceringstilbud til og med ${kampagneDato}: det første ekstra eksemplar er med i pakken uden beregning.`,
     },
     hvem: { h2: 'Hvem står bag' },
     spoergsmaal: {
@@ -202,7 +213,7 @@ export function copy(season: Season = currentSeason()) {
         },
         {
           q: 'Kan jeg få flere eksemplarer af det samme billede?',
-          a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for. Er det et helt andet billede, koster det som en almindelig bestilling.`,
+          a: `Ja. Når du har set dit billede, kan du lægge et eller flere ekstra eksemplarer til – ${formatDkk(EXTRA_PRINT_DKK[format])} for et mere, uanset størrelse, med samme ramme, i samme pakke. Restaureringen er jo lavet, så det er kun selve billedet, du betaler for.${kampagneFaq} Er det et helt andet billede, koster det som en almindelig bestilling.`,
         },
         {
           q: 'Får jeg også den digitale fil?',
@@ -266,10 +277,11 @@ export function copy(season: Season = currentSeason()) {
       slow: 'Det tager lidt længere i dag – billedet er stadig i gang. Du kan roligt blive stående.',
       cancel: 'Afbryd (billedet slettes)',
       keepTitle: 'Skal vi sende dig linket?',
-      keepP: 'Så behøver du ikke vente her. Vi sender dit preview på mail, så snart det er klar – og ikke andet.',
+      keepP: 'Vi sender et link til billedet på mail – og ikke andet. Linket viser resultatet, når det er klar.',
       keepEmail: 'Din e-mail',
       keepCta: 'Send mig linket',
-      keepDone: 'Sendt. Du kan roligt lukke siden – linket ligger i din indbakke om lidt.',
+      keepDone: 'Linket er sendt. Du kan lukke siden; vi arbejder videre på billedet. Tjek også spam, hvis mailen ikke dukker op.',
+      keepFailed: 'Linket blev ikke sendt. Din e-mail er stadig i feltet. Prøv igen, eller vent på resultatet her.',
       networkTitle: 'Forbindelsen røg.',
       networkError: 'Forbindelsen røg undervejs. Billedet er stadig valgt – prøv igen.',
       timeoutTitle: 'Det tog for lang tid.',

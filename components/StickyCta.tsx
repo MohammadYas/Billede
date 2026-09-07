@@ -18,7 +18,7 @@ export default function StickyCta({ label, onClick }: { label: string; onClick: 
   useEffect(() => { document.body.classList.toggle('sticky-on', visible); }, [visible]);
   return (
     <div className={`sticky-cta${visible ? ' on' : ''}`} aria-hidden={!visible}>
-      <button type="button" className="btn btn-block" onClick={onClick} tabIndex={visible ? 0 : -1}>{label}</button>
+      <button type="button" className="btn btn-block" onClick={(e) => { e.currentTarget.focus(); onClick(); }} tabIndex={visible ? 0 : -1}>{label}</button>
     </div>
   );
 }

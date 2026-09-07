@@ -1,4 +1,4 @@
--- Genfundet schema. Applied via Composio (Supabase Management API) on 2026-09-03
+-- Billedarv schema. Applied via Composio (Supabase Management API) on 2026-09-03
 -- and checked in here for replay. Runtime uses the service role from the server only.
 
 create extension if not exists pgcrypto;

@@ -8,21 +8,21 @@ const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 /** Plain, typographic, one image max. Inline CSS only. */
 function shell(title: string, body: string): string {
   const f = getFounder();
-  const sig = [f.name || 'Genfundet', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
+  const sig = [f.company || f.name || 'Billedarv', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
   return `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(title)}</title></head>
-<body style="margin:0;background:#F6F1E8;color:#1C1A17;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;">
+<body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;">
 <div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
-  <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:-0.01em;margin-bottom:32px;">Genfundet</div>
+  <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:-0.01em;margin-bottom:32px;">Billedarv</div>
   ${body}
-  <hr style="border:0;border-top:1px solid #D9D1C3;margin:40px 0 16px;">
-  <p style="margin:0;font-size:14px;color:#5B554C;">${esc(sig)}</p>
+  <hr style="border:0;border-top:1px solid #E2DDD4;margin:40px 0 16px;">
+  <p style="margin:0;font-size:14px;color:#5D5953;">${esc(sig)}</p>
 </div></body></html>`;
 }
 
 const h1 = (t: string) => `<h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.1;letter-spacing:-0.015em;margin:0 0 20px;">${esc(t)}</h1>`;
 const p = (t: string) => `<p style="margin:0 0 16px;">${t}</p>`;
 const button = (href: string, label: string, quiet = false) =>
-  `<a href="${href}" style="display:inline-block;padding:14px 22px;border-radius:2px;text-decoration:none;font-weight:600;${quiet ? 'color:#1C1A17;border:1px solid #1C1A17;' : 'background:#1C1A17;color:#F6F1E8;'}margin:0 12px 12px 0;">${esc(label)}</a>`;
+  `<a href="${href}" style="display:inline-block;padding:14px 22px;border-radius:2px;text-decoration:none;font-weight:600;${quiet ? 'color:#171614;border:1px solid #171614;' : 'background:#171614;color:#FBFAF7;'}margin:0 12px 12px 0;">${esc(label)}</a>`;
 
 export function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
@@ -33,7 +33,7 @@ import { formatDkk } from '@/lib/pricing';
 
 /** Full-width on a phone: the two decision buttons stack and fill the line. */
 const blockButton = (href: string, label: string, quiet = false) =>
-  `<a href="${href}" style="display:block;box-sizing:border-box;width:100%;text-align:center;padding:14px 22px;border-radius:2px;text-decoration:none;font-weight:600;${quiet ? 'color:#1C1A17;border:1px solid #1C1A17;' : 'background:#1C1A17;color:#F6F1E8;'}margin:0 0 12px;">${esc(label)}</a>`;
+  `<a href="${href}" style="display:block;box-sizing:border-box;width:100%;text-align:center;padding:14px 22px;border-radius:2px;text-decoration:none;font-weight:600;${quiet ? 'color:#171614;border:1px solid #171614;' : 'background:#171614;color:#FBFAF7;'}margin:0 0 12px;">${esc(label)}</a>`;
 
 /**
  * Ordrebekræftelse (forbrugeraftaleloven §13): what was bought, the amount incl. VAT, the delivery
@@ -58,16 +58,16 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
     p(`${esc(navn)} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne.`),
     p('Inden 48 timer får du en mail med det færdige billede. Du godkender det – eller beder om en ændring – før vi printer noget.'),
     p(`Derefter printer vi det i ${esc(orderLabel(o))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`),
-    mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">` : '',
+    mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #E2DDD4;">` : '',
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
     p(orderLines(o).map((l) => esc(l)).join('<br>') + (amount ? `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt` : '')),
     p(`${esc(orderDescription(o))}<br>` +
       (address ? `Leveres til: ${esc(address)}<br>` : '') +
       `Ordre ${esc(o.id.slice(0, 8))} · betalt ${esc(o.paid_at ? new Date(o.paid_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }) : 'i dag')}` +
       (gift ? `<br>Hilsen på kortet i pakken: “${esc(gift)}”` : '')),
-    p(`Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. <a href="${siteUrl('/handelsbetingelser')}" style="color:#2F4A3A;">Handelsbetingelser</a>${previewLink ? ` · <a href="${previewLink}" style="color:#2F4A3A;">Dit preview</a>` : ''}`),
-    f.email ? p(`Spørgsmål? Skriv til ${esc(kontakt)} på <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a> – eller svar på denne mail. Vi svarer inden 24 timer.`) : '',
-    repeatLink(o) ? `<hr style="border:0;border-top:1px solid #D9D1C3;margin:32px 0 20px;">${p(`<strong>Har I flere billeder?</strong> De ligger sjældent alene i skuffen. Har du et mere, kan du sende det ind herfra – samme arbejde, samme godkendelse.`)}${blockButton(repeatLink(o)!, 'Se billede nummer to', true)}` : '',
+    p(`Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. <a href="${siteUrl('/handelsbetingelser')}" style="color:#1F5A3C;">Handelsbetingelser</a>${previewLink ? ` · <a href="${previewLink}" style="color:#1F5A3C;">Dit preview</a>` : ''}`),
+    f.email ? p(`Spørgsmål? Skriv til ${esc(kontakt)} på <a href="mailto:${esc(f.email)}" style="color:#1F5A3C;">${esc(f.email)}</a> – eller svar på denne mail. Vi svarer inden 24 timer.`) : '',
+    repeatLink(o) ? `<hr style="border:0;border-top:1px solid #E2DDD4;margin:32px 0 20px;">${p(`<strong>Har I flere billeder?</strong> De ligger sjældent alene i skuffen. Har du et mere, kan du sende det ind herfra – samme arbejde, samme godkendelse.`)}${blockButton(repeatLink(o)!, 'Se billede nummer to', true)}` : '',
   ].join(''));
   const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms og fragt · ${orderDescription(o)}${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Send det næste ind her: ${repeatLink(o)}` : ''}`;
   return { subject, html, text };
@@ -78,7 +78,7 @@ export function changeReceived(opts: { text: string }): { subject: string; html:
   const html = shell(subject, [
     h1('Vi har fået din ændring.'),
     p('Tak. Vi retter det og sender dig en ny mail til godkendelse inden 48 timer. Vi printer ikke, før du siger ja.'),
-    p(`<span style="color:#5B554C;">Din besked: “${esc(opts.text)}”</span>`),
+    p(`<span style="color:#5D5953;">Din besked: “${esc(opts.text)}”</span>`),
   ].join(''));
   const text = `Vi har fået din ændring.\n\nTak. Vi retter det og sender dig en ny mail til godkendelse inden 48 timer. Vi printer ikke, før du siger ja.\n\nDin besked: "${opts.text}"`;
   return { subject, html, text };
@@ -99,20 +99,20 @@ export function refundNotice(opts: { amount: number }): { subject: string; html:
 export function approvalRequest(opts: { imageUrl: string; approveUrl: string; changeUrl: string; reminder?: boolean; second?: boolean; final?: boolean; colourOffer?: boolean; version?: number }): { subject: string; html: string; text: string } {
   const f = getFounder();
   const subject = opts.final ? 'Sidste påmindelse: dit færdige billede venter' : opts.second ? 'Dit færdige billede venter stadig på dit ja' : opts.reminder ? 'Dit færdige billede venter på dit ja' : 'Dit færdige billede er klar';
-  const colour = opts.colourOffer ? p(`Billedet er sort-hvidt. Vil du hellere have det i farver? <a href="${opts.changeUrl}?farver=1" style="color:#2F4A3A;">Bed om en farveversion</a> – det koster ikke ekstra, og du får et nyt billede til godkendelse.`) : '';
+  const colour = opts.colourOffer ? p(`Billedet er sort-hvidt. Vil du hellere have det i farver? <a href="${opts.changeUrl}?farver=1" style="color:#1F5A3C;">Bed om en farveversion</a> – det koster ikke ekstra, og du får et nyt billede til godkendelse.`) : '';
   const buttons = `<div style="margin:0 0 8px;">${blockButton(opts.approveUrl, 'Godkend')}${blockButton(opts.changeUrl, 'Jeg vil have en ændring', true)}</div>`;
   const html = shell(subject, [
     h1(opts.final ? 'Sidste påmindelse: dit færdige billede venter.' : opts.second ? 'Dit færdige billede venter stadig.' : opts.reminder ? 'Dit færdige billede venter på dit ja.' : 'Dit færdige billede er klar.'),
     p(opts.final
-      ? `Vi har ikke hørt fra dig i 14 dage. Hører vi ikke fra dig inden 7 dage, refunderer vi hele beløbet til dit kort, og bestillingen lukkes. Vil du have billedet, så tryk Godkend – så printer og sender vi det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a>` : ''}.`
+      ? `Vi har ikke hørt fra dig i 14 dage. Hører vi ikke fra dig inden 7 dage, refunderer vi hele beløbet til dit kort, og bestillingen lukkes. Vil du have billedet, så tryk Godkend – så printer og sender vi det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#1F5A3C;">${esc(f.email)}</a>` : ''}.`
       : opts.second
-      ? `Vi har ikke hørt fra dig. Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#2F4A3A;">${esc(f.email)}</a>` : ''}.`
+      ? `Vi har ikke hørt fra dig. Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du er i tvivl om, så svar på denne mail${f.email ? ` eller skriv til <a href="mailto:${esc(f.email)}" style="color:#1F5A3C;">${esc(f.email)}</a>` : ''}.`
       : 'Ligner det? Så tryk Godkend, og vi printer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen.'),
     buttons,
     colour,
-    `<img src="${opts.imageUrl}" alt="Dit restaurerede billede" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #D9D1C3;">`,
+    `<img src="${opts.imageUrl}" alt="Dit restaurerede billede" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #E2DDD4;">`,
     buttons,
-    p(`<span style="color:#5B554C;font-size:14px;">${opts.version && opts.version > 1 ? `Version ${opts.version}. ` : ''}Du kan også bare svare på denne mail med “ja”. Vi printer ikke, før du har godkendt.</span>`),
+    p(`<span style="color:#5D5953;font-size:14px;">${opts.version && opts.version > 1 ? `Version ${opts.version}. ` : ''}Du kan også bare svare på denne mail med “ja”. Vi printer ikke, før du har godkendt.</span>`),
   ].join(''));
   const text = `${subject}\n\n${opts.final ? 'Vi har ikke hørt fra dig i 14 dage. Hører vi ikke fra dig inden 7 dage, refunderer vi hele beløbet, og bestillingen lukkes.\n\n' : ''}Se dit billede og godkend her: ${opts.approveUrl}\nVil du have en ændring: ${opts.changeUrl}${opts.colourOffer ? `\nVil du have det i farver (uden ekstra beregning): ${opts.changeUrl}?farver=1` : ''}\n\nDu kan også svare på denne mail med "ja". Vi printer ikke, før du har godkendt.`;
   return { subject, html, text };
@@ -125,14 +125,14 @@ export function approvalRequest(opts: { imageUrl: string; approveUrl: string; ch
 export function shippedNotice(opts: { trackingNumber: string | null; trackingUrl: string | null; fileUrl?: string | null }): { subject: string; html: string; text: string } {
   const subject = 'Dit billede er på vej';
   const track = opts.trackingUrl
-    ? `<a href="${opts.trackingUrl}" style="color:#2F4A3A;">${esc(opts.trackingNumber ?? 'Følg pakken')}</a>`
+    ? `<a href="${opts.trackingUrl}" style="color:#1F5A3C;">${esc(opts.trackingNumber ?? 'Følg pakken')}</a>`
     : esc(opts.trackingNumber ?? '');
   const noTrack = 'Der er ikke noget sporingsnummer på denne pakke. Hører du ikke fra fragtfirmaet inden for et par hverdage, så svar på denne mail.';
   const html = shell(subject, [
     h1('Dit billede er på vej.'),
     p('Det er printet, indrammet og pakket. Nu er det hos fragtfirmaet.'),
     track ? p(`Tracking: ${track}`) : p(noTrack),
-    opts.fileUrl ? p(`Din digitale fil i høj opløsning: <a href="${opts.fileUrl}" style="color:#2F4A3A;">hent den her</a>. Gem den et sikkert sted – vi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.`) : '',
+    opts.fileUrl ? p(`Din digitale fil i høj opløsning: <a href="${opts.fileUrl}" style="color:#1F5A3C;">hent den her</a>. Gem den et sikkert sted – vi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.`) : '',
     p('Er rammen eller glasset beskadiget, når pakken kommer, så tag et foto og svar på denne mail – så sender vi et nyt.'),
   ].join(''));
   const text = `Dit billede er på vej.\n\nDet er printet, indrammet og pakket.${opts.trackingNumber ? `\nTracking: ${opts.trackingNumber}${opts.trackingUrl ? ` – ${opts.trackingUrl}` : ''}` : `\n${noTrack}`}${opts.fileUrl ? `\n\nDin digitale fil i høj opløsning: ${opts.fileUrl}\nVi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.` : ''}\n\nEr noget beskadiget ved levering, så svar på denne mail med et foto, så sender vi et nyt.`;

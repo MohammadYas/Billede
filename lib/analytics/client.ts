@@ -37,7 +37,6 @@ export function loadPixel(match?: { em?: string | null; ph?: string | null }) {
   const s = document.createElement('script'); s.async = true; s.src = 'https://connect.facebook.net/en_US/fbevents.js';
   document.head.appendChild(s);
   window.fbq!('init', id, clean(match));
-  window.fbq!('track', 'PageView');
 }
 
 const clean = (m?: { em?: string | null; ph?: string | null }) => {
@@ -72,7 +71,7 @@ function fire(name: ClientEvent, params: Record<string, unknown>, eventId?: stri
 export function track(name: ClientEvent, params: Record<string, unknown> = {}, opts: { serverLog?: boolean; eventId?: string; pixel?: boolean } = {}) {
   try {
     const c = consent();
-    if (opts.pixel === false) { /* loadPixel() already fired this one at Meta */ }
+    if (opts.pixel === false) { /* explicitly server-only */ }
     else if (c === 'yes') { if (!window.fbq) loadPixel(); fire(name, params, opts.eventId); }
     else if (c === null) queue(name, params, opts.eventId);
   } catch { /* never break the flow */ }

@@ -1,4 +1,4 @@
-import { CONFIG } from '@/lib/config';
+import { CONFIG, campaignActive } from '@/lib/config';
 import type { Order } from '@/lib/db/orders';
 import { formatLabelFor, formatOere, quote, readAddOns, type Quote, type QuoteLine } from '@/lib/pricing';
 
@@ -24,7 +24,7 @@ export function orderLabel(o: Order): string {
 export function orderQuote(o: Order): Quote {
   const m = metaOf(o);
   const a = readAddOns(m.addons);
-  const live = quote({ format: o.format, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(o) });
+  const live = quote({ format: o.format, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(o), campaign: campaignActive() });
   const snap = m.quote;
   if (snap?.lines?.length && typeof snap.totalOere === 'number') return { ...live, lines: snap.lines, totalOere: snap.totalOere };
   return live;

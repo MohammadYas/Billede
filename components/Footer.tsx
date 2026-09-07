@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="container foot-grid">
         <div style={{ display: 'grid', gap: 'var(--s3)', alignContent: 'start' }}>
           <Wordmark />
-          {(f.name || f.cvr || f.address) && <p>{[f.name, f.cvr ? `CVR ${f.cvr}` : '', f.address].filter(Boolean).join(' · ')}</p>}
+          {(f.company || f.name || f.cvr || f.address) && <p>{[f.company || f.name, f.cvr ? `CVR ${f.cvr}` : '', f.address].filter(Boolean).join(' · ')}</p>}
         </div>
         <div style={{ display: 'grid', gap: 'var(--s2)', alignContent: 'start' }}>
           <p><a className="tap" href="/handelsbetingelser">Handelsbetingelser</a> · <a className="tap" href="/privatliv">Privatliv</a></p>

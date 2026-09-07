@@ -119,3 +119,21 @@ test('no quote ever contains a negative line', () => {
   // and a caller that still passes the old flag cannot conjure one
   assert.equal(quote({ format: '30x40', repeat: true } as never).totalOere, 59900);
 });
+
+test('the launch offer puts the first extra copy in the parcel at 0 kr. and charges every further one', () => {
+  for (const format of customerFormats()) {
+    const base = PRICING[format].priceDkk;
+    assert.equal(dkk({ format, extraPrints: 0, campaign: true }), base, `${format}: nothing added, nothing changes`);
+    assert.equal(dkk({ format, extraPrints: 1, campaign: true }), base, `${format}: the first copy is in the parcel`);
+    assert.equal(dkk({ format, extraPrints: 2, campaign: true }), base + EXTRA_PRINT_DKK[format], `${format}: the second copy is paid`);
+    const q = quote({ format, extraPrints: 2, campaign: true });
+    assert.equal(stripeSum(q), q.totalOere, 'Stripe is charged what the bill showed');
+    assert.ok(q.lines.every((l) => l.amountOere >= 0), 'never a negative line');
+    assert.ok(q.lines.some((l) => l.key === 'extra_print_free' && l.amountOere === 0 && l.quantity === 1), 'the free copy is its own line on the receipt');
+  }
+});
+
+test('the launch offer is never on unless the caller says so', () => {
+  assert.equal(dkk({ format: '30x40', extraPrints: 1 }), 948);
+  assert.equal(quote({ format: '30x40', extraPrints: 1 }).lines.some((l) => l.key === 'extra_print_free'), false);
+});

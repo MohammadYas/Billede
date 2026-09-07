@@ -1,4 +1,4 @@
-# PRODUCT — Genfundet
+# PRODUCT — Billedarv
 
 Danish direct-to-consumer service: upload a phone photo of a damaged family photograph, see it restored in
 about 20 seconds, order it restored, printed and framed (30×40 cm) for 599 kr. incl. shipping.

@@ -6,7 +6,7 @@
  * the file they own is one click away once they say yes).
  */
 export function tiledWatermark(width: number, height: number, opts: { text?: string; opacity?: number } = {}): Buffer {
-  const text = opts.text ?? 'GENFUNDET · PREVIEW';
+  const text = opts.text ?? 'BILLEDARV · PREVIEW';
   const opacity = opts.opacity ?? 0.18;
   const fs = Math.max(12, Math.round(Math.min(width, height) / 22));
   const tileW = Math.round(fs * 0.68 * text.length + fs * 2.5); // bold caps with tracking ≈ 0.68 em per glyph, then a gap

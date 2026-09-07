@@ -14,7 +14,8 @@
  */
 import { chromium, devices } from 'playwright';
 const URL = process.env.PURL;
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
+if (!URL) throw new Error('Set PURL to an authorized test preview URL before running test:order.');
+const b = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM, args: ['--no-sandbox'] });
 const ctx = await b.newContext({ ...devices['iPhone 14'], viewport: { width: 390, height: 844 }, locale: 'da-DK' });
 const p = await ctx.newPage();
 await p.goto(URL, { waitUntil: 'networkidle' });
