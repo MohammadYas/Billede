@@ -31,6 +31,7 @@ export default function SizePicker({ sizes, frames, initialFormat, t }: {
           {sizes.map((x) => (
             <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}${x.recommended ? ' is-recommended' : ''}`}>
               <input type="radio" name="forside-stoerrelse" value={x.format} checked={x.format === format} onChange={() => { setFormat(x.format); remember({ format: x.format }); }} />
+              <picture className="size-shot"><source type="image/webp" srcSet={`/sizes/${x.format}.webp`} /><img src={`/sizes/${x.format}.jpg`} alt="" width={960} height={717} loading="lazy" decoding="async" /></picture>
               {x.recommended && <span className="tag">{t.recommended}</span>}
               <b>{x.label}</b>
               <span className="size-price tabular">{x.price}</span>
