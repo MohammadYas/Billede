@@ -105,17 +105,18 @@ Fælles for alle fem:
 
 - Format: enkelt billede. Identitet: Facebook-siden Billedearv, og Instagram-kontoen, hvis den findes.
   Multi-advertiser ads: fra. Alle Advantage+ creative-valg: fra.
-- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\creatives\`. Pr. annonce to filer med samme
-  navn: `…-1080x1350.jpg` til feed og Stories (4:5) og `…-1080x1080.jpg` til 1:1-placeringer. Upload
-  4:5-filen først, og vælg "Rediger pr. placering" for at give 1:1-filen til de placeringer, der kræver
-  kvadrat, så Meta ikke beskærer selv.
+- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\final\`. Pr. annonce to filer med samme
+  navn: `<koncept>-1080x1350.jpg` til feed og Stories (4:5) og `<koncept>-1080x1080.jpg` til
+  1:1-placeringer. Teksten sidder allerede i billedet (overskrift, linje, logo). Upload 4:5-filen først,
+  og vælg "Rediger pr. placering" for at give 1:1-filen til de placeringer, der kræver kvadrat, så Meta
+  ikke beskærer selv.
 - Website-URL: `https://billedearv.dk/`
 - Feltet **URL-parametre** (ikke selve URL'en):
   `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`
 - Knap: "Få mere at vide" (Learn more). Ikke "Køb nu": første skridt koster ikke noget.
 - Sprog: dansk. Ingen automatiske oversættelser.
 
-### Annonce 1: `gaven` (billede: `bryllup-1954-koekkenbord-1080x1350.jpg`)
+### Annonce 1: `gaven` (billede: `koekkenbord-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -128,7 +129,7 @@ Primær tekst:
 Overskrift: `Se det restaureret, før du køber`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 2: `dit-billede` (billede: `have-1976-paa-vaeggen-1080x1350.jpg`)
+### Annonce 2: `dit-billede` (billede: `paa-vaeggen-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -141,7 +142,7 @@ Primær tekst:
 Overskrift: `Dit gamle billede kan blive sådan her`
 Beskrivelse: `Se resultatet på skærmen, før du beslutter dig`
 
-### Annonce 3: `ser-foerst` (billede: `portraet-1962-skuffen-1080x1350.jpg`)
+### Annonce 3: `ser-foerst` (billede: `skuffen-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -154,7 +155,7 @@ Primær tekst:
 Overskrift: `Ingen bestilling, før du har set det`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 4: `tilbud` (billede: `foedselsdag-1985-gaven-pakkes-op-1080x1350.jpg`)
+### Annonce 4: `tilbud` (billede: `gaven-pakkes-op-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -165,7 +166,7 @@ Primær tekst:
 Overskrift: `Ét ekstra eksemplar med i pakken · til og med 30. september`
 Beskrivelse: `Samme billede, samme ramme, til den der også husker det`
 
-### Annonce 5: `samme-billede` (billede: `familie-ved-vandet-1948-i-haenderne-1080x1350.jpg`)
+### Annonce 5: `samme-billede` (billede: `i-haenderne-1080x1350.jpg`)
 
 Primær tekst:
 

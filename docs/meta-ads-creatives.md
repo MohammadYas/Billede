@@ -42,6 +42,31 @@ node scripts/ads-composite.mjs work/ads/scenes/familie-ved-vandet-1948-i-haender
 ```
 5. Åbn resultatet. Passer lys og skygge? Ellers vælg den anden variant fra modellen. Sig "billeder klar".
 
+## Telefonskærme og tekst (trin 3 og 4)
+
+En telefon i scenen viser aldrig et råt foto. Den viser **den rigtige forhåndsvisningsside** fra sitet,
+screenshottet på telefonstørrelse med eksempelparret sat ind i slideren (`scripts/ads-phone-screen.mjs`,
+kræver dev-serveren og en PREVIEW_READY-ordre; `--compact` beholder tilbudsbar, header, slider og knap,
+`--ratio` = feltets bredde/højde i scenen, så intet beskæres). Compositor'en får skærmen med `--screen`.
+
+Teksten sidder i billedet: `scripts/ads-render.mjs` lægger et panel i sitets tokens (papir, hairline,
+Schibsted Grotesk-overskrift, Public Sans-linje, Newsreader-ordmærke) under scenen og skriver
+`work/ads/final/<koncept>-1080x1350.jpg` og `-1080x1080.jpg`. Teksterne og beskæringsankeret pr.
+annonce står i `ADS` øverst i scriptet. Det er filerne i `work/ads/final/`, Chrome-prompten uploader.
+
+Hele kæden for de fem, som kørt 2026-09-08:
+
+```bash
+node scripts/ads-phone-screen.mjs portraet-1962 --order 656abef8 --ratio 0.40 --compact
+node scripts/ads-composite.mjs work/ads/scenes/portraet-1962-skuffen.png portraet-1962 --screen work/ads/screens/portraet-1962-phone.png
+node scripts/ads-composite.mjs work/ads/scenes/have-1976-paa-vaeggen.png have-1976
+node scripts/ads-composite.mjs work/ads/scenes/foedselsdag-1985-gaven-pakkes-op.png foedselsdag-1985 --both-after
+node scripts/ads-composite.mjs work/ads/scenes/familie-ved-vandet-1948-i-haenderne.png familie-ved-vandet-1948 --focus 0.35
+node scripts/ads-render.mjs
+```
+
+Køkkenbord venter på version 2 af scenen (stående telefon), se koncept 1.
+
 ## Fælles prompt-ramme
 
 Hver prompt herunder har samme opbygning, så du kan justere ét afsnit ad gangen uden at miste resten:
@@ -56,6 +81,61 @@ inside the placeholders, no frames or borders drawn inside the placeholders.
 ---
 
 ## Koncept 1: `koekkenbord` (annonce 1 `gaven`, par bryllup-1954)
+
+**Version 2 (2026-09-08): telefonen skal ligge stående**, ikke liggende. Skærmen får den rigtige
+Billedearv-side (slider med Før/Efter og knappen "Bestil mit billede · 599 kr."), og den er stående.
+Første version med liggende telefon kunne kun vise et råt foto. Gem som
+`work/ads/scenes/bryllup-1954-koekkenbord.png` (overskriv), kør derefter:
+
+```bash
+node scripts/ads-phone-screen.mjs bryllup-1954 --order 656abef8 --ratio 0.46 --compact
+node scripts/ads-composite.mjs work/ads/scenes/bryllup-1954-koekkenbord.png bryllup-1954 --screen work/ads/screens/bryllup-1954-phone.png --focus 0.4
+node scripts/ads-render.mjs koekkenbord
+```
+
+```
+ROLE: You are a Danish editorial still-life photographer shooting a quiet advertising image for a
+family photo-restoration service. The image must look like a real photograph, not a render.
+
+SCENE: A light oak kitchen table by a window in a Danish home, mid-morning. Seen exactly from above
+(true top-down, camera axis perpendicular to the table). In the upper half of the frame a modern
+smartphone lies flat on the table in PORTRAIT orientation (its long side vertical), screen up, black
+body with thin bezels, slightly rotated (at most 3 degrees). In the lower half, an old paper
+photograph lies flat, landscape orientation, with a cream border with worn, slightly torn edges and one
+faint stain on the border. A ceramic cup of coffee with milk at the upper left edge, a pair of reading
+glasses at the lower left, a folded green linen napkin partly out of frame at the right. A woman's hand
+in her late fifties, wedding ring, natural nails, rests at the lower right edge with two fingertips
+touching the corner of the old photograph. No face.
+
+PLACEHOLDERS (critical): Two flat, perfectly rectangular, pure black (#000000), matte areas with sharp
+straight edges, both seen exactly frontally because the camera is top-down.
+ - UPPER placeholder = the phone screen: one solid black rectangle in 9:19.5 PORTRAIT proportion
+   (tall, narrow), about 30 % of the image width, centred horizontally, in the upper half of the frame,
+   inside the phone body. Nothing on the screen: no icons, no time, no notch content, no reflection.
+ - LOWER placeholder = the picture area of the old photograph: one solid black rectangle in 3:2
+   landscape proportion, about 50 % of the image width, in the lower half, inside the cream border.
+ The two black rectangles must not overlap, must not touch other objects, and must contain nothing:
+ no reflections, no highlights, no gradient, no text, no icons, no inner border.
+
+CAMERA: Top-down, 50 mm equivalent, f/8, everything in sharp focus, no tilt. Full-frame digital look,
+fine natural grain, no vignetting.
+
+LIGHT: One large window from the left, soft, warm, directional. Long soft shadows falling to the right
+of the cup and the glasses. Subtle shadow under the phone and the photograph so they sit on the wood.
+
+MATERIALS & COLOUR: Oak with visible grain, matte ceramic, warm off-white in the shadows. Palette: oak,
+cream, warm grey, one muted green from the napkin. Low contrast, soft highlights, magazine grade.
+
+MOOD: Calm, unposed, private. A Sunday morning at your mother's table.
+
+NEGATIVE: no text, no letters, no logos, no watermark, no UI, no faces, no smiling, no candles, no bokeh
+balls, no HDR, no oversaturation, no lens flare, no perspective on the placeholders, no reflections
+inside the placeholders, no frames drawn inside the placeholders, no landscape phone, no second phone.
+
+OUTPUT: 4:5 portrait, photographic, 2K.
+```
+
+Version 1 (liggende telefon), kun til reference:
 
 ```
 ROLE: You are a Danish editorial still-life photographer shooting a quiet advertising image for a

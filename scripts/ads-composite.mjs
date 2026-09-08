@@ -82,7 +82,7 @@ console.log('after ', A); console.log('before', B);
 // the crop's centre at 38 % of the source height (faces in a full-length portrait); default is the middle.
 const focus = opt('--focus')?.[0] ?? 0.5;
 const src = await sharp(`public/examples/${pair}-after.jpg`).metadata();
-const OVER = 2; // draw 2 px past the detected edge so no anti-aliased black line survives
+const OVER = 4; // draw 4 px past the detected edge: models often draw a thin dark inner border around a print
 async function photo(name, box) {
   const w = box.w + OVER * 2, h = box.h + OVER * 2;
   let cw = src.width, ch = Math.round(cw * h / w);
@@ -91,8 +91,13 @@ async function photo(name, box) {
   const left = Math.round((src.width - cw) / 2);
   return sharp(`public/examples/${pair}-${name}.jpg`).extract({ left, top, width: cw, height: ch }).resize(w, h).toBuffer();
 }
+// --screen <png>: a phone screenshot (scripts/ads-phone-screen.mjs) fills the AFTER field instead of the bare photo
+const screen = opt('--screen') ? rest[rest.indexOf('--screen') + 1] : null;
+const afterLayer = screen
+  ? await sharp(screen).resize(A.w + OVER * 2, A.h + OVER * 2, { fit: 'cover', position: 'top' }).toBuffer()
+  : await photo('after', A);
 const layers = [
-  { input: await photo('after', A), left: A.x - OVER, top: A.y - OVER },
+  { input: afterLayer, left: A.x - OVER, top: A.y - OVER },
   { input: await photo(bothAfter ? 'after' : 'before', B), left: B.x - OVER, top: B.y - OVER },
 ];
 const composed = await scene.clone().composite(layers).toBuffer();
