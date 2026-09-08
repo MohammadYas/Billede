@@ -7,8 +7,8 @@ export function fromAddress(): string {
   const domain = process.env.EMAIL_DOMAIN ?? 'billedearv.dk';
   // the sender is the same address the site prints (hej@billedearv.dk), unless EMAIL_FROM_LOCAL says otherwise
   const local = (process.env.EMAIL_FROM_LOCAL ?? getFounder().email.split('@')[0] ?? '').toLowerCase().replace(/[^a-z0-9.-]/g, '') || 'hej';
-  // the company is the sender; a person's name only where the law asks for it (legal pages)
-  const name = getFounder().company || 'Billedearv';
+  // the brand is the sender; the company and a person's name only where the law asks for it (legal pages, receipts)
+  const name = 'Billedearv';
   return `${name} · Billedearv <${local}@${domain}>`;
 }
 

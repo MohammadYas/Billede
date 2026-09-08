@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 <h1 style="font-family:Georgia,serif;font-weight:500;font-size:28px;line-height:1.1;margin:0 0 20px;">Til når du står med billedet.</h1>
 <p style="margin:0 0 16px;">Læg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut, og det koster ikke noget at se resultatet.</p>
 <p style="margin:0 0 24px;"><a href="${link}" style="display:inline-block;padding:14px 22px;border-radius:2px;background:#171614;color:#FBFAF7;text-decoration:none;font-weight:600;">Se dit billede nu</a></p>
-<p style="margin:0;font-size:14px;color:#5D5953;">${esc(f.company || 'Billedearv')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
+<p style="margin:0;font-size:14px;color:#5D5953;">Billedearv${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
     try {
       const receipt = await sendMail({ to: email, subject: 'Dit link til Billedearv', html, text: `Til når du står med billedet: ${link}\n\nLæg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut.` });
       if (!receipt) return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });

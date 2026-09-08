@@ -69,13 +69,13 @@ export async function replyToThread(thread: string, text: string): Promise<Messa
   const quoted = lastIn ? `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2ddd4;color:#5D5953;font-size:14px;white-space:pre-line;">${esc(snippet(lastIn))}</div>` : '';
   const html = `<!doctype html><html lang="da"><body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;"><div style="max-width:560px;margin:0 auto;padding:32px 24px 48px;">
 ${paragraphs}
-<p style="margin:20px 0 0;">Venlig hilsen<br>${esc(f.company || 'Billedearv')}<br><a href="${siteUrl('/')}" style="color:#1F5A3C;">billedearv.dk</a> · ${esc(f.email ?? '')}</p>
+<p style="margin:20px 0 0;">Venlig hilsen<br>Billedearv<br><a href="${siteUrl('/')}" style="color:#1F5A3C;">billedearv.dk</a> · ${esc(f.email ?? '')}</p>
 ${quoted}</div></body></html>`;
   const headers: Record<string, string> = {};
   if (lastIn?.message_id) { headers['In-Reply-To'] = lastIn.message_id; headers['References'] = lastIn.message_id; }
-  const id = await sendMail({ to: thread, subject, html, text: `${text.trim()}\n\nVenlig hilsen\n${f.company || 'Billedearv'}\n${siteUrl('/')}`, headers });
+  const id = await sendMail({ to: thread, subject, html, text: `${text.trim()}\n\nVenlig hilsen\nBilledearv\n${siteUrl('/')}`, headers });
   return insertMessage({
-    direction: 'out', channel: 'email', thread, from_email: (f.email ?? '').toLowerCase(), from_name: f.company || 'Billedearv', to_email: thread,
+    direction: 'out', channel: 'email', thread, from_email: (f.email ?? '').toLowerCase(), from_name: 'Billedearv', to_email: thread,
     subject, text_body: text.trim(), html_body: null, message_id: null, in_reply_to: lastIn?.message_id ?? null, resend_id: id,
     order_id: lastIn?.order_id ?? null, client: null, attachments: null, read_at: new Date().toISOString(),
   });
@@ -89,10 +89,10 @@ export async function sendNewMessage(to: string, subject: string, text: string):
   const paragraphs = text.trim().split(/\n{2,}/).map((p) => `<p style="margin:0 0 14px;white-space:pre-line;">${esc(p)}</p>`).join('');
   const html = `<!doctype html><html lang="da"><body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;"><div style="max-width:560px;margin:0 auto;padding:32px 24px 48px;">
 ${paragraphs}
-<p style="margin:20px 0 0;">Venlig hilsen<br>${esc(f.company || 'Billedearv')}<br><a href="${siteUrl('/')}" style="color:#1F5A3C;">billedearv.dk</a> · ${esc(f.email ?? '')}</p></div></body></html>`;
-  const id = await sendMail({ to: thread, subject: subj, html, text: `${text.trim()}\n\nVenlig hilsen\n${f.company || 'Billedearv'}\n${siteUrl('/')}` });
+<p style="margin:20px 0 0;">Venlig hilsen<br>Billedearv<br><a href="${siteUrl('/')}" style="color:#1F5A3C;">billedearv.dk</a> · ${esc(f.email ?? '')}</p></div></body></html>`;
+  const id = await sendMail({ to: thread, subject: subj, html, text: `${text.trim()}\n\nVenlig hilsen\nBilledearv\n${siteUrl('/')}` });
   return insertMessage({
-    direction: 'out', channel: 'email', thread, from_email: (f.email ?? '').toLowerCase(), from_name: f.company || 'Billedearv', to_email: thread,
+    direction: 'out', channel: 'email', thread, from_email: (f.email ?? '').toLowerCase(), from_name: 'Billedearv', to_email: thread,
     subject: subj, text_body: text.trim(), html_body: null, message_id: null, in_reply_to: null, resend_id: id,
     order_id: await orderFor(thread), client: null, attachments: null, read_at: new Date().toISOString(),
   });

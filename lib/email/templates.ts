@@ -8,7 +8,7 @@ const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 /** Plain, typographic, one image max. Inline CSS only. */
 function shell(title: string, body: string): string {
   const f = getFounder();
-  const sig = [f.company || f.name || 'Billedearv', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
+  const sig = ['Billedearv', f.email || '', f.company ? `${f.company} · CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
   return `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(title)}</title></head>
 <body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;">
 <div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
