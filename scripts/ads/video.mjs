@@ -32,11 +32,11 @@ for (const c of which) {
     await page.close();
     files.push(png);
   }
-  // Each still becomes a clip with a slow push-in; clips are chained with xfade (wipe for the reveal).
-  const inputs = files.flatMap((f) => ['-i', f]); // one still each; zoompan turns it into d frames
+  // Each still becomes a clip with a slow push-in. Scale at 2× + centred crop + downscale, so a step is a quarter pixel (never zoompan: it rounds
+  // x/y to whole pixels every frame and the picture shakes). Clips are chained with xfade (wipe for the reveal).
+  const inputs = files.flatMap((f, i) => ['-loop', '1', '-framerate', String(FPS), '-t', String(c.video[i].d), '-i', f]);
   const clips = c.video.map((s, i) => {
-    const frames = Math.round(s.d * FPS);
-    return `[${i}:v]zoompan=z='1+0.05*on/${frames}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=${W}x${H}:fps=${FPS},setsar=1,format=yuv420p[v${i}]`;
+    return `[${i}:v]scale=w='${W * 2}*(1+0.04*t/${s.d})':h='${H * 2}*(1+0.04*t/${s.d})':eval=frame:flags=lanczos,crop=${W * 2}:${H * 2},scale=${W}:${H}:flags=lanczos,setsar=1,fps=${FPS},format=yuv420p[v${i}]`;
   });
   let chain = '', prev = 'v0', offset = 0;
   for (let i = 1; i < c.video.length; i++) {
