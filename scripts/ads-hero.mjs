@@ -8,10 +8,10 @@ import { resolve } from 'node:path';
 
 /** pos = object-position of the photograph (where the face is); seam = where the wipe stands, % of width. */
 const ADS = {
-  'portraet-1962': { pos: '50% 28%', seam: 50, tag: 'Se resultatet, før du køber', h1: 'Så tydeligt har du ikke set hende i 60 år.', line: 'Tag et foto af det gamle billede med telefonen. To minutter senere ser du det restaureret på skærmen. Det koster ikke noget at se.' },
-  'bryllup-1954': { pos: '50% 16%', seam: 50, tag: 'Gaven, de ikke selv kan købe sig til', h1: 'Mors og fars bryllupsbillede. Skarpt igen.', line: 'Hvert år falmer det lidt mere i skuffen. Tag et foto af det med telefonen, og se det restaureret, før du beslutter noget.' },
-  'have-1976': { pos: '50% 35%', seam: 48, tag: 'Farvebilleder fra 70’erne og 80’erne', h1: 'Farverne fra 1976. Som de var.', line: 'Falmet, gulnet, plettet. Det meste kan rettes. Se dit eget billede restaureret på skærmen, før du beslutter dig.' },
-  'familie-ved-vandet-1948': { pos: '50% 10%', seam: 50, tag: 'Samme billede, 70 år senere', h1: 'Som det lå i skuffen. Som det kommer hjem.', line: 'Tag et foto af billedet. Se resultatet på skærmen. Sig ja, så printer vi og sender det hjem i ramme.' },
+  'portraet-1962': { pos: '50% 28%', seam: 50, tag: 'Se resultatet, før du køber', h1: 'Så tydeligt har du ikke set hende i 60 år.', line: 'Tag et foto af det gamle billede med telefonen. Originalen bliver hjemme. To minutter senere ser du det restaureret på skærmen.' },
+  'bryllup-1954': { pos: '50% 16%', seam: 50, tag: 'Gaven, de ikke selv kan købe sig til', h1: 'Mors og fars bryllupsbillede. Tilbage på væggen.', line: 'Hvert år falmer det lidt mere i skuffen. Tag et foto af det med telefonen, og se det restaureret gratis, før du beslutter noget.' },
+  'have-1976': { pos: '50% 35%', seam: 48, tag: 'Få farverne frem igen', h1: 'Falmet siden 1976. Restaureret i dag.', line: 'Falmet, gulnet, plettet. Det meste kan rettes. Se dit eget billede restaureret på skærmen, før du beslutter dig.' },
+  'familie-ved-vandet-1948': { pos: '50% 10%', seam: 50, tag: 'Samme billede, 70 år senere', h1: 'Som det lå i skuffen. Som det kommer hjem.', line: 'Tag et foto af billedet. Se resultatet gratis på skærmen. Bestiller du, gennemgår vi ansigterne, og du godkender, før vi printer.' },
   'foedselsdag-1985': { pos: '50% 40%', seam: 50, tag: 'Lanceringstilbud til og med 30. september', h1: 'Fem år, lagkage og flag. Reddet.', line: 'Ved køb: ét ekstra eksemplar med i pakken uden beregning, til den der også husker det.' },
 };
 
@@ -46,8 +46,8 @@ h1 { font: 700 ${h1Size}px/1.04 'Schibsted Grotesk', Arial, sans-serif; letter-s
 .row { position: absolute; left: 56px; right: 56px; bottom: 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .btn { display: inline-flex; align-items: center; gap: 14px; padding: 0 34px; height: 76px; background: #171614; color: #fbfaf7; border-radius: 8px; font: 700 28px/1 'Schibsted Grotesk', Arial, sans-serif; letter-spacing: -0.01em; white-space: nowrap; }
 .btn svg { width: 26px; height: 26px; }
-.price { text-align: right; font: 400 24px/1.3 'Public Sans', Arial, sans-serif; color: #5d5953; }
-.price b { display: block; font: 700 30px/1.2 'Schibsted Grotesk', Arial, sans-serif; color: #171614; letter-spacing: -0.01em; }
+.price { text-align: right; font: 400 23px/1.3 'Public Sans', Arial, sans-serif; color: #5d5953; max-width: 560px; }
+.price b { display: block; font: 700 27px/1.2 'Schibsted Grotesk', Arial, sans-serif; color: #171614; letter-spacing: -0.01em; }
 </style></head><body>
 <div class="pic">
   <img class="after" src="${after}" alt="">
@@ -62,8 +62,8 @@ h1 { font: 700 ${h1Size}px/1.04 'Schibsted Grotesk', Arial, sans-serif; letter-s
   <h1>${ad.h1}</h1>
   <div class="line">${ad.line}</div>
   <div class="row">
-    <div class="btn">Prøv med dit eget billede <svg viewBox="0 0 24 24" fill="none" stroke="#fbfaf7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-    <div class="price"><b>Du betaler først, når du har set det</b>Fri fragt · 21 dages fuld fortrydelse</div>
+    <div class="btn">Se mit billede gratis <svg viewBox="0 0 24 24" fill="none" stroke="#fbfaf7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="price"><b>Gratis prøve. Bestil kun, hvis du vil.</b>Fri fragt · pengene tilbage, hvis det ikke ligner</div>
   </div>
 </div>
 </body></html>`;
@@ -92,8 +92,8 @@ h1 { font: 700 ${h1Size}px/1.02 'Schibsted Grotesk', Arial, sans-serif; letter-s
 .row { margin-top: 30px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .btn { display: inline-flex; align-items: center; gap: 14px; padding: 0 34px; height: 76px; background: #fbfaf7; color: #171614; border-radius: 8px; font: 700 28px/1 'Schibsted Grotesk', Arial, sans-serif; letter-spacing: -0.01em; white-space: nowrap; }
 .btn svg { width: 26px; height: 26px; }
-.price { text-align: right; font: 400 24px/1.3 'Public Sans', Arial, sans-serif; color: rgba(251,250,247,.86); }
-.price b { display: block; font: 700 30px/1.2 'Schibsted Grotesk', Arial, sans-serif; color: #fbfaf7; letter-spacing: -0.01em; }
+.price { text-align: right; font: 400 23px/1.3 'Public Sans', Arial, sans-serif; color: rgba(251,250,247,.86); max-width: 560px; }
+.price b { display: block; font: 700 27px/1.2 'Schibsted Grotesk', Arial, sans-serif; color: #fbfaf7; letter-spacing: -0.01em; }
 </style></head><body>
 <div class="pic">
   <img class="after" src="${after}" alt="">
@@ -108,8 +108,8 @@ h1 { font: 700 ${h1Size}px/1.02 'Schibsted Grotesk', Arial, sans-serif; letter-s
     <h1>${ad.h1}</h1>
     <div class="line">${ad.line}</div>
     <div class="row">
-      <div class="btn">Prøv med dit eget billede <svg viewBox="0 0 24 24" fill="none" stroke="#171614" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-      <div class="price"><b>Du betaler først, når du har set det</b>Fri fragt · 21 dages fuld fortrydelse</div>
+      <div class="btn">Se mit billede gratis <svg viewBox="0 0 24 24" fill="none" stroke="#171614" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="price"><b>Gratis prøve. Bestil kun, hvis du vil.</b>Fri fragt · pengene tilbage, hvis det ikke ligner</div>
     </div>
   </div>
 </div>
@@ -124,7 +124,7 @@ for (const key of which) {
   if (!ad) { console.error('unknown', key); continue; }
   const before = b64(resolve(`public/examples/${key}-before-1400.jpg`), 'image/jpeg');
   const after = b64(resolve(`public/examples/${key}-after-1400.jpg`), 'image/jpeg');
-  for (const [style, W, H, pic, h1Size] of [['hero', 1080, 1350, 880, 62], ['hero', 1080, 1080, 690, 50], ['overlay', 1080, 1350, 0, 66], ['overlay', 1080, 1080, 0, 54]]) {
+  for (const [style, W, H, pic, h1Size] of [['hero', 1080, 1350, 880, 62], ['hero', 1080, 1080, 650, 48], ['overlay', 1080, 1350, 0, 66], ['overlay', 1080, 1080, 0, 54]]) {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     const tmp = resolve(`work/ads/final/.${style}-${key}-${W}x${H}.html`);
     writeFileSync(tmp, style === 'overlay' ? overlay({ W, H, before, after, ad, h1Size }) : html({ W, H, pic, before, after, ad, h1Size }));
