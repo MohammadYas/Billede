@@ -8,6 +8,7 @@ import type { PreviewPayload } from '@/lib/preview-service';
 import { quote, formatOere, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, type Format, type Frame } from '@/lib/pricing';
 import { PICK_KEY } from './SizePicker';
 import Promo from './Promo';
+import { forgetResume } from './ResumeBanner';
 
 /** Loads an image off-screen so a swap never flashes the wrong picture. */
 const preload = (src: string) => new Promise<void>((resolve) => { const i = new Image(); i.onload = () => resolve(); i.onerror = () => resolve(); i.src = src; });
@@ -104,6 +105,18 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (w.requestIdleCallback) w.requestIdleCallback(run, { timeout: 4000 }); else window.setTimeout(run, 2500);
   }, [data.mockups, data.format, data.addons.frame]);
 
+  // the bottom bar waits until the picture has been looked at: it slides in once the picture's lower edge has
+  // scrolled clear of where the bar sits, so nothing is sold over the thing being judged
+  const picRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const [barOn, setBarOn] = useState(false);
+  useEffect(() => {
+    // clear = the picture and the row of buttons under it sit above where the bar will be
+    const look = () => { const r = picRef.current?.getBoundingClientRect(); const barH = barRef.current?.offsetHeight ?? 120; setBarOn(!r || r.bottom + 56 < window.innerHeight - barH); };
+    look();
+    window.addEventListener('scroll', look, { passive: true }); window.addEventListener('resize', look);
+    return () => { window.removeEventListener('scroll', look); window.removeEventListener('resize', look); };
+  }, []);
   const viewed = useRef(false);
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
@@ -127,6 +140,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   // the size and frame chosen on the landing page: applied once, only while the order still sits on its defaults
+  useEffect(() => { if (paid) forgetResume(); }, [paid]);
   useEffect(() => {
     let raw: string | null = null;
     try { raw = localStorage.getItem(PICK_KEY); localStorage.removeItem(PICK_KEY); } catch { /* private mode */ }
@@ -147,16 +161,32 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
 
-  const order = async () => {
+  // One question before payment, asked once: an extra copy. A yes writes the copy on the order (persist) and goes
+  // straight on; a no goes straight on. Nothing is pre-ticked, nothing is asked twice.
+  const [upsell, setUpsell] = useState(false);
+  const upsellAsked = useRef(false);
+  const upsellRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => { const d = upsellRef.current; if (!d) return; if (upsell && !d.open) d.showModal(); if (!upsell && d.open) d.close(); }, [upsell]);
+  const order = () => {
+    if (orderBusy.current || paid) return;
+    if (extraPrints === 0 && !upsellAsked.current) { upsellAsked.current = true; setUpsell(true); return; }
+    void checkout(extraPrints);
+  };
+  const answerUpsell = (yes: boolean) => {
+    setUpsell(false);
+    if (yes) setExtras(1);
+    void checkout(yes ? 1 : 0);
+  };
+  const checkout = async (copies: number) => {
     if (orderBusy.current || paid) return;
     orderBusy.current = true;
     setOrdering(true); setError(null);
     try {
-      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: false, format, frame, extraPrints, t: token }) });
+      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: false, format, frame, extraPrints: copies, t: token }) });
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
-      track('InitiateCheckout', { ...PRODUCT, content_ids: [format], value: bill.totalOere / 100 }, { eventId: j.sessionId });
+      track('InitiateCheckout', { ...PRODUCT, content_ids: [format], value: quote({ format, frame, extraPrints: copies, campaign: c.campaign.active }).totalOere / 100 }, { eventId: j.sessionId });
       window.location.assign(j.url);
     } catch {
       // never a server string: one calm message with a second door (e-mail)
@@ -174,6 +204,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     try {
       const r = await fetch(`/api/preview/${data.orderId}/cancel${q}`, { method: 'POST' });
       if (!r.ok) throw new Error('delete');
+      forgetResume();
       window.location.assign('/?slettet=1');
     } catch {
       setEraseError('Billedet blev ikke slettet. Prøv igen om lidt, eller skriv til os.');
@@ -301,6 +332,16 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   return (
     <div className="container pv">
+      <dialog ref={upsellRef} className="offer-dialog upsell" aria-labelledby="upsell-title" onClose={() => setUpsell(false)} onClick={(e) => { if (e.target === e.currentTarget) setUpsell(false); }}>
+        <div className="offer-text">
+          {c.campaign.active && <span className="promo-tag">{c.campaign.tag}</span>}
+          <h2 id="upsell-title">{c.preview.upsellTitle}</h2>
+          <div className="upsell-pair" aria-hidden><img src={mockup} alt="" width={160} height={119} /><img src={mockup} alt="" width={160} height={119} /></div>
+          <p>{c.preview.upsellBody}</p>
+          <button type="button" className="btn btn-block" onClick={() => answerUpsell(true)}>{c.preview.upsellYes}</button>
+          <button type="button" className="btn btn-block btn-quiet" onClick={() => answerUpsell(false)}>{c.preview.upsellNo}</button>
+        </div>
+      </dialog>
       <div className="pv-left">
         {cancelled && <p className="small notice" role="status">{c.preview.cancelled}</p>}
         <ol className="pv-steps" aria-label="Hvor du er i bestillingen">
@@ -308,7 +349,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         </ol>
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
         <p className="caption measure">{c.preview.howTo}</p>
-        <BeforeAfter before={data.original} after={data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal zoom={zoom ? 2.2 : 1} />
+        <div ref={picRef}><BeforeAfter before={data.original} after={data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal zoom={zoom ? 2.2 : 1} /></div>
+        {!paid && <p className="caption measure">{c.preview.watermarkNote}</p>}
         <div className="pv-toggle">
           <button type="button" className="link-btn" onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
         </div>
@@ -345,7 +387,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         </p>
         {eraseError && <p role="alert" className="small" style={{ color: 'var(--error)' }}>{eraseError} {c.email && <a href={c.emailHref}>{c.email}</a>}</p>}
       </div>
-      <div className="pv-cta-bar">
+      <div ref={barRef} className={`pv-cta-bar${barOn ? ' on' : ''}`} aria-hidden={!barOn}>
         {errorLine}
         <p className="caption">{c.preview.payment}</p>
         {button}

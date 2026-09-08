@@ -199,3 +199,20 @@
 .o-pick .size .size-shot { display: block; margin: 0 calc(var(--s3) * -1) var(--s2); aspect-ratio: 4 / 3; background: var(--paper-2); }
 .o-pick .size .size-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
 @media (max-width: 359px) { .o-pick .size .size-shot { margin: 0 calc(var(--s3) * -1) var(--s1); } }
+
+/* The way back to a picture started here: a small card above the sticky bar on a phone, bottom-left on a desk. */
+.resume { position: fixed; z-index: 34; left: 12px; right: 12px; bottom: calc(var(--bar-h, 0px) + 12px + var(--safe-bottom, 0px)); display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s3) var(--s3) var(--s4); background: var(--paper); border: 1px solid var(--hairline); border-radius: 8px; box-shadow: var(--shadow-object); }
+.resume-body { display: flex; align-items: center; gap: var(--s3); flex: 1; min-width: 0; flex-wrap: wrap; }
+.resume-body p { margin: 0; font-size: var(--fs-small); line-height: 1.35; flex: 1 1 14em; }
+.resume.ready .resume-body p { font-weight: 600; font-size: var(--fs-body); }
+.resume-dot { flex: none; width: 10px; height: 10px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 0 var(--accent-soft); animation: resume-pulse 1.6s ease-out infinite; }
+@keyframes resume-pulse { 0% { box-shadow: 0 0 0 0 rgba(31, 90, 60, 0.35); } 100% { box-shadow: 0 0 0 10px rgba(31, 90, 60, 0); } }
+.resume-close { flex: none; width: 40px; height: 40px; border: 0; background: none; color: var(--ink-2); font-size: 22px; line-height: 1; cursor: pointer; border-radius: 999px; }
+.resume-close:hover { background: var(--paper-2); }
+@media (min-width: 768px) { .resume { left: 24px; right: auto; bottom: 24px; width: min(440px, calc(100vw - 48px)); } }
+@media (prefers-reduced-motion: reduce) { .resume-dot { animation: none; } }
+/* The one question before payment, in the offer dialog's clothes. */
+.offer-dialog.upsell { width: min(480px, calc(100vw - 32px)); }
+.offer-dialog.upsell .offer-text { padding: var(--s5) var(--s5) var(--s5); }
+.upsell-pair { display: flex; gap: var(--s2); justify-self: stretch; }
+.upsell-pair img { flex: 1; min-width: 0; width: 50%; height: auto; border-radius: 4px; border: 1px solid var(--hairline); }

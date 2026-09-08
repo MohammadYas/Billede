@@ -8,6 +8,7 @@ import Framed from '@/components/Framed';
 import SizePicker from '@/components/SizePicker';
 import Promo from '@/components/Promo';
 import LaunchOffer from '@/components/LaunchOffer';
+import ResumeBanner from '@/components/ResumeBanner';
 import UploadFlow from '@/components/UploadFlow';
 import OpenFlowButton from '@/components/OpenFlowButton';
 import StickyCtaMount from '@/components/StickyCtaMount';
@@ -44,7 +45,9 @@ export default async function Page() {
   const c = copy();
   const examples = getExamples();
   const hero = examples[0] ?? null;
-  const grid = examples.slice(1, 7);
+  // the birthday-cake example is out of the grid: its original only had a crease and a slight cast, so the fade shows
+  // almost nothing happening — true, but not what a visitor should be asked to look at
+  const grid = examples.slice(1, 7).filter((e) => e.id !== 'foedselsdag-1985');
   const synthetic = examples.length > 0 && examples.every((e) => /eksempelbillede/i.test(e.caption));
   const placeholders = examples.some((e) => e.placeholder);
   const jul = c.season === 'jul';
@@ -217,6 +220,7 @@ export default async function Page() {
       </main>
       <Footer />
       {hero && <LaunchOffer campaign={c.campaign} cta={c.hero.cta} before={src(hero, 'before', '(min-width: 720px) 300px, 100vw')} after={src(hero, 'after', '(min-width: 720px) 300px, 100vw')} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} />}
+      <ResumeBanner working={c.resume.working} ready={c.resume.ready} cta={c.resume.cta} />
       <UploadFlow c={c} />
       <StickyCtaMount label={c.sticky} />
       <Consent text={c.cookie.text} accept={c.cookie.accept} decline={c.cookie.decline} />

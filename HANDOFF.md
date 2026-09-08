@@ -217,6 +217,9 @@ one 60 s, and a request body may be at most 6 MB. The restoration takes 30–45 
   keeps the shop tidy. Set up 2026-09-07 via SQL (`create extension pg_cron`, `pg_net`, `vault.create_secret`,
   `cron.schedule`); inspect with `select * from cron.job` and `select * from cron.job_run_details order by start_time desc limit 20`;
 - job state is on the order (`preview_meta.job`) and visible in admin.
+- the customer can leave during the wait: the sheet keeps the order on dismiss (only "Afbryd" deletes) and stores {id, token} in localStorage; `components/ResumeBanner.tsx` on the front page shows "vi arbejder stadig" / "Dit billede er klar" for 48 h. The order page asks once about an extra copy before Checkout (`upsell` in PreviewPanel).
+- wall mockups are drawn to scale on `public/mockup/wall.jpg` (sideboard = 120 cm); after changing the wall or `lib/restoration/mockup.ts`, run `npx tsx scripts/remockup-examples.mts` to redraw the example mockups.
+- end-to-end check of the whole customer path (one real restoration, stops on the Stripe page): `BASE=http://localhost:3000 ADMIN_PASSWORD=… node tests/e2e-flow.browser.mjs`; add `PREVIEW_URL=<an existing /p/<id>?t=…>` to rerun without restoring again.
 - abuse caps: one network (salted IP hash in `preview_meta.client`) may start 10 restorations and 5 leads per hour (`lib/api/client.ts`); raise `ORDERS_PER_HOUR` if a school or office ever hits it. Paid orders cannot be re-configured through the API.
 
 **Linux, Windows and sharp.** Netlify builds on Ubuntu and runs functions on Amazon Linux — it is Linux, even if you

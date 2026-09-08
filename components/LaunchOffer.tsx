@@ -25,6 +25,8 @@ export default function LaunchOffer({ campaign, cta, before, after, alt }: { cam
     try {
       if (sessionStorage.getItem(SEEN)) return;
       if (Number(localStorage.getItem(DISMISSED) ?? 0) > Date.now()) return;
+      // someone coming back for a picture they already started is not sold to again: the banner has the floor
+      if (localStorage.getItem('gf_resume')) return;
     } catch { /* private mode: show it */ }
     // a returning customer with a repeat link, or a visitor arriving straight at the upload, is not interrupted
     if (/[?&](igen|order)=/.test(location.search) || location.hash) return;

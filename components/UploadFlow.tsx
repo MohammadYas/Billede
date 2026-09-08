@@ -2,6 +2,7 @@
 import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { track } from '@/lib/analytics/client';
+import { rememberResume, forgetResume } from './ResumeBanner';
 import type { Copy } from '@/lib/copy';
 
 type Stage = 'uploading' | 'sending' | 'restoring' | 'preparing';
@@ -72,13 +73,21 @@ export default function UploadFlow({ c }: { c: Copy }) {
   }, []);
   const runRef = useRef(0); // bumped on every close: an in-flight start() sees it and stops
   const pollRef = useRef<number | null>(null);
+  const sendingAt = useRef(0); // when the restoration was accepted: the bar's estimate counts from here
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    if (state.kind !== 'processing') return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [state.kind]);
   const stopPolling = () => { if (pollRef.current) window.clearTimeout(pollRef.current); pollRef.current = null; };
   const closeFlow = useCallback((cancelSaved = false) => {
     runRef.current += 1;
     xhrRef.current?.abort(); stopPolling();
     const st = stateRef.current;
-    // A saved link survives dismissal; the explicit cancel still requests deletion.
-    if (st.kind === 'processing' && st.orderId && (cancelSaved || !keepSaved.current)) fetch(`/api/preview/${st.orderId}/cancel${st.token ? `?t=${encodeURIComponent(st.token)}` : ''}`, { method: 'POST' }).catch(() => {});
+    // Closing the sheet keeps the picture: the front page shows the way back to it (ResumeBanner). Only the
+    // explicit "Afbryd (billedet slettes)" asks for deletion.
+    if (st.kind === 'processing' && st.orderId && cancelSaved) { forgetResume(); fetch(`/api/preview/${st.orderId}/cancel${st.token ? `?t=${encodeURIComponent(st.token)}` : ''}`, { method: 'POST' }).catch(() => {}); }
     setState({ kind: 'closed' });
   }, []);
   const close = useCallback(() => closeFlow(), [closeFlow]);
@@ -231,6 +240,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
     if (!r.ok) throw new Error('run');
     track('ProcessingStarted', {}, { serverLog: true }); // the file is in the bucket and the restoration was accepted
     if (runAtCall !== runRef.current) return;
+    sendingAt.current = Date.now();
     setState({ kind: 'processing', stage: 'sending', percent: 100, file, thumb, orderId, token });
     poll(orderId, token, file, thumb);
   };
@@ -262,6 +272,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
     } catch { if (!cancelled()) fail(file, thumb, c.processing.networkError, c.processing.networkTitle); return; }
     if (cancelled()) { fetch(`/api/preview/${started.orderId}/cancel?t=${encodeURIComponent(started.token)}`, { method: 'POST' }).catch(() => {}); return; }
     setState((cur) => (cur.kind === 'processing' ? { ...cur, orderId: started.orderId, token: started.token } : cur));
+    rememberResume(started.orderId, started.token); // the way back, should the tab be closed during the wait
     const progress = (p: number) => setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'uploading', percent: p } : cur));
     let aborted = false;
     try {
@@ -315,9 +326,11 @@ export default function UploadFlow({ c }: { c: Copy }) {
 
   if (state.kind === 'closed') return null;
   const processing = state.kind === 'processing';
-  // upload 0–30 %, then a 28 s creep to 85 % while the model works (the request is in flight = 'sending'), 92 % once stored, 100 % when the preview is ready
-  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? 92 : state.stage === 'restoring' ? 96 : 100) : 0;
-  const creep = processing && state.stage === 'sending' ? '60s' : '300ms'; // never stalls before the 90 s server limit
+  // upload 0–30 %, then an estimate that climbs towards 90 % over the model's ~60 s (a curve, so it never stops moving
+  // and never claims done), 94 % once stored, 100 % when the preview is ready
+  const elapsed = processing && state.stage === 'sending' ? Math.max(0, (now || Date.now()) - sendingAt.current) : 0;
+  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? Math.min(90, 30 + 60 * (1 - Math.exp(-elapsed / 40_000))) : state.stage === 'restoring' ? 94 : 100) : 0;
+  const stepIndex = processing ? (state.stage === 'uploading' ? 0 : state.stage === 'preparing' ? 2 : 1) : 0;
   const sentence = processing ? (state.stage === 'sending' && phase > 0 ? c.processing.more[phase - 1] : c.processing.sentences[state.stage]) : '';
 
   return (
@@ -368,12 +381,18 @@ export default function UploadFlow({ c }: { c: Copy }) {
           <div style={{ display: 'grid', gap: 'var(--s4)' }} aria-live="polite" aria-busy="true">
             <div className="proc">
               <Thumb src={state.thumb} name={state.file.name} alt="" />
-              <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={c.processing.stages[state.stage]}>
-                <span style={{ ['--p' as string]: pct / 100, ['--pt' as string]: creep }} />
+            </div>
+            <div className="proc-bar">
+              <div className="proc-bar-head"><b>{c.processing.stages[state.stage]}</b><span className="tabular">{Math.round(pct)} %</span></div>
+              <div className="progress progress-big" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={c.processing.stages[state.stage]}>
+                <span style={{ ['--p' as string]: pct / 100 }} />
               </div>
+              <ol className="proc-steps" aria-hidden>
+                {c.processing.steps.map((s, i) => <li key={s} className={i < stepIndex ? 'done' : i === stepIndex ? 'now' : ''}>{s}</li>)}
+              </ol>
             </div>
             <p className="lead" style={{ fontFamily: 'var(--display)' }}>{sentence}</p>
-            <p className="caption">{c.processing.stages[state.stage]}{state.stage === 'uploading' ? ` · ${state.percent} %` : ''} · {slow ? c.processing.slow : c.processing.wait}</p>
+            <p className="caption">{slow ? c.processing.slow : c.processing.wait}</p>
             {/* the 90 seconds where a cold visitor leaves: if they do, we still have the address and can send them their own picture */}
             {state.orderId && (
               keepState === 'done' ? <p className="small" role="status">{c.processing.keepDone}</p> : (

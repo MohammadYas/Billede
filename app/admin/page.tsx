@@ -63,6 +63,18 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const ratio = shown ? Math.round((started / shown) * 100) : null;
   const active = sp.status || sp.alle ? orders.filter((o) => o.status !== 'ABANDONED' || sp.status === 'ABANDONED') : orders.filter((o) => !ANALYTICS.includes(o.status));
   const age = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / 864e5);
+  // where the orders came from, last 30 days: previews, paid, money — per utm_source / utm_campaign
+  const PAID = ['PAID', 'IN_RETOUCH', 'AWAITING_APPROVAL', 'CHANGE_REQUESTED', 'APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'];
+  const bySource = new Map<string, { previews: number; paid: number; oere: number }>();
+  for (const o of orders) {
+    if (o.created_at < since) continue;
+    const key = `${o.utm?.utm_source ?? (o.utm?.fbclid ? 'facebook' : 'direkte')}${o.utm?.utm_campaign ? ' · ' + o.utm.utm_campaign : ''}`;
+    const row = bySource.get(key) ?? { previews: 0, paid: 0, oere: 0 };
+    if (o.status !== 'NEW' && o.status !== 'ABANDONED') row.previews += 1;
+    if (PAID.includes(o.status)) { row.paid += 1; row.oere += o.amount ?? 0; }
+    bySource.set(key, row);
+  }
+  const sources = [...bySource.entries()].sort((a, b) => b[1].paid - a[1].paid || b[1].previews - a[1].previews);
   const work = Object.keys(WORK).map((st) => ({ st, rows: orders.filter((o) => o.status === st && !(st === 'MANUAL_REVIEW' && !o.customer_email)) })).filter((g) => g.rows.length);
   return (
     <main className="wrap admin" style={{ paddingTop: 'var(--s3)', paddingBottom: 'var(--s9)' }}>
@@ -97,6 +109,21 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <p className="caption">Previews uden køb og opgivne uploads er skjult her (<a href="/admin?alle=1">vis alle</a>).</p>
           </section>
         )}
+        {!sp.status && (
+          <section className="adm-sources" style={{ display: 'grid', gap: 'var(--s3)' }}>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Kilder · 30 dage</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="tabular">
+                <thead><tr><th>Kilde · kampagne</th><th>Previews</th><th>Betalt</th><th>Omsætning</th><th>Preview → betalt</th></tr></thead>
+                <tbody>
+                  {sources.map(([k, r]) => <tr key={k}><td>{k}</td><td>{r.previews}</td><td>{r.paid}</td><td>{r.oere ? `${(r.oere / 100).toLocaleString('da-DK')} kr.` : '—'}</td><td>{r.previews ? `${Math.round((r.paid / r.previews) * 100)} %` : '—'}</td></tr>)}
+                  {sources.length === 0 && <tr><td colSpan={5} className="muted">Ingen ordrer de sidste 30 dage.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <p className="caption">utm_source og utm_campaign fra linket, kunden kom ind på (fbclid uden utm tælles som facebook). Sæt utm_content pr. annonce, så står den i tabellen under.</p>
+          </section>
+        )}
         <div style={{ overflowX: 'auto' }}>
           <table className="tabular">
             <thead><tr><th>Oprettet</th><th>Ordre</th><th>Status</th><th>Format</th><th>Kunde</th><th>Beløb</th><th>Kilde</th></tr></thead>
@@ -109,7 +136,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                   <td>{formatLabel(o.format)}{readAddOns((o.preview_meta as { addons?: unknown } | null)?.addons).frame === 'eg' ? ' · eg' : ''}{o.chosen_colour ? ' · farve' : ''}{readAddOns((o.preview_meta as { addons?: unknown } | null)?.addons).extraPrints > 0 ? ` · +${readAddOns((o.preview_meta as { addons?: unknown } | null)?.addons).extraPrints}` : ''}</td>
                   <td>{o.customer_email ?? '—'}</td>
                   <td>{o.amount ? `${(o.amount / 100).toLocaleString('da-DK')} kr.` : '—'}</td>
-                  <td>{o.utm?.utm_content ?? o.utm?.utm_source ?? '—'}</td>
+                  <td>{o.utm?.utm_source || o.utm?.utm_content || o.utm?.fbclid ? [o.utm?.utm_source ?? (o.utm?.fbclid ? 'facebook' : null), o.utm?.utm_campaign, o.utm?.utm_content].filter(Boolean).join(' · ') : '—'}</td>
                 </tr>
               ))}
               {active.length === 0 && <tr><td colSpan={7} className="muted">Ingen ordrer endnu.</td></tr>}

@@ -40,7 +40,7 @@ for (const w of WIDTHS) {
         if (b.height < 44 && b.width < 44) small.push(`${el.tagName.toLowerCase()} "${(el.textContent || '').trim().slice(0, 24)}" ${Math.round(b.width)}×${Math.round(b.height)}`);
       }
       // does the fixed bar sit on top of something you need to read or press?
-      const bar = [...document.querySelectorAll('*')].find((e) => { const cs = getComputedStyle(e); return cs.position === 'fixed' && e.getBoundingClientRect().bottom >= innerHeight - 2 && e.getBoundingClientRect().height > 40; });
+      const bar = [...document.querySelectorAll('*')].find((e) => { const cs = getComputedStyle(e); const r = e.getBoundingClientRect(); return cs.position === 'fixed' && r.bottom >= innerHeight - 2 && r.top < innerHeight - 2 && r.height > 40; }); // a bar slid off-screen covers nothing
       let covered = [];
       if (bar) {
         const bb = bar.getBoundingClientRect();

@@ -27,7 +27,7 @@ export async function makeApprovalImage(final: Buffer, longEdge = 1200): Promise
   const width = Math.round(w0 * s), height = Math.round(h0 * s);
   const base = await sharp(final).resize(width, height, { kernel: sharp.kernel.lanczos3 }).toBuffer();
   return sharp(base)
-    .composite([{ input: tiledWatermark(width, height, { text: 'BILLEDARV', opacity: 0.1 }), blend: 'over' }])
+    .composite([{ input: tiledWatermark(width, height, { text: 'VANDMÆRKE · KUN PÅ SKÆRMEN', opacity: 0.1 }), blend: 'over' }])
     .jpeg({ quality: 86, mozjpeg: true })
     .toBuffer();
 }

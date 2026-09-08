@@ -6,11 +6,13 @@
  * the file they own is one click away once they say yes).
  */
 export function tiledWatermark(width: number, height: number, opts: { text?: string; opacity?: number } = {}): Buffer {
-  const text = opts.text ?? 'BILLEDARV · PREVIEW';
-  const opacity = opts.opacity ?? 0.18;
-  const fs = Math.max(12, Math.round(Math.min(width, height) / 22));
-  const tileW = Math.round(fs * 0.68 * text.length + fs * 2.5); // bold caps with tracking ≈ 0.68 em per glyph, then a gap
-  const tileH = Math.round(fs * 3.4);
+  // The words say what the mark is and that it goes away: a customer who has never met a watermark must not
+  // read it as a fault in the picture. Bigger and sparser than a classic tile for the same reason.
+  const text = opts.text ?? 'VANDMÆRKE · FORSVINDER VED BESTILLING';
+  const opacity = opts.opacity ?? 0.22;
+  const fs = Math.max(14, Math.round(Math.min(width, height) / 17));
+  const tileW = Math.round(fs * 0.68 * text.length + fs * 3); // bold caps with tracking ≈ 0.68 em per glyph, then a gap
+  const tileH = Math.round(fs * 5.2);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
   <defs>
     <pattern id="wm" width="${tileW}" height="${tileH}" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
