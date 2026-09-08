@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, recordAttempt } from '@/lib/admin/auth';
 import { listOrders } from '@/lib/db/orders';
 import { supabaseAdmin } from '@/lib/db/supabase';
+import { signedUrl } from '@/lib/db/storage';
 import { formatLabel } from '@/lib/pricing';
 import { readAddOns } from '@/lib/pricing';
 import { STATUS_DA } from '@/lib/admin/status';
@@ -63,6 +64,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const ratio = shown ? Math.round((started / shown) * 100) : null;
   const active = sp.status || sp.alle ? orders.filter((o) => o.status !== 'ABANDONED' || sp.status === 'ABANDONED') : orders.filter((o) => !ANALYTICS.includes(o.status));
   const age = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / 864e5);
+  // a thumbnail per listed order: the customer's picture is what the owner recognises an order by
+  const thumbs = new Map<string, string>();
+  await Promise.all(active.slice(0, 60).map(async (o) => { const p = o.preview_path ?? o.original_path; if (p) { try { thumbs.set(o.id, await signedUrl(p, 900)); } catch { /* no thumbnail */ } } }));
   // where the orders came from, last 30 days: previews, paid, money — per utm_source / utm_campaign
   const PAID = ['PAID', 'IN_RETOUCH', 'AWAITING_APPROVAL', 'CHANGE_REQUESTED', 'APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'];
   const bySource = new Map<string, { previews: number; paid: number; oere: number }>();
@@ -126,10 +130,11 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         )}
         <div style={{ overflowX: 'auto' }}>
           <table className="tabular">
-            <thead><tr><th>Oprettet</th><th>Ordre</th><th>Status</th><th>Format</th><th>Kunde</th><th>Beløb</th><th>Kilde</th></tr></thead>
+            <thead><tr><th>Billede</th><th>Oprettet</th><th>Ordre</th><th>Status</th><th>Format</th><th>Kunde</th><th>Beløb</th><th>Kilde</th></tr></thead>
             <tbody>
               {active.map((o) => (
                 <tr key={o.id}>
+                  <td>{thumbs.get(o.id) ? <a href={`/admin/orders/${o.id}`}><img className="adm-thumb" src={thumbs.get(o.id)} alt="" width={56} height={56} loading="lazy" /></a> : <span className="adm-thumb" aria-hidden />}</td>
                   <td>{new Date(o.created_at).toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', dateStyle: 'short', timeStyle: 'short' })}</td>
                   <td><a href={`/admin/orders/${o.id}`}>{o.id.slice(0, 8)}</a></td>
                   <td>{STATUS_DA[o.status] ?? o.status}</td>
@@ -139,7 +144,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                   <td>{o.utm?.utm_source || o.utm?.utm_content || o.utm?.fbclid ? [o.utm?.utm_source ?? (o.utm?.fbclid ? 'facebook' : null), o.utm?.utm_campaign, o.utm?.utm_content].filter(Boolean).join(' · ') : '—'}</td>
                 </tr>
               ))}
-              {active.length === 0 && <tr><td colSpan={7} className="muted">Ingen ordrer endnu.</td></tr>}
+              {active.length === 0 && <tr><td colSpan={8} className="muted">Ingen ordrer endnu.</td></tr>}
             </tbody>
           </table>
         </div>

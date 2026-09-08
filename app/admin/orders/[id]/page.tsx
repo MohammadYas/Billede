@@ -6,7 +6,7 @@ import { FORMATS, formatLabel, PRICING } from '@/lib/pricing';
 import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
 import { STATUS_FLOW } from '@/lib/db/orders';
 import { ManualProvider } from '@/lib/fulfillment/manual';
-import { actionCheckPayment, actionFulfillment, actionNote, actionSendApproval, actionSetFormat, actionSetStatus, actionToggleColour } from '@/lib/admin/actions';
+import { actionCheckPayment, actionFulfillment, actionNote, actionRedraw, actionSendApproval, actionSetFormat, actionSetStatus, actionToggleColour } from '@/lib/admin/actions';
 import GenerateFinalButton from '@/components/admin/GenerateFinalButton';
 import FinalUpload from '@/components/admin/FinalUpload';
 import { getJob } from '@/lib/jobs';
@@ -72,6 +72,12 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           {repeatLink(order) && <p><strong>Gentagelseslink (kunden har det i kvitteringen):</strong> <span className="muted">{repeatLink(order)}</span></p>}
         </section>
 
+        {order.restored_path && (
+          <form action={actionRedraw.bind(null, order.id)} style={{ display: 'flex', gap: 'var(--s3)', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="submit" className="btn btn-quiet">Tegn preview og rammer igen</button>
+            <span className="caption">Kundens billede på væggen og vandmærket, tegnet med den nuværende væg og det nuværende mærke. Restaureringen røres ikke.</span>
+          </form>
+        )}
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 'var(--s4)' }}>
           {(['original', 'restored', 'colour', 'mockup', 'final'] as const).map((k) => urls[k] ? (
             <figure key={k} style={{ margin: 0 }}>

@@ -211,6 +211,33 @@ export async function processRestore(orderId: string): Promise<void> {
 }
 
 /** Colourisation as a second job (see DECISIONS.md). Idempotent. */
+/**
+ * Redraws what is derived from the stored restoration — the watermarked preview and the six wall
+ * mockups — with the current watermark and wall. For orders made before a change to either; the
+ * restoration itself is not touched. Admin: "Tegn preview og rammer igen".
+ */
+export async function redrawDerived(orderId: string): Promise<{ mockups: number }> {
+  const order = await getOrder(orderId);
+  if (!order?.restored_path) throw new Error('Ordren har ingen restaureret fil.');
+  const { makePreview, makeMockup } = await heavy();
+  const restored = await getObject(order.restored_path);
+  const previewPath = objectPath(order.id, 'preview');
+  await putObject(previewPath, await makePreview(restored));
+  const mockups: Record<string, string> = {};
+  for (const fmt of customerFormats()) {
+    for (const frame of FRAMES) {
+      const p = objectPath(order.id, 'mockup');
+      await putObject(p, await makeMockup(restored, { format: fmt, frame: frameColour(frame) }));
+      mockups[mockupKey(fmt, frame)] = p;
+    }
+  }
+  const fresh = (await getOrder(orderId))!;
+  const startFormat = isFormat(fresh.format) ? fresh.format : customerFormat();
+  const startFrame = readAddOns(metaOf(fresh).addons).frame;
+  await updateOrder(order.id, { preview_path: previewPath, mockup_path: mockups[mockupKey(startFormat, startFrame)], preview_meta: { ...metaOf(fresh), mockups } });
+  return { mockups: Object.keys(mockups).length };
+}
+
 export async function processColour(orderId: string): Promise<void> {
   const order = await getOrder(orderId);
   if (!order) return;

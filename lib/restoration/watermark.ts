@@ -9,15 +9,15 @@ export function tiledWatermark(width: number, height: number, opts: { text?: str
   // The words say what the mark is and that it goes away: a customer who has never met a watermark must not
   // read it as a fault in the picture. Bigger and sparser than a classic tile for the same reason.
   const text = opts.text ?? 'VANDMÆRKE · FORSVINDER VED BESTILLING';
-  const opacity = opts.opacity ?? 0.22;
-  const fs = Math.max(14, Math.round(Math.min(width, height) / 17));
+  const opacity = opts.opacity ?? 0.32;
+  const fs = Math.max(16, Math.round(Math.min(width, height) / 13));
   const tileW = Math.round(fs * 0.68 * text.length + fs * 3); // bold caps with tracking ≈ 0.68 em per glyph, then a gap
   const tileH = Math.round(fs * 5.2);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
   <defs>
     <pattern id="wm" width="${tileW}" height="${tileH}" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
-      <text x="0" y="${fs}" font-family="Helvetica, Arial, sans-serif" font-size="${fs}" font-weight="700" letter-spacing="${Math.max(1, Math.round(fs / 6))}" fill="#ffffff" fill-opacity="${opacity}" stroke="#000000" stroke-opacity="${(opacity * 0.6).toFixed(3)}" stroke-width="${Math.max(0.6, fs / 28).toFixed(2)}">${text}</text>
-      <text x="${Math.round(tileW / 2)}" y="${Math.round(fs + tileH / 2)}" font-family="Helvetica, Arial, sans-serif" font-size="${fs}" font-weight="700" letter-spacing="${Math.max(1, Math.round(fs / 6))}" fill="#ffffff" fill-opacity="${opacity}" stroke="#000000" stroke-opacity="${(opacity * 0.6).toFixed(3)}" stroke-width="${Math.max(0.6, fs / 28).toFixed(2)}">${text}</text>
+      <text x="0" y="${fs}" font-family="Helvetica, Arial, sans-serif" font-size="${fs}" font-weight="700" letter-spacing="${Math.max(1, Math.round(fs / 6))}" fill="#ffffff" fill-opacity="${opacity}" stroke="#000000" stroke-opacity="${(opacity * 0.8).toFixed(3)}" stroke-width="${Math.max(0.8, fs / 22).toFixed(2)}">${text}</text>
+      <text x="${Math.round(tileW / 2)}" y="${Math.round(fs + tileH / 2)}" font-family="Helvetica, Arial, sans-serif" font-size="${fs}" font-weight="700" letter-spacing="${Math.max(1, Math.round(fs / 6))}" fill="#ffffff" fill-opacity="${opacity}" stroke="#000000" stroke-opacity="${(opacity * 0.8).toFixed(3)}" stroke-width="${Math.max(0.8, fs / 22).toFixed(2)}">${text}</text>
     </pattern>
   </defs>
   <rect width="100%" height="100%" fill="url(#wm)"/>

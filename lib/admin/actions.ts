@@ -89,6 +89,15 @@ export async function actionCheckPayment(id: string) {
   } catch (e) { back(id, `Stripe-fejl: ${e instanceof Error ? e.message : e}`); }
 }
 
+export async function actionRedraw(id: string) {
+  await guard();
+  try {
+    const { redrawDerived } = await import('@/lib/preview-service');
+    const r = await redrawDerived(id);
+    back(id, `Preview og ${r.mockups} rammebilleder tegnet igen`);
+  } catch (e) { back(id, `Fejl: ${e instanceof Error ? e.message : e}`); }
+}
+
 export async function actionSendApproval(id: string) {
   await guard();
   const order = await getOrder(id); if (!order) return;
