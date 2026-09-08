@@ -197,7 +197,7 @@ export default async function Page() {
         <div className="wrap" style={{ paddingTop: 'var(--s7)' }}>
           <div className="container strip">
             <span><b>{c.tryghed[2]}</b></span>
-            {c.email && <span>Spørgsmål? <a href={c.emailHref}>{c.email}</a></span>}
+            {c.email && <span>Spørgsmål? <a href={c.emailHref}>{c.email}</a> eller <a href="/kontakt">kontaktformularen</a></span>}
             <span>Vi svarer på mail inden 24 timer.</span>
           </div>
         </div>

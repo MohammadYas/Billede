@@ -166,6 +166,17 @@ export function copy(season: Season = currentSeason()) {
       priceFrom: `for ${formatLabel(format)}`,
       cta,
     },
+    kontakt: {
+      h1: 'Skriv til os.',
+      lead: 'Spørgsmål om et gammelt billede, en bestilling eller en gave? Skriv her – vi svarer på mail inden 24 timer, som regel meget hurtigere. Har du en bestilling, så brug den e-mail, du bestilte med.',
+      mailInstead: 'Du kan også bare skrive direkte til',
+      form: {
+        name: 'Dit navn', email: 'Din e-mail', message: 'Din besked', send: 'Send besked', sending: 'Sender…',
+        done: 'Tak – vi har fået din besked.', doneP: 'Vi svarer på {email} inden 24 timer. Tjek også spam, hvis svaret lader vente på sig.',
+        invalidEmail: 'Skriv en e-mail, vi kan svare på.', tooShort: 'Skriv lidt mere, så vi ved, hvad det drejer sig om.',
+        rate: 'Der er sendt mange beskeder fra dit netværk lige nu. Vent lidt, og prøv igen.', failed: 'Beskeden blev ikke sendt. Prøv igen, eller skriv direkte til os på mail.',
+      },
+    },
     resume: {
       working: 'Vi arbejder stadig på dit billede. Det er klar om lidt – du kan blive her eller komme tilbage.',
       ready: 'Dit billede er klar.',

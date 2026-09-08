@@ -44,6 +44,7 @@ ${faq}
 
 ## Sider
 - ${base}/ — forsiden: eksempler (før/efter), priser, sådan foregår det, spørgsmål
+- ${base}/kontakt — kontaktformular (svar inden 24 timer)
 - ${base}/handelsbetingelser — handelsbetingelser
 - ${base}/privatliv — privatlivspolitik
 

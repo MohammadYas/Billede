@@ -6,7 +6,7 @@ import { CONFIG } from '@/lib/config';
  * AI crawlers are named and allowed on the same public pages, so the assistants people ask about
  * "restaurering af gamle billeder" can read what the site is and what it costs (see /llms.txt).
  */
-const PUBLIC = ['/', '/privatliv', '/handelsbetingelser', '/llms.txt'];
+const PUBLIC = ['/', '/kontakt', '/privatliv', '/handelsbetingelser', '/llms.txt'];
 const PRIVATE = ['/p/', '/tak', '/godkend/', '/admin', '/api/'];
 const AI_AGENTS = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'anthropic-ai', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot', 'Amazonbot', 'meta-externalagent', 'Bytespider', 'DuckAssistBot', 'YouBot', 'MistralAI-User'];
 

@@ -439,3 +439,20 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .detail figcaption { grid-column: 1 / -1; background: var(--paper); padding: var(--s2) 0 0; }
 @media (min-width: 768px) { .details { grid-template-columns: repeat(2, 1fr); gap: var(--s6) var(--s5); } }
 @media (min-width: 1024px) { .details { grid-template-columns: repeat(3, 1fr); } }
+
+/* Admin inbox: a list of conversations, then one conversation as a column of messages with the answer box under it. */
+.msg-badge { display: inline-block; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; vertical-align: middle; }
+.msg-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--hairline); }
+.msg-list li { border-bottom: 1px solid var(--hairline); }
+.msg-list a { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'who when' 'what when'; gap: 2px var(--s4); padding: var(--s3) var(--s2); text-decoration: none; color: var(--ink); }
+.msg-list a:hover { background: var(--paper-2); }
+.msg-who { grid-area: who; font-weight: 600; font-size: var(--fs-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-what { grid-area: what; font-size: var(--fs-small); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-when { grid-area: when; font-size: var(--fs-caption); color: var(--ink-2); white-space: nowrap; align-self: start; }
+.msg-list li.is-unread .msg-what { color: var(--ink); }
+.msg-thread { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s3); }
+.msg-thread li { max-width: 46em; padding: var(--s3) var(--s4); border-radius: 8px; background: var(--paper-2); }
+.msg-thread li.is-out { justify-self: end; background: var(--accent-soft); border: 1px solid var(--accent); }
+.msg-meta { font-size: var(--fs-caption); color: var(--ink-2); margin-bottom: var(--s1); }
+.msg-body { margin: 0; white-space: pre-line; overflow-wrap: anywhere; font-size: var(--fs-body); }
+.msg-body img { max-width: 100%; height: auto; }

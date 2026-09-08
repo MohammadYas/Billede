@@ -17,7 +17,7 @@ export function isEmailConfigured(): boolean {
 }
 
 /** Sends one mail. Returns the provider id, or null when email is not configured (logged, never throws in that case). */
-export async function sendMail(opts: { to: string; subject: string; html: string; text: string; replyTo?: string }): Promise<string | null> {
+export async function sendMail(opts: { to: string; subject: string; html: string; text: string; replyTo?: string; headers?: Record<string, string> }): Promise<string | null> {
   if (!isEmailConfigured()) {
     console.warn(`[email] RESEND_API_KEY missing — would send "${opts.subject}" to ${opts.to}`);
     return null;
@@ -30,6 +30,7 @@ export async function sendMail(opts: { to: string; subject: string; html: string
     html: opts.html,
     text: opts.text,
     replyTo: opts.replyTo ?? process.env.EMAIL_REPLY_TO ?? getFounder().email ?? undefined,
+    ...(opts.headers ? { headers: opts.headers } : {}),
   });
   if (error) throw new Error(`resend: ${error.message}`);
   return data?.id ?? null;

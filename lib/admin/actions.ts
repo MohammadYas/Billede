@@ -98,6 +98,18 @@ export async function actionRedraw(id: string) {
   } catch (e) { back(id, `Fejl: ${e instanceof Error ? e.message : e}`); }
 }
 
+export async function actionReply(thread: string, formData: FormData) {
+  await guard();
+  const text = String(formData.get('text') ?? '').trim();
+  const back = (m: string) => redirect(`/admin/beskeder/${encodeURIComponent(thread)}?msg=${encodeURIComponent(m)}`);
+  if (text.length < 2) back('Skriv et svar først.');
+  try {
+    const { replyToThread } = await import('@/lib/inbox');
+    await replyToThread(thread, text);
+  } catch (e) { back(`Svaret blev ikke sendt: ${e instanceof Error ? e.message : e}`); }
+  back('Svar sendt.');
+}
+
 export async function actionSendApproval(id: string) {
   await guard();
   const order = await getOrder(id); if (!order) return;
