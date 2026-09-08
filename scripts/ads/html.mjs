@@ -6,15 +6,15 @@ import { resolve } from 'node:path';
 import { pairSrc } from './concepts.mjs';
 
 const b64 = (p, mime) => `data:${mime};base64,${readFileSync(p).toString('base64')}`;
-const jpg = (p) => b64(p, 'image/jpeg');
+export const jpg = (p) => b64(p, 'image/jpeg');
 const font = (f) => b64(resolve('public/fonts', f), 'font/woff2');
-const FONTS = `
+export const FONTS = `
 @font-face { font-family: 'Schibsted Grotesk'; src: url('${font('SchibstedGrotesk-normal.woff2')}') format('woff2'); font-weight: 400 900; }
 @font-face { font-family: 'Public Sans'; src: url('${font('PublicSans-normal.woff2')}') format('woff2'); font-weight: 400 700; }
 @font-face { font-family: 'Newsreader'; src: url('${font('Newsreader-normal.woff2')}') format('woff2'); font-weight: 300 700; }`;
-const MARK = b64(resolve('public/logo-mark.png'), 'image/png');
-const WALL = jpg('public/mockup/wall.jpg');
-const ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+export const MARK = b64(resolve('public/logo-mark.png'), 'image/png');
+export const WALL = jpg('public/mockup/wall.jpg');
+export const ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
 const INK = '#171614', CREAM = '#fbfaf7';

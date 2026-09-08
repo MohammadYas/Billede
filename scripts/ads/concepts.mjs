@@ -36,7 +36,9 @@ export const offer = campaign();
  *            framed = the restored picture in a black frame on the wall, the old print in front of it.
  *   text     where the hook sits on 4:5 and 1:1 (top | bottom); 9:16 puts text in the bands above and below.
  *   pair     the example pair for the before → after reveal, with the crop position both sides share.
- *   video    shots for the 9:16 reel (scripts/ads/video.mjs). Absent = static only.
+ *   reel     the 9:16 reel (scripts/ads/reel.mjs): `open` = where the old print starts (a scene with the
+ *            print's box in 4:5 px and an optional `zoom` about that print, a print on a table, or the photo full-screen), `line` under the frame, `hookAt: 'bottom'` when the top of the scene is busy,
+ *            `endLine` over the CTA. Absent = static only.
  */
 export const CONCEPTS = [
   {
@@ -45,13 +47,7 @@ export const CONCEPTS = [
     cta: CTA.own, price: PRICE,
     visual: { kind: 'scene', src: scene('familie-ved-vandet-1948-i-haenderne'), pos: '50% 45%' }, text: 'top',
     pair: 'portraet-1962', pairPos: '50% 22%',
-    video: [
-      { type: 'scene', src: scene('portraet-1962-skuffen'), pos: '50% 40%', hook: true, d: 2.4 },
-      { type: 'before', d: 1.6 },
-      { type: 'after', d: 2.0, transition: 'wipeleft' },
-      { type: 'framed', d: 2.2, line: 'Print, ramme og fri fragt' },
-      { type: 'end', d: 2.8 },
-    ],
+    reel: { open: { kind: 'scene', src: scene('portraet-1962-skuffen'), box: { x: 455, y: 613, w: 174, h: 256 } }, hookAt: 'bottom', line: 'Print, ramme og fri fragt' },
   },
   {
     key: 'gift', motive: 'Gift', stage: 'cold', style: 'polished',
@@ -59,13 +55,7 @@ export const CONCEPTS = [
     cta: CTA.first, price: PRICE,
     visual: { kind: 'framed' }, text: 'top',
     pair: 'bryllup-1954', pairPos: '50% 30%',
-    video: [
-      { type: 'print', side: 'before', d: 2.4, hook: true },
-      { type: 'before', d: 1.4 },
-      { type: 'after', d: 2.0, transition: 'wipeleft' },
-      { type: 'framed', d: 2.2, line: 'Lån billedet et øjeblik. Resten kan være en overraskelse.' },
-      { type: 'end', d: 2.8 },
-    ],
+    reel: { open: { kind: 'scene', src: scene('bryllup-1954-koekkenbord'), box: { x: 283, y: 648, w: 477, h: 276 }, zoom: 1.6 }, line: 'Lån billedet et øjeblik. Resten kan være en overraskelse.' },
   },
   {
     key: 'trust', motive: 'Trust / likeness', stage: 'retargeting', style: 'polished',
@@ -81,13 +71,7 @@ export const CONCEPTS = [
     cta: CTA.look, price: PRICE,
     visual: { kind: 'scene', src: scene('bryllup-1954-koekkenbord'), pos: '50% 40%' }, text: 'top',
     pair: 'bryllup-1954', pairPos: '50% 30%',
-    video: [
-      { type: 'scene', src: scene('bryllup-1954-koekkenbord'), pos: '50% 40%', hook: true, d: 2.4 },
-      { type: 'before', d: 1.4 },
-      { type: 'after', d: 2.0, transition: 'wipeleft' },
-      { type: 'framed', d: 2.0 },
-      { type: 'end', d: 2.8, line: 'Et foto med mobilen er nok.' },
-    ],
+    reel: { open: { kind: 'scene', src: scene('bryllup-1954-koekkenbord'), box: { x: 283, y: 648, w: 477, h: 276 } }, endLine: 'Et foto med mobilen er nok.' },
   },
   {
     key: 'physical', motive: 'Physical product / value', stage: 'cold', style: 'polished',
@@ -95,13 +79,7 @@ export const CONCEPTS = [
     cta: CTA.look, price: 'Print, ramme og fri fragt fra 599 kr.',
     visual: { kind: 'scene', src: scene('have-1976-paa-vaeggen'), pos: '50% 15%', shift: 100 }, text: 'top',
     pair: 'have-1976', pairPos: '50% 40%',
-    video: [
-      { type: 'before', d: 2.2, hook: true },
-      { type: 'after', d: 1.8, transition: 'wipeleft' },
-      { type: 'print', d: 1.8 },
-      { type: 'scene', src: scene('have-1976-paa-vaeggen'), pos: '50% 100%', d: 2.2, line: 'Print, ramme og fri fragt fra 599 kr.' },
-      { type: 'end', d: 2.8 },
-    ],
+    reel: { open: { kind: 'before' }, line: 'Print, ramme og fri fragt fra 599 kr.' },
   },
   ...(offer.active ? [{
     key: 'offer', motive: 'Offer (only while lib/config.ts says the launch offer is on)', stage: 'offer', style: 'polished',
@@ -119,13 +97,7 @@ export const CONCEPTS = [
     cta: CTA.own, price: 'Fra 599 kr. i ramme',
     visual: { kind: 'scene', src: scene('portraet-1962-skuffen'), pos: '50% 40%' }, text: 'top',
     pair: 'portraet-1962', pairPos: '50% 22%',
-    video: [
-      { type: 'scene', src: scene('portraet-1962-skuffen'), pos: '50% 40%', hook: true, d: 2.4 },
-      { type: 'before', d: 1.4 },
-      { type: 'after', d: 2.0, transition: 'wipeleft' },
-      { type: 'framed', d: 2.0 },
-      { type: 'end', d: 2.8 },
-    ],
+    reel: { open: { kind: 'scene', src: scene('portraet-1962-skuffen'), box: { x: 455, y: 613, w: 174, h: 256 } }, hookAt: 'bottom' },
   },
   {
     key: 'ugc-original', motive: 'Original stays home (UGC look)', stage: 'cold', style: 'ugc',
@@ -134,13 +106,7 @@ export const CONCEPTS = [
     cta: CTA.look, price: PRICE,
     visual: { kind: 'scene', src: scene('bryllup-1954-koekkenbord'), pos: '50% 40%' }, text: 'top',
     pair: 'bryllup-1954', pairPos: '50% 30%',
-    video: [
-      { type: 'scene', src: scene('bryllup-1954-koekkenbord'), pos: '50% 40%', hook: true, d: 2.4 },
-      { type: 'before', d: 1.4 },
-      { type: 'after', d: 2.0, transition: 'wipeleft' },
-      { type: 'framed', d: 2.0 },
-      { type: 'end', d: 2.8, line: 'Et foto med mobilen er nok.' },
-    ],
+    reel: { open: { kind: 'scene', src: scene('bryllup-1954-koekkenbord'), box: { x: 283, y: 648, w: 477, h: 276 } }, endLine: 'Et foto med mobilen er nok.' },
   },
 ];
 

@@ -3,7 +3,7 @@
 Sådan bruges den: log ind på business.facebook.com i Chrome, åbn Ads Manager på den rigtige annoncekonto,
 åbn Claude-udvidelsen og indsæt alt under stregen som første besked. Billederne ligger i
 `work/ads/final/` (billeder) og `work/ads/video/` (reels); lav dem igen med `node scripts/ads/static.mjs` og
-`node scripts/ads/video.mjs`, hvis eksemplerne eller teksterne ændrer sig. Systemet: `docs/meta-ads-creatives.md`.
+`node scripts/ads/reel.mjs`, hvis eksemplerne eller teksterne ændrer sig. Systemet: `docs/meta-ads-creatives.md`.
 
 Forudsætning, som Claude ikke kan klare for dig: annoncekontoen har en betalingsmetode, Facebook-siden
 "Billedearv" findes, og du er admin på Business Manager. Pixel og Conversions API er endnu ikke tændt på
@@ -103,7 +103,7 @@ Rapportér resultatet af hvert punkt i en tabel, før du går til fase 1.
 ## Fase 3: annoncerne – én idé pr. annonce
 
 Filerne ligger i `C:\Users\mo\Desktop\Billede\work\ads\` (lavet af `node scripts/ads/static.mjs` og
-`node scripts/ads/video.mjs`). Hvert koncept findes som:
+`node scripts/ads/reel.mjs`). Hvert koncept findes som:
 
 - `final/<koncept>-4x5.jpg` (feed), `final/<koncept>-1x1.jpg` (kvadrat), `final/<koncept>-9x16.jpg` (Stories)
 - `video/<koncept>-9x16.mp4` (Reels/Stories, 8–9 sekunder, uden lyd) for koncepterne memory, gift, original,

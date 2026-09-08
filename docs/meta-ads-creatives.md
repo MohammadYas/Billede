@@ -14,9 +14,11 @@ ingen refusion, intet "bestil kun hvis". Brandmærket er lille og står sidst.
   over sløret baggrund, så Reels' egne knapper ikke dækker teksten) og hvert video-shot.
 - `scripts/ads/static.mjs` – `work/ads/final/<koncept>-{4x5,1x1,9x16}.jpg`; `--hooks` giver også
   `-h2`-varianter til hook-test.
-- `scripts/ads/video.mjs` – `work/ads/video/<koncept>-9x16.mp4`, 8–9 s: hook (2,4 s) → gammelt foto →
-  **wipe** til restaureret (selve overgangen er beviset) → det fysiske resultat i ramme → slutkort med CTA og
-  pris. ffmpeg (findes i `C:Usersmo	oolsfmpeg`; sæt `FFMPEG=` hvis den flytter). Uden lyd.
+- `scripts/ads/reel.mjs` – `work/ads/video/<koncept>-9x16.mp4`, 9–10 s, fuld 9:16 med ægte bevægelse: hooket
+  kommer ord for ord over scenen → det gamle print løftes ud af scenen og fylder skærmen → en wipe restaurerer
+  det → det restaurerede billede glider ind i en ramme på væggen → CTA og pris. Én animeret side, hvert
+  frame renderes deterministisk (`seek(t)` → screenshot), ffmpeg samler (findes i `C:Usersmo	oolsfmpeg`;
+  sæt `FFMPEG=` hvis den flytter). Uden lyd. Aldrig zoompan (ryster) og aldrig stills med overgange (diasshow).
 
 Koncepterne (seks købsmotiver + to UGC-versioner):
 
@@ -106,7 +108,7 @@ node scripts/ads-composite.mjs work/ads/scenes/have-1976-paa-vaeggen.png have-19
 node scripts/ads-composite.mjs work/ads/scenes/foedselsdag-1985-gaven-pakkes-op.png foedselsdag-1985 --both-after
 node scripts/ads-composite.mjs work/ads/scenes/familie-ved-vandet-1948-i-haenderne.png familie-ved-vandet-1948 --focus 0.35
 node scripts/ads/static.mjs --hooks
-node scripts/ads/video.mjs
+node scripts/ads/reel.mjs
 ```
 
 Køkkenbord bruges som den er (liggende telefon med det restaurerede foto); version 2 er ikke længere nødvendig.
