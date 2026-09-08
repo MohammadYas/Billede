@@ -1,18 +1,45 @@
 # Annoncebilleder
 
-## Det, der bruges: seks købsmotiver (`scripts/ads-concepts.mjs`)
+## Det, der bruges: creative-systemet i `scripts/ads/` (reset 2026-09-08)
 
-Hver annonce har tre led: følelsen, den gratis prøve, det fysiske produkt med pris ("I ramme fra 599 kr.
-inkl. fragt"). Aldrig "gratis" uden pris i samme billede. Seks koncepter: A følelse (`a-emotion`),
-B fysisk produkt (`b-produkt`), C gave (`c-gave`), D tillid/ansigter (`d-ligne`), E originalen bliver hjemme
-(`e-original`), F tilbud (`f-tilbud`, kun mens `lib/config.ts` siger, at tilbuddet er aktivt; scriptet
-læser datoen selv). Tre layouts: `split` (samme ansigt halvt/halvt, kun portrætter; aldrig et gruppefoto,
-hvor de to halvdele ville vise to forskellige personer), `cards` (hele før- og efter-billedet side om side
-med FØR/EFTER), `scene` (en komponeret produktscene fra `work/ads/creatives/`). Ingen slider-knop i et
-statisk billede. Output `work/ads/final/<koncept>-1080x1350.jpg` og `-1080x1080.jpg`. Nyt koncept = én
-linje i `ADS`.
+Formålet er purchase-ROAS hos kold Meta-trafik, ikke CTR. En annonce skal få en tilfældig person til at
+tænke på sit eget billede, før brandet siger noget. Derfor: **én idé pr. annonce.** Hook, visuelt bevis,
+én CTA og priskvalificeringen. Ingen eyebrow, ingen brødtekst, ingen logo-boks, ingen FØR/EFTER-chips,
+ingen refusion, intet "bestil kun hvis". Brandmærket er lille og står sidst.
 
-## Sekundært: genererede scener med gpt-image-2 / Gemini (produktet i et hjem)
+- `scripts/ads/concepts.mjs` – data: koncept, købsmotiv, funnel-trin (cold / retargeting / offer), stil
+  (polished / ugc), hooks (første bruges; resten er hook-varianter), evt. én støttelinje, CTA,
+  priskvalificering, det visuelle (scene / split / framed), eksempelpar til reveal, og shot-listen til video.
+- `scripts/ads/html.mjs` – én skabelon for alt: 4:5, 1:1, 9:16 (indhold i en centreret 1080×1350-scene
+  over sløret baggrund, så Reels' egne knapper ikke dækker teksten) og hvert video-shot.
+- `scripts/ads/static.mjs` – `work/ads/final/<koncept>-{4x5,1x1,9x16}.jpg`; `--hooks` giver også
+  `-h2`-varianter til hook-test.
+- `scripts/ads/video.mjs` – `work/ads/video/<koncept>-9x16.mp4`, 8–9 s: hook (2,4 s) → gammelt foto →
+  **wipe** til restaureret (selve overgangen er beviset) → det fysiske resultat i ramme → slutkort med CTA og
+  pris. ffmpeg (findes i `C:Usersmo	oolsfmpeg`; sæt `FFMPEG=` hvis den flytter). Uden lyd.
+
+Koncepterne (seks købsmotiver + to UGC-versioner):
+
+| Koncept | Trin | Hook | Visuelt | Format |
+|---|---|---|---|---|
+| memory | cold | Har du også sådan et billede? | hænder med gammelt + restaureret print; reel: skuffen → portræt-wipe → ramme | billede + reel |
+| gift | cold | Hvad giver man sine forældre, når de allerede har alt? | bryllupsbilledet i ramme på væggen, det gamle print foran | billede + reel |
+| trust | retargeting | Det skal stadig ligne hende. + "Vi gennemgår ansigterne. Du godkender før print." | samme ansigt, halvt/halvt | billede |
+| original | cold | Du skal ikke sende originalen. + "Et foto med mobilen er nok." | telefon over det gamle print på bordet | billede + reel |
+| physical | cold | Det er ikke bare en fil. / Fra skuffen til væggen. | rammen på væggen, det gamle print på skænken | billede + reel |
+| offer | offer, kun mens `lib/config.ts` siger aktivt | Der er næsten altid én mere, der også husker det. | to indrammede eksemplarer i pakken | billede |
+| ugc-memory / ugc-original | cold | som memory / original | samme scener, Instagram-tekstbokse, intet brandmærke | billede + reel |
+
+Regler: split kun på samme ansigt (aldrig et gruppefoto); ingen slider-knop i et statisk billede; "gratis"
+aldrig uden "fra 599 kr." i samme billede; refusion og garanti kun på landingssiden, i FAQ og i checkout;
+ingen opfundne kundehistorier (eksemplerne er genererede originaler med ægte restaurering). Nyt koncept =
+ét objekt i `CONCEPTS`. Nyt scenebillede = pipelinen nedenfor.
+
+Forkastet 2026-09-08 (brochure): eyebrow + overskrift + brødtekst + knap + pris + fragt + logo-boks i ét
+billede (`scripts/ads-concepts.mjs`, `ads-render.mjs`, `ads-creatives.mjs`, slettet). Deres output ligger i
+`work/ads/final-old-brochure/` til sammenligning.
+
+## Scenerne: genererede scener med gpt-image-2 / Gemini (produktet i et hjem)
 
 Forkastet som primære annoncer 2026-09-08 (fotografiet bliver for lille; "sælger intet"). Pipelinen står,
 fordi scenerne er gode som sekundære "sådan ser det ud hjemme"-annoncer og til landingssiden.
@@ -66,23 +93,23 @@ screenshottet på telefonstørrelse med eksempelparret sat ind i slideren (`scri
 kræver dev-serveren og en PREVIEW_READY-ordre; `--compact` beholder tilbudsbar, header, slider og knap,
 `--ratio` = feltets bredde/højde i scenen, så intet beskæres). Compositor'en får skærmen med `--screen`.
 
-Teksten sidder i billedet: `scripts/ads-render.mjs` lægger et panel i sitets tokens (papir, hairline,
-Schibsted Grotesk-overskrift, Public Sans-linje, Newsreader-ordmærke) under scenen og skriver
-`work/ads/final/<koncept>-1080x1350.jpg` og `-1080x1080.jpg`. Teksterne og beskæringsankeret pr.
-annonce står i `ADS` øverst i scriptet. Det er filerne i `work/ads/final/`, Chrome-prompten uploader.
+Scenen ender i `work/ads/creatives/<par>-<koncept>-1080x1350.jpg`, som `scripts/ads/concepts.mjs` peger på
+(`scene(...)`). Teksten lægges først på af `scripts/ads/static.mjs` / `video.mjs`.
 
-Hele kæden for de fem, som kørt 2026-09-08:
+Hele kæden for de fem, som kørt 2026-09-08 (skuffen uden UI på skærmen: det rå restaurerede foto, fordi
+telefonen ikke må være det første, øjet ser):
 
 ```bash
 node scripts/ads-phone-screen.mjs portraet-1962 --order 656abef8 --ratio 0.40 --compact
-node scripts/ads-composite.mjs work/ads/scenes/portraet-1962-skuffen.png portraet-1962 --screen work/ads/screens/portraet-1962-phone.png
+node scripts/ads-composite.mjs work/ads/scenes/portraet-1962-skuffen.png portraet-1962 --focus 0.28
 node scripts/ads-composite.mjs work/ads/scenes/have-1976-paa-vaeggen.png have-1976
 node scripts/ads-composite.mjs work/ads/scenes/foedselsdag-1985-gaven-pakkes-op.png foedselsdag-1985 --both-after
 node scripts/ads-composite.mjs work/ads/scenes/familie-ved-vandet-1948-i-haenderne.png familie-ved-vandet-1948 --focus 0.35
-node scripts/ads-render.mjs
+node scripts/ads/static.mjs --hooks
+node scripts/ads/video.mjs
 ```
 
-Køkkenbord venter på version 2 af scenen (stående telefon), se koncept 1.
+Køkkenbord bruges som den er (liggende telefon med det restaurerede foto); version 2 er ikke længere nødvendig.
 
 ## Fælles prompt-ramme
 
@@ -107,7 +134,7 @@ Første version med liggende telefon kunne kun vise et råt foto. Gem som
 ```bash
 node scripts/ads-phone-screen.mjs bryllup-1954 --order 656abef8 --ratio 0.46 --compact
 node scripts/ads-composite.mjs work/ads/scenes/bryllup-1954-koekkenbord.png bryllup-1954 --screen work/ads/screens/bryllup-1954-phone.png --focus 0.4
-node scripts/ads-render.mjs koekkenbord
+node scripts/ads/static.mjs original ugc-original
 ```
 
 ```

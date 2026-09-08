@@ -2,7 +2,8 @@
 
 Sådan bruges den: log ind på business.facebook.com i Chrome, åbn Ads Manager på den rigtige annoncekonto,
 åbn Claude-udvidelsen og indsæt alt under stregen som første besked. Billederne ligger i
-`work/ads/final/` (lav dem igen med `node scripts/ads-concepts.mjs`, hvis eksemplerne eller teksterne ændrer sig).
+`work/ads/final/` (billeder) og `work/ads/video/` (reels); lav dem igen med `node scripts/ads/static.mjs` og
+`node scripts/ads/video.mjs`, hvis eksemplerne eller teksterne ændrer sig. Systemet: `docs/meta-ads-creatives.md`.
 
 Forudsætning, som Claude ikke kan klare for dig: annoncekontoen har en betalingsmetode, Facebook-siden
 "Billedearv" findes, og du er admin på Business Manager. Pixel og Conversions API er endnu ikke tændt på
@@ -99,110 +100,100 @@ Rapportér resultatet af hvert punkt i en tabel, før du går til fase 1.
 - Optimering: Conversions. Budstrategi: Highest volume, ingen omkostningsgrænse. Attribution: 7 dages
   klik, 1 dags visning.
 
-## Fase 3: seks annoncer, seks købsmotiver
+## Fase 3: annoncerne – én idé pr. annonce
 
-Fælles for alle seks:
+Filerne ligger i `C:\Users\mo\Desktop\Billede\work\ads\` (lavet af `node scripts/ads/static.mjs` og
+`node scripts/ads/video.mjs`). Hvert koncept findes som:
 
-- Format: enkelt billede. Identitet: Facebook-siden Billedearv, og Instagram-kontoen, hvis den findes.
-  Multi-advertiser ads: fra. Alle Advantage+ creative-valg: fra.
-- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\final\` (lavet af `node scripts/ads-concepts.mjs`).
-  Pr. annonce: `<koncept>-1080x1350.jpg` til feed og Stories (4:5) og `<koncept>-1080x1080.jpg` til
-  1:1-placeringer. Overskrift, tekst, knap og "I ramme fra 599 kr. inkl. fragt" sidder allerede i billedet.
-  Upload 4:5-filen først, og vælg "Rediger pr. placering" for at give 1:1-filen til de placeringer, der
-  kræver kvadrat, så Meta ikke beskærer selv.
+- `final/<koncept>-4x5.jpg` (feed), `final/<koncept>-1x1.jpg` (kvadrat), `final/<koncept>-9x16.jpg` (Stories)
+- `video/<koncept>-9x16.mp4` (Reels/Stories, 8–9 sekunder, uden lyd) for koncepterne memory, gift, original,
+  physical, ugc-memory og ugc-original.
+- `final/<koncept>-h2-*.jpg` er samme koncept med hook-variant 2 (til en senere hook-test, ikke nu).
+
+Fælles for alle:
+
+- Identitet: Facebook-siden Billedearv, og Instagram-kontoen, hvis den findes. Multi-advertiser ads: fra.
+  Alle Advantage+ creative-valg: fra (ingen automatisk beskæring, musik, tekst eller forbedringer).
+- Video-annoncer: upload `video/<koncept>-9x16.mp4`; under "Rediger pr. placering" giv feed-placeringer
+  `final/<koncept>-4x5.jpg` som miniature/alternativ, hvis Ads Manager beder om det. Billed-annoncer: upload
+  4:5 først, giv 9:16 til Stories/Reels og 1:1 til de placeringer, der kræver kvadrat.
 - Website-URL: `https://billedearv.dk/`
 - Feltet **URL-parametre** (ikke selve URL'en):
   `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`
-- Knap: "Få mere at vide" (Learn more). Ikke "Køb nu": første skridt koster ikke noget.
-- Sprog: dansk. Ingen automatiske oversættelser.
-- Hver annoncetekst har tre led i den rækkefølge: følelsen, den gratis prøve, det fysiske produkt med pris.
-  Skriv aldrig "gratis" uden prisen i samme tekst.
+- Knap: "Få mere at vide". Sprog: dansk, ingen automatiske oversættelser.
+- Primærteksten begynder med hooket, ikke med brandet. "Gratis" står aldrig uden "fra 599 kr." i samme tekst.
+  Ingen refusion, ingen "problemer", ingen garantier i kolde annoncer; det står på landingssiden og i FAQ.
 
-### Annonce 1: `a-emotion` (billede: `a-emotion-1080x1350.jpg`)
+### Annoncesæt A (koldt, det eksisterende brede sæt)
 
-Primær tekst:
+Seks annoncer. Navngiv dem præcis som konceptet, så `utm_content` matcher.
 
-> Så tydeligt har du ikke set hende i 60 år.
+**`memory`** – video `video/memory-9x16.mp4` + billede `final/memory-4x5.jpg` (to annoncer: `memory-video`, `memory`)
+
+> Har du også sådan et billede?
 >
-> Tag et foto af det gamle billede med mobilen, og se det restaureret gratis. Originalen bliver hjemme hos dig.
+> Tag et foto af det med mobilen, og se det restaureret gratis. Kan du lide resultatet, sender vi det hjem i ramme fra 599 kr. inkl. fragt.
+
+Overskrift: `Se dit eget restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
+
+**`gift`** – video `video/gift-9x16.mp4` + billede `final/gift-4x5.jpg` (`gift-video`, `gift`)
+
+> Hvad giver man sine forældre, når de allerede har alt?
 >
-> Kan du lide resultatet, gennemgår vi ansigterne og sender det hjem i ramme med passepartout og glas – fra 599 kr. inkl. fragt. Du godkender, før vi printer.
+> Lån bryllupsbilledet et øjeblik, tag et foto med mobilen, og se det restaureret gratis. I ramme fra 599 kr. inkl. fragt – til dig eller direkte til dem.
 
-Overskrift: `Se det restaureret gratis. I ramme fra 599 kr.`
-Beskrivelse: `Du godkender ansigterne før print`
+Overskrift: `Se resultatet gratis først` · Beskrivelse: `I ramme fra 599 kr.`
 
-### Annonce 2: `b-produkt` (billede: `b-produkt-1080x1350.jpg`)
+**`original`** – video `video/original-9x16.mp4` + billede `final/original-4x5.jpg` (`original-video`, `original`)
 
-Primær tekst:
-
-> Fra skuffen til væggen.
+> Du skal ikke sende originalen.
 >
-> Se restaureringen gratis. Kan du lide resultatet, får du det færdigt som print på mat fotopapir, i ramme med passepartout og glas – fra 599 kr. inkl. fragt.
+> Et foto med mobilen er nok. Se restaureringen gratis på skærmen. I ramme fra 599 kr. inkl. fragt.
+
+Overskrift: `Et foto med mobilen er nok` · Beskrivelse: `I ramme fra 599 kr.`
+
+**`physical`** – video `video/physical-9x16.mp4` + billede `final/physical-4x5.jpg` (`physical-video`, `physical`)
+
+> Det er ikke bare en fil.
 >
-> Restaurering, gennemgang af ansigterne, print, ramme, den digitale fil og levering er med. Ingen tillæg.
+> Restaurering, print på mat fotopapir, ramme med passepartout og glas, og fri fragt – fra 599 kr. Se restaureringen gratis først.
 
-Overskrift: `Fra skuffen til væggen`
-Beskrivelse: `Print, ramme, glas og fri fragt fra 599 kr.`
+Overskrift: `Print, ramme og fri fragt` · Beskrivelse: `Fra 599 kr.`
 
-### Annonce 3: `c-gave` (billede: `c-gave-1080x1350.jpg`)
+**`ugc-memory`** – kun video `video/ugc-memory-9x16.mp4` (`ugc-memory`). Samme tekst som `memory`.
 
-Primær tekst:
+**`ugc-original`** – kun video `video/ugc-original-9x16.mp4` (`ugc-original`). Samme tekst som `original`.
 
-> Gaven, de ikke selv kan købe sig til.
->
-> Tag et foto af mors og fars bryllupsbillede i smug, og se det restaureret gratis.
->
-> Bestiller du, kommer det hjem i ramme fra 599 kr. inkl. fragt – til dig eller direkte til dem. Du godkender det færdige billede, før vi printer.
+### Annoncesæt B (retargeting, oprettes pauset)
 
-Overskrift: `Mors og fars bryllupsbillede. Tilbage på væggen.`
-Beskrivelse: `I ramme fra 599 kr. inkl. fragt`
+Nyt annoncesæt i samme kampagne: målgruppe = custom audience "Website-besøgende 30 dage" (opret den under
+Målgrupper med pixelen; den er tom, indtil pixelen kører, og det er forventet). Ekskludér købere
+(event Purchase, 180 dage). Budget 50 kr./dag. Optimering: Purchase. Samme placeringer som sæt A.
 
-### Annonce 4: `d-ligne` (billede: `d-ligne-1080x1350.jpg`)
-
-Primær tekst:
+**`trust`** – billede `final/trust-4x5.jpg` (+ 1:1 og 9:16)
 
 > Det skal stadig ligne hende.
 >
-> Restaureringen må ikke gøre bedstemor til en anden person. Derfor gennemgår vi ansigterne, før billedet går til print, og du godkender resultatet.
->
-> Se restaureringen gratis først. I ramme fra 599 kr. inkl. fragt.
+> Vi gennemgår ansigterne, og du godkender resultatet, før vi printer. Se dit eget restaureret gratis. I ramme fra 599 kr. inkl. fragt.
 
-Overskrift: `Det skal stadig ligne hende`
-Beskrivelse: `Du godkender ansigterne før print · fra 599 kr.`
+Overskrift: `Du godkender før print` · Beskrivelse: `I ramme fra 599 kr.`
 
-### Annonce 5: `e-original` (billede: `e-original-1080x1350.jpg`)
-
-Primær tekst:
-
-> Du sender aldrig originalen.
->
-> Tag blot et foto med mobilen. Dit gamle familiebillede bliver hjemme hos dig, og du ser restaureringen gratis på skærmen, før du beslutter noget.
->
-> Vil du have det hjem i ramme, koster det fra 599 kr. inkl. fragt. Du godkender, før vi printer.
-
-Overskrift: `Originalen bliver hjemme hos dig`
-Beskrivelse: `Se restaureringen gratis · i ramme fra 599 kr.`
-
-### Annonce 6: `f-tilbud` (billede: `f-tilbud-1080x1350.jpg`) – kun mens tilbuddet er aktivt
+**`offer`** – billede `final/offer-4x5.jpg` – kun mens tilbuddet er aktivt
 
 Scriptet laver kun denne fil, mens lanceringstilbuddet er aktivt i `lib/config.ts` (til og med 30. september
-2026). Findes filen ikke, springes annoncen over.
+2026). Findes filen ikke, springes annoncen over. Sæt den også ind i sæt A som syvende annonce.
 
-Primær tekst:
-
-> Lanceringstilbud til og med 30. september: 2 indrammede eksemplarer fra 599 kr.
+> Der er næsten altid én mere, der også husker det.
 >
-> Ét til dig. Ét til den, der også husker det. Det første ekstra eksemplar af samme billede, størrelse og ramme er gratis.
->
-> Se restaureringen gratis først, og bestil kun, hvis du kan lide resultatet. Fri fragt. Du godkender, før vi printer.
+> 2 indrammede eksemplarer fra 599 kr.: ét til dig, ét til den, der også husker det. Det første ekstra eksemplar af samme billede, størrelse og ramme er gratis til og med 30. september. Se restaureringen gratis først.
 
-Overskrift: `2 indrammede eksemplarer fra 599 kr.`
-Beskrivelse: `Til og med 30. september · fri fragt`
+Overskrift: `2 indrammede eksemplarer fra 599 kr.` · Beskrivelse: `Til og med 30. september`
 
 ## Fase 4: gennemgang, og stop
 
 1. Åbn forhåndsvisning af alle annoncer i mobil-feed og i Stories. Screenshot af hver. Tjek, at
-   overskriften ikke afkortes, at billedet ikke beskæres, og at "FØR"/"EFTER" begge kan læses.
+   overskriften ikke afkortes, at billedet ikke beskæres, og at videoernes hook kan læses i Reels uden at
+   ligge under Metas egne knapper.
 2. Klik forhåndsvisningens link til landingssiden. Den åbnede URL skal indeholde
    `utm_source=facebook` og `utm_content=` efterfulgt af annoncenavnet.
 3. Rapportér i en tabel: kampagne, annoncesæt og hver annonce med ID, status (kladde/pauset), og en
