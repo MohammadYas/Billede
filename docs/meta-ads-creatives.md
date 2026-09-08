@@ -1,4 +1,22 @@
-# Annoncebilleder: scener fra gpt-image-2 / Gemini, fotografierne lægges ind bagefter
+# Annoncebilleder
+
+## Det, der bruges: fotografiet selv (`scripts/ads-hero.mjs`)
+
+Det, der sælger i denne kategori, er ansigtet, stort, halvt ødelagt og halvt reddet. `node scripts/ads-hero.mjs`
+laver pr. eksempelpar fire filer i `work/ads/final/`: `overlay-<par>-1080x1350` (tekst på fotoet over en
+mørk gradient, til feed 4:5), `overlay-<par>-1080x1080`, `hero-<par>-1080x1350` og `hero-<par>-1080x1080`
+(fotoet med papirpanel under). Sitets slider-knop og Før/Efter-chips ligger på sømmen; knap "Prøv med dit
+eget billede", pris "Fra 599 kr. i ramme · fri fragt · du betaler først, når du har set det". Tekster,
+ansigtsposition (`pos`) og sømmens placering (`seam`) pr. par står i `ADS` øverst i scriptet. Ingen
+credits, ingen billedmodel: fotografierne er pipelinens ægte output fra `public/examples/`.
+
+Chrome-prompten bruger `overlay-*-1080x1350` til 4:5 og `hero-*-1080x1080` til 1:1 (panelet dækker ingen
+ansigter i det tætte kvadrat).
+
+## Sekundært: genererede scener med gpt-image-2 / Gemini (produktet i et hjem)
+
+Forkastet som primære annoncer 2026-09-08 (fotografiet bliver for lille; "sælger intet"). Pipelinen står,
+fordi scenerne er gode som sekundære "sådan ser det ud hjemme"-annoncer og til landingssiden.
 
 **Ingen referencebilleder.** Modellen laver kun scenen og efterlader to helt sorte, matte, frontale
 rektangler, hvor fotografierne skal sidde. Bagefter lægger `scripts/ads-composite.mjs` det ægte før- og

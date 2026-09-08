@@ -2,7 +2,7 @@
 
 Sådan bruges den: log ind på business.facebook.com i Chrome, åbn Ads Manager på den rigtige annoncekonto,
 åbn Claude-udvidelsen og indsæt alt under stregen som første besked. Billederne ligger i
-`work/ads/creatives/` (lav dem igen med `node scripts/ads-creatives.mjs`, hvis eksemplerne ændrer sig).
+`work/ads/final/` (lav dem igen med `node scripts/ads-hero.mjs`, hvis eksemplerne eller teksterne ændrer sig).
 
 Forudsætning, som Claude ikke kan klare for dig: annoncekontoen har en betalingsmetode, Facebook-siden
 "Billedearv" findes, og du er admin på Business Manager. Pixel og Conversions API er endnu ikke tændt på
@@ -105,18 +105,21 @@ Fælles for alle fem:
 
 - Format: enkelt billede. Identitet: Facebook-siden Billedearv, og Instagram-kontoen, hvis den findes.
   Multi-advertiser ads: fra. Alle Advantage+ creative-valg: fra.
-- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\final\`. Pr. annonce to filer med samme
-  navn: `<koncept>-1080x1350.jpg` til feed og Stories (4:5) og `<koncept>-1080x1080.jpg` til
-  1:1-placeringer. Teksten sidder allerede i billedet (overskrift, linje, logo). Upload 4:5-filen først,
-  og vælg "Rediger pr. placering" for at give 1:1-filen til de placeringer, der kræver kvadrat, så Meta
-  ikke beskærer selv.
+- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\final\`. Pr. annonce: `overlay-<par>-1080x1350.jpg`
+  til feed og Stories (4:5; fotografiet fuld højde, teksten på billedet) og `hero-<par>-1080x1080.jpg` til
+  1:1-placeringer (fotografiet med tekstpanel under, så ingen ansigter dækkes). Overskrift, linje, knap og
+  pris sidder allerede i billedet. Upload 4:5-filen først, og vælg "Rediger pr. placering" for at give
+  1:1-filen til de placeringer, der kræver kvadrat, så Meta ikke beskærer selv.
+- Reserve, hvis Meta afviser et billede for tekstmængde, eller til et andet annoncesæt senere:
+  `hero-<par>-1080x1350.jpg` (samme foto, tekst i panel under) og scene-annoncerne `skuffen`,
+  `paa-vaeggen`, `gaven-pakkes-op`, `i-haenderne` (produktet i et hjem).
 - Website-URL: `https://billedearv.dk/`
 - Feltet **URL-parametre** (ikke selve URL'en):
   `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`
 - Knap: "Få mere at vide" (Learn more). Ikke "Køb nu": første skridt koster ikke noget.
 - Sprog: dansk. Ingen automatiske oversættelser.
 
-### Annonce 1: `gaven` (billede: `koekkenbord-1080x1350.jpg`)
+### Annonce 1: `gaven` (billede: `overlay-bryllup-1954-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -129,7 +132,7 @@ Primær tekst:
 Overskrift: `Se det restaureret, før du køber`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 2: `dit-billede` (billede: `paa-vaeggen-1080x1350.jpg`)
+### Annonce 2: `dit-billede` (billede: `overlay-have-1976-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -142,7 +145,7 @@ Primær tekst:
 Overskrift: `Dit gamle billede kan blive sådan her`
 Beskrivelse: `Se resultatet på skærmen, før du beslutter dig`
 
-### Annonce 3: `ser-foerst` (billede: `skuffen-1080x1350.jpg`)
+### Annonce 3: `ser-foerst` (billede: `overlay-portraet-1962-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -155,7 +158,7 @@ Primær tekst:
 Overskrift: `Ingen bestilling, før du har set det`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 4: `tilbud` (billede: `gaven-pakkes-op-1080x1350.jpg`)
+### Annonce 4: `tilbud` (billede: `overlay-foedselsdag-1985-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -166,7 +169,7 @@ Primær tekst:
 Overskrift: `Ét ekstra eksemplar med i pakken · til og med 30. september`
 Beskrivelse: `Samme billede, samme ramme, til den der også husker det`
 
-### Annonce 5: `samme-billede` (billede: `i-haenderne-1080x1350.jpg`)
+### Annonce 5: `samme-billede` (billede: `overlay-familie-ved-vandet-1948-1080x1350.jpg`)
 
 Primær tekst:
 
