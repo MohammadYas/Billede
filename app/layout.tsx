@@ -28,6 +28,8 @@ export const metadata: Metadata = {
     images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Før og efter: restaureret familiebillede' }],
   },
   twitter: { card: 'summary_large_image', title: 'Billedearv – gamle billeder, restaureret og indrammet', description: `Se dit gamle familiebillede restaureret på halvandet minut. I ramme fra ${priceFrom}, fri fragt.`, images: ['/og.jpg'] },
+  // Meta → Business Settings → Brand Safety → Domains → billedearv.dk → meta tag: the content value goes in META_DOMAIN_VERIFICATION
+  ...(process.env.META_DOMAIN_VERIFICATION ? { verification: { other: { 'facebook-domain-verification': [process.env.META_DOMAIN_VERIFICATION] } } } : {}),
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
   icons: { icon: [{ url: '/favicon.png', type: 'image/png', sizes: '64x64' }, { url: '/favicon.svg', type: 'image/svg+xml' }], apple: '/apple-touch-icon.png' },
   alternates: { canonical: '/' },
