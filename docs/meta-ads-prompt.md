@@ -99,23 +99,23 @@ Rapportér resultatet af hvert punkt i en tabel, før du går til fase 1.
 - Optimering: Conversions. Budstrategi: Highest volume, ingen omkostningsgrænse. Attribution: 7 dages
   klik, 1 dags visning.
 
-## Fase 3: fire annoncer
+## Fase 3: fem annoncer
 
-Fælles for alle fire:
+Fælles for alle fem:
 
 - Format: enkelt billede. Identitet: Facebook-siden Billedearv, og Instagram-kontoen, hvis den findes.
   Multi-advertiser ads: fra. Alle Advantage+ creative-valg: fra.
-- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\creatives\`. Brug den genererede scene
-  `<par>-<koncept>-1080x1350.jpg` (lavet efter `docs/meta-ads-creatives.md`) som hovedbillede; findes
-  den ikke for et par, brug collagen `<par>-story-1080x1350.jpg`, og `<par>-feed-1080x1080.jpg` til
-  1:1-placeringer (vælg "Rediger pr. placering", så Meta ikke beskærer selv).
+- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\creatives\`. Pr. annonce to filer med samme
+  navn: `…-1080x1350.jpg` til feed og Stories (4:5) og `…-1080x1080.jpg` til 1:1-placeringer. Upload
+  4:5-filen først, og vælg "Rediger pr. placering" for at give 1:1-filen til de placeringer, der kræver
+  kvadrat, så Meta ikke beskærer selv.
 - Website-URL: `https://billedearv.dk/`
 - Feltet **URL-parametre** (ikke selve URL'en):
   `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`
 - Knap: "Få mere at vide" (Learn more). Ikke "Køb nu": første skridt koster ikke noget.
 - Sprog: dansk. Ingen automatiske oversættelser.
 
-### Annonce 1: `gaven` (billede: bryllup-1954, koncept `koekkenbord`)
+### Annonce 1: `gaven` (billede: `bryllup-1954-koekkenbord-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -128,7 +128,7 @@ Primær tekst:
 Overskrift: `Se det restaureret, før du køber`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 2: `dit-billede` (billede: have-1976, koncept `paa-vaeggen`)
+### Annonce 2: `dit-billede` (billede: `have-1976-paa-vaeggen-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -141,7 +141,7 @@ Primær tekst:
 Overskrift: `Dit gamle billede kan blive sådan her`
 Beskrivelse: `Se resultatet på skærmen, før du beslutter dig`
 
-### Annonce 3: `ser-foerst` (billede: portraet-1962, koncept `skuffen`)
+### Annonce 3: `ser-foerst` (billede: `portraet-1962-skuffen-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -154,7 +154,7 @@ Primær tekst:
 Overskrift: `Ingen bestilling, før du har set det`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 4: `tilbud` (billede: foedselsdag-1985, koncept `gaven-pakkes-op`)
+### Annonce 4: `tilbud` (billede: `foedselsdag-1985-gaven-pakkes-op-1080x1350.jpg`)
 
 Primær tekst:
 
@@ -165,12 +165,26 @@ Primær tekst:
 Overskrift: `Ét ekstra eksemplar med i pakken · til og med 30. september`
 Beskrivelse: `Samme billede, samme ramme, til den der også husker det`
 
-Reservebilleder, hvis et af de fire afvises eller skal skiftes: familie-1932, familie-ved-vandet-1948,
-cykel-1944. Brug ikke bryllup-1916 (for lille forskel mellem før og efter).
+### Annonce 5: `samme-billede` (billede: `familie-ved-vandet-1948-i-haenderne-1080x1350.jpg`)
+
+Primær tekst:
+
+> Samme billede. Til venstre som det har ligget i skuffen. Til højre som det kommer hjem.
+>
+> Tag et foto af billedet med telefonen, og se det restaureret på skærmen. Det koster ikke noget at se, og du bestiller kun, hvis du vil have det i ramme.
+>
+> Fra 599 kr. i ramme med glas, fri fragt, leveret inden 10 hverdage efter dit ja.
+
+Overskrift: `Samme billede, 70 år senere`
+Beskrivelse: `Se det på skærmen, før du beslutter dig`
+
+Skal én annonce skiftes ud, findes reservebilleder som rene før/efter-collager i samme mappe
+(`<par>-story-1080x1350.jpg`, `<par>-feed-1080x1080.jpg`) for familie-1932 og cykel-1944. Brug ikke
+bryllup-1916 (for lille forskel mellem før og efter).
 
 ## Fase 4: gennemgang, og stop
 
-1. Åbn forhåndsvisning af alle fire annoncer i mobil-feed og i Stories. Screenshot af hver. Tjek, at
+1. Åbn forhåndsvisning af alle fem annoncer i mobil-feed og i Stories. Screenshot af hver. Tjek, at
    overskriften ikke afkortes, at billedet ikke beskæres, og at "FØR"/"EFTER" begge kan læses.
 2. Klik forhåndsvisningens link til landingssiden. Den åbnede URL skal indeholde
    `utm_source=facebook` og `utm_content=` efterfulgt af annoncenavnet.

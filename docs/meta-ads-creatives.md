@@ -25,8 +25,21 @@ node scripts/ads-composite.mjs work/ads/scenes/bryllup-1954-koekkenbord.png bryl
 ```
 
    Output: `work/ads/creatives/bryllup-1954-koekkenbord-1080x1350.jpg` og `-1080x1080.jpg`. Scriptet
-   finder de to sorte felter selv; finder det ikke præcis to, siger det fra, og du kan give felterne
-   manuelt: `--after x,y,w,h --before x,y,w,h` (pixel i scenen).
+   finder de to sorte felter selv (også en telefonskærm, der hænger sammen med telefonens sorte krop);
+   finder det ikke præcis to, siger det fra, og du kan give felterne manuelt:
+   `--after x,y,w,h --before x,y,w,h` (pixel i scenen). Før og efter får altid det samme udsnit;
+   er feltet liggende og fotografiet stående, styrer `--focus 0.4` hvor udsnittets midte ligger
+   (0 = top, 1 = bund; ansigter i et helfigursportræt ligger omkring 0,35–0,4).
+
+   Kørt 2026-09-08 på fem gpt-image-2-scener: alle fem felter fundet automatisk. Kommandoerne:
+
+```bash
+node scripts/ads-composite.mjs work/ads/scenes/bryllup-1954-koekkenbord.png bryllup-1954 --focus 0.4
+node scripts/ads-composite.mjs work/ads/scenes/have-1976-paa-vaeggen.png have-1976
+node scripts/ads-composite.mjs work/ads/scenes/portraet-1962-skuffen.png portraet-1962
+node scripts/ads-composite.mjs work/ads/scenes/foedselsdag-1985-gaven-pakkes-op.png foedselsdag-1985 --both-after
+node scripts/ads-composite.mjs work/ads/scenes/familie-ved-vandet-1948-i-haenderne.png familie-ved-vandet-1948 --focus 0.35
+```
 5. Åbn resultatet. Passer lys og skygge? Ellers vælg den anden variant fra modellen. Sig "billeder klar".
 
 ## Fælles prompt-ramme
