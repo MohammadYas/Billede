@@ -3,7 +3,7 @@ import { getFounder, missing } from '@/lib/founder';
 import { CONFIG, formatCutoffDate } from '@/lib/config';
 import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK } from '@/lib/pricing';
 
-export const metadata = { title: 'Handelsbetingelser – Billedarv' };
+export const metadata = { title: 'Handelsbetingelser – Billedearv' };
 
 export default function Handelsbetingelser() {
   const f = getFounder();

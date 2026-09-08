@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import { tiledWatermark } from './watermark';
 
 /**
- * Customer-facing preview: 1000 px long edge, JPEG q80, and "BILLEDARV · PREVIEW" tiled across the
+ * Customer-facing preview: 1000 px long edge, JPEG q80, and "BILLEDEARV · PREVIEW" tiled across the
  * whole picture at about 18 % — light enough to judge the faces, present in every crop so a
  * screenshot is not the product. The zoom view scales this same file, so it is covered too.
  */

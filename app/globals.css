@@ -1,4 +1,4 @@
-/* Billedarv — tokens and base. See DESIGN.md. */
+/* Billedearv — tokens and base. See DESIGN.md. */
 @font-face { font-family: 'Newsreader'; src: url('/fonts/Newsreader-normal.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Newsreader'; src: url('/fonts/Newsreader-italic.woff2') format('woff2'); font-weight: 300 700; font-style: italic; font-display: swap; }
 @font-face { font-family: 'Public Sans'; src: url('/fonts/PublicSans-normal.woff2') format('woff2'); font-weight: 400 700; font-style: normal; font-display: swap; }

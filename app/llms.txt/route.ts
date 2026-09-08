@@ -15,7 +15,7 @@ export async function GET() {
   const base = CONFIG.siteUrl.replace(/\/$/, '');
   const sizes = customerFormats().map((fm) => `- ${formatLabel(fm)}: ${formatDkk(PRICING[fm].priceDkk)} inkl. moms, ramme (sort eller eg med passepartout og glas), digital fil i høj opløsning og fri fragt i Danmark`).join('\n');
   const faq = c.spoergsmaal.items.map((it) => `### ${it.q}\n${it.a}`).join('\n\n');
-  const text = `# Billedarv
+  const text = `# Billedearv
 
 > Dansk service, der restaurerer gamle familiebilleder og leverer dem som print i ramme. Kunden tager et foto af det gamle billede med telefonen, ser resultatet på skærmen om cirka halvandet minut, og bestiller først bagefter. Et menneske gennemgår hvert billede, før det printes; kunden godkender det færdige billede på mail. Ligner det ikke, får kunden pengene tilbage.
 

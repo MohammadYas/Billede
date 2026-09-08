@@ -1,4 +1,4 @@
-# ANTI_SLOP — forbid-list for Billedarv
+# ANTI_SLOP — forbid-list for Billedearv
 
 Research summary (2026-09): every AI site-builder (Lovable, v0, Bolt, Cursor defaults) converges on the
 statistical average of Tailwind tutorials and shadcn/ui: Inter, indigo-to-violet gradients, a centred hero
@@ -9,10 +9,10 @@ Sources: DEV Community ("Why AI websites all look the same", "Blame Tailwind's i
 Publishd. The opposite of slop is not "more design" — it is fewer, specific, physical decisions.
 
 Every line below is audited pass/fail in QA.md §Anti-slop audit with a screenshot reference.
-"Opposite" is what Billedarv does instead.
+"Opposite" is what Billedearv does instead.
 
 ## A. Typography
-| # | Forbidden | Opposite on Billedarv |
+| # | Forbidden | Opposite on Billedearv |
 |---|---|---|
 | A1 | Inter / Roboto / Poppins / Manrope / Space Grotesk / Plus Jakarta / Geist, and per impeccable's 2026 detector also Fraunces and Instrument Sans, as display or body | Schibsted Grotesk (display, buttons) + Public Sans (body), Newsreader only in the wordmark, all self-hosted |
 | A2 | Default Tailwind type scale (text-xl/2xl/4xl steps) | Hand-set scale, tight display leading (1.02–1.08), generous body leading (1.55) |
@@ -70,7 +70,7 @@ Every line below is audited pass/fail in QA.md §Anti-slop audit with a screensh
 ## G. Structure and meta
 | # | Forbidden | Opposite |
 |---|---|---|
-| G1 | Framework favicon, missing OG image, generic `<title>` | Wordmark favicon, OG image = a real before/after, title "Billedarv – gamle billeder, restaureret og indrammet" |
+| G1 | Framework favicon, missing OG image, generic `<title>` | Wordmark favicon, OG image = a real before/after, title "Billedearv – gamle billeder, restaureret og indrammet" |
 | G2 | Empty About / Contact, no phone, no CVR | Founder section with live phone and mail, CVR in footer |
 | G3 | Builder fingerprints (lovable.app, bolt, "vibe" in class names) | Own domain, own CSS, no default components |
 | G4 | shadcn/ui, Radix, lucide defaults left untouched | No UI kit. Seven hand-written components |

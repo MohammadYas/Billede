@@ -17,7 +17,7 @@ export function clientIp(h: Headers): string | null {
 export function clientKey(h: Headers): string | null {
   const ip = clientIp(h);
   if (!ip) return null;
-  const salt = process.env.JOB_SECRET ?? process.env.CRON_SECRET ?? 'billedarv';
+  const salt = process.env.JOB_SECRET ?? process.env.CRON_SECRET ?? 'billedearv';
   return createHash('sha256').update(`${salt}|${ip}`).digest('base64url').slice(0, 24);
 }
 

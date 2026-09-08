@@ -14,7 +14,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const OUT = (process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : 'assets/examples-source');
-const UA = 'BilledarvBuild/0.1 (https://billedarv.dk)';
+const UA = 'BilledearvBuild/0.1 (https://billedearv.dk)';
 
 /**
  * name → Commons file title. The sidecar next to each output file carries the caption and the licence.

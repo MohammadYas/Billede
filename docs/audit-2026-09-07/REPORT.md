@@ -1,4 +1,4 @@
-# Resultat – Billedarv
+# Resultat – Billedearv
 
 8 prioriterede fund er rettet og verificeret lokalt. Priser, betalingsberegning og brand er bevaret. Ingen deploy, betaling, ekstern mail, kundehenvendelse eller upload til en ekstern tjeneste blev udført. Den oprindelige brugerfil `.claude/launch.json` er bevaret.
 

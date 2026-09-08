@@ -8,11 +8,11 @@ const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 /** Plain, typographic, one image max. Inline CSS only. */
 function shell(title: string, body: string): string {
   const f = getFounder();
-  const sig = [f.company || f.name || 'Billedarv', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
+  const sig = [f.company || f.name || 'Billedearv', f.email || '', f.cvr ? `CVR ${f.cvr}` : ''].filter(Boolean).join(' · ');
   return `<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(title)}</title></head>
 <body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;">
 <div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
-  <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:-0.01em;margin-bottom:32px;">Billedarv</div>
+  <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:-0.01em;margin-bottom:32px;">Billedearv</div>
   ${body}
   <hr style="border:0;border-top:1px solid #E2DDD4;margin:40px 0 16px;">
   <p style="margin:0;font-size:14px;color:#5D5953;">${esc(sig)}</p>

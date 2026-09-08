@@ -14,7 +14,7 @@ export default function JsonLd() {
   const org = {
     '@type': 'Organization',
     '@id': `${base}/#org`,
-    name: 'Billedarv',
+    name: 'Billedearv',
     legalName: f.company || undefined,
     url: base,
     logo: `${base}/logo.png`,
@@ -45,7 +45,7 @@ export default function JsonLd() {
     '@type': 'FAQPage',
     mainEntity: c.spoergsmaal.items.map((it) => ({ '@type': 'Question', name: it.q, acceptedAnswer: { '@type': 'Answer', text: it.a } })),
   };
-  const site = { '@type': 'WebSite', '@id': `${base}/#website`, url: base, name: 'Billedarv', inLanguage: 'da-DK', publisher: { '@id': `${base}/#org` } };
+  const site = { '@type': 'WebSite', '@id': `${base}/#website`, url: base, name: 'Billedearv', inLanguage: 'da-DK', publisher: { '@id': `${base}/#org` } };
   const howto = {
     '@type': 'HowTo',
     name: c.saadan.h2,

@@ -16,5 +16,5 @@ export async function notifyOwner(subject: string, lines: string[], orderId?: st
 ${lines.map((l) => `<p style="margin:0 0 8px;">${esc(l)}</p>`).join('')}
 <p style="margin:16px 0 0;"><a href="${link}" style="color:#1F5A3C;">${esc(link)}</a></p></div></body></html>`;
   const text = `${subject}\n\n${lines.join('\n')}\n\n${link}`;
-  try { await sendMail({ to, subject: `[Billedarv] ${subject}`, html, text }); } catch (e) { console.error('owner mail failed', e); }
+  try { await sendMail({ to, subject: `[Billedearv] ${subject}`, html, text }); } catch (e) { console.error('owner mail failed', e); }
 }

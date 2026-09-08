@@ -1,4 +1,4 @@
-# Billedarv
+# Billedearv
 
 Danish direct-to-consumer service: upload a phone photo of a damaged family photograph, see it restored in about
 a minute and a half, order it restored, printed and framed (30×40 cm 599 kr., 40×50 cm 799 kr., 50×70 cm 999 kr., free shipping).
@@ -33,7 +33,7 @@ project in `.env.local`; re-apply with the Supabase SQL editor or the Management
 | `PREVIEW_IMAGE_QUALITY` | `medium` (≈33 s for two candidates). `high` is ≈90 s and only used for the print final |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` | database and private bucket (server only uses the service role) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Checkout. Payment methods come from the Stripe account, so Apple Pay and Google Pay appear wherever the browser supports them |
-| `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_FROM_LOCAL` | mails from `<fornavn>@billedarv.dk` |
+| `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_FROM_LOCAL` | mails from `<fornavn>@billedearv.dk` |
 | `NEXT_PUBLIC_META_PIXEL_ID` | Pixel; the consent banner only renders when set |
 | `ADMIN_PASSWORD`, `CRON_SECRET`, `JOB_SECRET`, `JOB_RUNNER` | admin login (rate-limited), retention cron auth, background job runner secret, `netlify`/`inline` |
 | `NEXT_PUBLIC_SITE_URL`, `DELIVERY_DAYS_MAX`, `CHRISTMAS_START_DATE`, `CHRISTMAS_CUTOFF_DATE`, `LEGAL_DRAFT` | absolute URLs; delivery promises and the Christmas window (never hard-coded in copy); legal draft stamp |

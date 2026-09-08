@@ -33,7 +33,7 @@ if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') {
   if (!siteUrl || siteUrl.includes('localhost')) {
     throw new Error(
       `The site URL resolves to "${siteUrl || '(nothing)'}", so every canonical tag, og:url and sitemap entry on the ` +
-      'prerendered pages would point at localhost. Set NEXT_PUBLIC_SITE_URL to https://billedarv.dk in Netlify → Environment variables.',
+      'prerendered pages would point at localhost. Set NEXT_PUBLIC_SITE_URL to https://billedearv.dk in Netlify → Environment variables.',
     );
   }
 }

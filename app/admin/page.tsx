@@ -45,7 +45,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         <form action={login} className="container" style={{ maxWidth: 360, display: 'grid', gap: 'var(--s4)' }}>
           <Wordmark />
           <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordrer og produktion</h1>
-          <p className="small muted">Kun for Billedarv.</p>
+          <p className="small muted">Kun for Billedearv.</p>
           <div className="field"><label htmlFor="pw">Adgangskode</label><input id="pw" name="password" type="password" autoComplete="current-password" required /></div>
           {sp.fejl === 'vent' && <p className="small" style={{ color: 'var(--error)' }}>For mange forsøg. Vent 15 minutter.</p>}
           {sp.fejl === '1' && <p className="small" style={{ color: 'var(--error)' }}>Forkert adgangskode.</p>}

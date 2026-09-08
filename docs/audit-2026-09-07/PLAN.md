@@ -1,4 +1,4 @@
-# Billedarv – konverteringsaudit 7. september 2026
+# Billedearv – konverteringsaudit 7. september 2026
 
 Plan skrevet efter før-gennemgang og før ændringer i produktkode. Status opdateres efter verifikation.
 
@@ -8,7 +8,7 @@ Runde 2 (Claude Code, samme dag): C01–C08 gennemgået i kode og genkørt; én 
 
 ## Grundlag og afgrænsning
 
-Billedarv restaurerer indsendte familiefotos og sælger print med ramme. Primært konverteringsmål: betalt ordre efter preview. Projektets målgruppe er danske voksne 35–65 år, primært på mobil fra Meta-annoncer. Det er projektets beskrivelse, ikke valideret brugerdata. Aktuel priskilde er `lib/pricing.ts`: 599/799/999 kr., ekstra eksemplar 349 kr. Brand og priser bevares.
+Billedearv restaurerer indsendte familiefotos og sælger print med ramme. Primært konverteringsmål: betalt ordre efter preview. Projektets målgruppe er danske voksne 35–65 år, primært på mobil fra Meta-annoncer. Det er projektets beskrivelse, ikke valideret brugerdata. Aktuel priskilde er `lib/pricing.ts`: 599/799/999 kr., ekstra eksemplar 349 kr. Brand og priser bevares.
 
 Eksisterende prioriteringer i HANDOFF, DECISIONS og QA indgår. Ældre dokumenter modsiger hinanden om antal størrelser, ventetid og analytics; aktuel kode og observeret adfærd er grundlag for denne plan. `.claude/launch.json` var allerede ændret/utracket og røres ikke.
 

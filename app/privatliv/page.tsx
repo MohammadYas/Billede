@@ -2,7 +2,7 @@ import LegalPage from '@/components/LegalPage';
 import { getFounder, missing } from '@/lib/founder';
 import { CONFIG } from '@/lib/config';
 
-export const metadata = { title: 'Privatliv – Billedarv' };
+export const metadata = { title: 'Privatliv – Billedearv' };
 
 export default function Privatliv() {
   const f = getFounder();
@@ -14,7 +14,7 @@ export default function Privatliv() {
   ].filter(Boolean).join(', ');
   return (
     <LegalPage title="Sådan behandler vi dine oplysninger" updated="3. september 2026">
-      <p>Billedarv restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p>
+      <p>Billedearv restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p>
 
       <h2>Dataansvarlig</h2>
       <p>{ansvarlig}.</p>

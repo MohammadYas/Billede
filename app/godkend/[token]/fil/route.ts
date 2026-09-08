@@ -21,6 +21,6 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: str
   const order = await orderByToken(token);
   if (!order || !DELIVERED.includes(order.status)) return new NextResponse('Not found', { status: 404 });
   if (!order.final_path) return new NextResponse('Filen er slettet efter opbevaringsfristen.', { status: 410, headers: { 'content-type': 'text/plain; charset=utf-8' } });
-  const url = await signedUrl(order.final_path, undefined, `billedarv-${order.id.slice(0, 8)}.jpg`);
+  const url = await signedUrl(order.final_path, undefined, `billedearv-${order.id.slice(0, 8)}.jpg`);
   return NextResponse.redirect(url, { status: 302, headers: { 'cache-control': 'private, no-store', 'x-robots-tag': 'noindex' } });
 }

@@ -35,13 +35,13 @@ export async function POST(req: NextRequest) {
     const f = getFounder();
     const link = siteUrl('/');
     const html = `<!doctype html><html lang="da"><body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;"><div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
-<div style="font-family:Georgia,serif;font-size:22px;margin-bottom:32px;">Billedarv</div>
+<div style="font-family:Georgia,serif;font-size:22px;margin-bottom:32px;">Billedearv</div>
 <h1 style="font-family:Georgia,serif;font-weight:500;font-size:28px;line-height:1.1;margin:0 0 20px;">Til når du står med billedet.</h1>
 <p style="margin:0 0 16px;">Læg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut, og det koster ikke noget at se resultatet.</p>
 <p style="margin:0 0 24px;"><a href="${link}" style="display:inline-block;padding:14px 22px;border-radius:2px;background:#171614;color:#FBFAF7;text-decoration:none;font-weight:600;">Se dit billede nu</a></p>
-<p style="margin:0;font-size:14px;color:#5D5953;">${esc(f.company || 'Billedarv')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
+<p style="margin:0;font-size:14px;color:#5D5953;">${esc(f.company || 'Billedearv')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
     try {
-      const receipt = await sendMail({ to: email, subject: 'Dit link til Billedarv', html, text: `Til når du står med billedet: ${link}\n\nLæg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut.` });
+      const receipt = await sendMail({ to: email, subject: 'Dit link til Billedearv', html, text: `Til når du står med billedet: ${link}\n\nLæg det fladt i dagslys, uden blitz, og tag et foto af det med telefonen. Resten tager omkring halvandet minut.` });
       if (!receipt) return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });
     } catch {
       console.error('nophoto mail failed');

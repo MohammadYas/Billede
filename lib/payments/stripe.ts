@@ -80,7 +80,7 @@ export class StripeProvider implements PaymentProvider {
         extra_prints: String(opts.quote.addons.extraPrints),
         chosen_colour: String(order.chosen_colour),
       },
-      payment_intent_data: { description: `Billedarv ordre ${order.id.slice(0, 8)}`, metadata: { order_id: order.id } },
+      payment_intent_data: { description: `Billedearv ordre ${order.id.slice(0, 8)}`, metadata: { order_id: order.id } },
       expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
     });
     if (!session.url) throw new Error('Stripe returned no checkout url');

@@ -34,13 +34,13 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const navn = fornavn();
   const f = getFounder();
   const html = `<!doctype html><html lang="da"><body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;"><div style="max-width:560px;margin:0 auto;padding:40px 24px 56px;">
-<div style="font-family:Georgia,serif;font-size:22px;margin-bottom:32px;">Billedarv</div>
+<div style="font-family:Georgia,serif;font-size:22px;margin-bottom:32px;">Billedearv</div>
 <h1 style="font-family:Georgia,serif;font-weight:500;font-size:28px;line-height:1.1;margin:0 0 20px;">Dit preview.</h1>
 <p style="margin:0 0 16px;">Her er linket til dit restaurerede billede. Det virker, indtil billedet slettes – ${CONFIG.retentionUnpaidDays} dage efter upload – og vi printer ikke noget, før du selv bestiller og siger ja.</p>
 <p style="margin:0 0 24px;"><a href="${link}" style="display:inline-block;padding:14px 22px;border-radius:2px;background:#171614;color:#FBFAF7;text-decoration:none;font-weight:600;">Se dit billede</a></p>
-<p style="margin:0;font-size:14px;color:#5D5953;">${esc(f.company || 'Billedarv')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
+<p style="margin:0;font-size:14px;color:#5D5953;">${esc(f.company || 'Billedearv')}${f.email ? ` · ${esc(f.email)}` : ''}</p></div></body></html>`;
   try {
-      const receipt = await sendMail({ to: email, subject: 'Dit preview hos Billedarv', html, text: `Dit preview: ${link}\n\nLinket virker, indtil billedet slettes – ${CONFIG.retentionUnpaidDays} dage efter upload. Vi printer ikke noget, før du bestiller og siger ja.\n\n${navn}` });
+      const receipt = await sendMail({ to: email, subject: 'Dit preview hos Billedearv', html, text: `Dit preview: ${link}\n\nLinket virker, indtil billedet slettes – ${CONFIG.retentionUnpaidDays} dage efter upload. Vi printer ikke noget, før du bestiller og siger ja.\n\n${navn}` });
       if (!receipt) return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });
   } catch {
     console.error('save-link mail failed');

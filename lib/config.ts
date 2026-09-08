@@ -27,7 +27,7 @@ export const CONFIG = {
    *  URLs. Netlify sets URL and DEPLOY_PRIME_URL itself, so a forgotten variable still cannot put
    *  localhost into somebody's inbox. */
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? process.env.DEPLOY_PRIME_URL ?? 'http://localhost:3000',
-  siteName: 'Billedarv',
+  siteName: 'Billedearv',
 } as const;
 
 if (process.env.NODE_ENV === 'production' && CONFIG.siteUrl.includes('localhost')) {

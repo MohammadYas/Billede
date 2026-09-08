@@ -3,7 +3,7 @@
 Kopiér teksten i blokken. Den tager højde for, at rettelserne allerede ligger lokalt, men også for at din Claude-session kan være på en anden revision.
 
 ```text
-Arbejd i C:\Users\mo\Desktop\Billede på Billedarv som senior frontend-udvikler, UX-designer og CRO-specialist. Færdiggør og kvalitetssikr konverteringsrettelserne nedenfor. Stop ikke ved en audit eller generelle forslag.
+Arbejd i C:\Users\mo\Desktop\Billede på Billedearv som senior frontend-udvikler, UX-designer og CRO-specialist. Færdiggør og kvalitetssikr konverteringsrettelserne nedenfor. Stop ikke ved en audit eller generelle forslag.
 
 Læs først AGENTS.md, CLAUDE.md, README.md, HANDOFF.md, DECISIONS.md, DESIGN.md, ANTI_SLOP.md og QA.md. Følg AGENTS.md's krav om relevante Next.js-guider i node_modules/next/dist/docs. Læs derefter docs/audit-2026-09-07/PLAN.md og REPORT.md samt før-/efterindeks.
 

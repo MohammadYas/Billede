@@ -1,4 +1,4 @@
-# DESIGN — Billedarv
+# DESIGN — Billedearv
 
 **Direction: the product page of one product, played straight.** A framed photograph, proven before it is bought.
 Warm white paper, near-black ink, one deep green; the visitor's own picture is the argument, so the page opens on a real
