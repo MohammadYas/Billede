@@ -8,7 +8,7 @@
 export function tiledWatermark(width: number, height: number, opts: { text?: string; opacity?: number } = {}): Buffer {
   // The words say what the mark is and that it goes away: a customer who has never met a watermark must not
   // read it as a fault in the picture. Bigger and sparser than a classic tile for the same reason.
-  const text = opts.text ?? 'VANDMÆRKE · FORSVINDER VED BESTILLING';
+  const text = opts.text ?? 'VANDMÆRKE'; // one word, so every instance fits whole on a phone-sized picture; the page says it goes away
   const opacity = opts.opacity ?? 0.32;
   const fs = Math.max(16, Math.round(Math.min(width, height) / 13));
   const tileW = Math.round(fs * 0.68 * text.length + fs * 3); // bold caps with tracking ≈ 0.68 em per glyph, then a gap
