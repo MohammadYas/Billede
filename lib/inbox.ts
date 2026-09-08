@@ -80,3 +80,20 @@ ${quoted}</div></body></html>`;
     order_id: lastIn?.order_id ?? null, client: null, attachments: null, read_at: new Date().toISOString(),
   });
 }
+
+/** A conversation the owner starts: sent from hej@ and filed as the thread's first row. */
+export async function sendNewMessage(to: string, subject: string, text: string): Promise<Message> {
+  const thread = threadKey(to);
+  const f = getFounder();
+  const subj = subject.trim() || 'Fra Billedearv';
+  const paragraphs = text.trim().split(/\n{2,}/).map((p) => `<p style="margin:0 0 14px;white-space:pre-line;">${esc(p)}</p>`).join('');
+  const html = `<!doctype html><html lang="da"><body style="margin:0;background:#FBFAF7;color:#171614;font-family:'Public Sans','Helvetica Neue',Arial,sans-serif;font-size:17px;line-height:1.55;"><div style="max-width:560px;margin:0 auto;padding:32px 24px 48px;">
+${paragraphs}
+<p style="margin:20px 0 0;">Venlig hilsen<br>${esc(f.company || 'Billedearv')}<br><a href="${siteUrl('/')}" style="color:#1F5A3C;">billedearv.dk</a> · ${esc(f.email ?? '')}</p></div></body></html>`;
+  const id = await sendMail({ to: thread, subject: subj, html, text: `${text.trim()}\n\nVenlig hilsen\n${f.company || 'Billedearv'}\n${siteUrl('/')}` });
+  return insertMessage({
+    direction: 'out', channel: 'email', thread, from_email: (f.email ?? '').toLowerCase(), from_name: f.company || 'Billedearv', to_email: thread,
+    subject: subj, text_body: text.trim(), html_body: null, message_id: null, in_reply_to: null, resend_id: id,
+    order_id: await orderFor(thread), client: null, attachments: null, read_at: new Date().toISOString(),
+  });
+}

@@ -110,6 +110,21 @@ export async function actionReply(thread: string, formData: FormData) {
   back('Svar sendt.');
 }
 
+export async function actionCompose(formData: FormData) {
+  await guard();
+  const to = String(formData.get('to') ?? '').trim().toLowerCase();
+  const subject = String(formData.get('subject') ?? '').trim();
+  const text = String(formData.get('text') ?? '').trim();
+  const backList = (m: string) => redirect(`/admin/beskeder?msg=${encodeURIComponent(m)}`);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) backList('Skriv en gyldig e-mail.');
+  if (text.length < 2) backList('Skriv en besked først.');
+  try {
+    const { sendNewMessage } = await import('@/lib/inbox');
+    await sendNewMessage(to, subject, text);
+  } catch (e) { backList(`Beskeden blev ikke sendt: ${e instanceof Error ? e.message : e}`); }
+  redirect(`/admin/beskeder/${encodeURIComponent(to)}?msg=${encodeURIComponent('Besked sendt.')}`);
+}
+
 export async function actionSendApproval(id: string) {
   await guard();
   const order = await getOrder(id); if (!order) return;

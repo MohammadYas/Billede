@@ -58,7 +58,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         {next && <p className="notice" style={{ fontWeight: 600 }}>{next}</p>}
         {job && job.state !== 'done' && <p className="small" style={{ color: job.state === 'failed' ? 'var(--error)' : 'var(--ink-2)' }}>Job {job.kind}: {job.state}{job.stage ? ` · ${job.stage}` : ''}{job.reason ? ` · ${job.reason}` : ''}</p>}
         <section className="small adm-facts">
-          <p><strong>Kunde:</strong> {order.customer_name ?? '—'} · {order.customer_email ?? '—'} · {order.customer_phone ?? '—'}</p>
+          <p><strong>Kunde:</strong> {order.customer_name ?? '—'} · {order.customer_email ?? '—'} · {order.customer_phone ?? '—'}{order.customer_email && <> · <a href={`/admin/beskeder?til=${encodeURIComponent(order.customer_email)}`}>Skriv til kunden</a> · <a href={`/admin/beskeder/${encodeURIComponent(order.customer_email.toLowerCase())}`}>Samtale</a></>}</p>
           <p><strong>Adresse:</strong> {addr ? [addr.line1, addr.line2, `${addr.postal_code ?? ''} ${addr.city ?? ''}`].filter(Boolean).join(', ') : '—'}</p>
           <p><strong>Betaling:</strong> {order.payment_provider ?? '—'} {order.payment_session_id ?? ''} {order.payment_intent ?? ''}{order.payment_session_id && ['NEW', 'PREVIEW_READY', 'ABANDONED'].includes(order.status) ? <form action={actionCheckPayment.bind(null, order.id)} style={{ display: 'inline' }}> <button type="submit" className="link-btn">Tjek betaling hos Stripe</button></form> : null}</p>
           <p><strong>Kilde:</strong> {order.utm ? Object.entries(order.utm).map(([k, v]) => `${k}=${v}`).join(' ') : '—'}</p>

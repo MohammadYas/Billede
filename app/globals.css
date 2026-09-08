@@ -456,3 +456,9 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .msg-meta { font-size: var(--fs-caption); color: var(--ink-2); margin-bottom: var(--s1); }
 .msg-body { margin: 0; white-space: pre-line; overflow-wrap: anywhere; font-size: var(--fs-body); }
 .msg-body img { max-width: 100%; height: auto; }
+
+.msg-compose summary { cursor: pointer; list-style: none; }
+.msg-compose summary::-webkit-details-marker { display: none; }
+.msg-compose summary::before { content: '+'; display: inline-block; width: 1.2em; font-weight: 600; color: var(--accent); }
+.msg-compose[open] summary::before { content: '–'; }
+.msg-compose .btn { width: auto; justify-self: start; }
