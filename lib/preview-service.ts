@@ -164,7 +164,7 @@ export async function processRestore(orderId: string): Promise<void> {
     const startFrame = readAddOns(metaOf(order).addons).frame;
     const mockups: Record<string, string> = {};
     const renderMockup = async (fmt: Format, frame: Frame) => {
-      const buf = await makeMockup(result.restored, { format: fmt, frame: frameColour(frame) });
+      const buf = await makeMockup(result.restored, { format: fmt, frame: frameColour(frame), watermark: true });
       const p = objectPath(order.id, 'mockup');
       await putObject(p, buf);
       mockups[mockupKey(fmt, frame)] = p;
@@ -227,7 +227,7 @@ export async function redrawDerived(orderId: string): Promise<{ mockups: number 
   for (const fmt of customerFormats()) {
     for (const frame of FRAMES) {
       const p = objectPath(order.id, 'mockup');
-      await putObject(p, await makeMockup(restored, { format: fmt, frame: frameColour(frame) }));
+      await putObject(p, await makeMockup(restored, { format: fmt, frame: frameColour(frame), watermark: true }));
       mockups[mockupKey(fmt, frame)] = p;
     }
   }

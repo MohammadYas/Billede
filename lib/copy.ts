@@ -116,7 +116,6 @@ export function copy(season: Season = currentSeason()) {
       lead: 'Til den runde fødselsdag, jubilæet, guldbrylluppet eller julen: et billede, de troede var gået tabt – skarpt, i ramme, klar til at hænge op. Det er den slags, der bliver stille ved bordet.',
       points: [
         ['Tag billedet i smug', 'Et foto af det gamle billede med telefonen er nok. Læg det tilbage i skuffen, inden nogen ser det.'],
-        ['Skriv en hilsen', 'Ved betaling kan du skrive et par linjer. Vi lægger et kort ved med din hilsen.'],
         ['Send det direkte – eller hjem til dig', 'Skriv modtagerens adresse ved betaling, hvis det skal sendes direkte. Ellers kommer det hjem til dig, pakket så glasset holder.'],
         [jul ? 'Under træet til tiden' : 'Til tiden', jul ? `Bestil senest ${dato}, så er det leveret inden jul. Du godkender billedet på mail, før vi printer.` : `Leveret ${levering}, efter du har godkendt billedet på mail.`],
       ] as [string, string][],
@@ -146,7 +145,7 @@ export function copy(season: Season = currentSeason()) {
       recommended: 'Anbefalet',
       sizesNote: 'Samme billede og samme kvalitet i alle tre. Tryk på den, du vil have.',
       carry: 'Dit valg følger med til bestillingssiden. Du kan skifte igen, når du har set dit billede.',
-      note: `Restaurering, print, ramme, kort med din hilsen, indpakning og fragt – ét beløb per billede.`,
+      note: `Restaurering, print, ramme, indpakning og fragt – ét beløb per billede.`,
     },
     eksempler: { h2: 'Det kunne være jeres.', how: 'Billederne skifter selv mellem før og efter. Tryk på et billede, hvis du selv vil skifte.', colourOn: 'Se den i farver', colourOff: 'Se den i sort-hvid', detail: 'Nærbillede', lead: 'Bryllupsbilledet, barnet på trappen, bedsteforældrene i haven. Gulnet, ridset eller falmet – tag et foto af det, og se selv, hvad der kan gøres.', syntheticNote: 'Eksemplerne er ikke kundebilleder. Originalerne er fremstillet til at vise, hvad restaureringen gør ved folder, pletter og falmede farver – og selve restaureringen er kørt gennem præcis den samme proces som dit billede.', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
     offer: {
@@ -242,10 +241,6 @@ export function copy(season: Season = currentSeason()) {
           a: 'Ja. Skriv modtagerens navn og adresse som leveringsadresse ved betaling. Godkendelsesmailen kommer stadig til dig, så du ser det færdige billede først.',
         },
         {
-          q: 'Kan jeg lægge en hilsen ved?',
-          a: 'Ja. Ved betaling er der et felt til en hilsen på op til 200 tegn. Vi skriver den på et kort og lægger det i pakken.',
-        },
-        {
           q: 'Hvordan betaler jeg?',
           a: `${pay}. Du betaler ved bestilling og kan fortryde med fuld refusion, indtil du har godkendt det færdige billede.`,
         },
@@ -332,7 +327,7 @@ export function copy(season: Season = currentSeason()) {
       copiesOne: 'eksemplar',
       copiesMany: 'eksemplarer',
       yourPhoto: 'Dit billede',
-      sizeNote: 'Ramme, glas, kort med din hilsen og fri fragt er med i alle størrelser.',
+      sizeNote: 'Ramme, glas og fri fragt er med i alle størrelser.',
       frameTitle: 'Ramme',
       frameSort: 'Sort',
       frameSortHint: 'Klassisk. Lader billedet stå alene',
@@ -363,7 +358,7 @@ export function copy(season: Season = currentSeason()) {
       ctaShort: 'Bestil mit billede',
       under: 'Pengene tilbage, hvis det ikke ligner.',
       payment: `${pay} via Stripe · Ingen oprettelse`,
-      gift: 'Er det en gave? Ved betaling kan du skrive en hilsen, som vi lægger ved på et kort.',
+      gift: 'Er det en gave? Skriv modtagerens adresse som leveringsadresse ved betaling – så sendes det direkte.',
       checkoutError: email
         ? `Vi kunne ikke åbne betalingen lige nu. Prøv igen om et øjeblik – eller ${skrivTil} på ${email}, så sender vi et betalingslink. Dit preview er gemt.`
         : 'Vi kunne ikke åbne betalingen lige nu. Prøv igen om et øjeblik. Dit preview er gemt.',

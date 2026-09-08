@@ -2,9 +2,9 @@ import sharp from 'sharp';
 import { tiledWatermark } from './watermark';
 
 /**
- * Customer-facing preview: 1000 px long edge, JPEG q80, and "BILLEDEARV · PREVIEW" tiled across the
- * whole picture at about 18 % — light enough to judge the faces, present in every crop so a
- * screenshot is not the product. The zoom view scales this same file, so it is covered too.
+ * Customer-facing preview: 1000 px long edge, JPEG q80, and the brand mark (frame + "Billedearv") on a
+ * diagonal grid at about 26 % — light enough to judge the faces, present in every crop so a screenshot
+ * is not the product. The zoom view scales this same file, so it is covered too.
  */
 export async function makePreview(restored: Buffer, longEdge = 1000): Promise<Buffer> {
   const meta = await sharp(restored).metadata();
@@ -14,7 +14,7 @@ export async function makePreview(restored: Buffer, longEdge = 1000): Promise<Bu
   const height = Math.round(h0 * Math.min(1, s));
   const base = await sharp(restored).resize(width, height, { kernel: sharp.kernel.lanczos3 }).toBuffer();
   return sharp(base)
-    .composite([{ input: tiledWatermark(width, height, { opacity: 0.18 }), blend: 'over' }])
+    .composite([{ input: tiledWatermark(width, height, { opacity: 0.26 }), blend: 'over' }])
     .jpeg({ quality: 80, mozjpeg: true })
     .toBuffer();
 }
@@ -27,7 +27,7 @@ export async function makeApprovalImage(final: Buffer, longEdge = 1200): Promise
   const width = Math.round(w0 * s), height = Math.round(h0 * s);
   const base = await sharp(final).resize(width, height, { kernel: sharp.kernel.lanczos3 }).toBuffer();
   return sharp(base)
-    .composite([{ input: tiledWatermark(width, height, { text: 'VANDMÆRKE', opacity: 0.1 }), blend: 'over' }])
+    .composite([{ input: tiledWatermark(width, height, { opacity: 0.14 }), blend: 'over' }])
     .jpeg({ quality: 86, mozjpeg: true })
     .toBuffer();
 }

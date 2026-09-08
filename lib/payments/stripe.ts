@@ -61,7 +61,6 @@ export class StripeProvider implements PaymentProvider {
       client_reference_id: order.id,
       line_items: this.lineItems(opts.quote, opts.previewImageUrl),
       shipping_address_collection: { allowed_countries: ['DK'] },
-      custom_fields: [{ key: 'gavehilsen', label: { type: 'custom', custom: 'Hilsen på et kort i pakken (valgfri)' }, type: 'text', optional: true, text: { maximum_length: 200 } }],
       // no phone number: nothing in fulfilment needs it, support runs on e-mail, and a required phone
       // field is the most expensive question on a checkout for a brand the customer has just met
       consent_collection: { terms_of_service: 'required' },

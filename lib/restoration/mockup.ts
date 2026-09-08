@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { PRICING, type Format, DEFAULT_FORMAT } from '@/lib/pricing';
+import { tiledWatermark } from './watermark';
 
 /**
  * Photographic frame mockup, composed by code (sharp), never generated.
@@ -15,7 +16,7 @@ import { PRICING, type Format, DEFAULT_FORMAT } from '@/lib/pricing';
  * Frame: thin black (or oak) moulding with a bevel, 4 cm off-white mount with an inner shadow, glass
  * glare, a contact shadow and a soft cast shadow down-right.
  */
-export type MockupOptions = { format?: Format; width?: number; frame?: 'black' | 'oak' };
+export type MockupOptions = { format?: Format; width?: number; frame?: 'black' | 'oak'; /** the brand mark on the picture inside the frame (customer previews; never the site's own examples) */ watermark?: boolean };
 
 const WALL_PATH = path.join(process.cwd(), 'public', 'mockup', 'wall.jpg');
 /** how the backdrop is laid out: the sideboard's width in the world and in the picture, and where its top edge sits */
@@ -74,8 +75,9 @@ export async function makeMockup(image: Buffer, opts: MockupOptions = {}): Promi
   const innerH = outerH - 2 * (moulding + mount);
 
   // Photograph fitted inside the mount opening (letterboxed on mount if aspect differs).
-  const photo = await sharp(image).resize(innerW, innerH, { fit: 'inside', kernel: sharp.kernel.lanczos3 }).toBuffer();
+  let photo = await sharp(image).resize(innerW, innerH, { fit: 'inside', kernel: sharp.kernel.lanczos3 }).toBuffer();
   const pm = await sharp(photo).metadata();
+  if (opts.watermark && pm.width && pm.height) photo = await sharp(photo).composite([{ input: tiledWatermark(pm.width, pm.height, { opacity: 0.26 }), blend: 'over' }]).toBuffer();
   const px = Math.round((innerW - (pm.width ?? innerW)) / 2);
   const py = Math.round((innerH - (pm.height ?? innerH)) / 2);
 
@@ -104,8 +106,8 @@ export async function makeMockup(image: Buffer, opts: MockupOptions = {}): Promi
     <rect x="0" y="0" width="${outerW}" height="${Math.max(1, Math.round(moulding * 0.45))}" fill="url(#bevel)"/>
     <rect x="${moulding}" y="${moulding}" width="${outerW - 2 * moulding}" height="${outerH - 2 * moulding}" fill="#F5F1E9"/>
     <rect x="${moulding}" y="${moulding}" width="${outerW - 2 * moulding}" height="${Math.max(1, Math.round(mount * 0.12))}" fill="#000" fill-opacity="0.10"/>
-    <rect x="${moulding + mount - 1}" y="${moulding + mount - 1}" width="${innerW + 2}" height="${innerH + 2}" fill="#000" fill-opacity="0.22"/>
-    <rect x="${moulding + mount - 2}" y="${moulding + mount - 2}" width="${innerW + 4}" height="${innerH + 4}" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="1"/>
+    <rect x="${moulding + mount + px - 1}" y="${moulding + mount + py - 1}" width="${(pm.width ?? innerW) + 2}" height="${(pm.height ?? innerH) + 2}" fill="#000" fill-opacity="0.22"/>
+    <rect x="${moulding + mount + px - 2}" y="${moulding + mount + py - 2}" width="${(pm.width ?? innerW) + 4}" height="${(pm.height ?? innerH) + 4}" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="1"/>
   </svg>`;
   const glareSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${outerW}" height="${outerH}">
     <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.09"/><stop offset="0.45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0.03"/></linearGradient></defs>
