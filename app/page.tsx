@@ -45,9 +45,10 @@ export default async function Page() {
   const c = copy();
   const examples = getExamples();
   const hero = examples[0] ?? null;
-  // the birthday-cake example is out of the grid: its original only had a crease and a slight cast, so the fade shows
-  // almost nothing happening — true, but not what a visitor should be asked to look at
-  const grid = examples.slice(1, 7).filter((e) => e.id !== 'foedselsdag-1985');
+  const grid = examples.slice(1, 7);
+  // the birthday cake's original only had a crease and a slight cast: the whole picture barely changes in a fade,
+  // its close-up does — so that card shows the close-up (the same restoration, a tighter crop)
+  const CLOSE_UP = new Set(['foedselsdag-1985']);
   const synthetic = examples.length > 0 && examples.every((e) => /eksempelbillede/i.test(e.caption));
   const placeholders = examples.some((e) => e.placeholder);
   const jul = c.season === 'jul';
@@ -116,17 +117,22 @@ export default async function Page() {
         {grid.length > 0 && (
           <section className="wrap section" aria-labelledby="eksempler" style={{ paddingTop: 0 }}>
             <div className="container">
-              <div className="ex-head"><h2 id="eksempler">{c.eksempler.h2}</h2><p className="lead">{c.eksempler.lead}</p></div>
+              <div className="ex-head"><h2 id="eksempler">{c.eksempler.h2}</h2><p className="lead">{c.eksempler.lead}</p><p className="ex-how">{c.eksempler.how}</p></div>
               <div className="ex-grid">
                 {grid.map((e) => {
-                  const aspect = `${e.width} / ${e.height}`;
+                  const closeUp = CLOSE_UP.has(e.id) && e.detail ? e.detail : null;
+                  const aspect = `${e.width} / ${e.height}`; // the close-up is square; shown in the same frame as the rest, face centred
                   const alt = `Før og efter: ${e.caption.replace(/\.$/, '')}`;
                   return (
-                    <figure key={e.id}>
-                      {e.colour
-                        ? <ColourExample before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} colour={e.colour} alt={alt} aspect={aspect} />
+                    <figure key={e.id} className="ex-card">
+                      <div className="ex-media">
+                      {closeUp
+                        ? <Compare mode="fade" before={{ src: closeUp.before, srcSetWebp: closeUp.before.replace(/\.jpg$/, '.webp') }} after={{ src: closeUp.after, srcSetWebp: closeUp.after.replace(/\.jpg$/, '.webp') }} alt={alt} aspect={aspect} />
+                        : e.colour
+                        ? <ColourExample before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} colour={e.colour} alt={alt} aspect={aspect} on={c.eksempler.colourOn} off={c.eksempler.colourOff} />
                         : <Compare mode="fade" before={src(e, 'before', GRID_SIZES)} after={src(e, 'after', GRID_SIZES)} alt={alt} aspect={aspect} />}
-                      <figcaption><Caption text={e.caption} /></figcaption>
+                      </div>
+                      <figcaption className="ex-cap"><Caption text={e.caption} />{closeUp && <span className="caption">{c.eksempler.detail}: {closeUp.label.toLowerCase()}</span>}</figcaption>
                     </figure>
                   );
                 })}

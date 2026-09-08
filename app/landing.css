@@ -42,13 +42,26 @@
 .ex-head { display: grid; gap: var(--s3); margin-bottom: var(--s6); }
 .ex-head .lead { max-width: 30em; color: var(--ink-2); }
 /* two across even on a phone: six tall prints in one column made the page twice as long as the argument */
-.ex-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s5) var(--s3); }
-.ex-grid figure { margin: 0; display: grid; gap: var(--s2); }
-.ex-grid .ba { border-radius: 4px; }
-.ex-grid .caption { font-size: 13px; }
+.ex-how { max-width: 34em; font-size: var(--fs-body); color: var(--ink); }
+.ex-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s5) var(--s3); align-items: stretch; }
+.ex-card { margin: 0; display: grid; grid-template-rows: auto 1fr; gap: var(--s3); padding: var(--s2) var(--s2) var(--s3); background: var(--paper); border-radius: 8px; box-shadow: var(--shadow-object); }
+.ex-media { position: relative; }
+/* in the grid the Før/Efter label sits top-left, so the colour button owns the bottom-right corner on every width */
+.ex-card .cmp-fade .lbl { bottom: auto; top: var(--s2); }
+.ex-cap { align-content: start; }
+.ex-card .cmp { border-radius: 4px; }
+.ex-cap { display: grid; gap: 2px; padding: 0 var(--s1); }
+.ex-cap > .caption:first-child { font-size: var(--fs-small); color: var(--ink); line-height: 1.35; }
+.ex-cap > .caption:first-child b { font-weight: 600; }
+.ex-cap > .caption + .caption { font-size: var(--fs-caption); }
+/* the colour choice sits on the picture, bottom right, opposite the Før/Efter label */
+.ex-actions { position: absolute; right: var(--s2); bottom: var(--s2); }
+.ex-actions .btn-sm { min-height: 40px; padding: 0 var(--s3); font-size: var(--fs-small); background: rgba(251, 250, 247, 0.94); border-color: transparent; box-shadow: 0 1px 4px rgba(23, 22, 20, 0.18); }
+.ex-actions .btn-sm[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .ex-note { padding-top: var(--s5); max-width: 44em; }
-@media (min-width: 640px) { .ex-grid { gap: var(--s6) var(--s5); } .ex-grid .caption { font-size: var(--fs-caption); } }
-@media (min-width: 1024px) { .ex-grid { grid-template-columns: repeat(3, 1fr); gap: var(--s7) var(--s6); } }
+@media (max-width: 479px) { .ex-actions .btn-sm { min-height: 36px; padding: 0 var(--s2); font-size: 13px; } }
+@media (min-width: 640px) { .ex-grid { gap: var(--s6) var(--s5); } .ex-card { padding: var(--s3) var(--s3) var(--s4); gap: var(--s3); } .ex-cap > .caption:first-child { font-size: var(--fs-body); } }
+@media (min-width: 1024px) { .ex-grid { grid-template-columns: repeat(3, 1fr); gap: var(--s6) var(--s5); } }
 
 /* How it works — three stages of the same photograph, numbered because the order is the product */
 .how { display: grid; gap: var(--s6); }
