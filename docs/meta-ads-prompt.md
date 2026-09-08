@@ -105,16 +105,17 @@ Fælles for alle fire:
 
 - Format: enkelt billede. Identitet: Facebook-siden Billedearv, og Instagram-kontoen, hvis den findes.
   Multi-advertiser ads: fra. Alle Advantage+ creative-valg: fra.
-- Upload to filer pr. annonce fra `C:\Users\mo\Desktop\Billede\work\ads\creatives\`: filen
-  `…-feed-1080x1080.jpg` til feed og `…-story-1080x1350.jpg` til 4:5-placeringer (vælg "Crop"/"Rediger
-  pr. placering", så Meta ikke beskærer 1:1-billedet i Stories).
+- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\creatives\`. Brug den genererede scene
+  `<par>-<koncept>-1080x1350.jpg` (lavet efter `docs/meta-ads-creatives.md`) som hovedbillede; findes
+  den ikke for et par, brug collagen `<par>-story-1080x1350.jpg`, og `<par>-feed-1080x1080.jpg` til
+  1:1-placeringer (vælg "Rediger pr. placering", så Meta ikke beskærer selv).
 - Website-URL: `https://billedearv.dk/`
 - Feltet **URL-parametre** (ikke selve URL'en):
   `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`
 - Knap: "Få mere at vide" (Learn more). Ikke "Køb nu": første skridt koster ikke noget.
 - Sprog: dansk. Ingen automatiske oversættelser.
 
-### Annonce 1: `gaven` (billede: bryllup-1954)
+### Annonce 1: `gaven` (billede: bryllup-1954, koncept `koekkenbord`)
 
 Primær tekst:
 
@@ -127,7 +128,7 @@ Primær tekst:
 Overskrift: `Se det restaureret, før du køber`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 2: `dit-billede` (billede: have-1976)
+### Annonce 2: `dit-billede` (billede: have-1976, koncept `paa-vaeggen`)
 
 Primær tekst:
 
@@ -140,7 +141,7 @@ Primær tekst:
 Overskrift: `Dit gamle billede kan blive sådan her`
 Beskrivelse: `Se resultatet på skærmen, før du beslutter dig`
 
-### Annonce 3: `ser-foerst` (billede: portraet-1962)
+### Annonce 3: `ser-foerst` (billede: portraet-1962, koncept `skuffen`)
 
 Primær tekst:
 
@@ -153,7 +154,7 @@ Primær tekst:
 Overskrift: `Ingen bestilling, før du har set det`
 Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
 
-### Annonce 4: `tilbud` (billede: foedselsdag-1985)
+### Annonce 4: `tilbud` (billede: foedselsdag-1985, koncept `gaven-pakkes-op`)
 
 Primær tekst:
 
