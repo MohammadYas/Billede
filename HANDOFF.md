@@ -7,6 +7,21 @@ unverified. Items in **bold** block the test.
 
 Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
 
+## Status 2026-09-08 (read this first)
+
+- **Live:** https://billedearv.dk (Netlify site `billedarv`, builds from GitHub on every push to `billedarv-redesign`; `main` is kept identical by fast-forward). Brand and domain are **Billedearv** with an e — the owner bought billedearv.dk; billedarv.dk does not exist.
+- **Done and verified:** landing (offer dialog, fading before/after with tap and hold, scaled size cards, examples as prints), upload sheet (readable progress, order survives a closed tab, resume banner on the front page), order page (brand watermark on preview and mockups, mockups to scale with a sideboard as ruler, one extra-copy question before Checkout, bottom bar after the picture is seen), Stripe Checkout (live key, no greeting field), admin (thumbnails, Kilder/UTM table, redraw derived pictures, inbox with replies), contact form at /kontakt, SEO surfaces, Supabase pg_cron housekeeping, security hardening (RLS, IP caps, HSTS, signed webhooks).
+- **Tests:** `npm test` (36 unit), `npm run build`, `BASE=http://localhost:3000 node tests/viewport.browser.mjs`, and the whole customer path with one real restoration: `BASE=http://localhost:3000 ADMIN_PASSWORD=… node tests/e2e-flow.browser.mjs` (`PREVIEW_URL=…` reruns from an existing preview).
+- **Owner still has to (in this order):**
+  1. Resend → Domains → billedearv.dk → **Verify DNS records** (records are in place; until verified no mail goes out and admin replies fail with that message).
+  2. Resend → API Keys → a **Full access** key → `RESEND_API_KEY` in `.env.local` and Netlify (the current key is send-only; the inbox needs to read received mail).
+  3. Resend → Webhooks → add `https://billedearv.dk/api/webhooks/resend`, event `email.received` → signing secret as `RESEND_WEBHOOK_SECRET` in Netlify. Until then /api/webhooks/resend answers 503 and mail to hej@ waits in Resend → Emails → Receiving.
+  4. Stripe Dashboard: webhook URL → `https://billedearv.dk/api/webhooks/stripe` (same signing secret), statement descriptor BILLEDEARV.DK, business website/name.
+  5. Street address in `assets/founder/founder.md`; lawyer reads /handelsbetingelser and /privatliv → `LEGAL_DRAFT=false` in Netlify.
+  6. Meta pixel id + CAPI token in Netlify when ads start; `?utm_source=…&utm_campaign=…&utm_content=…` on every ad link (admin → Kilder reads them).
+  7. Delete the two test orders in admin (`ecf3aaeb` = owner's phone test, `6d8f65fc` = Playwright); a fresh Checkout session blocks deletion for an hour.
+- **Never** run `netlify build` / `netlify deploy --build` on Windows (breaks sharp; `npm install` repairs). Always `npm run build` locally before pushing a change to a client component.
+
 **Deployed 2026-09-07.** Netlify site `billedearv` (id 21e453f1-e0d5-4fd1-ba40-9d401c58977c, https://billedarv.netlify.app) builds branch `billedarv-redesign` on Linux. The repo is linked the manual way because the Netlify GitHub App is not installed on the account: a read-only deploy key on the GitHub repo ("Netlify billedearv") plus two GitHub webhooks (Netlify's generic hook and a build hook for the branch), so every push builds. All env vars are set from `.env.local` (`NEXT_PUBLIC_SITE_URL=https://billedearv.dk`, `JOB_RUNNER=netlify`). `netlify.toml` names `publish = ".next"` (the Next plugin refuses the repo root). **Before every push that touches a client component, run `npm run build` locally**: `next dev` tolerates a server-only import (node:fs via lib/copy → lib/founder) inside a client component, the production build does not, and Netlify only tells you afterwards. **Never run `netlify build` or `netlify deploy --build` on Windows**: the build command installs the Linux sharp binaries and breaks the local install (fix: `npm install`). First live restoration went through in 58 s (upload → background function → sharp → Supabase → PREVIEW_READY). Still to do in Netlify: add the domain billedearv.dk (A @ → 75.2.60.5, CNAME www → billedarv.netlify.app), and when the branch is merged, switch the production branch to `main` in Site configuration → Build & deploy and in the build hook.
 
 **A. Before the first Netlify build**
