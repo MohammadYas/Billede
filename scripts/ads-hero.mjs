@@ -8,11 +8,11 @@ import { resolve } from 'node:path';
 
 /** pos = object-position of the photograph (where the face is); seam = where the wipe stands, % of width. */
 const ADS = {
-  'portraet-1962': { pos: '50% 28%', seam: 50, tag: 'Se resultatet, før du køber', h1: 'Så tydeligt har du ikke set hende i 60 år.', line: 'Tag et foto af det gamle billede med telefonen. Et par minutter efter ser du det restaureret på skærmen. Det koster ikke noget at se.' },
-  'bryllup-1954': { pos: '50% 16%', seam: 50, tag: 'Gaven, de ikke selv kan købe', h1: 'Mors og fars bryllupsbillede. Skarpt igen.', line: 'Tag et foto af billedet med telefonen, og se det restaureret, før du beslutter noget. Det koster ikke noget at se.' },
-  'have-1976': { pos: '50% 35%', seam: 48, tag: 'Farvebilleder fra 70’erne og 80’erne', h1: 'Farverne fra 1976. Som de var.', line: 'Falmet, gulnet, plettet. Det meste kan rettes. Se dit eget billede restaureret på skærmen, før du køber.' },
-  'familie-ved-vandet-1948': { pos: '50% 10%', seam: 50, tag: 'Samme billede, 70 år senere', h1: 'Som det lå i skuffen. Som det kommer hjem.', line: 'Tag et foto af billedet. Se resultatet på skærmen. Sig ja, så printer vi og sender det i ramme.' },
-  'foedselsdag-1985': { pos: '50% 40%', seam: 50, tag: 'Lanceringstilbud til og med 30. september', h1: 'Fem år, lagkage og flag. Reddet.', line: 'Ved køb: ét ekstra eksemplar med i pakken uden beregning, til den der også husker det. Værdi 349 kr.' },
+  'portraet-1962': { pos: '50% 28%', seam: 50, tag: 'Se resultatet, før du køber', h1: 'Så tydeligt har du ikke set hende i 60 år.', line: 'Tag et foto af det gamle billede med telefonen. To minutter senere ser du det restaureret på skærmen. Det koster ikke noget at se.' },
+  'bryllup-1954': { pos: '50% 16%', seam: 50, tag: 'Gaven, de ikke selv kan købe sig til', h1: 'Mors og fars bryllupsbillede. Skarpt igen.', line: 'Hvert år falmer det lidt mere i skuffen. Tag et foto af det med telefonen, og se det restaureret, før du beslutter noget.' },
+  'have-1976': { pos: '50% 35%', seam: 48, tag: 'Farvebilleder fra 70’erne og 80’erne', h1: 'Farverne fra 1976. Som de var.', line: 'Falmet, gulnet, plettet. Det meste kan rettes. Se dit eget billede restaureret på skærmen, før du beslutter dig.' },
+  'familie-ved-vandet-1948': { pos: '50% 10%', seam: 50, tag: 'Samme billede, 70 år senere', h1: 'Som det lå i skuffen. Som det kommer hjem.', line: 'Tag et foto af billedet. Se resultatet på skærmen. Sig ja, så printer vi og sender det hjem i ramme.' },
+  'foedselsdag-1985': { pos: '50% 40%', seam: 50, tag: 'Lanceringstilbud til og med 30. september', h1: 'Fem år, lagkage og flag. Reddet.', line: 'Ved køb: ét ekstra eksemplar med i pakken uden beregning, til den der også husker det.' },
 };
 
 const b64 = (p, mime) => `data:${mime};base64,${readFileSync(p).toString('base64')}`;
@@ -63,7 +63,7 @@ h1 { font: 700 ${h1Size}px/1.04 'Schibsted Grotesk', Arial, sans-serif; letter-s
   <div class="line">${ad.line}</div>
   <div class="row">
     <div class="btn">Prøv med dit eget billede <svg viewBox="0 0 24 24" fill="none" stroke="#fbfaf7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-    <div class="price"><b>Fra 599 kr. i ramme</b>Fri fragt · du betaler først, når du har set det</div>
+    <div class="price"><b>Du betaler først, når du har set det</b>Fri fragt · 21 dages fuld fortrydelse</div>
   </div>
 </div>
 </body></html>`;
@@ -109,7 +109,7 @@ h1 { font: 700 ${h1Size}px/1.02 'Schibsted Grotesk', Arial, sans-serif; letter-s
     <div class="line">${ad.line}</div>
     <div class="row">
       <div class="btn">Prøv med dit eget billede <svg viewBox="0 0 24 24" fill="none" stroke="#171614" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-      <div class="price"><b>Fra 599 kr. i ramme</b>Fri fragt · du betaler først, når du har set det</div>
+      <div class="price"><b>Du betaler først, når du har set det</b>Fri fragt · 21 dages fuld fortrydelse</div>
     </div>
   </div>
 </div>

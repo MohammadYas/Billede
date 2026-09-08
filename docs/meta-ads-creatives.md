@@ -6,7 +6,7 @@ Det, der sælger i denne kategori, er ansigtet, stort, halvt ødelagt og halvt r
 laver pr. eksempelpar fire filer i `work/ads/final/`: `overlay-<par>-1080x1350` (tekst på fotoet over en
 mørk gradient, til feed 4:5), `overlay-<par>-1080x1080`, `hero-<par>-1080x1350` og `hero-<par>-1080x1080`
 (fotoet med papirpanel under). Sitets slider-knop og Før/Efter-chips ligger på sømmen; knap "Prøv med dit
-eget billede", pris "Fra 599 kr. i ramme · fri fragt · du betaler først, når du har set det". Tekster,
+eget billede", og i stedet for en pris risikofjernelsen "Du betaler først, når du har set det · fri fragt · 21 dages fuld fortrydelse" (prisen står kun sidst i annonceteksten: en pris i billedet forankrer købet, før værdien er set). Tekster,
 ansigtsposition (`pos`) og sømmens placering (`seam`) pr. par står i `ADS` øverst i scriptet. Ingen
 credits, ingen billedmodel: fotografierne er pipelinens ægte output fra `public/examples/`.
 
