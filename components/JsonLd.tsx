@@ -38,7 +38,7 @@ export default function JsonLd() {
       availability: 'https://schema.org/InStock',
       url: base,
       shippingDetails: { '@type': 'OfferShippingDetails', shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'DKK' }, shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'DK' } },
-      hasMerchantReturnPolicy: { '@type': 'MerchantReturnPolicy', applicableCountry: 'DK', returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow', merchantReturnDays: 21, refundType: 'https://schema.org/FullRefund' },
+      hasMerchantReturnPolicy: { '@type': 'MerchantReturnPolicy', applicableCountry: 'DK', returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow', merchantReturnDays: 14, refundType: 'https://schema.org/FullRefund' },
     })),
   };
   const faq = {

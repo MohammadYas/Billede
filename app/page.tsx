@@ -1,7 +1,7 @@
 import { copy } from '@/lib/copy';
 import { getExamples, type Example } from '@/lib/examples';
 import { exampleSrcSet, GRID_SIZES, HERO_SIZES } from '@/lib/images';
-import type { Source } from '@/components/BeforeAfter';
+import BeforeAfter, { type Source } from '@/components/BeforeAfter';
 import Compare from '@/components/Compare';
 import ColourExample from '@/components/ColourExample';
 import Framed from '@/components/Framed';
@@ -41,6 +41,16 @@ function Caption({ text }: { text: string }) {
   return <span className="caption" title={m[3] || undefined}><b>{m[1]}</b>, {m[2]}</span>;
 }
 
+/** The primary button with the paid object beside it, so "gratis" never stands alone. */
+function CtaRow({ cta, value, className = '' }: { cta: string; value: string; className?: string }) {
+  return (
+    <div className={`cta-row ${className}`.trim()}>
+      <OpenFlowButton>{cta}</OpenFlowButton>
+      <span className="value-line">{value}</span>
+    </div>
+  );
+}
+
 export default async function Page() {
   const c = copy();
   const examples = getExamples();
@@ -52,6 +62,9 @@ export default async function Page() {
   const synthetic = examples.length > 0 && examples.every((e) => /eksempelbillede/i.test(e.caption));
   const placeholders = examples.some((e) => e.placeholder);
   const jul = c.season === 'jul';
+  // the face that proves "it still looks like them": the hero's own close-up, the same crop before and after
+  const face = examples.find((e) => e.detail && /ansigt|øjne/i.test(e.detail.label))?.detail ?? hero?.detail ?? null;
+  const heroH = hero ? Math.round((480 * hero.height) / hero.width) : 0;
 
   return (
     <>
@@ -61,7 +74,7 @@ export default async function Page() {
           <Wordmark />
           <div className="nav-right">
             <span className="caption">{c.priceFrom} · fri fragt</span>
-            <OpenFlowButton className="btn btn-sm nav-cta">{c.hero.cta}</OpenFlowButton>
+            <OpenFlowButton className="btn btn-sm nav-cta">{c.hero.ctaShort}</OpenFlowButton>
           </div>
         </div>
       </header>
@@ -69,18 +82,20 @@ export default async function Page() {
         <JsonLd />
         <DeletedNotice text={c.preview.erased} />
 
-        {/* Hero — the claim, the button, and the proof: a real damaged print turning sharp under the finger. */}
+        {/* Hero — the free look, then the paid object: a photograph, a print, a frame, a price. The proof beside it. */}
         <section id="hero" className="wrap" aria-label="Se hvad restaureringen gør">
           <HeroViewContent targetId="hero" />
           <div className="container hero">
             <div className="hero-copy">
+              <p className="eyebrow">{c.hero.eyebrow}</p>
               <h1>{c.hero.h1}</h1>
               <p className="lead">{c.hero.sub}</p>
-              <Promo campaign={c.campaign} />
-              {jul && c.hero.eyebrow && <p className="deadline">{c.hero.eyebrow}</p>}
+              {jul && c.hero.deadline && <p className="deadline">{c.hero.deadline}</p>}
               <div className="hero-cta">
                 <OpenFlowButton>{c.hero.cta}</OpenFlowButton>
-                <span className="caption hero-note"><b>{c.hero.smallStrong}</b> {c.hero.small}</span>
+                <ul className="hero-trust" aria-label="Det skal du vide">
+                  {c.hero.trust.map((t) => <li key={t}>{t}</li>)}
+                </ul>
               </div>
             </div>
             {hero && (
@@ -94,17 +109,59 @@ export default async function Page() {
 
         <div className="wrap"><div className="container trust">{c.tryghed.map((t, i) => <span key={i}>{t}</span>)}</div></div>
 
-        {/* How it works — the same photograph at each stage */}
-        <section className="wrap section" aria-labelledby="saadan">
+        {/* From the drawer to the wall — the same photograph as a print, a frame and a parcel: what the price buys */}
+        {hero && (
+          <section className="wrap section" aria-labelledby="skuffen">
+            <div className="container chain-section">
+              <div className="chain-head">
+                <h2 id="skuffen">{c.skuffen.h2}</h2>
+                <p className="lead">{c.skuffen.lead}</p>
+              </div>
+              <ol className="chain" aria-label="Fra dit gamle billede til det færdige produkt">
+                <li className="chain-step">
+                  <div className="chain-media"><img src={small(hero.before)} alt={`Det gamle billede, som det er nu: ${hero.caption.replace(/\.$/, '')}`} width={480} height={heroH} loading="lazy" decoding="async" /></div>
+                  <span className="chain-label"><span className="n">1</span>{c.skuffen.chain[0]}</span>
+                </li>
+                <li className="chain-step">
+                  <div className="chain-media"><img src={small(hero.after)} alt="Det samme billede, restaureret" width={480} height={heroH} loading="lazy" decoding="async" /></div>
+                  <span className="chain-label"><span className="n">2</span>{c.skuffen.chain[1]}</span>
+                </li>
+                <li className="chain-step">
+                  <div className="chain-media is-print"><span className="print"><img src={small(hero.after)} alt="Det restaurerede billede som print på mat fotopapir" width={480} height={heroH} loading="lazy" decoding="async" /></span></div>
+                  <span className="chain-label"><span className="n">3</span>{c.skuffen.chain[2]}</span>
+                </li>
+                <li className="chain-step">
+                  <div className="chain-media is-frame">
+                    {hero.mockup
+                      ? <img src={hero.mockup.replace(/\.jpg$/, '-480.jpg')} alt={`Det færdige produkt: ${c.formatLabel} i sort ramme på væggen`} width={480} height={384} loading="lazy" decoding="async" />
+                      : <Framed src={small(hero.after)} alt={`Det færdige produkt: ${c.formatLabel} i ramme`} width={480} height={heroH} />}
+                  </div>
+                  <span className="chain-label"><span className="n">4</span>{c.skuffen.chain[3]}</span>
+                </li>
+              </ol>
+              <div className="value">
+                <h3>{c.skuffen.valueH}</h3>
+                <ul className="value-list">{c.skuffen.value.map((v) => <li key={v}>{v}</li>)}</ul>
+                <CtaRow cta={c.hero.cta} value={c.hero.valueLine} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* How it works — three steps, and the one thing a visitor is afraid of: posting the original */}
+        <section className="wrap section section-quiet" aria-labelledby="saadan">
           <div className="container how">
-            <div className="how-head"><h2 id="saadan">{c.saadan.h2}</h2><p className="lead">{c.saadan.note}</p></div>
+            <div className="how-head">
+              <div><h2 id="saadan">{c.saadan.h2}</h2><p className="lead">{c.saadan.note}</p></div>
+              <aside className="callout" aria-label={c.original.h2}><b>{c.original.h2}</b><span>{c.original.p}</span></aside>
+            </div>
             <ol className="steps">
               {c.saadan.steps.map((s, i) => (
                 <li key={i} className="step">
                   <div className={`step-media${i === 2 ? ' is-frame' : ''}`} aria-hidden>
-                    {hero && i === 0 && <img src={small(hero.before)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
-                    {hero && i === 1 && <img src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} loading="lazy" />}
-                    {hero && i === 2 && <Framed src={small(hero.after)} alt="" width={480} height={Math.round((480 * hero.height) / hero.width)} />}
+                    {hero && i === 0 && <img src={small(hero.before)} alt="" width={480} height={heroH} loading="lazy" />}
+                    {hero && i === 1 && <img src={small(hero.after)} alt="" width={480} height={heroH} loading="lazy" />}
+                    {hero && i === 2 && <Framed src={small(hero.after)} alt="" width={480} height={heroH} />}
                   </div>
                   <div className="step-text"><span className="n">{i + 1}</span><h3>{c.saadan.titles[i]}</h3><p>{s}</p></div>
                 </li>
@@ -112,6 +169,23 @@ export default async function Page() {
             </ol>
           </div>
         </section>
+
+        {/* It still has to be them — the same face, before and after, under the finger; the process that makes sure */}
+        {face && (
+          <section className="wrap section" aria-labelledby="ligne">
+            <div className="container ligne">
+              <figure className="ligne-pic">
+                <BeforeAfter before={{ src: face.before, srcSetWebp: face.before.replace(/\.jpg$/, '.webp') }} after={{ src: face.after, srcSetWebp: face.after.replace(/\.jpg$/, '.webp') }} alt={`Samme ansigt før og efter restaureringen: ${face.label.toLowerCase()}`} aspect="1 / 1" reveal beforeLabel={c.preview.before} afterLabel={c.preview.after} />
+                <figcaption className="caption">{c.ligne.hint}</figcaption>
+              </figure>
+              <div className="ligne-text">
+                <h2 id="ligne">{c.ligne.h2}</h2>
+                <p className="lead">{c.ligne.p}</p>
+                <CtaRow cta={c.hero.cta} value={c.hero.valueLine} />
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Examples — six more of the same object */}
         {grid.length > 0 && (
@@ -173,8 +247,7 @@ export default async function Page() {
                 {c.offer.guarantee.map((g) => <li key={g}>{g}</li>)}
               </ul>
               <div className="offer-cta o-cta">
-                <OpenFlowButton>{c.offer.cta}</OpenFlowButton>
-                <span className="caption"><b style={{ color: 'var(--ink)', fontWeight: 600 }}>{c.hero.smallStrong}</b></span>
+                <CtaRow cta={c.offer.cta} value={c.hero.valueLine} />
               </div>
             </div>
           </div>

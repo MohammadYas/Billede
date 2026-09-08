@@ -1,17 +1,16 @@
 # Annoncebilleder
 
-## Det, der bruges: fotografiet selv (`scripts/ads-hero.mjs`)
+## Det, der bruges: seks købsmotiver (`scripts/ads-concepts.mjs`)
 
-Det, der sælger i denne kategori, er ansigtet, stort, halvt ødelagt og halvt reddet. `node scripts/ads-hero.mjs`
-laver pr. eksempelpar fire filer i `work/ads/final/`: `overlay-<par>-1080x1350` (tekst på fotoet over en
-mørk gradient, til feed 4:5), `overlay-<par>-1080x1080`, `hero-<par>-1080x1350` og `hero-<par>-1080x1080`
-(fotoet med papirpanel under). Sitets slider-knop og Før/Efter-chips ligger på sømmen; knap "Prøv med dit
-eget billede", og i stedet for en pris risikofjernelsen "Du betaler først, når du har set det · fri fragt · 21 dages fuld fortrydelse" (prisen står kun sidst i annonceteksten: en pris i billedet forankrer købet, før værdien er set). Tekster,
-ansigtsposition (`pos`) og sømmens placering (`seam`) pr. par står i `ADS` øverst i scriptet. Ingen
-credits, ingen billedmodel: fotografierne er pipelinens ægte output fra `public/examples/`.
-
-Chrome-prompten bruger `overlay-*-1080x1350` til 4:5 og `hero-*-1080x1080` til 1:1 (panelet dækker ingen
-ansigter i det tætte kvadrat).
+Hver annonce har tre led: følelsen, den gratis prøve, det fysiske produkt med pris ("I ramme fra 599 kr.
+inkl. fragt"). Aldrig "gratis" uden pris i samme billede. Seks koncepter: A følelse (`a-emotion`),
+B fysisk produkt (`b-produkt`), C gave (`c-gave`), D tillid/ansigter (`d-ligne`), E originalen bliver hjemme
+(`e-original`), F tilbud (`f-tilbud`, kun mens `lib/config.ts` siger, at tilbuddet er aktivt; scriptet
+læser datoen selv). Tre layouts: `split` (samme ansigt halvt/halvt, kun portrætter; aldrig et gruppefoto,
+hvor de to halvdele ville vise to forskellige personer), `cards` (hele før- og efter-billedet side om side
+med FØR/EFTER), `scene` (en komponeret produktscene fra `work/ads/creatives/`). Ingen slider-knop i et
+statisk billede. Output `work/ads/final/<koncept>-1080x1350.jpg` og `-1080x1080.jpg`. Nyt koncept = én
+linje i `ADS`.
 
 ## Sekundært: genererede scener med gpt-image-2 / Gemini (produktet i et hjem)
 

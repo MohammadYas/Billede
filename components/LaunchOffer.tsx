@@ -66,10 +66,9 @@ export default function LaunchOffer({ campaign, cta, before, after, alt }: { cam
         <div className="offer-text">
           <span className="promo-tag">{campaign.tag}</span>
           <h2 id="offer-title">{campaign.title}</h2>
+          <p className="offer-body">{campaign.body}</p>
           <ul className="offer-points">
-            <li>Tag et foto af det gamle billede – og se det restaureret, før du beslutter noget. Det koster ikke noget.</li>
-            <li>Bestiller du, får du ét ekstra eksemplar med i pakken – til den, der også husker det.</li>
-            <li>Ligner det ikke, får du hele beløbet tilbage.</li>
+            {campaign.points.map((p) => <li key={p}>{p}</li>)}
           </ul>
           <p className="promo-until">{campaign.untilLine}</p>
           <button type="button" className="btn btn-block" onClick={start}>{cta}</button>

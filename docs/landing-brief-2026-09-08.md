@@ -1,4 +1,4 @@
-# Landing-page-brief fra ejeren, 2026-09-08 (PARKERET: "kun billeder, rør ikke hjemmesiden lige nu")
+# Landing-page-brief fra ejeren, 2026-09-08 (UDFØRT 2026-09-08 sammen med runde 2; facts-afsnittet gælder stadig)
 
 Ejerens brief i kort form, så den kan udføres senere uden at starte forfra. Mål: flere uploads, flere
 køb efter preview, tillid, forståelse af prisen fra 599 kr., match mellem Meta-annoncer og landingsside.

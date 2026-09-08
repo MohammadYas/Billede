@@ -14,7 +14,7 @@ import { fornavn, getFounder } from '@/lib/founder';
 export const CTA_VARIANTS = {
   A: 'Se hvad dit billede kan blive til',
   B: 'Genskab mit billede',
-  C: 'Se hvad mit billede kan blive til',
+  C: 'Se mit billede restaureret gratis',
 } as const;
 export type CtaVariant = keyof typeof CTA_VARIANTS;
 export function ctaVariant(): CtaVariant {
@@ -22,6 +22,8 @@ export function ctaVariant(): CtaVariant {
   return v && v in CTA_VARIANTS ? (v as CtaVariant) : 'C';
 }
 export const primaryCta = () => CTA_VARIANTS[ctaVariant()];
+/** The same call to action where a whole sentence does not fit: the header on a phone, the sticky bar. */
+export const PRIMARY_CTA_SHORT = 'Se mit billede gratis';
 
 /** "Til sammenligning …" under the price. The owner's own market figure; the owner keeps the evidence for it. */
 export const PRICE_ANCHOR = 'Til sammenligning: hos en fotograf koster restaureringen alene typisk 300–600 kr. – uden ramme og levering.';
@@ -96,49 +98,79 @@ export function copy(season: Season = currentSeason()) {
     variants: { portrait: sizes.map((fmt) => variant(fmt, false)), landscape: sizes.map((fmt) => variant(fmt, true)) },
     sizes: sizes.map((fmt) => [formatLabel(fmt), formatDkk(PRICING[fmt].priceDkk)] as [string, string]),
     hero: {
-      eyebrow: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : `Julen er nået – vi leverer inden ${X} hverdage`) : 'Gaven, de ikke selv kan købe.',
-      h1: 'Det gamle billede af mor og far. Skarpt igen, i ramme, klar til at give.',
-      sub: 'Tag et foto af det med telefonen, og se det restaureret – før du beslutter noget.',
+      /** one line above the headline: the free look, then the paid object — never "gratis" on its own */
+      eyebrow: 'Se resultatet, før du køber',
+      deadline: jul ? (days > 0 ? `Julegaven 2026 · bestil senest ${dato}, så er den under træet` : days === 0 ? `Sidste dag for levering inden jul` : `Julen er nået – vi leverer inden ${X} hverdage`) : '',
+      h1: 'Få det gamle familiebillede tilbage.',
+      sub: `Tag et foto med mobilen og se restaureringen gratis. Kan du lide resultatet, gennemgår vi det og sender det hjem til dig i ramme ${priceFrom} inkl. fragt.`,
       cta,
-      /** the risk reversal, set apart from the price line so it reads before it */
-      smallStrong: 'Du ser resultatet, før du køber – det koster ikke noget.',
-      small: `Skal det hjem til dig i ramme: ${priceFrom}, fri fragt.`,
+      ctaShort: PRIMARY_CTA_SHORT,
+      /** under the button: the two objections a cold visitor has, and the price so "gratis" never stands alone */
+      trust: ['Originalen bliver hjemme', 'Du godkender før print', `${cap(priceFrom)} inkl. fragt`],
+      /** the value line beside any repeated button */
+      valueLine: `I ramme ${priceFrom} inkl. fragt`,
+      smallStrong: 'Se resultatet gratis, før du bestiller.',
+      small: `I ramme ${priceFrom} inkl. fragt.`,
       mockCaption: `${formatLabel(format)} i sort ramme med passepartout og glas. Sådan kommer det.`,
       beforeCaption: 'Sådan så det ud, før.',
       /** under the fading pair: what the picture is doing, and the one thing a finger can do */
       fadeHint: 'Billedet skifter selv mellem før og efter. Tryk på det, hvis du selv vil skifte.',
       /** the whole path in one line, right under the button */
-      howShort: 'Tag et foto af billedet, se resultatet, og bestil kun hvis du vil. Det tager et par minutter.',
       countdown: jul && days > 0 ? `${days} ${days === 1 ? 'dag' : 'dage'} til sidste bestilling for levering inden jul` : '',
     },
     gave: {
       h2: jul ? 'Den julegave, de ikke selv kan købe' : 'Den gave, de ikke selv kan købe',
-      lead: 'Til den runde fødselsdag, jubilæet, guldbrylluppet eller julen: et billede, de troede var gået tabt – skarpt, i ramme, klar til at hænge op. Det er den slags, der bliver stille ved bordet.',
+      lead: 'Til den runde fødselsdag, jubilæet, guldbrylluppet eller julen: et billede, de troede var gået tabt – restaureret, i ramme, klar til at hænge op. Det er den slags, der bliver stille ved bordet.',
       points: [
         ['Tag billedet i smug', 'Et foto af det gamle billede med telefonen er nok. Læg det tilbage i skuffen, inden nogen ser det.'],
         ['Send det direkte – eller hjem til dig', 'Skriv modtagerens adresse ved betaling, hvis det skal sendes direkte. Ellers kommer det hjem til dig, pakket så glasset holder.'],
         [jul ? 'Under træet til tiden' : 'Til tiden', jul ? `Bestil senest ${dato}, så er det leveret inden jul. Du godkender billedet på mail, før vi printer.` : `Leveret ${levering}, efter du har godkendt billedet på mail.`],
       ] as [string, string][],
     },
+    /** the hairline row under the hero: positive facts only; what happens if something goes wrong lives by the price and in the FAQ */
     tryghed: [
-      'Du godkender, før vi printer – ellers pengene tilbage',
-      `Bestiller du ikke, slettes billedet efter ${CONFIG.retentionUnpaidDays} dage`,
+      'Du godkender ansigterne, før vi printer',
+      'Se resultatet gratis, før du bestiller',
       `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''}`,
     ],
+    /** the object, early: the same photograph as a print, a frame and a parcel — why the price is not an app's price */
+    skuffen: {
+      h2: 'Fra skuffen til væggen.',
+      lead: `Se restaureringen gratis. Kan du lide resultatet, får du det færdigt som print i ramme ${priceFrom} inkl. fragt.`,
+      chain: ['Dit gamle billede', 'Restaureret og gennemgået', 'Printet på mat fotopapir', 'I ramme, sendt hjem'],
+      valueH: `Det får du ${priceFrom}`,
+      value: [
+        'Restaurering, gennemgået af et menneske før print',
+        'Print på mat fotopapir',
+        'Ramme i sort eller eg, med passepartout og glas',
+        'Den restaurerede fil i høj opløsning',
+        'Fri fragt i Danmark',
+      ],
+    },
     saadan: {
       h2: 'Sådan foregår det',
-      titles: ['Tag et foto af billedet', 'Se resultatet på skærmen', 'Godkend – så printer vi og sender'],
+      titles: ['Tag et foto', 'Se restaureringen gratis', 'Godkend og få det hjem i ramme'],
       steps: [
-        'Tag et foto af billedet med telefonen. Dagslys, ingen blitz – det er nok.',
-        'AI laver et første forslag på omkring halvandet minut. Du ser det på skærmen, før du bestiller noget.',
-        `Et menneske gennemgår hvert billede og tjekker ansigterne, før det printes. Du godkender på mail, vi printer og sender. Leveret ${levering}.`,
+        'Du sender aldrig originalen. Et godt mobilfoto i dagslys er nok.',
+        'På omkring halvandet minut kan du se, hvad billedet kan blive til. Kan du ikke lide det, bestiller du ingenting.',
+        `Bestiller du – i ramme ${priceFrom} inkl. fragt – bliver resultatet gennemgået. Du godkender det færdige billede på mail, før vi printer. Leveret ${levering}.`,
       ],
       note: 'Papir falmer, og folder bliver ikke glattere med årene. Et foto af billedet, som det er nu, er nok til at redde det.',
     },
+    /** the objection that decides the purchase: will it still be them */
+    ligne: {
+      h2: 'Det skal stadig ligne dem.',
+      p: 'Restaureringen må ikke gøre mor, far eller bedstefar til en anden person. Bestiller du, gennemgår vi ansigterne, og du godkender resultatet, før vi printer.',
+      hint: 'Træk i midten. Samme ansigt, før og efter.',
+    },
+    original: {
+      h2: 'Du sender aldrig originalen.',
+      p: 'Tag blot et foto med mobilen. Dit gamle familiebillede bliver hjemme hos dig.',
+    },
     taetPaa: { h2: 'Tæt på', p: 'Det er i detaljerne, man kan se, om det er gjort ordentligt. Øjne, hænder, skrift og stof – ikke udglattet, bare rene.' },
     produkt: {
-      h2: `Det får du for ${price}`,
-      lead: 'Restaureret foto, print, ramme og levering. Ét beløb – ingen tillæg.',
+      h2: `Vælg størrelse og ramme`,
+      lead: `Restaureret foto, print, ramme og levering. Ét beløb ${priceFrom} – ingen tillæg.`,
       rows: rowsFor(format, formatLabel(format)),
       sizesTitle: 'Størrelser',
       sizeCards: sizes.map((fmt) => ({ format: fmt, label: formatLabel(fmt), price: formatDkk(PRICING[fmt].priceDkk), hint: hint[fmt] ?? '', recommended: fmt === RECOMMENDED_FORMAT })),
@@ -151,13 +183,17 @@ export function copy(season: Season = currentSeason()) {
     offer: {
       line: `Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret ${levering}, efter du har godkendt billedet på mail.`,
       deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
-      priceNote: 'inkl. moms, ramme og fragt · pengene tilbage, hvis det ikke ligner',
+      priceNote: 'inkl. moms, ramme og fragt',
       allIn: 'Det er hele prisen. Restaurering, ramme, glas, den digitale fil og levering er med. Ingen tillæg.',
       /** Comparative price claim supplied by the owner (markedsføringsloven: keep the documentation behind it). Empty string removes the line. */
       anchor: PRICE_ANCHOR,
+      /** by the price, where the decision is made: the positive facts first, the refund rule last */
       guarantee: [
-        'Du ser resultatet, før du bestiller',
+        'Se resultatet gratis, før du bestiller',
         'Du godkender det færdige billede på mail, før vi printer',
+        'Originalen bliver hjemme hos dig',
+        `Dansk virksomhed${by ? `, ${by}` : ''}${f.cvr ? ` · CVR ${f.cvr}` : ''} · fri fragt`,
+        `Bestiller du ikke, slettes billedet efter ${CONFIG.retentionUnpaidDays} dage`,
         'Ligner det ikke, får du hele beløbet tilbage',
       ] as string[],
       kontakt: email ? `Spørgsmål? ${cap(skrivTil)} på ${email} – vi svarer inden 24 timer.` : '',
@@ -187,29 +223,56 @@ export function copy(season: Season = currentSeason()) {
       until: kampagneDato,
       line: `Lanceringstilbud til og med ${kampagneDato}: ét ekstra eksemplar af billedet med i pakken – til den, der også husker det. Værdi ${formatDkk(EXTRA_PRINT_DKK[format])}`,
       short: `Lanceringstilbud: ekstra eksemplar med i pakken til og med ${kampagneDato}.`,
-      bar: `Lanceringstilbud: ét ekstra eksemplar gratis · til og med ${kampagneDato}`,
+      bar: `Lanceringstilbud: 2 indrammede eksemplarer ${priceFrom} · til og med ${kampagneDato}`,
       tag: 'Lanceringstilbud',
-      title: `Ét ekstra eksemplar gratis – værdi ${formatDkk(EXTRA_PRINT_DKK[format])}`,
+      /** the offer as the object it is: two framed prints, one price — not a "gratis" without a price beside it */
+      title: `2 indrammede eksemplarer ${priceFrom}`,
       untilLine: `Gælder til og med ${kampagneDato}`,
-      body: 'Samme billede, samme størrelse og ramme, i samme pakke – til den, der også husker det.',
-      terms: 'Tilføjes med ét tryk på bestillingssiden. Gælder det første ekstra eksemplar.',
+      body: 'Ét til dig. Ét til den, der også husker det.',
+      terms: `Det første ekstra eksemplar af samme billede, størrelse og ramme er gratis (værdi ${formatDkk(EXTRA_PRINT_DKK[format])}). Tilføjes med ét tryk på bestillingssiden.`,
       extra: `Lanceringstilbud til og med ${kampagneDato}: det første ekstra eksemplar er med i pakken uden beregning.`,
+      /** the dialog's three lines: the free look, the paid object with its price, the control before print */
+      points: [
+        'Tag et foto af det gamle billede, og se det restaureret gratis, før du beslutter noget.',
+        `Bestiller du – i ramme ${priceFrom} inkl. fragt – får du ét ekstra eksemplar med i pakken, til den der også husker det.`,
+        'Du godkender ansigterne, før vi printer.',
+      ],
     },
     hvem: { h2: 'Hvem står bag' },
     spoergsmaal: {
       h2: 'Ofte stillede spørgsmål',
       items: [
         {
+          q: 'Skal jeg sende det originale billede til jer?',
+          a: 'Nej. Du tager kun et foto af det med telefonen. Originalen bliver liggende i skuffen hos dig – vi rører den aldrig.',
+        },
+        {
           q: 'Koster det noget at se resultatet?',
-          a: `Nej. Du tager et foto af billedet, ser det restaureret på skærmen, og først derefter beslutter du, om det skal hjem til dig. Bestiller du ikke, slettes billedet af sig selv efter ${CONFIG.retentionUnpaidDays} dage.`,
+          a: `Nej. Du tager et foto af billedet, ser det restaureret på skærmen, og først derefter beslutter du, om det skal hjem til dig i ramme – det koster ${priceFrom} inkl. fragt. Bestiller du ikke, slettes billedet af sig selv efter ${CONFIG.retentionUnpaidDays} dage.`,
         },
         {
-          q: 'Mit billede er meget ødelagt eller sløret – kan I stadig gøre noget?',
-          a: 'Prisen er den samme, uanset hvor beskadiget billedet er. Revner, folder, gulstik og vandskjolder er det, restaureringen er bedst til. Sløret er sværere end ridset – skarphed, der aldrig var i billedet, kan vi ikke opfinde – men også det koster ikke noget at prøve. Tag et foto af det og se selv.',
+          q: 'Hvad koster det, og hvad får jeg?',
+          a: `${sizes.map((x) => `${formatLabel(x)} for ${formatDkk(PRICING[x].priceDkk)}`).join(', ')}. Beløbet dækker restaureringen, et menneskes gennemgang af ansigterne, print på mat fotopapir, ramme i sort eller eg med passepartout og glas, den restaurerede fil i høj opløsning og fri fragt i Danmark. Ingen tillæg.`,
         },
         {
-          q: 'Ser det kunstigt ud?',
-          a: `Det er præcis det, ${navn} tjekker for, før det printes. Hvis restaureringen har ændret noget i et ansigt, rettes det tilbage. Og du ser det færdige billede og godkender det, før vi printer.`,
+          q: 'Hvornår betaler jeg?',
+          a: `Ved bestilling, efter du har set previewet på skærmen. Vi printer først, når du har set det færdige billede på mail og sagt ja – og indtil da kan du fortryde og få hele beløbet tilbage.`,
+        },
+        {
+          q: 'Hvad hvis ansigtet ikke ligner?',
+          a: `Det er præcis det, ${navn} tjekker for, før det printes. Hvis restaureringen har ændret noget i et ansigt, rettes det tilbage. Du ser det færdige billede og godkender det, før vi printer – og ligner det stadig ikke, får du hele beløbet tilbage.`,
+        },
+        {
+          q: 'Hvordan fungerer godkendelse før print?',
+          a: 'Inden 48 timer efter din bestilling får du en mail med det færdige billede. Du kan godkende det eller bede om en ændring. Vi printer først, når du har sagt ja.',
+        },
+        {
+          q: 'Kan I reparere revner, folder og falmede farver?',
+          a: 'Ja. Revner, folder, gulstik, vandskjolder og falmede farver er det, restaureringen er bedst til. Prisen er den samme, uanset hvor beskadiget billedet er.',
+        },
+        {
+          q: 'Kan I gøre et uskarpt billede skarpt?',
+          a: 'Kun til en vis grad. Skarphed, der aldrig var i billedet, kan vi ikke opfinde. Men det koster ikke noget at prøve – tag et foto af det og se selv, før du beslutter noget.',
         },
         {
           q: 'Kan jeg fortryde?',
@@ -221,10 +284,6 @@ export function copy(season: Season = currentSeason()) {
         {
           q: 'Hvad sker der med mit billede?',
           a: `Det bruges kun til din bestilling: gemt i EU, behandlet af vores AI-leverandør og – hvis du bestiller – sendt til printpartneren. Aldrig brugt til andet. Bestiller du ikke, slettes det automatisk efter ${CONFIG.retentionUnpaidDays} dage; bestiller du, ${CONFIG.retentionCompletedDays} dage efter leveringen. Eller straks, hvis du beder om det.`,
-        },
-        {
-          q: 'Skal jeg sende det originale billede til jer?',
-          a: 'Nej. Du tager kun et foto af det med telefonen. Originalen bliver liggende i skuffen hos dig – vi rører den aldrig.',
         },
         {
           q: 'Jeg har ikke billedet – det ligger hos min mor.',
@@ -261,17 +320,17 @@ export function copy(season: Season = currentSeason()) {
         },
       ],
     },
-    slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : 'Halvandet minut, så har du set det. Du bestiller først bagefter.', cta },
-    sticky: cta,
+    slut: { line: jul ? 'Halvandet minut, så har du set det. Julegaven er klaret i aften.' : `Halvandet minut, så har du set det. I ramme ${priceFrom} inkl. fragt, hvis du vil have det hjem.`, cta },
+    sticky: PRIMARY_CTA_SHORT,
     upload: {
-      how: 'Læg det gamle billede på bordet i dagslys, og tag et foto af det med telefonen. Eller vælg et foto, du allerede har taget. Om cirka halvandet minut viser vi resultatet.',
+      how: 'Læg det gamle billede på bordet i dagslys, og tag et foto af det med telefonen. Eller vælg et foto, du allerede har taget. Originalen bliver hjemme hos dig – vi skal kun bruge fotoet. Om cirka halvandet minut viser vi resultatet.',
       camera: 'Tag et foto',
       library: 'Vælg fra kamerarulle',
       pick: 'Vælg billede',
       drop: '…eller træk det herind.',
       tips: 'Læg billedet fladt i dagslys, uden blitz. Fyld skærmen med det.',
       check: 'Er det skarpt og uden genskin? Ellers vælg et andet.',
-      free: 'Det koster ikke noget at se. Du betaler først, hvis du bestiller – og først efter du har set resultatet.',
+      free: `Det koster ikke noget at se resultatet. Vil du have det hjem i ramme, koster det ${priceFrom} inkl. fragt – og du godkender, før vi printer.`,
       note: `Billedet bruges kun til din bestilling. Det gemmes i EU og behandles af vores AI-leverandør, og det slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller – eller med det samme, hvis du beder om det.`,
       privacy: 'Læs mere under Privatliv',
       cta: 'Vis mig resultatet',
@@ -330,7 +389,7 @@ export function copy(season: Season = currentSeason()) {
       specLess: 'Vis mindre',
 
       next: `Det her er AI'ens første forslag. Bestiller du, gennemgår ${navn} billedet – især ansigterne – og du godkender det færdige billede på mail, før vi printer.`,
-      headNote: 'Fri fragt · pengene tilbage',
+      headNote: 'Fri fragt · du godkender før print',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Vi printer først, når du har set det færdige billede og sagt ja.',
       sizeTitle: 'Størrelse',

@@ -2,7 +2,7 @@
 
 Sådan bruges den: log ind på business.facebook.com i Chrome, åbn Ads Manager på den rigtige annoncekonto,
 åbn Claude-udvidelsen og indsæt alt under stregen som første besked. Billederne ligger i
-`work/ads/final/` (lav dem igen med `node scripts/ads-hero.mjs`, hvis eksemplerne eller teksterne ændrer sig).
+`work/ads/final/` (lav dem igen med `node scripts/ads-concepts.mjs`, hvis eksemplerne eller teksterne ændrer sig).
 
 Forudsætning, som Claude ikke kan klare for dig: annoncekontoen har en betalingsmetode, Facebook-siden
 "Billedearv" findes, og du er admin på Business Manager. Pixel og Conversions API er endnu ikke tændt på
@@ -99,96 +99,109 @@ Rapportér resultatet af hvert punkt i en tabel, før du går til fase 1.
 - Optimering: Conversions. Budstrategi: Highest volume, ingen omkostningsgrænse. Attribution: 7 dages
   klik, 1 dags visning.
 
-## Fase 3: fem annoncer
+## Fase 3: seks annoncer, seks købsmotiver
 
-Fælles for alle fem:
+Fælles for alle seks:
 
 - Format: enkelt billede. Identitet: Facebook-siden Billedearv, og Instagram-kontoen, hvis den findes.
   Multi-advertiser ads: fra. Alle Advantage+ creative-valg: fra.
-- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\final\`. Pr. annonce: `overlay-<par>-1080x1350.jpg`
-  til feed og Stories (4:5; fotografiet fuld højde, teksten på billedet) og `hero-<par>-1080x1080.jpg` til
-  1:1-placeringer (fotografiet med tekstpanel under, så ingen ansigter dækkes). Overskrift, linje, knap og
-  pris sidder allerede i billedet. Upload 4:5-filen først, og vælg "Rediger pr. placering" for at give
-  1:1-filen til de placeringer, der kræver kvadrat, så Meta ikke beskærer selv.
-- Reserve, hvis Meta afviser et billede for tekstmængde, eller til et andet annoncesæt senere:
-  `hero-<par>-1080x1350.jpg` (samme foto, tekst i panel under) og scene-annoncerne `skuffen`,
-  `paa-vaeggen`, `gaven-pakkes-op`, `i-haenderne` (produktet i et hjem).
+- Billederne ligger i `C:\Users\mo\Desktop\Billede\work\ads\final\` (lavet af `node scripts/ads-concepts.mjs`).
+  Pr. annonce: `<koncept>-1080x1350.jpg` til feed og Stories (4:5) og `<koncept>-1080x1080.jpg` til
+  1:1-placeringer. Overskrift, tekst, knap og "I ramme fra 599 kr. inkl. fragt" sidder allerede i billedet.
+  Upload 4:5-filen først, og vælg "Rediger pr. placering" for at give 1:1-filen til de placeringer, der
+  kræver kvadrat, så Meta ikke beskærer selv.
 - Website-URL: `https://billedearv.dk/`
 - Feltet **URL-parametre** (ikke selve URL'en):
   `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`
 - Knap: "Få mere at vide" (Learn more). Ikke "Køb nu": første skridt koster ikke noget.
 - Sprog: dansk. Ingen automatiske oversættelser.
+- Hver annoncetekst har tre led i den rækkefølge: følelsen, den gratis prøve, det fysiske produkt med pris.
+  Skriv aldrig "gratis" uden prisen i samme tekst.
 
-### Annonce 1: `gaven` (billede: `overlay-bryllup-1954-1080x1350.jpg`)
-
-Primær tekst:
-
-> Det gamle billede af mor og far. Skarpt igen, i ramme, klar til at give.
->
-> Tag et foto af billedet med telefonen. Et par minutter efter ser du det restaureret på skærmen, før du beslutter noget. Det koster ikke noget at se.
->
-> Skal det hjem i ramme: fra 599 kr., fri fragt. 30×40, 40×50 eller 50×70 cm, sort ramme eller eg.
-
-Overskrift: `Se det restaureret, før du køber`
-Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
-
-### Annonce 2: `dit-billede` (billede: `overlay-have-1976-1080x1350.jpg`)
+### Annonce 1: `a-emotion` (billede: `a-emotion-1080x1350.jpg`)
 
 Primær tekst:
 
-> Dit gamle billede kan blive sådan her.
+> Så tydeligt har du ikke set hende i 60 år.
 >
-> Folder, pletter og falmede farver kan rettes. Tag et foto af billedet med telefonen, og se resultatet på skærmen. Det koster ikke noget at se.
+> Tag et foto af det gamle billede med mobilen, og se det restaureret gratis. Originalen bliver hjemme hos dig.
 >
-> Vil du have det hjem: fra 599 kr. i ramme med glas, fri fragt, leveret inden 10 hverdage efter dit ja.
+> Kan du lide resultatet, gennemgår vi ansigterne og sender det hjem i ramme med passepartout og glas – fra 599 kr. inkl. fragt. Du godkender, før vi printer.
 
-Overskrift: `Dit gamle billede kan blive sådan her`
-Beskrivelse: `Se resultatet på skærmen, før du beslutter dig`
+Overskrift: `Se det restaureret gratis. I ramme fra 599 kr.`
+Beskrivelse: `Du godkender ansigterne før print`
 
-### Annonce 3: `ser-foerst` (billede: `overlay-portraet-1962-1080x1350.jpg`)
+### Annonce 2: `b-produkt` (billede: `b-produkt-1080x1350.jpg`)
 
 Primær tekst:
 
-> Et lille portræt fra pungen. Sådan bliver det, når det er restaureret.
+> Fra skuffen til væggen.
 >
-> Sådan foregår det: Tag et foto af billedet. Se resultatet på skærmen. Sig ja, så printer vi og sender det i ramme. Bestiller du ikke, slettes billedet af sig selv efter 30 dage.
+> Se restaureringen gratis. Kan du lide resultatet, får du det færdigt som print på mat fotopapir, i ramme med passepartout og glas – fra 599 kr. inkl. fragt.
 >
-> Dansk virksomhed, Vemmelev · CVR 46300831.
+> Restaurering, gennemgang af ansigterne, print, ramme, den digitale fil og levering er med. Ingen tillæg.
 
-Overskrift: `Ingen bestilling, før du har set det`
-Beskrivelse: `Fra 599 kr. i ramme · fri fragt`
+Overskrift: `Fra skuffen til væggen`
+Beskrivelse: `Print, ramme, glas og fri fragt fra 599 kr.`
 
-### Annonce 4: `tilbud` (billede: `overlay-foedselsdag-1985-1080x1350.jpg`)
+### Annonce 3: `c-gave` (billede: `c-gave-1080x1350.jpg`)
 
 Primær tekst:
 
-> Lanceringstilbud til og med 30. september: ét ekstra eksemplar af billedet med i pakken, til den, der også husker det. Værdi 349 kr.
+> Gaven, de ikke selv kan købe sig til.
 >
-> Tag et foto af det gamle billede med telefonen, se det restaureret på skærmen, og bestil kun, hvis du vil have det hjem. Fra 599 kr. i ramme, fri fragt.
+> Tag et foto af mors og fars bryllupsbillede i smug, og se det restaureret gratis.
+>
+> Bestiller du, kommer det hjem i ramme fra 599 kr. inkl. fragt – til dig eller direkte til dem. Du godkender det færdige billede, før vi printer.
 
-Overskrift: `Ét ekstra eksemplar med i pakken · til og med 30. september`
-Beskrivelse: `Samme billede, samme ramme, til den der også husker det`
+Overskrift: `Mors og fars bryllupsbillede. Tilbage på væggen.`
+Beskrivelse: `I ramme fra 599 kr. inkl. fragt`
 
-### Annonce 5: `samme-billede` (billede: `overlay-familie-ved-vandet-1948-1080x1350.jpg`)
+### Annonce 4: `d-ligne` (billede: `d-ligne-1080x1350.jpg`)
 
 Primær tekst:
 
-> Samme billede. Til venstre som det har ligget i skuffen. Til højre som det kommer hjem.
+> Det skal stadig ligne hende.
 >
-> Tag et foto af billedet med telefonen, og se det restaureret på skærmen. Det koster ikke noget at se, og du bestiller kun, hvis du vil have det i ramme.
+> Restaureringen må ikke gøre bedstemor til en anden person. Derfor gennemgår vi ansigterne, før billedet går til print, og du godkender resultatet.
 >
-> Fra 599 kr. i ramme med glas, fri fragt, leveret inden 10 hverdage efter dit ja.
+> Se restaureringen gratis først. I ramme fra 599 kr. inkl. fragt.
 
-Overskrift: `Samme billede, 70 år senere`
-Beskrivelse: `Se det på skærmen, før du beslutter dig`
+Overskrift: `Det skal stadig ligne hende`
+Beskrivelse: `Du godkender ansigterne før print · fra 599 kr.`
 
-Skal én annonce skiftes ud, findes reservebilleder som rene før/efter-collager i samme mappe
-(`<par>-story-1080x1350.jpg`, `<par>-feed-1080x1080.jpg`) for familie-1932 og cykel-1944. Brug ikke
-bryllup-1916 (for lille forskel mellem før og efter).
+### Annonce 5: `e-original` (billede: `e-original-1080x1350.jpg`)
+
+Primær tekst:
+
+> Du sender aldrig originalen.
+>
+> Tag blot et foto med mobilen. Dit gamle familiebillede bliver hjemme hos dig, og du ser restaureringen gratis på skærmen, før du beslutter noget.
+>
+> Vil du have det hjem i ramme, koster det fra 599 kr. inkl. fragt. Du godkender, før vi printer.
+
+Overskrift: `Originalen bliver hjemme hos dig`
+Beskrivelse: `Se restaureringen gratis · i ramme fra 599 kr.`
+
+### Annonce 6: `f-tilbud` (billede: `f-tilbud-1080x1350.jpg`) – kun mens tilbuddet er aktivt
+
+Scriptet laver kun denne fil, mens lanceringstilbuddet er aktivt i `lib/config.ts` (til og med 30. september
+2026). Findes filen ikke, springes annoncen over.
+
+Primær tekst:
+
+> Lanceringstilbud til og med 30. september: 2 indrammede eksemplarer fra 599 kr.
+>
+> Ét til dig. Ét til den, der også husker det. Det første ekstra eksemplar af samme billede, størrelse og ramme er gratis.
+>
+> Se restaureringen gratis først, og bestil kun, hvis du kan lide resultatet. Fri fragt. Du godkender, før vi printer.
+
+Overskrift: `2 indrammede eksemplarer fra 599 kr.`
+Beskrivelse: `Til og med 30. september · fri fragt`
 
 ## Fase 4: gennemgang, og stop
 
-1. Åbn forhåndsvisning af alle fem annoncer i mobil-feed og i Stories. Screenshot af hver. Tjek, at
+1. Åbn forhåndsvisning af alle annoncer i mobil-feed og i Stories. Screenshot af hver. Tjek, at
    overskriften ikke afkortes, at billedet ikke beskæres, og at "FØR"/"EFTER" begge kan læses.
 2. Klik forhåndsvisningens link til landingssiden. Den åbnede URL skal indeholde
    `utm_source=facebook` og `utm_content=` efterfulgt af annoncenavnet.

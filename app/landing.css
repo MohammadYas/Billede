@@ -229,3 +229,61 @@
 .offer-dialog.upsell .offer-text { padding: var(--s5) var(--s5) var(--s5); }
 .upsell-pair { display: flex; gap: var(--s2); justify-self: stretch; }
 .upsell-pair img { flex: 1; min-width: 0; width: 50%; height: auto; border-radius: 4px; border: 1px solid var(--hairline); }
+
+/* Second conversion round (2026-09-08): the free look and the paid object in one breath, the product early, the face that proves it. */
+.eyebrow { font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.hero-copy .eyebrow { margin-bottom: calc(var(--s2) * -1); }
+/* under the button: the two objections and the price, so "gratis" never stands alone */
+.hero-trust { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); font-size: var(--fs-small); color: var(--ink-2); max-width: 30em; }
+.hero-trust li { display: inline-flex; align-items: center; gap: var(--s2); }
+.hero-trust li::before { content: ''; width: 0.5em; height: 0.28em; border-left: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: translateY(-0.1em) rotate(-45deg); flex: none; }
+.hero-trust li:last-child { color: var(--ink); font-weight: 600; }
+/* the primary button and the paid object beside it */
+.cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
+.cta-row .btn { min-width: 260px; }
+.value-line { font-family: var(--display); font-weight: 600; font-size: var(--fs-body); color: var(--ink); letter-spacing: -0.005em; }
+
+/* From the drawer to the wall — the same photograph four times: as it is, restored, as a print, framed */
+.chain-section { display: grid; gap: var(--s6); }
+.chain-head { display: grid; gap: var(--s3); }
+.chain-head .lead { max-width: 30em; color: var(--ink-2); }
+.chain { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s5) var(--s3); }
+.chain-step { display: grid; gap: var(--s3); align-content: start; }
+.chain-media { display: grid; place-items: center; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: var(--paper-2); }
+.chain-media > img { width: 100%; height: 100%; object-fit: cover; }
+.chain-media.is-print { padding: 10%; }
+.chain-media.is-print .print { display: block; width: 100%; padding: 4%; background: #fbfaf7; box-shadow: var(--shadow-object); }
+.chain-media.is-print .print img { display: block; width: 100%; height: auto; }
+.chain-media.is-frame { padding: 0; }
+.chain-media.is-frame > img { object-fit: cover; }
+.chain-media.is-frame .framed { width: 78%; }
+.chain-label { display: flex; gap: var(--s2); align-items: baseline; font-family: var(--display); font-weight: 650; font-size: var(--fs-body); line-height: 1.25; letter-spacing: -0.01em; }
+.chain-label .n { flex: none; color: var(--accent); font-size: var(--fs-small); }
+/* what the price buys: five short lines and the button, on the quiet block */
+.value { display: grid; gap: var(--s4); padding: var(--s5); background: var(--paper-2); border-radius: 8px; }
+.value h3 { font-family: var(--display); font-weight: 650; font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: -0.02em; }
+.value-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); max-width: 30em; }
+.value-list li { position: relative; padding-left: 1.6em; font-size: var(--fs-body); }
+.value-list li::before { content: ''; position: absolute; left: 0.15em; top: 0.6em; width: 0.55em; height: 0.3em; border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); }
+@media (min-width: 640px) { .chain { grid-template-columns: repeat(4, 1fr); gap: var(--s5); } }
+@media (min-width: 1024px) {
+  .chain-section { grid-template-columns: 1fr; }
+  .value { grid-template-columns: 1fr 1fr; align-items: start; padding: var(--s6) var(--s7); }
+  .value h3 { grid-column: 1 / -1; }
+  .value .cta-row { align-self: center; }
+}
+
+/* How it works: the note and, beside it, the one thing people are afraid of */
+.how-head { grid-template-columns: 1fr; align-items: start; }
+.callout { display: grid; gap: var(--s1); padding: var(--s4) var(--s5); border-left: 3px solid var(--accent); background: var(--paper); border-radius: 0 6px 6px 0; max-width: 30em; }
+.callout b { font-family: var(--display); font-weight: 650; font-size: var(--fs-lead); line-height: 1.25; letter-spacing: -0.01em; }
+.callout span { font-size: var(--fs-body); color: var(--ink-2); }
+@media (min-width: 1024px) { .how-head { grid-template-columns: 1fr auto; gap: var(--s7); } }
+
+/* It still has to be them — the same face under the finger, and the sentence that says who makes sure */
+.ligne { display: grid; gap: var(--s6); }
+.ligne-pic { margin: 0; display: grid; gap: var(--s2); max-width: 520px; }
+.ligne-pic .ba { border-radius: 6px; box-shadow: var(--shadow-object); }
+.ligne-text { display: grid; gap: var(--s4); align-content: center; }
+.ligne-text .lead { max-width: 26em; color: var(--ink-2); }
+@media (min-width: 1024px) { .ligne { grid-template-columns: 5fr 6fr; gap: var(--s9); align-items: center; } }
