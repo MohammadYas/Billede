@@ -78,6 +78,15 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   // a thumbnail per listed order: the customer's picture is what the owner recognises an order by
   const thumbs = new Map<string, string>();
   await Promise.all(active.slice(0, 60).map(async (o) => { const p = o.preview_path ?? o.original_path; if (p) { try { thumbs.set(o.id, await signedUrl(p, 900)); } catch { /* no thumbnail */ } } }));
+  // every generation, newest first: the original next to what the model made of it, whatever happened afterwards
+  const withPreview = orders.filter((o) => o.preview_path);
+  const gens = withPreview.slice(0, 48);
+  const pair = new Map<string, { before?: string; after?: string }>();
+  await Promise.all(gens.map(async (o) => {
+    const p: { before?: string; after?: string } = {};
+    try { if (o.original_path) p.before = await signedUrl(o.original_path, 900); p.after = await signedUrl(o.preview_path!, 900); } catch { /* file gone */ }
+    pair.set(o.id, p);
+  }));
   // where the orders came from, last 30 days: previews, paid, money — per utm_source / utm_campaign
   const PAID = ['PAID', 'IN_RETOUCH', 'AWAITING_APPROVAL', 'CHANGE_REQUESTED', 'APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'];
   const bySource = new Map<string, { previews: number; paid: number; oere: number }>();
@@ -119,6 +128,25 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <p className="cfg-label">Preview → betaling · 30 dage</p>
             <p style={{ fontFamily: 'var(--display)', fontSize: 'var(--fs-display)', lineHeight: 1, fontWeight: 300 }} className="tabular">{ratio === null ? '–' : `${ratio} %`}</p>
             <p className="small muted">{started} af {shown} viste previews gik videre til betaling · {bought} køb. Kilde: vores egen eventlog (PreviewShown → InitiateCheckout), ikke Meta.</p>
+          </section>
+        )}
+        {!sp.status && (
+          <section style={{ display: 'grid', gap: 'var(--s3)' }}>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Genereringer · {withPreview.length}{withPreview.length > gens.length ? ` (viser ${gens.length} nyeste)` : ''}</h2>
+            <div className="adm-gens">
+              {gens.map((o) => (
+                <a key={o.id} href={`/admin/orders/${o.id}`} className="adm-gen">
+                  <span className="adm-gen-pics">
+                    {pair.get(o.id)?.before ? <img src={pair.get(o.id)!.before} alt="" loading="lazy" /> : <span aria-hidden />}
+                    {pair.get(o.id)?.after ? <img src={pair.get(o.id)!.after} alt="" loading="lazy" /> : <span aria-hidden />}
+                  </span>
+                  <span className="small">{new Date(o.created_at).toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', dateStyle: 'short', timeStyle: 'short' })} · {STATUS_DA[o.status] ?? o.status}</span>
+                  <span className="small muted">{o.customer_name ?? o.customer_email ?? 'ingen e-mail'} · {srcKey(o.utm)}</span>
+                </a>
+              ))}
+              {gens.length === 0 && <p className="muted">Ingen genereringer endnu.</p>}
+            </div>
+            <p className="caption">Alle previews, også dem uden køb. Original til venstre, restaurering til højre. Tryk for ordren.</p>
           </section>
         )}
         {!sp.status && (

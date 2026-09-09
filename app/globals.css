@@ -409,6 +409,10 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .adm-card .caption { margin: 0; }
 .admin table { border-collapse: collapse; width: 100%; font-size: var(--fs-small); }
 .adm-thumb { display: block; width: 56px; height: 56px; object-fit: cover; border-radius: 4px; background: var(--paper-2); }
+.adm-gens { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s3); }
+.adm-gen { display: grid; gap: var(--s1); color: inherit; text-decoration: none; }
+.adm-gen-pics { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; aspect-ratio: 8 / 5; }
+.adm-gen-pics img, .adm-gen-pics span { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 4px; background: var(--paper-2); }
 .admin th, .admin td { text-align: left; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--hairline); vertical-align: top; overflow-wrap: normal; white-space: nowrap; }
 .admin th { font-weight: 600; color: var(--ink-2); }
 .adm-sources td:first-child, .adm-sources th:first-child { white-space: normal; min-width: 11em; } /* the link label wraps so the counts stay on a phone screen */
