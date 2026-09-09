@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, recordAttempt } from '@/lib/admin/auth';
 import { listOrders } from '@/lib/db/orders';
 import { supabaseAdmin } from '@/lib/db/supabase';
+import type { Utm } from '@/lib/analytics/events';
 import { signedUrl } from '@/lib/db/storage';
 import { formatLabel } from '@/lib/pricing';
 import { readAddOns } from '@/lib/pricing';
@@ -37,6 +38,9 @@ const WORK: Record<string, string> = {
 };
 const ANALYTICS = ['NEW', 'PREVIEW_READY', 'ABANDONED'];
 
+/** One label per link a visitor arrived on: utm_source · utm_campaign · utm_content (the ad's name). */
+const srcKey = (u: Utm | null | undefined) => `${u?.utm_source ?? (u?.fbclid ? 'facebook (uden utm)' : 'direkte')}${u?.utm_campaign ? ' · ' + u.utm_campaign : ''}${u?.utm_content ? ' · ' + u.utm_content : ''}`;
+
 export default async function Admin({ searchParams }: { searchParams: Promise<{ fejl?: string; status?: string; alle?: string }> }) {
   const sp = await searchParams;
   if (!(await isAdmin())) {
@@ -58,8 +62,15 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   // The one number that decides the test: of the people who saw their own preview, how many went on
   // to payment. Distinct orders per event, last 30 days, from our own event log (not Meta's).
   const since = new Date(Date.now() - 30 * 864e5).toISOString();
-  const { data: ev } = await supabaseAdmin().from('events').select('name, order_id, session_id').in('name', ['PreviewShown', 'InitiateCheckout', 'Purchase']).gte('created_at', since).limit(10000);
-  const distinct = (n: string) => new Set(((ev ?? []) as { name: string; order_id: string | null; session_id: string | null }[]).filter((e) => e.name === n).map((e) => e.order_id ?? e.session_id).filter(Boolean)).size;
+  // PostgREST hands out at most 1000 rows per request, so the log is read in pages (newest first).
+  type Ev = { name: string; order_id: string | null; session_id: string | null; utm: Utm | null };
+  const ev: Ev[] = [];
+  for (let from = 0; from < 30000; from += 1000) {
+    const { data } = await supabaseAdmin().from('events').select('name, order_id, session_id, utm').in('name', ['PageView', 'FlowOpened', 'PreviewShown', 'InitiateCheckout', 'Purchase']).gte('created_at', since).order('created_at', { ascending: false }).range(from, from + 999);
+    ev.push(...((data ?? []) as Ev[]));
+    if (!data || data.length < 1000) break;
+  }
+  const distinct = (n: string) => new Set(ev.filter((e) => e.name === n).map((e) => e.order_id ?? e.session_id).filter(Boolean)).size;
   const shown = distinct('PreviewShown'), started = distinct('InitiateCheckout'), bought = distinct('Purchase');
   const ratio = shown ? Math.round((started / shown) * 100) : null;
   const active = sp.status || sp.alle ? orders.filter((o) => o.status !== 'ABANDONED' || sp.status === 'ABANDONED') : orders.filter((o) => !ANALYTICS.includes(o.status));
@@ -72,13 +83,25 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const bySource = new Map<string, { previews: number; paid: number; oere: number }>();
   for (const o of orders) {
     if (o.created_at < since) continue;
-    const key = `${o.utm?.utm_source ?? (o.utm?.fbclid ? 'facebook' : 'direkte')}${o.utm?.utm_campaign ? ' · ' + o.utm.utm_campaign : ''}${o.utm?.utm_content ? ' · ' + o.utm.utm_content : ''}`;
+    const key = srcKey(o.utm);
     const row = bySource.get(key) ?? { previews: 0, paid: 0, oere: 0 };
     if (o.status !== 'NEW' && o.status !== 'ABANDONED') row.previews += 1;
     if (PAID.includes(o.status)) { row.paid += 1; row.oere += o.amount ?? 0; }
     bySource.set(key, row);
   }
   const sources = [...bySource.entries()].sort((a, b) => b[1].paid - a[1].paid || b[1].previews - a[1].previews);
+  // and where the visitors came from, before anyone ordered: distinct sessions per step, per link — the
+  // three launch ads show up as three rows (utm_content = the ad's name). Playwright test traffic is left out.
+  const STEPS = ['PageView', 'FlowOpened', 'PreviewShown', 'Purchase'] as const;
+  const visits = new Map<string, Record<(typeof STEPS)[number], Set<string>>>();
+  for (const e of ev) {
+    if (!(STEPS as readonly string[]).includes(e.name) || e.utm?.utm_source === 'pwtest') continue;
+    const k = srcKey(e.utm);
+    const row = visits.get(k) ?? { PageView: new Set<string>(), FlowOpened: new Set<string>(), PreviewShown: new Set<string>(), Purchase: new Set<string>() };
+    row[e.name as (typeof STEPS)[number]].add(e.order_id ?? e.session_id ?? '');
+    visits.set(k, row);
+  }
+  const visitRows = [...visits.entries()].sort((a, b) => b[1].Purchase.size - a[1].Purchase.size || b[1].PreviewShown.size - a[1].PreviewShown.size || b[1].PageView.size - a[1].PageView.size);
   const work = Object.keys(WORK).map((st) => ({ st, rows: orders.filter((o) => o.status === st && !(st === 'MANUAL_REVIEW' && !o.customer_email)) })).filter((g) => g.rows.length);
   return (
     <main className="wrap admin" style={{ paddingTop: 'var(--s3)', paddingBottom: 'var(--s9)' }}>
@@ -115,7 +138,18 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         )}
         {!sp.status && (
           <section className="adm-sources" style={{ display: 'grid', gap: 'var(--s3)' }}>
-            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Kilder · 30 dage</h2>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Besøg · 30 dage</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="tabular">
+                <thead><tr><th>Kilde · kampagne · annonce</th><th>Besøg</th><th>Åbnede upload</th><th>Så preview</th><th>Købte</th></tr></thead>
+                <tbody>
+                  {visitRows.map(([k, r]) => <tr key={k}><td>{k}</td><td>{r.PageView.size}</td><td>{r.FlowOpened.size}</td><td>{r.PreviewShown.size}</td><td>{r.Purchase.size}</td></tr>)}
+                  {visitRows.length === 0 && <tr><td colSpan={5} className="muted">Ingen besøg de sidste 30 dage.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <p className="caption">Unikke besøg (sessioner) pr. link fra vores egen eventlog. Annoncerne står som facebook · lancering-sep26 · FINAL_COLD_01/02/03; »facebook (uden utm)« er klik fra Facebook uden annonce-parametre (fx siden eller forhåndsvisning).</p>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Ordrer pr. kilde · 30 dage</h2>
             <div style={{ overflowX: 'auto' }}>
               <table className="tabular">
                 <thead><tr><th>Kilde · kampagne · annonce</th><th>Previews</th><th>Betalt</th><th>Omsætning</th><th>Preview → betalt</th></tr></thead>
