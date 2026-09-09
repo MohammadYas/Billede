@@ -96,7 +96,7 @@ Launch-sættet er skåret til tre kolde annoncer (audit 2026-09-10). Filerne lig
 `FINAL_COLD_0N-4x5.jpg` (feed, "Original"), `-9x16.jpg` (Stories/Reels) og `-1x1.jpg` (kvadrat). Intet
 retargeting-sæt, intet tilbud, ingen video i denne omgang.
 
-Fælles: identitet Facebook-siden Billedearv (ingen Instagram-konto). Alle Advantage+ creative-valg fra,
+Fælles: identitet Facebook-siden Billedearv (ingen Instagram-konto). Annoncesættet kører kun Facebook-placeringer, indtil en Instagram-konto er koblet på og autoriseret. Alle Advantage+ creative-valg fra,
 "Annoncer fra flere annoncører" fra. Website-URL `https://billedearv.dk/`, URL-parametre
 `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`, knap "Læs mere".
 Annoncenavn = filnavnets første del.
