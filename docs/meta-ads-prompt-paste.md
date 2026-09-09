@@ -89,44 +89,27 @@ Rapportér resultatet af hvert punkt i en tabel, før du går til fase 1.
 - Optimering: Conversions. Budstrategi: Highest volume, ingen omkostningsgrænse. Attribution: 7 dages
   klik, 1 dags visning.
 
-## Fase 3: annoncerne (kun billeder ved launch)
+## Fase 3: præcis tre annoncer (kun billeder)
 
-Filerne ligger på denne computer i `C:\Users\mo\Desktop\Billede\work\ads\final\`. Hver annonce har tre
-filer: `<navn>-4x5.jpg` (feed), `<navn>-1x1.jpg` (kvadrat) og `<navn>-9x16.jpg` (Stories/Reels).
+Launch-sættet er skåret til tre kolde annoncer (audit 2026-09-10). Filerne ligger i
+`C:\Users\mo\Desktop\Billede\work\ads\launch\` (lavet af `node scripts/ads/static.mjs --launch`). Pr. annonce:
+`FINAL_COLD_0N-4x5.jpg` (feed, "Original"), `-9x16.jpg` (Stories/Reels) og `-1x1.jpg` (kvadrat). Intet
+retargeting-sæt, intet tilbud, ingen video i denne omgang.
 
-**Upload:** brug din egen fil-upload-funktion på Metas upload-felt med den fulde sti, fx
-`C:\Users\mo\Desktop\Billede\work\ads\final\memory-4x5.jpg`. Upload 4:5 først, og brug "Rediger pr.
-placering"/"Crop" til at give 1:1 til de kvadratiske placeringer og 9:16 til Stories/Reels, så Meta ikke
-beskærer selv. **Kan du ikke uploade filer** (fil-dialogen åbner ikke, eller uploaden fejler to gange), så
-spring ikke annoncen over og vælg ikke et andet billede: gør alt andet i annoncen færdigt (navn, tekster,
-URL, parametre, knap, placeringsindstillinger), gem som kladde hvis Meta tillader det uden billede, og
-skriv i slutrapporten præcis hvilke filer jeg selv skal uploade til hvilke annoncer. Kan annoncen slet
-ikke gemmes uden billede, så lad den stå åben i editoren, tag et screenshot og skriv alle tekster til
-den i rapporten, så jeg kun mangler at klikke Upload.
+Fælles: identitet Facebook-siden Billedearv (ingen Instagram-konto). Alle Advantage+ creative-valg fra,
+"Annoncer fra flere annoncører" fra. Website-URL `https://billedearv.dk/`, URL-parametre
+`utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`, knap "Læs mere".
+Annoncenavn = filnavnets første del.
 
-Fælles for alle annoncer:
-
-- Format: enkelt billede. Identitet: Facebook-siden Billedearv og Instagram-kontoen, hvis den findes.
-  Multi-advertiser ads: fra. Alle Advantage+ creative-valg: fra (ingen beskæring, musik, tekst, forbedring).
-- Website-URL: `https://billedearv.dk/`
-- Feltet **URL-parametre** (ikke selve URL'en):
-  `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}`
-- Knap: "Få mere at vide". Sprog: dansk, ingen automatiske oversættelser.
-- Annoncenavn = filnavnets første del (fx `memory`), så `utm_content` matcher.
-- Primærteksten begynder med hooket, ikke med brandet. "Gratis" står aldrig uden "fra 599 kr." i samme
-  tekst. Ingen refusion, garanti eller "problemer" i annoncesæt A.
-
-### Annoncesæt A (koldt, det brede sæt fra fase 2): fem annoncer
-
-**`memory`** – `memory-4x5.jpg` / `memory-1x1.jpg` / `memory-9x16.jpg`
+**`FINAL_COLD_01`** (memory: "Har du også sådan et billede?")
 
 > Har du også sådan et billede?
 >
 > Tag et foto af det med mobilen, og se det restaureret gratis. Kan du lide resultatet, sender vi det hjem i ramme fra 599 kr. inkl. fragt.
 
-Overskrift: `Se dit eget restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
+Overskrift: `Se dit billede restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
 
-**`gift`** – `gift-4x5.jpg` / `gift-1x1.jpg` / `gift-9x16.jpg`
+**`FINAL_COLD_02`** (gift: "Hvad giver man sine forældre, når de allerede har alt?")
 
 > Hvad giver man sine forældre, når de allerede har alt?
 >
@@ -134,58 +117,15 @@ Overskrift: `Se dit eget restaureret gratis` · Beskrivelse: `I ramme fra 599 kr
 
 Overskrift: `Se resultatet gratis først` · Beskrivelse: `I ramme fra 599 kr.`
 
-**`reveal`** – `reveal-4x5.jpg` / `reveal-1x1.jpg` / `reveal-9x16.jpg`
+**`FINAL_COLD_03`** (reveal: "Så tydeligt har du ikke set hende i 60 år.")
 
 > Så tydeligt har du ikke set hende i 60 år.
 >
 > Tag et foto af det gamle billede med mobilen, og se det restaureret gratis. Kan du lide resultatet, sender vi det hjem i ramme fra 599 kr. inkl. fragt.
 
-Overskrift: `Se dit eget restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
+Overskrift: `Se dit billede restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
 
-**`original`** – `original-4x5.jpg` / `original-1x1.jpg` / `original-9x16.jpg`
-
-> Du skal ikke sende originalen.
->
-> Et foto med mobilen er nok. Se restaureringen gratis på skærmen. I ramme fra 599 kr. inkl. fragt.
-
-Overskrift: `Et foto med mobilen er nok` · Beskrivelse: `I ramme fra 599 kr.`
-
-**`physical`** – `physical-h2-4x5.jpg` / `physical-h2-1x1.jpg` / `physical-h2-9x16.jpg`
-
-> Fra skuffen til væggen.
->
-> Restaurering, print på mat fotopapir, ramme med passepartout og glas, og fri fragt – fra 599 kr. Se restaureringen gratis først.
-
-Overskrift: `Print, ramme og fri fragt` · Beskrivelse: `Fra 599 kr.`
-
-### Annoncesæt B (retargeting, oprettes pauset): tre annoncer
-
-Nyt annoncesæt i samme kampagne, navn `META_Sales_DK_Retargeting30_Purchase`. Målgruppe: custom audience
-"Website-besøgende 30 dage" (opret den under Målgrupper → Custom audience → Website → pixelen → alle
-besøgende, 30 dage; den er tom, indtil pixelen kører, og det er forventet). Ekskludér custom audience
-"Købere 180 dage" (event Purchase). Budget 50 kr./dag. Optimering: Conversions, hændelse Purchase.
-Placeringer som sæt A. Alder 45–65+, Danmark.
-
-**`offer`** – `offer-4x5.jpg` / `offer-1x1.jpg` / `offer-9x16.jpg` – findes filen ikke, er tilbuddet udløbet: spring over.
-
-> Der er næsten altid én mere, der også husker det.
->
-> 2 indrammede eksemplarer fra 599 kr.: ét til dig, ét til den, der også husker det. Det første ekstra eksemplar af samme billede, størrelse og ramme er gratis til og med 30. september. Se restaureringen gratis først.
-
-Overskrift: `2 indrammede eksemplarer fra 599 kr.` · Beskrivelse: `Til og med 30. september`
-
-**`trust`** – `trust-4x5.jpg` / `trust-1x1.jpg` / `trust-9x16.jpg`
-
-> Det skal stadig ligne hende.
->
-> Vi gennemgår ansigterne, og du godkender resultatet, før vi printer. Se dit eget restaureret gratis. I ramme fra 599 kr. inkl. fragt.
-
-Overskrift: `Du godkender før print` · Beskrivelse: `I ramme fra 599 kr.`
-
-**`physical-rt`** – samme filer og tekster som `physical` i sæt A.
-
-Ikke med ved launch (ligger klar i samme mappe, rør dem ikke): `*-h2-*` bortset fra physical-h2,
-`ugc-*`, `physical-4x5.jpg`, `reveal-h2-*`. Videoerne i `work/ads/video/` bruges ikke i denne omgang.
+Droppet fra launch (filerne ligger stadig i `work/ads/final/`): original, physical, trust, offer, ugc-*.
 
 ## Fase 4: gennemgang, og stop
 
