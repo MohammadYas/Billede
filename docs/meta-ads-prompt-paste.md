@@ -211,7 +211,11 @@ Ikke med ved launch (ligger klar i samme mappe, rør dem ikke): `*-h2-*` bortset
 3. **Daglig tjekliste, dag 1 til 7**, rapporteret som én tabel pr. dag: forbrug mod budget, CPM, CTR
    (link), pris pr. `PreviewShown`, frekvens, og hvad tabellen "Kilder · 30 dage" i billedearv.dk/admin
    viser pr. `utm_content` (jeg logger ind selv og giver dig skærmen).
-4. **Beslutningsregler.** Rør intet de første 3 dage eller under 2.000 visninger pr. annonce. Derefter:
+4. **Stop-regel (ejerens):** 0 køb efter 1.500 kr. samlet forbrug → sæt kampagnen på pause og rapportér.
+   Sæt derfor kampagnens forbrugsgrænse (Campaign spending limit) til 1.500 kr., før der publiceres, så
+   Meta selv stopper. Budgettet er 150 kr./dag i sæt A og 50 kr./dag i sæt B (pauset); tabellen viser
+   sættets budget på hver annonce, ikke et budget pr. annonce.
+5. **Beslutningsregler.** Rør intet de første 3 dage eller under 2.000 visninger pr. annonce. Derefter:
    en annonce med link-CTR under halvdelen af den bedste sættes på pause. Efter 7 dage med stabil pris pr.
    `PreviewShown`: hæv budgettet 20 %, og vent 3 dage før næste forhøjelse. Foreslå altid, gør det aldrig
    uden mit ok.

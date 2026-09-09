@@ -27,4 +27,5 @@ Før Udgiv, i denne rækkefølge:
 4. Custom conversion PreviewShown: skift reglen fra URL til eventet. Sæt A: skift konverteringshændelse
    fra Visning af indhold til PreviewShown.
 5. Startdato på begge sæt: sæt til dagen efter du publicerer, kl. 09.00.
-6. Udgiv sæt A. Sæt B forbliver pauset, til pixelen har fyldt målgruppen (typisk en uge).
+6. Kampagne → Forbrugsgrænse (Campaign spending limit): 1.500 kr. Stop-regel: 0 køb efter 1.500 kr. → pause.
+7. Udgiv sæt A. Sæt B forbliver pauset, til pixelen har fyldt målgruppen (typisk en uge).
