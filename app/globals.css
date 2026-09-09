@@ -427,6 +427,7 @@ body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 
 .cmp-lens .lbl.before { display: none; }
 .cmp-hold img.before, .cmp-fade img.before { opacity: 0; transition: opacity 260ms ease-out; } /* back out gently */
 .cmp-hold.show-before img.before { opacity: 1; transition-duration: 120ms; } /* in fast: feedback lands on the press */
+.cmp-fade.paused img.before, .cmp-fade.paused .lbl { transition-duration: 80ms; } /* a finger asked for the other side: it comes at once; only the idle loop dissolves slowly */
 .cmp-fade img.before { transition: opacity 1400ms ease-in-out; }
 .cmp-fade.pressed img.before, .cmp-fade.pressed .lbl { transition-duration: 160ms; } /* a press answers at once; the loop keeps its slow dissolve */
 .cmp-fade.show-before img.before { opacity: 1; }

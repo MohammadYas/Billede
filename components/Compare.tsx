@@ -231,7 +231,7 @@ export default function Compare({ before, after, alt, aspect, mode, beforeLabel 
   const hint = mode === 'lens' ? 'Tryk eller træk luppen' : holdLike ? 'Hold for at se før' : '';
   const described = hint || 'Skifter selv mellem før og efter';
   return (
-    <div ref={ref} className={`cmp cmp-${mode}${showBefore ? ' show-before' : ''} ${className}`.trim()} style={{ aspectRatio: aspect, ['--lx' as string]: '50%', ['--ly' as string]: '42%', ['--r' as string]: `${radius}px` }}
+    <div ref={ref} className={`cmp cmp-${mode}${showBefore ? ' show-before' : ''}${paused ? ' paused' : ''} ${className}`.trim()} style={{ aspectRatio: aspect, ['--lx' as string]: '50%', ['--ly' as string]: '42%', ['--r' as string]: `${radius}px` }}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={release} onPointerCancel={release} onPointerLeave={(e) => { if (mode !== 'lens') release(e); }}
       onKeyDown={onKey} tabIndex={0} role="img" aria-label={`${alt}. ${described}.`}>
       <Pic s={a} className="after" />
