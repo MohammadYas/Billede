@@ -72,7 +72,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const bySource = new Map<string, { previews: number; paid: number; oere: number }>();
   for (const o of orders) {
     if (o.created_at < since) continue;
-    const key = `${o.utm?.utm_source ?? (o.utm?.fbclid ? 'facebook' : 'direkte')}${o.utm?.utm_campaign ? ' · ' + o.utm.utm_campaign : ''}`;
+    const key = `${o.utm?.utm_source ?? (o.utm?.fbclid ? 'facebook' : 'direkte')}${o.utm?.utm_campaign ? ' · ' + o.utm.utm_campaign : ''}${o.utm?.utm_content ? ' · ' + o.utm.utm_content : ''}`;
     const row = bySource.get(key) ?? { previews: 0, paid: 0, oere: 0 };
     if (o.status !== 'NEW' && o.status !== 'ABANDONED') row.previews += 1;
     if (PAID.includes(o.status)) { row.paid += 1; row.oere += o.amount ?? 0; }
@@ -118,14 +118,14 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Kilder · 30 dage</h2>
             <div style={{ overflowX: 'auto' }}>
               <table className="tabular">
-                <thead><tr><th>Kilde · kampagne</th><th>Previews</th><th>Betalt</th><th>Omsætning</th><th>Preview → betalt</th></tr></thead>
+                <thead><tr><th>Kilde · kampagne · annonce</th><th>Previews</th><th>Betalt</th><th>Omsætning</th><th>Preview → betalt</th></tr></thead>
                 <tbody>
                   {sources.map(([k, r]) => <tr key={k}><td>{k}</td><td>{r.previews}</td><td>{r.paid}</td><td>{r.oere ? `${(r.oere / 100).toLocaleString('da-DK')} kr.` : '—'}</td><td>{r.previews ? `${Math.round((r.paid / r.previews) * 100)} %` : '—'}</td></tr>)}
                   {sources.length === 0 && <tr><td colSpan={5} className="muted">Ingen ordrer de sidste 30 dage.</td></tr>}
                 </tbody>
               </table>
             </div>
-            <p className="caption">utm_source og utm_campaign fra linket, kunden kom ind på (fbclid uden utm tælles som facebook). Sæt utm_content pr. annonce, så står den i tabellen under.</p>
+            <p className="caption">utm_source, utm_campaign og utm_content (annoncens navn) fra linket, kunden kom ind på (fbclid uden utm tælles som facebook).</p>
           </section>
         )}
         <div style={{ overflowX: 'auto' }}>

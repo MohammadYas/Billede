@@ -181,15 +181,17 @@
 .fade-hint { max-width: 30em; }
 
 /* Launch-offer dialog: the offer block's language, a picture that repairs itself, one button. Native <dialog> for focus and Esc. */
-.offer-dialog { border: 0; padding: 0; background: var(--paper); color: var(--ink); width: min(680px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); border-radius: 8px; box-shadow: var(--shadow-object); overflow: hidden; }
+.offer-dialog { border: 0; padding: 0; background: var(--paper); color: var(--ink); width: min(680px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); border-radius: 8px; box-shadow: var(--shadow-object); overflow: hidden; }
 .offer-dialog::backdrop { background: rgba(23, 22, 20, 0.55); backdrop-filter: blur(2px); }
 .offer-dialog[open] { animation: offer-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 @keyframes offer-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
-.offer-dialog-body { position: relative; display: grid; }
+/* Short in-app viewports (Facebook's browser is ~360×560): the body scrolls and the button stays in view. */
+.offer-dialog-body { position: relative; display: grid; max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+body.offer-open { overflow: hidden; }
 .offer-close { position: absolute; z-index: 2; right: 6px; top: 6px; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: rgba(251, 250, 247, 0.92); border: 0; border-radius: 999px; color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer; }
 .offer-close:hover { background: var(--paper); }
 .offer-pic { background: var(--paper-2); }
-.offer-pic .cmp { aspect-ratio: 16 / 9 !important; }
+.offer-pic .cmp { aspect-ratio: 16 / 9 !important; max-height: 30dvh; }
 .offer-pic .cmp img { object-position: 50% 30%; }
 .offer-text { display: grid; gap: var(--s3); justify-items: start; padding: var(--s4) var(--s4) var(--s5); }
 .offer-text h2 { font-size: 24px; line-height: 1.12; letter-spacing: -0.015em; text-wrap: balance; }
@@ -198,6 +200,7 @@
 .offer-points li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 0.55em; height: 0.3em; border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); }
 .offer-text .promo-until { margin: 0; }
 .offer-text .btn { width: 100%; }
+@media (max-width: 719px) { .offer-text .btn { position: sticky; bottom: var(--s3); box-shadow: 0 0 0 8px var(--paper), 0 var(--s3) 0 var(--s3) var(--paper); } }
 .offer-no { justify-self: center; font-size: var(--fs-small); color: var(--ink-2); min-height: 44px; margin: 0; }
 @media (min-width: 720px) {
   .offer-dialog-body { grid-template-columns: 5fr 6fr; }
