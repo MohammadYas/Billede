@@ -1,16 +1,3 @@
-# Prompt til Claude i Chrome: lanceringskampagnen i Meta Ads Manager
-
-Sådan bruges den: log ind på business.facebook.com i Chrome, åbn Ads Manager på den rigtige annoncekonto,
-åbn Claude-udvidelsen og indsæt alt under stregen som første besked. Billederne ligger i
-`work/ads/final/` (lav dem igen med `node scripts/ads/static.mjs --hooks`, hvis eksemplerne eller teksterne ændrer
-sig). Launch-sættet (audit 2026-09-09): memory, gift, trust, original, physical-h2 koldt; offer, trust,
-physical-h2 til retargeting. Kun billeder i første omgang. Systemet: `docs/meta-ads-creatives.md`.
-
-Forudsætning, som Claude ikke kan klare for dig: annoncekontoen har en betalingsmetode, Facebook-siden
-"Billedearv" findes, og du er admin på Business Manager. Pixel og Conversions API er endnu ikke tændt på
-sitet, derfor oprettes alt **pauset** og publiceres først, når Test Events viser eventene.
-
----
 
 Du er performance marketer og arbejder i min Meta Ads Manager i denne browser. Du skal oprette
 lanceringskampagnen for **Billedearv** (billedearv.dk). Alt herunder er fakta om produktet; find ikke selv på
