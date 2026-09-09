@@ -132,8 +132,8 @@ h1 { font-family: 'Schibsted Grotesk', Arial, sans-serif; font-weight: 700; line
 .row.stack { flex-direction: column; align-items: flex-start; gap: ${Math.round(12 * k)}px; }
 .row.stack .right { text-align: left; }
 .price { max-width: ${Math.round(470 * k)}px; font: 700 ${Math.round(28 * k)}px/1.2 'Schibsted Grotesk', Arial, sans-serif; letter-spacing: -0.01em; text-shadow: 0 2px 10px rgba(23,22,20,.5); }
-.brand { display: inline-flex; align-items: center; gap: ${Math.round(8 * k)}px; margin-top: ${Math.round(10 * k)}px; font: 500 ${Math.round(22 * k)}px/1 'Newsreader', Georgia, serif; opacity: .8; }
-.brand img { width: ${Math.round(24 * k)}px; height: ${Math.round(24 * k)}px; display: block; background: ${CREAM}; border-radius: 4px; }
+.brand { display: inline-flex; align-items: center; gap: ${Math.round(7 * k)}px; margin-top: ${Math.round(10 * k)}px; font: 500 ${Math.round(19 * k)}px/1 'Newsreader', Georgia, serif; opacity: .7; }
+.brand img { width: ${Math.round(20 * k)}px; height: ${Math.round(20 * k)}px; display: block; background: ${CREAM}; border-radius: 4px; }
 .brand.corner { position: absolute; right: ${Math.round(56 * k)}px; bottom: ${Math.round(52 * k)}px; }
 /* UGC: Instagram-style caption boxes, no gradients, no brand */
 .cap { display: inline; padding: ${Math.round(6 * k)}px ${Math.round(18 * k)}px; background: #fff; color: #111; -webkit-box-decoration-break: clone; box-decoration-break: clone; font: 700 ${Math.round(52 * k)}px/1.62 'Public Sans', Arial, sans-serif; letter-spacing: -0.01em; text-shadow: none; border-radius: ${Math.round(6 * k)}px; }

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 
 export const PRICE = 'I ramme fra 599 kr.';
 export const CTA = {
-  own: 'Se dit eget restaureret gratis',
+  own: 'Se dit billede restaureret gratis',
   first: 'Se resultatet gratis først',
   look: 'Se restaureringen gratis',
 };
@@ -52,6 +52,7 @@ export const CONCEPTS = [
   {
     key: 'gift', motive: 'Gift', stage: 'cold', style: 'polished',
     hooks: ['Hvad giver man sine forældre, når de allerede har alt?', 'Har du også ét billede fra dine forældres bryllup?'],
+    sub: 'Et billede, de troede var tabt.',
     cta: CTA.first, price: PRICE,
     visual: { kind: 'framed' }, text: 'top',
     pair: 'bryllup-1954', pairPos: '50% 30%',
@@ -115,6 +116,9 @@ export const CONCEPTS = [
     reel: { open: { kind: 'scene', src: scene('bryllup-1954-koekkenbord'), box: { x: 283, y: 648, w: 477, h: 276 } }, endLine: 'Et foto med mobilen er nok.' },
   },
 ];
+
+/** The launch set: exactly three cold statics, exported as FINAL_COLD_01–03 by `static.mjs --launch`. */
+export const LAUNCH = { memory: 'FINAL_COLD_01', gift: 'FINAL_COLD_02', reveal: 'FINAL_COLD_03' };
 
 export function pick(keys) {
   if (!keys.length) return CONCEPTS;
