@@ -134,13 +134,13 @@ Overskrift: `Se dit eget restaureret gratis` · Beskrivelse: `I ramme fra 599 kr
 
 Overskrift: `Se resultatet gratis først` · Beskrivelse: `I ramme fra 599 kr.`
 
-**`trust`** – `trust-4x5.jpg` / `trust-1x1.jpg` / `trust-9x16.jpg`
+**`reveal`** – `reveal-4x5.jpg` / `reveal-1x1.jpg` / `reveal-9x16.jpg`
 
-> Det skal stadig ligne hende.
+> Så tydeligt har du ikke set hende i 60 år.
 >
-> Vi gennemgår ansigterne, og du godkender resultatet, før vi printer. Se dit eget restaureret gratis. I ramme fra 599 kr. inkl. fragt.
+> Tag et foto af det gamle billede med mobilen, og se det restaureret gratis. Kan du lide resultatet, sender vi det hjem i ramme fra 599 kr. inkl. fragt.
 
-Overskrift: `Du godkender før print` · Beskrivelse: `I ramme fra 599 kr.`
+Overskrift: `Se dit eget restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
 
 **`original`** – `original-4x5.jpg` / `original-1x1.jpg` / `original-9x16.jpg`
 
@@ -150,7 +150,7 @@ Overskrift: `Du godkender før print` · Beskrivelse: `I ramme fra 599 kr.`
 
 Overskrift: `Et foto med mobilen er nok` · Beskrivelse: `I ramme fra 599 kr.`
 
-**`physical`** – `physical-h2-4x5.jpg` / `physical-h2-9x16.jpg` (ingen 1:1: brug 4:5 til kvadratiske placeringer og lad Meta beskære top/bund)
+**`physical`** – `physical-h2-4x5.jpg` / `physical-h2-1x1.jpg` / `physical-h2-9x16.jpg`
 
 > Fra skuffen til væggen.
 >
@@ -174,12 +174,18 @@ Placeringer som sæt A. Alder 45–65+, Danmark.
 
 Overskrift: `2 indrammede eksemplarer fra 599 kr.` · Beskrivelse: `Til og med 30. september`
 
-**`trust-rt`** – samme filer og tekster som `trust` i sæt A.
+**`trust`** – `trust-4x5.jpg` / `trust-1x1.jpg` / `trust-9x16.jpg`
+
+> Det skal stadig ligne hende.
+>
+> Vi gennemgår ansigterne, og du godkender resultatet, før vi printer. Se dit eget restaureret gratis. I ramme fra 599 kr. inkl. fragt.
+
+Overskrift: `Du godkender før print` · Beskrivelse: `I ramme fra 599 kr.`
 
 **`physical-rt`** – samme filer og tekster som `physical` i sæt A.
 
 Ikke med ved launch (ligger klar i samme mappe, rør dem ikke): `*-h2-*` bortset fra physical-h2,
-`ugc-*`, `physical-4x5.jpg`. Videoerne i `work/ads/video/` bruges ikke i denne omgang.
+`ugc-*`, `physical-4x5.jpg`, `reveal-h2-*`. Videoerne i `work/ads/video/` bruges ikke i denne omgang.
 
 ## Fase 4: gennemgang, og stop
 

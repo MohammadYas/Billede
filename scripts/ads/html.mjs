@@ -65,7 +65,7 @@ function overlay(c, t, W, SH, where) {
       ${t.price ? `<div style="margin-top:${Math.round(14 * k)}px"><span class="cap ink">${esc(t.price)}</span></div>` : ''}
     </div>` : `
     ${t.small ? `<div class="small">${esc(t.small)}</div>` : ''}
-    <div class="row">
+    <div class="row${c.stack1x1 && W === SH ? ' stack' : ''}">
       <div class="btn">${esc(t.cta)} ${ARROW}</div>
       <div class="right">${t.price ? `<div class="price">${esc(t.price)}</div>` : ''}${t.brand === false ? '' : `<div class="brand"><img src="${MARK}" alt="">Billedearv</div>`}</div>
     </div>`) : (t.brand === false || ugc ? '' : `<div class="brand corner"><img src="${MARK}" alt="">Billedearv</div>`);
@@ -129,6 +129,8 @@ h1 { font-family: 'Schibsted Grotesk', Arial, sans-serif; font-weight: 700; line
 .btn { display: inline-flex; align-items: center; gap: ${Math.round(14 * k)}px; padding: 0 ${Math.round(30 * k)}px; height: ${Math.round(78 * k)}px; border-radius: 999px; background: ${CREAM}; color: ${INK}; font: 700 ${Math.round(29 * k)}px/1 'Schibsted Grotesk', Arial, sans-serif; letter-spacing: -0.01em; white-space: nowrap; }
 .btn svg { width: ${Math.round(26 * k)}px; height: ${Math.round(26 * k)}px; }
 .right { text-align: right; }
+.row.stack { flex-direction: column; align-items: flex-start; gap: ${Math.round(12 * k)}px; }
+.row.stack .right { text-align: left; }
 .price { max-width: ${Math.round(470 * k)}px; font: 700 ${Math.round(28 * k)}px/1.2 'Schibsted Grotesk', Arial, sans-serif; letter-spacing: -0.01em; text-shadow: 0 2px 10px rgba(23,22,20,.5); }
 .brand { display: inline-flex; align-items: center; gap: ${Math.round(8 * k)}px; margin-top: ${Math.round(10 * k)}px; font: 500 ${Math.round(22 * k)}px/1 'Newsreader', Georgia, serif; opacity: .8; }
 .brand img { width: ${Math.round(24 * k)}px; height: ${Math.round(24 * k)}px; display: block; background: ${CREAM}; border-radius: 4px; }

@@ -58,6 +58,12 @@ export const CONCEPTS = [
     reel: { open: { kind: 'scene', src: scene('bryllup-1954-koekkenbord'), box: { x: 283, y: 648, w: 477, h: 276 }, zoom: 1.6 }, line: 'Lån billedet et øjeblik. Resten kan være en overraskelse.' },
   },
   {
+    key: 'reveal', motive: 'Before/after as the buying reason (cold)', stage: 'cold', style: 'polished',
+    hooks: ['Så tydeligt har du ikke set hende i 60 år.', 'Nogle billeder bliver ved med at betyde noget, selv når papiret falmer.'],
+    cta: CTA.own, price: PRICE,
+    visual: { kind: 'split', pair: 'portraet-1962', pos: '50% 18%', seam: 50 }, text: 'bottom',
+  },
+  {
     key: 'trust', motive: 'Trust / likeness', stage: 'retargeting', style: 'polished',
     hooks: ['Det skal stadig ligne hende.'],
     sub: 'Vi gennemgår ansigterne. Du godkender før print.',
@@ -77,7 +83,7 @@ export const CONCEPTS = [
     key: 'physical', motive: 'Physical product / value', stage: 'cold', style: 'polished',
     hooks: ['Det er ikke bare en fil.', 'Fra skuffen til væggen.'],
     cta: CTA.look, price: 'Print, ramme og fri fragt fra 599 kr.',
-    visual: { kind: 'scene', src: scene('have-1976-paa-vaeggen'), pos: '50% 15%', shift: 100 }, text: 'top',
+    visual: { kind: 'scene', src: scene('have-1976-paa-vaeggen'), pos: '50% 15%', shift: 100 }, text: 'top', stack1x1: true,
     pair: 'have-1976', pairPos: '50% 40%',
     reel: { open: { kind: 'before' }, line: 'Print, ramme og fri fragt fra 599 kr.' },
   },

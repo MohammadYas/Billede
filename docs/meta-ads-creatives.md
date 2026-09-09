@@ -26,6 +26,7 @@ Koncepterne (seks købsmotiver + to UGC-versioner):
 |---|---|---|---|---|
 | memory | cold | Har du også sådan et billede? | hænder med gammelt + restaureret print; reel: skuffen → portræt-wipe → ramme | billede + reel |
 | gift | cold | Hvad giver man sine forældre, når de allerede har alt? | bryllupsbilledet i ramme på væggen, det gamle print foran | billede + reel |
+| reveal | cold | Så tydeligt har du ikke set hende i 60 år. | samme split som trust, koldt hook | billede |
 | trust | retargeting | Det skal stadig ligne hende. + "Vi gennemgår ansigterne. Du godkender før print." | samme ansigt, halvt/halvt | billede |
 | original | cold | Du skal ikke sende originalen. + "Et foto med mobilen er nok." | telefon over det gamle print på bordet | billede + reel |
 | physical | cold | Det er ikke bare en fil. / Fra skuffen til væggen. | rammen på væggen, det gamle print på skænken | billede + reel |
