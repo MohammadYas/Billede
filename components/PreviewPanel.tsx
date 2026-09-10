@@ -179,6 +179,12 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (yes) setExtras(1);
     void checkout(yes ? 1 : 0);
   };
+  // back from Stripe (bfcache restores the page as it was, mid-"Åbner betaling…"): the button must work again
+  useEffect(() => {
+    const back = () => { orderBusy.current = false; setOrdering(false); };
+    window.addEventListener('pageshow', back);
+    return () => window.removeEventListener('pageshow', back);
+  }, []);
   const checkout = async (copies: number) => {
     if (orderBusy.current || paid) return;
     orderBusy.current = true;
