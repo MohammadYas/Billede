@@ -460,7 +460,7 @@ export function copy(season: Season = currentSeason()) {
     },
     tak: {
       h1: `Tak. ${cap(navn)} kigger på dit billede inden 24 timer.`,
-      p: 'Du får det færdige billede til godkendelse på mail inden 48 timer. Vi printer først, når du siger ja.',
+      p: 'Du får det færdige billede til godkendelse på mail inden 48 timer. Vi printer først, når du siger ja. Tjek også spam – og hører vi ikke fra dig, ringer eller skriver vi til det nummer, du gav ved betalingen.',
       timeline: [
         ['Inden 24 timer', `${cap(navn)} gennemgår billedet og tjekker ansigterne.`],
         ['Inden 48 timer', 'Du får en mail med det færdige billede. Godkend, eller bed om en ændring.'],

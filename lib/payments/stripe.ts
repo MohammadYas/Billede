@@ -61,8 +61,9 @@ export class StripeProvider implements PaymentProvider {
       client_reference_id: order.id,
       line_items: this.lineItems(opts.quote, opts.previewImageUrl),
       shipping_address_collection: { allowed_countries: ['DK'] },
-      // no phone number: nothing in fulfilment needs it, support runs on e-mail, and a required phone
-      // field is the most expensive question on a checkout for a brand the customer has just met
+      // the phone is required (owner, 2026-09-10): the approval mail is the one step that needs an answer, and a
+      // 60-year-old who never opens the spam folder must be reachable by SMS or a call before the order stalls
+      phone_number_collection: { enabled: true },
       consent_collection: { terms_of_service: 'required' },
       custom_text: {
         terms_of_service_acceptance: {
