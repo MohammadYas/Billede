@@ -345,11 +345,10 @@ html { scroll-behavior: smooth; }
 .pv-steps li.now { color: var(--ink); opacity: 1; box-shadow: inset 0 -2px 0 var(--ink); }
 
 /* the wall, crossfading between sizes and frames */
-.pv-mock { position: relative; width: min(100%, 520px); }
-.pv-mock img { display: block; width: 100%; height: auto; }
-.pv-mock img.in { position: absolute; inset: 0; animation: mockIn 260ms ease-out both; }
-@keyframes mockIn { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .pv-mock img.in { animation: none; } .size, .frame { transition: none; } }
+.pv-mock { position: relative; width: min(100%, 520px); aspect-ratio: 1200 / 960; background: var(--paper-2); }
+.pv-mock img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 160ms ease-out; }
+.pv-mock img.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .pv-mock img { transition: none; } .size, .frame { transition: none; } }
 
 /* Sizes on the landing page: the same three boxes the order page uses, so the choice is already familiar when it matters; the default is marked as the default, nothing more */
 .size-compare { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }

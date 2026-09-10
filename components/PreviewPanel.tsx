@@ -10,9 +10,6 @@ import { PICK_KEY } from './SizePicker';
 import Promo from './Promo';
 import { forgetResume } from './ResumeBanner';
 
-/** Loads an image off-screen so a swap never flashes the wrong picture. */
-const preload = (src: string) => new Promise<void>((resolve) => { const i = new Image(); i.onload = () => resolve(); i.onerror = () => resolve(); i.src = src; });
-
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
@@ -42,26 +39,13 @@ function Total({ oere }: { oere: number }) {
   return <span className="tabular">{formatOere(shown)}</span>;
 }
 
-/** Two stacked layers, so a new frame or size fades in over the old one instead of blinking. */
-function Mockup({ src, alt }: { src: string; alt: string }) {
-  const [layers, setLayers] = useState<{ src: string; key: number }[]>([{ src, key: 0 }]);
-  const n = useRef(0);
-  useEffect(() => {
-    if (layers[layers.length - 1].src === src) return;
-    let alive = true;
-    preload(src).then(() => {
-      if (!alive) return;
-      n.current += 1;
-      setLayers((ls) => [...ls.slice(-1), { src, key: n.current }]);
-      window.setTimeout(() => { if (alive) setLayers((ls) => ls.slice(-1)); }, 300);
-    });
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src]);
+/** All six wall mockups are in the page from the start, stacked; a size or a frame only changes which one is on top,
+ *  so a tap answers at once — no image to wait for, however fast the customer taps through the sizes. */
+function Mockup({ srcs, current, alt }: { srcs: Record<string, string>; current: string; alt: string }) {
   return (
     <div className="pv-mock">
-      {layers.map((l, i) => (
-        <img key={l.key} className={i > 0 ? 'in' : ''} src={l.src} alt={i === layers.length - 1 ? alt : ''} aria-hidden={i !== layers.length - 1} width={1200} height={960} />
+      {Object.entries(srcs).map(([k, s]) => (
+        <img key={k} src={s} className={k === current ? 'on' : ''} alt={k === current ? alt : ''} aria-hidden={k !== current} width={1200} height={960} decoding="async" />
       ))}
     </div>
   );
@@ -93,17 +77,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const variants = landscape ? c.variants.landscape : c.variants.portrait;
   const v = variants.find((x) => x.format === format) ?? variants[0];
   const label = landscape ? `${v.label} ${c.preview.landscape}` : v.label;
-  const mockup = data.mockups[`${format}:${frame}`] ?? data.mockup;
-
-  // every combination is fetched up front, so picking a size or a frame swaps the wall with no wait
-  useEffect(() => {
-    // the one on screen is already loading; the rest wait for an idle moment so they do not compete
-    // with the customer's own photograph on a phone connection
-    const others = Object.entries(data.mockups).filter(([k]) => k !== `${data.format}:${data.addons.frame}`).map(([, u]) => u);
-    const run = () => others.forEach((u) => { if (u) void preload(u); });
-    const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
-    if (w.requestIdleCallback) w.requestIdleCallback(run, { timeout: 4000 }); else window.setTimeout(run, 2500);
-  }, [data.mockups, data.format, data.addons.frame]);
+  // one wall mockup per size and frame; an order from before they existed has only its own
+  const mockupKey = `${format}:${frame}`;
+  const mockupSrcs = data.mockups[mockupKey] ? data.mockups : { [mockupKey]: data.mockup };
+  const mockup = mockupSrcs[mockupKey];
 
   // the bottom bar waits until the picture has been looked at: it slides in once the picture's lower edge has
   // scrolled clear of where the bar sits, so nothing is sold over the thing being judged
@@ -375,7 +352,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <div className="pv-grid">
           {/* the object first, then what it is, then the price — the decisions come after the value */}
           <h2 id="videre" style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.hang}</h2>
-          <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
+          <Mockup srcs={mockupSrcs} current={mockupKey} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <p className="caption measure">{c.produkt.lead}</p>
           {/* a phone gets the spec as one line and a link; a desktop has the room for the rows */}
