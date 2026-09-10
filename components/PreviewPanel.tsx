@@ -244,7 +244,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   const config = (
     <div className="config">
-      <fieldset className="cfg" id="vaelg">
+      <fieldset className="cfg">
         <legend className="cfg-label"><span className="n">1</span>{c.preview.sizeTitle}</legend>
         <div className="sizes-row">
           {variants.map((x) => (
@@ -352,7 +352,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
         <p className="caption measure">{c.preview.howTo}</p>
         <div ref={picRef}><BeforeAfter before={data.original} after={data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain rest={0} controls priority zoom={zoom ? 2.2 : 1} /></div>
-        <a href="#vaelg" className="btn btn-quiet btn-block pv-next">{c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
+        <a href="#videre" className="btn btn-quiet btn-block pv-next" onClick={(e) => { const el = document.getElementById('videre'); if (!el) return; e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
         {!paid && <p className="caption measure">{c.preview.watermarkNote}</p>}
         <div className="pv-toggle">
           <button type="button" className="link-btn" onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
@@ -368,7 +368,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <div className="pv-desktop-cta">{cta}</div>
         <div className="pv-grid">
           {/* the object first, then what it is, then the price — the decisions come after the value */}
-          <h2 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.hang}</h2>
+          <h2 id="videre" style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.hang}</h2>
           <Mockup src={mockup} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
           <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
           <p className="caption measure">{c.produkt.lead}</p>

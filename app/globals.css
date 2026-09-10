@@ -249,7 +249,7 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 @media (prefers-reduced-motion: reduce) { .pv-next .arrow { animation: none; } }
 @media (min-width: 1024px) { .pv-next { display: none; } }
 html { scroll-behavior: smooth; }
-#vaelg { scroll-margin-top: var(--s6); }
+#videre { scroll-margin-top: var(--s5); }
 @media (min-width: 1024px) { .pv .ba { max-height: 70dvh; } }
 /* the customer's own comparison: one big switch, the whole picture one side at a time (the wipe stays for those who want it) */
 .ba-switch { display: grid; grid-template-columns: 1fr 1fr; margin-top: var(--s2); border: 1px solid var(--ink); border-radius: 6px; overflow: hidden; }

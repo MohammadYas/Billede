@@ -380,7 +380,7 @@ export function copy(season: Season = currentSeason()) {
     preview: {
       h2: 'Her er dit billede.',
       howTo: 'Tryk på Før og Efter for at sammenligne.',
-      nextStep: 'Vælg størrelse og ramme',
+      nextStep: 'Se det i ramme og vælg størrelse',
       watermarkNote: 'Skriften hen over billedet er et vandmærke. Det er kun på skærmen – printet og din fil er uden.',
       upsellTitle: 'Skal der et ekstra eksemplar med?',
       upsellBody: kampagne ? 'Under lanceringstilbuddet er det første ekstra eksemplar gratis: samme billede, samme ramme, i samme pakke. Til den, der også husker det.' : `Samme billede, samme ramme, i samme pakke – ${formatDkk(EXTRA_PRINT_DKK[format])}. Til den, der også husker det.`,
