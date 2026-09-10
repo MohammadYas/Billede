@@ -240,7 +240,14 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 .pv-left { display: grid; gap: var(--s4); }
 /* the order bar is fixed and 102 px tall: the picture has to end above it, or its own controls
    (Før/Efter, the colour toggle) sit behind the bar on the first screen */
-.pv .ba { max-height: min(70dvh, calc(100dvh - 372px)); margin-inline: auto; }
+.pv .ba { max-height: min(70dvh, calc(100dvh - 420px)); margin-inline: auto; }
+/* the way on, right under the switch; the arrow nods once after a moment, in case the eye stayed on the picture */
+.pv-next { margin-top: var(--s1); gap: var(--s2); }
+.pv-next .arrow { display: inline-block; animation: nod 900ms ease-in-out 5s 2; }
+@keyframes nod { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .pv-next .arrow { animation: none; } }
+@media (min-width: 1024px) { .pv-next { display: none; } }
+html { scroll-behavior: smooth; }
 @media (min-width: 1024px) { .pv .ba { max-height: 70dvh; } }
 /* the customer's own comparison: one big switch, the whole picture one side at a time (the wipe stays for those who want it) */
 .ba-switch { display: grid; grid-template-columns: 1fr 1fr; margin-top: var(--s2); border: 1px solid var(--ink); border-radius: 6px; overflow: hidden; }

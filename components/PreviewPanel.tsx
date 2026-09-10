@@ -242,7 +242,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   const config = (
     <div className="config">
-      <fieldset className="cfg">
+      <fieldset className="cfg" id="vaelg">
         <legend className="cfg-label"><span className="n">1</span>{c.preview.sizeTitle}</legend>
         <div className="sizes-row">
           {variants.map((x) => (
@@ -350,6 +350,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
         <p className="caption measure">{c.preview.howTo}</p>
         <div ref={picRef}><BeforeAfter before={data.original} after={data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain reveal rest={0} controls zoom={zoom ? 2.2 : 1} /></div>
+        <a href="#vaelg" className="btn btn-quiet btn-block pv-next">{c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
         {!paid && <p className="caption measure">{c.preview.watermarkNote}</p>}
         <div className="pv-toggle">
           <button type="button" className="link-btn" onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
