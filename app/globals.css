@@ -181,7 +181,9 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 @media (prefers-reduced-motion: reduce) { .ba img { transition: none; } }
 .ba.contain img { object-fit: contain; }
 .ba img.after { clip-path: inset(0 0 0 var(--x, 50%)); }
-.ba .handle { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; pointer-events: none; transform: translateX(var(--x, 50%)) translateX(var(--kx, 0px)); will-change: transform; }
+.ba .handle { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; pointer-events: none; transform: translateX(var(--x, 50%)) translateX(var(--kx, 0px)); will-change: transform; transition: opacity 150ms ease-out; }
+.ba.at-edge:not(.pressed) .handle { opacity: 0; } /* a whole side is showing: no half-cut knob at the edge */
+.ba.has-switch .lbl { display: none; } /* the switch under the picture is the one set of Før/Efter */
 .ba .handle::before { content: ''; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--paper); box-shadow: 0 0 0 1px rgba(28,26,23,0.25); }
 .ba .knob { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 2px rgba(28,26,23,0.3); transition: transform 100ms ease-out, box-shadow 100ms ease-out; }
 .ba.pressed .knob { transform: translate(-50%, -50%) scale(1.12); box-shadow: 0 2px 6px rgba(28,26,23,0.35); } /* feedback on pointer-down */
@@ -242,7 +244,7 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
 @media (min-width: 1024px) { .pv .ba { max-height: 70dvh; } }
 /* the customer's own comparison: one big switch, the whole picture one side at a time (the wipe stays for those who want it) */
 .ba-switch { display: grid; grid-template-columns: 1fr 1fr; margin-top: var(--s2); border: 1px solid var(--ink); border-radius: 6px; overflow: hidden; }
-.ba-switch button { min-height: 48px; border: 0; background: var(--paper); color: var(--ink); font-family: var(--display); font-weight: 600; font-size: var(--fs-body); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background-color 100ms ease-out, color 100ms ease-out; }
+.ba-switch button { min-height: 52px; border: 0; background: var(--paper); color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 17px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background-color 100ms ease-out, color 100ms ease-out; }
 .ba-switch button + button { border-left: 1px solid var(--ink); }
 .ba-switch button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
 .pv-toggle { display: flex; align-items: center; gap: var(--s5); min-height: 44px; }

@@ -88,6 +88,7 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
     const c = Math.max(0, Math.min(100, v));
     el.style.setProperty('--x', `${c}%`);
     el.style.setProperty('--kx', `${knobOver}px`);
+    el.classList.toggle('at-edge', c <= 0.5 || c >= 99.5); // a whole side is showing: the seam and knob step out of the picture
   };
 
   const stop = () => { if (raf.current) cancelAnimationFrame(raf.current); raf.current = null; target.current = null; };
@@ -185,7 +186,7 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
 
   const side = chosen ?? (x >= 99 ? 'before' : x <= 1 ? 'after' : null);
   return (<>
-    <div ref={ref} className={`ba${contain ? ' contain' : ''} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, ['--zoom' as string]: zoom, aspectRatio: aspect }}
+    <div ref={ref} className={`ba${contain ? ' contain' : ''}${controls ? ' has-switch' : ''} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, ['--zoom' as string]: zoom, aspectRatio: aspect }}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}>
       <Picture s={b} className="before" alt={alt} priority={priority} />
       <Picture s={a} className="after" alt="" priority={priority} ariaHidden />
