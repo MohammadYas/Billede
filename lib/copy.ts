@@ -217,6 +217,8 @@ export function copy(season: Season = currentSeason()) {
       working: 'Vi arbejder stadig på dit billede. Det er klar om lidt – du kan blive her eller komme tilbage.',
       ready: 'Dit billede er klar.',
       cta: 'Se dit billede',
+      again: 'Din upload blev afbrudt, før billedet nåede frem. Vælg det igen – det tager et øjeblik.',
+      retry: 'Prøv igen',
     },
     campaign: {
       active: kampagne,

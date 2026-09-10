@@ -15,9 +15,9 @@ type Saved = { id: string; t: string; at: number };
 export function rememberResume(id: string, t: string) { try { localStorage.setItem(RESUME_KEY, JSON.stringify({ id, t, at: Date.now() })); } catch { /* private mode */ } }
 export function forgetResume() { try { localStorage.removeItem(RESUME_KEY); } catch { /* ignore */ } }
 
-type View = { kind: 'working' } | { kind: 'ready'; href: string } | null;
+type View = { kind: 'working' } | { kind: 'ready'; href: string } | { kind: 'again' } | null;
 
-export default function ResumeBanner({ working, ready, cta }: { working: string; ready: string; cta: string }) {
+export default function ResumeBanner({ working, ready, cta, again, retry }: { working: string; ready: string; cta: string; again: string; retry: string }) {
   const [view, setView] = useState<View>(null);
   const [saved, setSaved] = useState<Saved | null>(null);
 
@@ -46,9 +46,20 @@ export default function ResumeBanner({ working, ready, cta }: { working: string;
         const j = (await r.json()) as { status?: string; job?: { state?: string } | null; cancelled?: boolean };
         if (j.cancelled || !j.status) { forgetResume(); setView(null); return; }
         if (j.status === 'PREVIEW_READY') { setView({ kind: 'ready', href: `/p/${saved.id}?t=${encodeURIComponent(saved.t)}` }); return; }
-        if (j.status === 'NEW' && j.job && (j.job.state === 'running' || j.job.state === 'queued')) { setView({ kind: 'working' }); timer = window.setTimeout(ask, 6000); return; }
-        // paid, refunded, failed without retry, or simply nothing running: nothing to come back to from here
-        if (j.status !== 'NEW') forgetResume();
+        if (j.status === 'NEW') {
+          const st = j.job?.state;
+          if (st === 'running' || st === 'queued') { setView({ kind: 'working' }); timer = window.setTimeout(ask, 6000); return; }
+          // the tab was closed between the upload and the start of the job: ask for the job now (idempotent server-side)
+          if (!j.job) {
+            const r2 = await fetch(`/api/preview/${saved.id}/run?t=${encodeURIComponent(saved.t)}`, { method: 'POST' }).catch(() => null);
+            if (!alive) return;
+            if (r2?.ok) { setView({ kind: 'working' }); timer = window.setTimeout(ask, 6000); return; }
+          }
+          // the photo never landed (closed during the upload) or the job failed: the way back is to pick it again
+          forgetResume(); setView({ kind: 'again' }); return;
+        }
+        // paid, refunded, deleted: nothing to come back to from here
+        forgetResume();
         setView(null);
       } catch { if (alive) timer = window.setTimeout(ask, 10000); }
     };
@@ -62,8 +73,9 @@ export default function ResumeBanner({ working, ready, cta }: { working: string;
     <div className={`resume ${view.kind}`} role="status" aria-live="polite">
       <div className="resume-body">
         {view.kind === 'working' ? <span className="resume-dot" aria-hidden /> : null}
-        <p>{view.kind === 'working' ? working : ready}</p>
+        <p>{view.kind === 'working' ? working : view.kind === 'again' ? again : ready}</p>
         {view.kind === 'ready' && <a className="btn btn-sm" href={view.href}>{cta}</a>}
+        {view.kind === 'again' && <button type="button" className="btn btn-sm" onClick={() => { setView(null); window.dispatchEvent(new CustomEvent('gf:open')); }}>{retry}</button>}
       </div>
       <button type="button" className="resume-close" aria-label="Luk" onClick={hide}>×</button>
     </div>

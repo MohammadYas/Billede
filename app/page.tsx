@@ -299,7 +299,7 @@ export default async function Page() {
       </main>
       <Footer />
       {hero && <LaunchOffer campaign={c.campaign} cta={c.hero.cta} before={src(hero, 'before', '(min-width: 720px) 300px, 100vw')} after={src(hero, 'after', '(min-width: 720px) 300px, 100vw')} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} />}
-      <ResumeBanner working={c.resume.working} ready={c.resume.ready} cta={c.resume.cta} />
+      <ResumeBanner working={c.resume.working} ready={c.resume.ready} cta={c.resume.cta} again={c.resume.again} retry={c.resume.retry} />
       <UploadFlow c={c} />
       <StickyCtaMount label={c.sticky} />
       <Consent text={c.cookie.text} accept={c.cookie.accept} decline={c.cookie.decline} />
