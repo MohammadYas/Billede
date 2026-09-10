@@ -117,6 +117,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     window.addEventListener('scroll', look, { passive: true }); window.addEventListener('resize', look);
     return () => { window.removeEventListener('scroll', look); window.removeEventListener('resize', look); };
   }, []);
+  // the cookie banner sits on the order bar only while the bar is up; before that it stays at the bottom, off the picture and its switch
+  useEffect(() => { document.body.classList.toggle('pv-bar-on', barOn); return () => document.body.classList.remove('pv-bar-on'); }, [barOn]);
   const viewed = useRef(false);
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
@@ -278,8 +280,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="caption measure">{c.preview.extraLead}</p>
         <Promo campaign={c.campaign} compact />
         {extraPrints === 0 ? (
-          <button type="button" className="btn btn-quiet extra-add" onClick={() => setExtras(1)}>
-            {c.preview.extraAdd} <span className="tabular">+ {c.campaign.active ? '0 kr.' : v.extraPrint}</span>
+          <button type="button" className="btn btn-quiet btn-block extra-add" onClick={() => setExtras(1)}>
+            {c.campaign.active ? c.preview.extraAddFree : <>{c.preview.extraAdd} <span className="tabular">· {v.extraPrint}</span></>}
           </button>
         ) : (
           <div className="stepper" role="group" aria-label={c.preview.extraTitle}>

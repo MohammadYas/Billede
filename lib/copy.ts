@@ -409,6 +409,7 @@ export function copy(season: Season = currentSeason()) {
       extraLead: 'Samme billede, samme størrelse og ramme, i samme pakke – til den, der også husker det.',
       extraLabel: 'Ekstra eksemplar',
       extraAdd: 'Tilføj et eksemplar',
+      extraAddFree: 'Tilføj et ekstra eksemplar – gratis',
       extraOne: 'eksemplar mere',
       extraMany: 'eksemplarer mere',
       extraRemove: 'Fjern',
