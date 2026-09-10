@@ -671,3 +671,18 @@ Ikke bekræftet: at 5 hverdage matcher printpartnerens reelle leveringstid – d
 | Handelsbetingelser | ODR fjernet; automatisk refusion efter 21 dage beskrevet |
 | `npm run typecheck` · `npm test` · `test:order` · `test:viewport` | rent · 8/8 · 9/9 · 12/12 – ingen konsolfejl, ingen "Vis i farver" på bestillingssiden, ingen ODR i handelsbetingelserne |
 
+
+## Pass 11 — the phone after the upload (campaign live, 2026-09-09/10)
+
+| What the owner saw on his phone | What was done | Evidence |
+|---|---|---|
+| Offer dialog's button cut off from Facebook | dialog body scrolls, picture ≤ 30 dvh, sticky button on phones | Playwright 360×560 and 390×640 against live: button rect inside the viewport |
+| Before/after slow on tap | 80 ms on tap, 1,4 s only for the idle loop | live: `transition-duration` 1.4s → 0.08s after the tap, opacity 0 within 200 ms |
+| "Se dit billede" gone after closing during the upload | resume banner starts a missing job or offers "Prøv igen" | order created without a file + key set → banner text and the sheet opens, on dev and live |
+| Comparison hard to read after the upload | Før \| Efter switch, whole picture per side, no reveal, original hidden until the restoration has loaded | WebKit + Chromium: `img.before` hidden until `img.after` complete, even with the restoration delayed 1,5 s |
+| Stuck on the first screen | "Se det i ramme og vælg størrelse ↓" lands on the framed picture, 24 px margin | scrollY identical at 1,2 s and 2,7 s after the tap; heading top = 24 px |
+| Extra-copy button ugly; cookie banner on the switch; Back from Stripe = dead button | full-width button and stepper; banner at the bottom until the order bar is up; `pageshow` resets the ordering state | live: `.consent` bottom 0 px; button enabled again after a simulated persisted `pageshow` |
+| Mockup does not follow size or frame | one physical scale with the sideboard in the shot; six mockups stacked, class toggle | three taps in a second: the right image on top within 60 ms, all six loaded, Chromium and WebKit on live |
+| Admin shows nothing for the campaign | Besøg per ad, orders per ad, Genereringer grid; paged event query | live admin at 390 px: rows per utm_content, grid of original + preview |
+
+Every round ended with `npm test` 36/36, `npm run build`, `tests/viewport.browser.mjs` OK at 375–1280.

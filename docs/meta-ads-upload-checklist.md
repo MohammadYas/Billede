@@ -1,3 +1,5 @@
+> **Historisk (2026-09-10).** Uploadet er gjort, og launch-sættet blev skåret til tre annoncer (FINAL_COLD_01 memory, FINAL_COLD_02 gift, FINAL_COLD_03 reveal i `work/ads/launch/`); annoncesæt B og de øvrige kladder er slettet. Kampagnen kører. Listen herunder er, som den så ud før beskæringen.
+
 # Upload-tjekliste, Meta Ads Manager (kampagne META_Sales_DK45-70_Lancering_2026-09)
 
 Filerne ligger i `C:\Users\mo\Desktop\Billede\work\ads\final\`. Pr. annonce: upload 4:5, vælg "Rediger pr.

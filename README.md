@@ -5,7 +5,17 @@ a minute and a half, order it restored, printed and framed (30×40 cm 599 kr., 4
 One product, three sizes, chosen after the preview. Support is e-mail only — there is no phone number on the site.
 The customer approves the finished image by mail before anything is printed.
 
-Read in this order: `HANDOFF.md` (what the owner must do before the test) → `DECISIONS.md` → `QUALITY_REPORT.md` → `QA.md`.
+Read in this order: `CLAUDE.md` (working rules) → `HANDOFF.md` (status block first: the campaign is live since 2026-09-09) → `DECISIONS.md` → `QUALITY_REPORT.md` → `QA.md`.
+
+## Verify before a push
+
+```bash
+npm test                                                     # 36 unit tests
+npm run build                                                # what Netlify runs (never `netlify build` on Windows)
+BASE=http://localhost:3000 node tests/viewport.browser.mjs   # phone/desktop layout, tap targets, overflow
+```
+
+Playwright has Chromium and WebKit; phone flows are checked in WebKit with the iPhone 13 profile. Every test and the dev server use the production Supabase from `.env.local` — tag test visits `?utm_source=pwtest`. One push per task: each push is a Netlify build.
 
 ## Stack
 

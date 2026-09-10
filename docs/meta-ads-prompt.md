@@ -1,5 +1,7 @@
 # Prompt til Claude i Chrome: lanceringskampagnen i Meta Ads Manager
 
+**Status 2026-09-10: kampagnen er publiceret og kører** (siden 2026-09-09 ~10:45; tre annoncer FINAL_COLD_01/02/03, kun Facebook-placeringer, kampagnebudget 150 kr./dag, forbrugsgrænse 1.500 kr., alle Advantage+-forbedringer fra, URL-parametre verificeret på alle tre). Denne prompt er historik for, hvordan den blev bygget; brug den kun igen til en ny kampagne. Hvad der stadig mangler (kun ejeren): telefonverificering på annoncekontoen, bekræftet business-e-mail → CAPI-token i Netlify, pixel-test fra en telefon → skift konverteringshændelsen til PreviewShown. Se `HANDOFF.md`.
+
 Sådan bruges den: log ind på business.facebook.com i Chrome, åbn Ads Manager på den rigtige annoncekonto,
 åbn Claude-udvidelsen og indsæt alt under stregen som første besked. Billederne ligger i
 `work/ads/final/` (lav dem igen med `node scripts/ads/static.mjs --hooks`, hvis eksemplerne eller teksterne ændrer
