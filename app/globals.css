@@ -240,6 +240,11 @@ body:not(.sticky-on):not(.has-pv-bar) .consent { padding-bottom: calc(var(--s4) 
    (Før/Efter, the colour toggle) sit behind the bar on the first screen */
 .pv .ba { max-height: min(70dvh, calc(100dvh - 372px)); margin-inline: auto; }
 @media (min-width: 1024px) { .pv .ba { max-height: 70dvh; } }
+/* the customer's own comparison: one big switch, the whole picture one side at a time (the wipe stays for those who want it) */
+.ba-switch { display: grid; grid-template-columns: 1fr 1fr; margin-top: var(--s2); border: 1px solid var(--ink); border-radius: 6px; overflow: hidden; }
+.ba-switch button { min-height: 48px; border: 0; background: var(--paper); color: var(--ink); font-family: var(--display); font-weight: 600; font-size: var(--fs-body); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background-color 100ms ease-out, color 100ms ease-out; }
+.ba-switch button + button { border-left: 1px solid var(--ink); }
+.ba-switch button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
 .pv-toggle { display: flex; align-items: center; gap: var(--s5); min-height: 44px; }
 .pv-toggle .link-btn[disabled] { text-decoration: none; }
 .pv-grid { display: grid; gap: var(--s5); }
