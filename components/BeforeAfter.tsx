@@ -68,12 +68,12 @@ const rubber = (over: number, dim = 100, c = 0.55) => (over * dim * c) / (dim + 
  */
 export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', afterLabel = 'Efter', aspect = '1 / 1', contain = false, zoom = 1, reveal = false, priority = false, className = '', rest = REST, controls = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [x, setX] = useState(reveal ? START : 50);
+  const [x, setX] = useState(reveal ? START : rest);
   const [chosen, setChosen] = useState<'before' | 'after' | null>(null); // the switch answers on the tap, not when the spring settles
   const b = toSource(before), a = toSource(after);
 
   // physics state lives in refs
-  const pos = useRef(reveal ? START : 50);
+  const pos = useRef(reveal ? START : rest);
   const vel = useRef(0);
   const target = useRef<number | null>(null);
   const response = useRef(0.35);
@@ -186,7 +186,7 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
 
   const side = chosen ?? (x >= 99 ? 'before' : x <= 1 ? 'after' : null);
   return (<>
-    <div ref={ref} className={`ba${contain ? ' contain' : ''}${controls ? ' has-switch' : ''} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, ['--zoom' as string]: zoom, aspectRatio: aspect }}
+    <div ref={ref} className={`ba${contain ? ' contain' : ''}${controls ? ' has-switch' : ''}${x <= 0.5 || x >= 99.5 ? ' at-edge' : ''} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, ['--zoom' as string]: zoom, aspectRatio: aspect }}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}>
       <Picture s={b} className="before" alt={alt} priority={priority} />
       <Picture s={a} className="after" alt="" priority={priority} ariaHidden />
