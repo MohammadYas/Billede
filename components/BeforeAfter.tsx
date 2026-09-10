@@ -28,11 +28,13 @@ const KNOB = 22; // px, half the knob
 
 const toSource = (s: string | Source): Source => (typeof s === 'string' ? { src: s } : s);
 
-function Picture({ s, className, alt, priority, ariaHidden }: { s: Source; className: string; alt: string; priority: boolean; ariaHidden?: boolean }) {
+function Picture({ s, className, alt, priority, ariaHidden, imgRef, onLoad }: { s: Source; className: string; alt: string; priority: boolean; ariaHidden?: boolean; imgRef?: React.Ref<HTMLImageElement>; onLoad?: () => void }) {
   return (
     <picture>
       {s.srcSetWebp && <source type="image/webp" srcSet={s.srcSetWebp} sizes={s.sizes} />}
       <img
+        ref={imgRef}
+        onLoad={onLoad}
         className={className}
         src={s.src}
         srcSet={s.srcSetJpg}
@@ -69,7 +71,11 @@ const rubber = (over: number, dim = 100, c = 0.55) => (over * dim * c) / (dim + 
 export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', afterLabel = 'Efter', aspect = '1 / 1', contain = false, zoom = 1, reveal = false, priority = false, className = '', rest = REST, controls = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [x, setX] = useState(reveal ? START : rest);
-  const [chosen, setChosen] = useState<'before' | 'after' | null>(null); // the switch answers on the tap, not when the spring settles
+  const [chosen, setChosen] = useState<'before' | 'after' | null>(null);
+  // the original stays invisible until the restoration has arrived: the first thing on screen is never the damage
+  const afterImg = useRef<HTMLImageElement>(null);
+  const [afterIn, setAfterIn] = useState(false);
+  useEffect(() => { if (afterImg.current?.complete && afterImg.current.naturalWidth > 0) setAfterIn(true); }, []); // the switch answers on the tap, not when the spring settles
   const b = toSource(before), a = toSource(after);
 
   // physics state lives in refs
@@ -186,10 +192,10 @@ export default function BeforeAfter({ before, after, alt, beforeLabel = 'Før', 
 
   const side = chosen ?? (x >= 99 ? 'before' : x <= 1 ? 'after' : null);
   return (<>
-    <div ref={ref} className={`ba${contain ? ' contain' : ''}${controls ? ' has-switch' : ''}${x <= 0.5 || x >= 99.5 ? ' at-edge' : ''} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, ['--zoom' as string]: zoom, aspectRatio: aspect }}
+    <div ref={ref} className={`ba${contain ? ' contain' : ''}${controls ? ' has-switch' : ''}${x <= 0.5 || x >= 99.5 ? ' at-edge' : ''}${afterIn ? '' : ' waiting'} ${className}`.trim()} style={{ ['--x' as string]: `${x}%`, ['--zoom' as string]: zoom, aspectRatio: aspect }}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}>
       <Picture s={b} className="before" alt={alt} priority={priority} />
-      <Picture s={a} className="after" alt="" priority={priority} ariaHidden />
+      <Picture s={a} className="after" alt="" priority={priority} ariaHidden imgRef={afterImg} onLoad={() => setAfterIn(true)} />
       <div className="handle" aria-hidden><div className="knob" /></div>
       <button type="button" className="lbl before" onClick={() => showSide('before')} aria-label={`Vis hele billedet ${beforeLabel.toLowerCase()}`}><span>{beforeLabel}</span></button>
       <button type="button" className="lbl after" onClick={() => showSide('after')} aria-label={`Vis hele billedet ${afterLabel.toLowerCase()}`}><span>{afterLabel}</span></button>
