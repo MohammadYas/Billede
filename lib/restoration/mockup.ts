@@ -24,12 +24,15 @@ const SIDEBOARD_CM = 120;
 const SIDEBOARD_FRAC = 0.53;
 const SIDEBOARD_TOP_FRAC = 0.64;
 const WALL_ASPECT = 1792 / 2400;
-const GAP_CM = 18; // between the sideboard and the bottom of the frame
+const GAP_CM = 12; // between the sideboard and the bottom of the frame
 const MOULDING_CM = 1.6;
 const MOUNT_CM = 4;
-/** how much of the shot the frame may take: wider frames for bigger sizes, capped by height for the tall one */
-const WIDTH_FRAC: Record<string, number> = { '20x30': 0.36, '30x40': 0.42, '40x50': 0.5, '50x70': 0.58 };
-const HEIGHT_CAP = 0.78;
+/** One scale for every size: the camera does not move between 30×40 and 50×70, so a bigger print is a
+ *  bigger frame over the same sideboard. The scale is set by the largest print, which must fit between the
+ *  top margin and the gap above the sideboard; the sideboard's top edge sits at SIDEBOARD_Y of the shot. */
+const SIDEBOARD_Y = 0.92;
+const TOP_MARGIN = 0.03;
+const LONGEST_CM = Math.max(...Object.values(PRICING).map((s) => Math.max(s.widthCm, s.heightCm)));
 
 async function wallWindow(W: number, H: number, pxPerCm: number, frameBottomY: number): Promise<Buffer> {
   // resize the wall so its sideboard measures 120 cm at this scale, then crop a W×H window whose bottom shows the sideboard's top
@@ -66,7 +69,8 @@ export async function makeMockup(image: Buffer, opts: MockupOptions = {}): Promi
   const portrait = (meta.height ?? 1) >= (meta.width ?? 1);
   const wCm = (portrait ? spec.widthCm : spec.heightCm) + 2 * (MOULDING_CM + MOUNT_CM);
   const hCm = (portrait ? spec.heightCm : spec.widthCm) + 2 * (MOULDING_CM + MOUNT_CM);
-  const pxPerCm = Math.min(((WIDTH_FRAC[format] ?? 0.5) * W) / wCm, (HEIGHT_CAP * H) / hCm);
+  const longest = LONGEST_CM + 2 * (MOULDING_CM + MOUNT_CM);
+  const pxPerCm = Math.min((H * (SIDEBOARD_Y - TOP_MARGIN)) / (longest + GAP_CM), (0.82 * W) / longest);
   const outerW = Math.round(wCm * pxPerCm);
   const outerH = Math.round(hCm * pxPerCm);
   const moulding = Math.max(3, Math.round(MOULDING_CM * pxPerCm));
@@ -82,7 +86,7 @@ export async function makeMockup(image: Buffer, opts: MockupOptions = {}): Promi
   const py = Math.round((innerH - (pm.height ?? innerH)) / 2);
 
   const x0 = Math.round((W - outerW) / 2);
-  const y0 = Math.round((H - outerH) * 0.42); // a little above centre: the sideboard's top edge takes the bottom
+  const y0 = Math.round(H * SIDEBOARD_Y - GAP_CM * pxPerCm - outerH); // every size hangs the same height above the sideboard
   const frameBottom = y0 + outerH;
 
   const wall = await wallWindow(W, H, pxPerCm, frameBottom);
