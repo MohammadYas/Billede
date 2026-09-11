@@ -74,6 +74,8 @@ await p.waitForTimeout(2000);
 
 console.log('\n== 5. The preview page ==');
 ok('opens on the restoration', await p.locator('.ba').evaluate((el) => el.style.getPropertyValue('--x') === '0%'));
+// the original stays hidden only while the picture on top is still loading; wait that out before asking
+await p.waitForFunction(() => !document.querySelector('.ba')?.classList.contains('waiting'), null, { timeout: 20000 }).catch(() => {});
 ok('original is shown once the restoration has loaded', await p.locator('.ba img.before').evaluate((el) => getComputedStyle(el).visibility === 'visible'));
 const sw = p.locator('.ba-switch button');
 ok('Foer/Efter switch present', (await sw.count()) === 2);
