@@ -15,10 +15,12 @@ export default function Consent({ text, accept, decline }: { text: string; accep
     if (consent() !== null || !process.env.NEXT_PUBLIC_META_PIXEL_ID) return;
     // only after the first scroll: the visitor who taps the button straight away is never interrupted (nothing is tracked before consent anyway)
     const reveal = () => { setShow(true); window.removeEventListener('scroll', onScroll); window.clearTimeout(timer); };
-    const onScroll = () => { if (window.scrollY > 120) reveal(); };
-    // a visitor who taps the button straight from the first screen never scrolls — and would never be
-    // asked, so nothing they do could ever be measured
-    const timer = window.setTimeout(reveal, 6000);
+    const onScroll = () => { if (window.scrollY > 60) reveal(); };
+    // Six seconds was too long to wait. Three days of ads (2026-09-09/11) put the median visit at three
+    // seconds, so almost nobody was ever asked: no answer means no pixel, no pixel means Meta learns nothing,
+    // and a campaign that learns nothing keeps buying three-second visits. Asking sooner is the only way out
+    // of that loop, and the banner is the same banner — no harder to decline, only offered in time.
+    const timer = window.setTimeout(reveal, 2500);
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(timer); };
