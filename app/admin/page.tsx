@@ -41,7 +41,7 @@ const ANALYTICS = ['NEW', 'PREVIEW_READY', 'ABANDONED'];
 /** One label per link a visitor arrived on: utm_source · utm_campaign · utm_content (the ad's name). */
 const srcKey = (u: Utm | null | undefined) => `${u?.utm_source ?? (u?.fbclid ? 'facebook (uden utm)' : 'direkte')}${u?.utm_campaign ? ' · ' + u.utm_campaign : ''}${u?.utm_content ? ' · ' + u.utm_content : ''}`;
 
-export default async function Admin({ searchParams }: { searchParams: Promise<{ fejl?: string; status?: string; alle?: string }> }) {
+export default async function Admin({ searchParams }: { searchParams: Promise<{ fejl?: string; status?: string; alle?: string; testbilleder?: string }> }) {
   const sp = await searchParams;
   if (!(await isAdmin())) {
     return (
@@ -79,7 +79,11 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const thumbs = new Map<string, string>();
   await Promise.all(active.slice(0, 60).map(async (o) => { const p = o.preview_path ?? o.original_path; if (p) { try { thumbs.set(o.id, await signedUrl(p, 900)); } catch { /* no thumbnail */ } } }));
   // every generation, newest first: the original next to what the model made of it, whatever happened afterwards
-  const withPreview = orders.filter((o) => o.preview_path);
+  // A click from an ad always carries fbclid, whatever the visitor answers to cookies. Everything else in
+  // here is the owner's own testing or ours, and it buried the handful of real ones.
+  const fromCampaign = (o: (typeof orders)[number]) => Boolean(o.utm?.fbclid) || o.utm?.utm_source === 'facebook';
+  const allPreviews = orders.filter((o) => o.preview_path);
+  const withPreview = sp.testbilleder ? allPreviews : allPreviews.filter(fromCampaign);
   const gens = withPreview.slice(0, 48);
   const pair = new Map<string, { before?: string; after?: string }>();
   await Promise.all(gens.map(async (o) => {
@@ -133,6 +137,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         {!sp.status && (
           <section style={{ display: 'grid', gap: 'var(--s3)' }}>
             <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Genereringer · {withPreview.length}{withPreview.length > gens.length ? ` (viser ${gens.length} nyeste)` : ''}</h2>
+            <p className="caption">{sp.testbilleder ? <>Alle billeder, også test. <a href="/admin">Vis kun fra annoncer</a></> : <>Kun billeder fra annoncerne. {allPreviews.length - withPreview.length > 0 ? <>{allPreviews.length - withPreview.length} test er skjult. </> : null}<a href="/admin?testbilleder=1">Vis alle</a></>}</p>
             <div className="adm-gens">
               {gens.map((o) => (
                 <a key={o.id} href={`/admin/orders/${o.id}`} className="adm-gen">
@@ -144,7 +149,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                   <span className="small muted">{o.customer_name ?? o.customer_email ?? 'ingen e-mail'} · {srcKey(o.utm)}</span>
                 </a>
               ))}
-              {gens.length === 0 && <p className="muted">Ingen genereringer endnu.</p>}
+              {gens.length === 0 && <p className="muted">{sp.testbilleder ? 'Ingen genereringer endnu.' : 'Ingen billeder fra annoncerne endnu.'}</p>}
             </div>
             <p className="caption">Alle previews, også dem uden køb. Original til venstre, restaurering til højre. Tryk for ordren.</p>
           </section>

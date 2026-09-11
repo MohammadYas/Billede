@@ -80,7 +80,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   // Colour is made only when the customer asks for it: the model call costs money, and most people never
   // tap it. Once it exists it is a free switch, and the choice rides to Stripe as `chosen_colour`.
   const [colourUrl, setColourUrl] = useState<string | null>(data.colour);
-  const [colourOn, setColourOn] = useState(Boolean(data.colour) && data.chosenColour);
+  const [colourOn, setColourOn] = useState(Boolean(data.colour) && (data.chosenColour || data.isMonochrome));
   const [colourBusy, setColourBusy] = useState(false);
   const [colourErr, setColourErr] = useState(false);
   const colourTimer = useRef<number | null>(null);
@@ -134,7 +134,11 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
-  const chooseColour = (on: boolean) => { setColourOn(on); persist({ colour: on }); };
+  // A black-and-white photograph turning into a person is the strongest thing on this page, so it is what
+  // we lead with once it exists. The moment the customer touches the switch it becomes their choice and we
+  // never move it again, and the line under the picture says plainly that the colours are a guess.
+  const colourTouched = useRef(false);
+  const chooseColour = (on: boolean) => { colourTouched.current = true; setColourOn(on); persist({ colour: on }); };
   // The colour job starts on its own when the restoration is done, a few seconds after this page opens.
   // Watching for it here is the difference between a tap that answers instantly and one that waits.
   useEffect(() => {
@@ -146,7 +150,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         const r = await fetch(`/api/preview/${data.orderId}${q}`, { cache: 'no-store' });
         const j = (await r.json()) as { payload?: { colour?: string | null } | null };
         if (!alive) return;
-        if (j.payload?.colour) { const img = new Image(); img.src = j.payload.colour; setColourUrl(j.payload.colour); return; }
+        if (j.payload?.colour) {
+          const url = j.payload.colour;
+          const img = new Image();
+          img.onload = () => { if (!alive) return; setColourUrl(url); if (!colourTouched.current) { setColourOn(true); persist({ colour: true }); } };
+          img.onerror = () => { if (alive) setColourUrl(url); };
+          img.src = url;
+          return;
+        }
       } catch { /* keep watching */ }
       if (alive) timer = window.setTimeout(() => { void look(); }, 6000);
     };
