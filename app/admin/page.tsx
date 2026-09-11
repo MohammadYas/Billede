@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { clientIp } from '@/lib/api/client';
 import { redirect } from 'next/navigation';
-import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, recordAttempt } from '@/lib/admin/auth';
+import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, recordAttempt, safeNext } from '@/lib/admin/auth';
 import { listOrders } from '@/lib/db/orders';
 import { supabaseAdmin } from '@/lib/db/supabase';
 import type { Utm } from '@/lib/analytics/events';
@@ -19,13 +19,19 @@ async function login(formData: FormData) {
   'use server';
   const h = await headers();
   const ip = clientIp(h) ?? 'local';
-  if (rateLimited(ip)) redirect('/admin?fejl=vent');
+  // the page the admin actually asked for, carried through the form so a deep link survives the login
+  const next = safeNext(String(formData.get('next') ?? ''));
+  const q = next === '/admin' ? '' : `&next=${encodeURIComponent(next)}`;
+  if (rateLimited(ip)) redirect(`/admin?fejl=vent${q}`);
   const ok = passwordOk(String(formData.get('password') ?? ''));
   recordAttempt(ip, ok);
-  if (!ok) redirect('/admin?fejl=1');
+  if (!ok) redirect(`/admin?fejl=1${q}`);
   const c = await cookies();
-  c.set(ADMIN_COOKIE, makeSessionCookie(), { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 12 * 3600 });
-  redirect('/admin');
+  // 'lax', not 'strict': a link in a mail is a cross-site navigation, and a strict cookie is withheld on
+  // it — so an admin who was already logged in was shown the login form every time he opened an order
+  // from his inbox. Lax still withholds the cookie on cross-site POSTs, which is where CSRF lives.
+  c.set(ADMIN_COOKIE, makeSessionCookie(), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 12 * 3600 });
+  redirect(next);
 }
 
 const WORK: Record<string, string> = {
@@ -41,7 +47,7 @@ const ANALYTICS = ['NEW', 'PREVIEW_READY', 'ABANDONED'];
 /** One label per link a visitor arrived on: utm_source · utm_campaign · utm_content (the ad's name). */
 const srcKey = (u: Utm | null | undefined) => `${u?.utm_source ?? (u?.fbclid ? 'facebook (uden utm)' : 'direkte')}${u?.utm_campaign ? ' · ' + u.utm_campaign : ''}${u?.utm_content ? ' · ' + u.utm_content : ''}`;
 
-export default async function Admin({ searchParams }: { searchParams: Promise<{ fejl?: string; status?: string; alle?: string; testbilleder?: string }> }) {
+export default async function Admin({ searchParams }: { searchParams: Promise<{ fejl?: string; status?: string; alle?: string; testbilleder?: string; next?: string }> }) {
   const sp = await searchParams;
   if (!(await isAdmin())) {
     return (
@@ -50,7 +56,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
           <Wordmark />
           <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordrer og produktion</h1>
           <p className="small muted">Kun for Billedearv.</p>
+          <input type="hidden" name="next" value={safeNext(sp.next)} />
           <div className="field"><label htmlFor="pw">Adgangskode</label><input id="pw" name="password" type="password" autoComplete="current-password" required /></div>
+          {safeNext(sp.next) !== '/admin' && <p className="small muted">Du sendes videre til den ordre, du klikkede på.</p>}
           {sp.fejl === 'vent' && <p className="small" style={{ color: 'var(--error)' }}>For mange forsøg. Vent 15 minutter.</p>}
           {sp.fejl === '1' && <p className="small" style={{ color: 'var(--error)' }}>Forkert adgangskode.</p>}
           <button className="btn" type="submit">Log ind</button>

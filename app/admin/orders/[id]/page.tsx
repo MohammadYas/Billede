@@ -18,8 +18,8 @@ export const metadata = { robots: { index: false, follow: false } };
 export const dynamic = 'force-dynamic';
 
 export default async function OrderPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ msg?: string }> }) {
-  if (!(await isAdmin())) redirect('/admin');
   const { id } = await params;
+  if (!(await isAdmin())) redirect(`/admin?next=${encodeURIComponent(`/admin/orders/${id}`)}`);
   const { msg } = await searchParams;
   const order = await getOrder(id);
   if (!order) notFound();

@@ -13,7 +13,7 @@ const snippet = (t: string | null, h: string | null) => (t ?? h?.replace(/<[^>]+
 
 /** Every conversation, newest first: who, what, when, and whether it waits for an answer. */
 export default async function Beskeder({ searchParams }: { searchParams: Promise<{ msg?: string; til?: string }> }) {
-  if (!(await isAdmin())) redirect('/admin');
+  if (!(await isAdmin())) redirect(`/admin?next=${encodeURIComponent('/admin/beskeder')}`);
   const { msg, til } = await searchParams;
   const threads = await listThreads();
   const waiting = threads.filter((t) => t.unread > 0).length;

@@ -345,13 +345,32 @@ export async function processFinal(orderId: string): Promise<void> {
   }
 }
 
-/** "Afbryd (billedet slettes)": drop every object and mark the order abandoned. */
+/**
+ * "Afbryd (billedet slettes)": drop every object and mark the order abandoned.
+ *
+ * The picture goes, and so does everything that could point back at a person. What stays is the handful of
+ * anonymous numbers that say how the restoration itself went — no image, no name, no address, no session
+ * beyond the one already on the row. Without them a deletion erased the evidence too: on 2026-09-11 four of
+ * twelve real ad orders were deleted by their owners, and there was no way left to tell whether they had
+ * deleted a good restoration or a bad one. Keeping the score is what makes that answerable next time.
+ */
 export async function abandon(orderId: string): Promise<void> {
   const order = await getOrder(orderId);
   if (!order) return;
-  const meta = metaOf(order);
+  const meta = metaOf(order) as Record<string, unknown>;
   await removeOrderObjects(orderId).catch((e) => console.error('abandon: remove failed', orderId, e));
-  await setStatus(orderId, 'ABANDONED', { original_path: null, restored_path: null, preview_path: null, mockup_path: null, colourised_path: null, preview_meta: { session_id: meta.session_id, share_token: meta.share_token, cancelled: true } });
+  const like = meta.likeness as { likeness?: number; same_people?: boolean; invented_details?: boolean; over_processed?: boolean } | undefined;
+  await setStatus(orderId, 'ABANDONED', {
+    original_path: null, restored_path: null, preview_path: null, mockup_path: null, colourised_path: null,
+    preview_meta: {
+      session_id: meta.session_id, share_token: meta.share_token, cancelled: true,
+      // anonymous quality record, kept on purpose (see above)
+      ssim: meta.ssim, durationMs: meta.durationMs, quality: meta.quality,
+      chroma: meta.chroma, input: meta.input, framing: meta.framing,
+      reviewReasons: meta.reviewReasons, needsManualReview: meta.needsManualReview,
+      ...(like ? { likeness: { likeness: like.likeness, same_people: like.same_people, invented_details: like.invented_details, over_processed: like.over_processed } } : {}),
+    },
+  });
 }
 
 /** A preview belongs to the browser session that made it, or to whoever holds its share token. */

@@ -14,7 +14,7 @@ const when = (iso: string) => new Date(iso).toLocaleString('da-DK', { timeZone: 
 
 /** One conversation: the messages in order, the customer's orders beside them, and the answer box. */
 export default async function Samtale({ params, searchParams }: { params: Promise<{ thread: string }>; searchParams: Promise<{ msg?: string }> }) {
-  if (!(await isAdmin())) redirect('/admin');
+  if (!(await isAdmin())) redirect(`/admin?next=${encodeURIComponent(`/admin/beskeder/${(await params).thread}`)}`);
   const { thread: raw } = await params;
   const { msg } = await searchParams;
   const thread = decodeURIComponent(raw).toLowerCase();

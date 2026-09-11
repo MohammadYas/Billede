@@ -34,6 +34,18 @@ export async function isAdmin(): Promise<boolean> {
   return verifySessionCookie(c.get(COOKIE)?.value);
 }
 
+/**
+ * Where to send the admin after a successful login. Only a path inside /admin is ever accepted, so a
+ * crafted `?next=` can never bounce anyone to another site or to a page this login does not protect.
+ */
+export function safeNext(next: string | undefined): string {
+  if (!next) return '/admin';
+  if (!next.startsWith('/admin')) return '/admin';   // must be ours
+  if (next.startsWith('//') || next.includes('\\')) return '/admin';   // protocol-relative or escaped
+  for (let i = 0; i < next.length; i++) { const c = next.charCodeAt(i); if (c <= 0x20 || c === 0x7f) return '/admin'; }  // whitespace or control characters
+  return next;
+}
+
 /** 5 attempts per 15 minutes per IP. */
 export function rateLimited(ip: string): boolean {
   const now = Date.now();
