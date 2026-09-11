@@ -14,7 +14,7 @@ const heavy = async () => {
 import { logEvent, type Utm } from '@/lib/analytics/events';
 import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
 import { customerFormat, customerFormats, isFormat, readAddOns, FRAMES, frameColour, type AddOns, type Format, type Frame } from '@/lib/pricing';
-import { getJob, setJob, type JobState } from '@/lib/jobs';
+import { getJob, setJob, enqueue, type JobState } from '@/lib/jobs';
 
 export type PreviewPayload = {
   orderId: string; original: string; preview: string; mockup: string; colour: string | null;
@@ -188,6 +188,14 @@ export async function processRestore(orderId: string): Promise<void> {
     await logEvent('PreviewShown', { sessionId, orderId, meta: { ms: result.meta.durationMs, ssim: result.meta.ssim } });
     // the one event the first campaign optimises for: server-side too, same event_id as the pixel's copy
     await sendServerEvent('PreviewShown', { eventId: order.id, order: ready, sourceUrl: eventSourceUrl(`/p/${order.id}`) });
+
+    // A black-and-white photograph turning colour is the strongest thing this pipeline can show, but it is also
+    // the one thing it invents, so it is never what we hand over first: the restoration stays faithful and stays
+    // on screen. The colour version is made in the background while the customer looks, so the button under the
+    // picture answers at once instead of asking a 60-year-old to wait another forty seconds for it.
+    if (result.isMonochrome) {
+      try { await enqueue('colour', order.id); } catch (e) { console.error('colour prewarm failed', orderId, e); }
+    }
 
     // the other five combinations, now that the customer is already looking at their photograph
     try {

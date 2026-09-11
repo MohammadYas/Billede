@@ -132,6 +132,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   const chooseColour = (on: boolean) => { setColourOn(on); persist({ colour: on }); };
+  /** The switch waits for the picture itself: flipping the label while the colour file is still on its way
+   *  leaves the customer looking at grey under a button that says the opposite — at the one moment that sells. */
+  const showColour = (url: string) => {
+    const go = () => { setColourUrl(url); setColourBusy(false); chooseColour(true); };
+    const img = new Image();
+    img.onload = go; img.onerror = go;
+    img.src = url;
+  };
   /** First tap starts the colour job and polls for it; every tap after that is a free switch. */
   const askColour = async () => {
     if (colourBusy) return;
@@ -143,7 +151,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       try {
         const r = await fetch(`/api/preview/${data.orderId}${q}`, { cache: 'no-store' });
         const j = (await r.json()) as { job?: { kind?: string; state?: string } | null; payload?: { colour?: string | null } | null };
-        if (j.payload?.colour) { setColourUrl(j.payload.colour); setColourBusy(false); chooseColour(true); return; }
+        if (j.payload?.colour) { showColour(j.payload.colour); return; }
         if (j.job?.kind === 'colour' && j.job.state === 'failed') { setColourBusy(false); setColourErr(true); return; }
         if (Date.now() - started > 150_000) { setColourBusy(false); setColourErr(true); return; }
       } catch { /* a dropped connection is not an answer: keep asking until the deadline */ }
@@ -152,7 +160,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     try {
       const r = await fetch(`/api/preview/${data.orderId}/colour${q}`, { method: 'POST' });
       const j = (await r.json().catch(() => ({}))) as { colour?: string | null };
-      if (j.colour) { setColourUrl(j.colour); setColourBusy(false); chooseColour(true); return; }
+      if (j.colour) { showColour(j.colour); return; }
       if (!r.ok) throw new Error('colour');
       colourTimer.current = window.setTimeout(() => { void poll(); }, 3000);
     } catch { setColourBusy(false); setColourErr(true); }
