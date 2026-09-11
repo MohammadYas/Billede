@@ -109,6 +109,9 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   }, []);
   // the cookie banner sits on the order bar only while the bar is up; before that it stays at the bottom, off the picture and its switch
   useEffect(() => { document.body.classList.toggle('pv-bar-on', barOn); return () => document.body.classList.remove('pv-bar-on'); }, [barOn]);
+  // The wait is long enough that people scroll while it runs, and a client-side navigation keeps the old
+  // position — so the page whose whole job is to show the picture opened halfway down the receipt.
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const viewed = useRef(false);
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
@@ -132,6 +135,25 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   const chooseColour = (on: boolean) => { setColourOn(on); persist({ colour: on }); };
+  // The colour job starts on its own when the restoration is done, a few seconds after this page opens.
+  // Watching for it here is the difference between a tap that answers instantly and one that waits.
+  useEffect(() => {
+    if (!data.isMonochrome || colourUrl) return;
+    let alive = true;
+    let timer: number | null = null;
+    const look = async () => {
+      try {
+        const r = await fetch(`/api/preview/${data.orderId}${q}`, { cache: 'no-store' });
+        const j = (await r.json()) as { payload?: { colour?: string | null } | null };
+        if (!alive) return;
+        if (j.payload?.colour) { const img = new Image(); img.src = j.payload.colour; setColourUrl(j.payload.colour); return; }
+      } catch { /* keep watching */ }
+      if (alive) timer = window.setTimeout(() => { void look(); }, 6000);
+    };
+    timer = window.setTimeout(() => { void look(); }, 4000);
+    return () => { alive = false; if (timer) window.clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.isMonochrome, data.orderId, colourUrl]);
   /** The switch waits for the picture itself: flipping the label while the colour file is still on its way
    *  leaves the customer looking at grey under a button that says the opposite — at the one moment that sells. */
   const showColour = (url: string) => {
