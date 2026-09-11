@@ -181,9 +181,34 @@ export async function processRestore(orderId: string): Promise<void> {
     const previewPath = objectPath(order.id, 'preview');
     const mockupPath = mockups[mockupKey(startFormat, startFrame)] ?? Object.values(mockups)[0]!;
     await Promise.all([putObject(restoredPath, result.restored), putObject(previewPath, previewBuf)]);
+
+    // A grey face turning into a person is the strongest thing this pipeline can show, so it is what the
+    // customer meets first: for a black-and-white photograph the colour version is made now, before the
+    // preview goes live, rather than a few seconds after it. The same job either way, so no extra cost and
+    // no extra model call — only the order changed. It takes the wait from about 45 s to about 85 s, still
+    // inside the minute and a half the page has always promised. If it fails the preview goes live anyway,
+    // in black and white, which is the honest fallback.
+    let colourPaths: { preview: string; full: string } | null = null;
+    const colourMockups: Record<string, string> = {};
+    if (result.isMonochrome) {
+      try {
+        const { colourise } = await heavy();
+        const { image } = await colourise(result.restored, (process.env.PREVIEW_IMAGE_QUALITY as 'low' | 'medium' | 'high') ?? 'medium');
+        const cPreview = objectPath(order.id, 'colourised');
+        const cFull = objectPath(order.id, 'colourised');
+        await Promise.all([putObject(cPreview, await makePreview(image)), putObject(cFull, image)]);
+        colourPaths = { preview: cPreview, full: cFull };
+        const cm = objectPath(order.id, 'mockup');
+        await putObject(cm, await makeMockup(image, { format: startFormat, frame: frameColour(startFrame), watermark: true }));
+        colourMockups[mockupKey(startFormat, startFrame, true)] = cm;
+      } catch (e) { console.error('colour up front failed', orderId, e); }
+    }
+
     const ready = await setStatus(order.id, 'PREVIEW_READY', {
       original_path: originalPath, restored_path: restoredPath, preview_path: previewPath, mockup_path: mockupPath,
-      is_monochrome: result.isMonochrome, preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta, mockups },
+      is_monochrome: result.isMonochrome,
+      ...(colourPaths ? { colourised_path: colourPaths.preview, chosen_colour: true } : {}),
+      preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta, mockups: { ...mockups, ...colourMockups }, ...(colourPaths ? { colourised_full_path: colourPaths.full } : {}) },
     });
     await setJob(orderId, { kind: 'restore', state: 'done', finishedAt: new Date().toISOString() });
     await logEvent('UploadCompleted', { sessionId, orderId });
@@ -191,11 +216,8 @@ export async function processRestore(orderId: string): Promise<void> {
     // the one event the first campaign optimises for: server-side too, same event_id as the pixel's copy
     await sendServerEvent('PreviewShown', { eventId: order.id, order: ready, sourceUrl: eventSourceUrl(`/p/${order.id}`) });
 
-    // A black-and-white photograph turning colour is the strongest thing this pipeline can show, but it is also
-    // the one thing it invents, so it is never what we hand over first: the restoration stays faithful and stays
-    // on screen. The colour version is made in the background while the customer looks, so the button under the
-    // picture answers at once instead of asking a 60-year-old to wait another forty seconds for it.
-    if (result.isMonochrome) {
+    // only if the up-front attempt failed: the customer still gets the button, it just has to wait for the job
+    if (result.isMonochrome && !colourPaths) {
       try { await enqueue('colour', order.id); } catch (e) { console.error('colour prewarm failed', orderId, e); }
     }
 
@@ -207,8 +229,20 @@ export async function processRestore(orderId: string): Promise<void> {
           await renderMockup(fmt, frame);
         }
       }
+      // the colour walls too, when there is a colour version to put in them
+      if (colourPaths) {
+        const colourFull = await getObject(colourPaths.full);
+        for (const fmt of customerFormats()) {
+          for (const frame of FRAMES) {
+            if (colourMockups[mockupKey(fmt, frame, true)]) continue;
+            const cp = objectPath(order.id, 'mockup');
+            await putObject(cp, await makeMockup(colourFull, { format: fmt, frame: frameColour(frame), watermark: true }));
+            colourMockups[mockupKey(fmt, frame, true)] = cp;
+          }
+        }
+      }
       const fresh = (await getOrder(orderId)) ?? order;
-      await updateOrder(order.id, { preview_meta: { ...metaOf(fresh), mockups: { ...(metaOf(fresh).mockups ?? {}), ...mockups } } });
+      await updateOrder(order.id, { preview_meta: { ...metaOf(fresh), mockups: { ...(metaOf(fresh).mockups ?? {}), ...mockups, ...colourMockups } } });
     } catch (e) { console.error('extra mockups failed', orderId, e); }
   } catch (e) {
     const reason = e instanceof RestoreError ? e.code : 'error';

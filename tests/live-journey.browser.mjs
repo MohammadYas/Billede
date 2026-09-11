@@ -43,12 +43,20 @@ if (await dlg.count()) {
 } else ok('offer dialog shown', false, '(campaign off?)');
 
 console.log('\n== 3. Consent asked in time ==');
+const localOnly = /localhost|127\.0\.0\.1/.test(base);
 await p.evaluate(() => window.scrollTo(0, 300));
-await p.waitForTimeout(2000);
-ok('consent banner appears', (await p.locator('.consent').count()) === 1);
-await p.locator('.consent button', { hasText: 'Ok' }).click();
-await p.waitForTimeout(2500);
-ok('pixel loads after consent', await p.evaluate(() => typeof window.fbq === 'function' && !!window.fbq.loaded));
+await p.waitForTimeout(2200);
+const hasBanner = (await p.locator('.consent').count()) === 1;
+if (hasBanner) {
+  ok('consent banner appears', true);
+  await p.locator('.consent button', { hasText: 'Ok' }).click();
+  await p.waitForTimeout(2500);
+  ok('pixel loads after consent', await p.evaluate(() => typeof window.fbq === 'function' && !!window.fbq.loaded));
+} else if (localOnly) {
+  console.log('  SKIP  consent banner and pixel (no NEXT_PUBLIC_META_PIXEL_ID on a dev machine)');
+} else {
+  ok('consent banner appears', false);
+}
 
 console.log('\n== 4. Upload and restoration ==');
 await p.evaluate(() => window.scrollTo(0, 0));
@@ -74,17 +82,21 @@ ok('tapping Foer shows the original', await p.locator('.ba').evaluate((el) => el
 await sw.last().click(); await p.waitForTimeout(1600);
 ok('way on is visible', await p.locator('.pv-next').isVisible());
 
-console.log('\n== 6. Colour ==');
+console.log('\n== 6. Colour is what the customer meets ==');
 const cbtn = p.locator('.pv-toggle button.btn').first();
 if (await cbtn.count()) {
-  const tap = Date.now();
-  await cbtn.scrollIntoViewIfNeeded(); await cbtn.click();
-  await p.waitForFunction(() => document.querySelector('.pv-toggle button.btn')?.textContent?.includes('sort-hvid'), null, { timeout: 150000 });
-  ok('colour version appears', true, `${((Date.now() - tap) / 1000).toFixed(1)} s`);
+  const shown = (await p.locator('.ba img.after').getAttribute('src')) || '';
+  ok('first picture shown is the colour version', /kind=colour/.test(shown), shown.replace(/^.*kind=/, '').replace(/&.*$/, ''));
+  ok('button offers black and white', ((await cbtn.textContent()) || '').includes('sort-hvid'));
   ok('receipt says i farver', (await p.locator('.bill-head p').innerText()).includes('i farver'));
-  ok('framed picture follows the choice', (await p.locator('.pv-mock img.on').getAttribute('src')).includes('c=farve'));
+  ok('framed picture is in colour', ((await p.locator('.pv-mock img.on').getAttribute('src')) || '').includes('c=farve'));
+  const t = Date.now();
+  await cbtn.scrollIntoViewIfNeeded(); await cbtn.click();
+  await p.waitForFunction(() => ((document.querySelector('.ba img.after') || {}).getAttribute ? document.querySelector('.ba img.after').getAttribute('src') : '').includes('kind=preview'), null, { timeout: 30000 }).catch(() => {});
+  const back = /kind=preview/.test((await p.locator('.ba img.after').getAttribute('src')) || '');
+  ok('switching to black and white is immediate', back, ((Date.now() - t) / 1000).toFixed(2) + ' s');
   await cbtn.click(); await p.waitForTimeout(900);
-} else ok('colour button (monochrome picture)', false, 'not offered');
+} else ok('colour offered on a monochrome picture', false, 'no button');
 
 console.log('\n== 7. Size, frame and price ==');
 const cards = p.locator('.sizes-row .size');
@@ -106,7 +118,7 @@ ok('no failed requests', bad.length === 0, bad.slice(0, 3).join(' | '));
 console.log('\n== 10. What the owner sees ==');
 const { data: o } = await sb.from('orders').select('status, utm, is_monochrome, colourised_path, preview_meta').eq('id', id).single();
 ok('order recorded with the ad name', o.utm?.utm_content === 'FINAL_COLD_04');
-ok('consent stored on the order', o.preview_meta?.consent === 'yes');
+if (hasBanner) ok('consent stored on the order', o.preview_meta?.consent === 'yes');
 ok('colour version kept', Boolean(o.colourised_path));
 
 await p.screenshot({ path: `${out}/fullcheck-final.png` });

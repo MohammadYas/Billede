@@ -112,6 +112,12 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   // The wait is long enough that people scroll while it runs, and a client-side navigation keeps the old
   // position — so the page whose whole job is to show the picture opened halfway down the receipt.
   useEffect(() => { window.scrollTo(0, 0); }, []);
+  // Both versions are held in the browser from the start, so "Se det i sort-hvid" answers on the tap rather
+  // than fetching the picture it is switching to.
+  useEffect(() => {
+    for (const url of [data.preview, data.colour]) if (url) { const i = new Image(); i.src = url; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const viewed = useRef(false);
   useEffect(() => {
     document.body.classList.add('has-pv-bar');
