@@ -52,9 +52,11 @@ export function orderLines(o: Order): string[] {
  * "Endnu et billede": the link a paid order carries, on /tak and in the ordrebekræftelse. It is the
  * order's own share token, so the link cannot be guessed from an order id alone.
  */
+const REPEAT_PAID: Order["status"][] = ["PAID", "IN_RETOUCH", "AWAITING_APPROVAL", "CHANGE_REQUESTED", "APPROVED", "IN_PRODUCTION", "SHIPPED", "COMPLETED"];
+/** Only a paid order has one: it rides in the receipt, and `repeatSource` refuses to resolve any other. */
 export function repeatLink(o: Order): string | null {
   const token = metaOf(o).share_token;
-  if (!token) return null;
+  if (!token || !REPEAT_PAID.includes(o.status)) return null;
   return `${CONFIG.siteUrl.replace(/\/$/, '')}/?igen=${encodeURIComponent(`${o.id}.${token}`)}`;
 }
 

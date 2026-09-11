@@ -69,7 +69,9 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           {typeof meta.gift_note === 'string' && meta.gift_note && <p style={{ background: 'var(--paper-2)', padding: 'var(--s3)' }}><strong>Gavehilsen til kortet i pakken:</strong> “{String(meta.gift_note)}”</p>}
           <p><strong>Bestilling:</strong> {orderLines(order).join(' · ')}</p>
           {typeof meta.repeat_of === 'string' && meta.repeat_of && <p><strong>Billede nummer to</strong> fra ordre <a href={`/admin/orders/${String(meta.repeat_of)}`}>{String(meta.repeat_of).slice(0, 8)}</a> – samme kunde. Ingen rabat: et nyt billede koster normal pris.</p>}
-          {repeatLink(order) && <p><strong>Gentagelseslink (kunden har det i kvitteringen):</strong> <span className="muted">{repeatLink(order)}</span></p>}
+          {repeatLink(order)
+            ? <p><strong>Gentagelseslink (kunden har det i kvitteringen):</strong> <span className="muted">{repeatLink(order)}</span></p>
+            : <p className="small muted">Gentagelseslink laves først, når ordren er betalt — det er kvitteringen, kunden får det i.</p>}
         </section>
 
         {order.restored_path && (
