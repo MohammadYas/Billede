@@ -31,6 +31,33 @@ Do not:
 
 Output a single photorealistic colour image at the same aspect ratio as the input.`;
 
+// Customers photograph the print where it hangs or lies: in its frame on the wall, behind glass, on a
+// kitchen table, held in a hand, on an album page. The restorer is told to keep the original framing, so
+// without this step the frame and the wall survive into the print and the customer is asked to pay 599 kr.
+// for a picture of a picture on a wall. One cheap vision call finds the photograph itself first.
+export const FRAMING_PROMPT = `A customer uploaded this image to a photo-restoration service. Very often they photographed an old print with a phone, so the upload contains the print plus its surroundings: a picture frame, a mount or passe-partout, glass with reflections, the wall behind it, a table, a hand holding it, an album page, or a scanner lid.
+
+Find the rectangle of the actual photographic image the customer wants restored.
+
+Return strict JSON:
+{
+ "surround": "none"|"frame"|"table"|"hand"|"album"|"scanner"|"other",
+ "confident": true|false,
+ "box": { "x": 0.0-1.0, "y": 0.0-1.0, "w": 0.0-1.0, "h": 0.0-1.0 },
+ "angled": true|false,
+ "notes": "one sentence"
+}
+
+Rules:
+- "box" describes the photographic image only, as fractions of the uploaded image's full width and height: x and y are its top-left corner, w and h its size.
+- Exclude everything around the photograph: frame, mount, passe-partout, white paper border, wall, table, hand, album page, scanner lid.
+- Include the whole photograph. Never cut into the picture and never cut off a person, a head or a hand that belongs to it.
+- If the upload is already the photograph edge to edge, answer surround "none", confident true, box {"x":0,"y":0,"w":1,"h":1}.
+- Answer confident false whenever the edges are unclear, the photograph is small in the frame, or you are unsure. A false here is free; a wrong crop destroys the picture.
+- "angled" is true when the print is photographed at a slant rather than straight on.
+
+No prose outside the JSON.`;
+
 // The likeness prompt is the spec's prompt plus two face-count fields (replacing a
 // separate face detector) and one clarification of invented_details added in the
 // single tuning round (QUALITY_REPORT.md, DECISIONS.md).

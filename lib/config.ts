@@ -22,7 +22,11 @@ export const CONFIG = {
   /** Upload limits. */
   maxUploadBytes: 25 * 1024 * 1024,
   /** Preview pipeline hard limit. */
-  previewTimeoutMs: 90_000, // a normal run is ~40 s; 45 s turned every slow minute at OpenAI into a lead form (attack #2, H1)
+  // A normal run is now ~80 s: framing check, restoration, and for a black-and-white print the colourisation
+  // in front of the preview. 45 s once turned every slow minute at OpenAI into a lead form (attack #2, H1),
+  // and 90 s would do the same again now that two more passes sit inside it. This is the hang guard, not the
+  // pace — the page says "about a minute and a half", and a run that lands at 100 s beats one that dies at 90.
+  previewTimeoutMs: 150_000,
   /** Every customer-facing link is built from this: mails, the repeat link, Stripe's success and cancel
    *  URLs. Netlify sets URL and DEPLOY_PRIME_URL itself, so a forgotten variable still cannot put
    *  localhost into somebody's inbox. */

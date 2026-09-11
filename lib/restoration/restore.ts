@@ -1,8 +1,8 @@
 import { RestoreError } from './errors';
 import OpenAI, { toFile } from 'openai';
 import { CONFIG } from '@/lib/config';
-import { COLOURISATION_PROMPT, LIKENESS_PROMPT, RESTORATION_PROMPT } from './prompts';
-import { chromaStats, dimensionsOf, ensureLongEdge, ensureMinimumSize, fitLongEdge, normaliseToJpeg, ssimLuma, trimScannerBorder } from './image-utils';
+import { COLOURISATION_PROMPT, FRAMING_PROMPT, LIKENESS_PROMPT, RESTORATION_PROMPT } from './prompts';
+import { type Box, chromaStats, cropToBox, dimensionsOf, ensureLongEdge, ensureMinimumSize, fitLongEdge, normaliseToJpeg, ssimLuma, trimScannerBorder } from './image-utils';
 
 /**
  * Restoration pipeline.
@@ -30,6 +30,14 @@ export type LikenessResult = {
   notes: string;
 };
 
+export type FramingResult = {
+  surround: 'none' | 'frame' | 'table' | 'hand' | 'album' | 'scanner' | 'other';
+  confident: boolean;
+  box: Box;
+  angled: boolean;
+  notes: string;
+};
+
 export type RestoreOptions = {
   /** "medium" for the customer preview, "high" for the print final. */
   quality?: ImageQuality;
@@ -39,6 +47,8 @@ export type RestoreOptions = {
   colourise?: boolean;
   /** Run the vision likeness check (default true). */
   likenessCheck?: boolean;
+  /** Find the photograph inside a photo-of-a-photo and crop to it (default true). */
+  findFraming?: boolean;
   /** Minimum long edge of the returned restored buffer. Default 2400. */
   minLongEdge?: number;
   /** Hard end-to-end limit in ms. Default CONFIG.previewTimeoutMs. */
@@ -59,7 +69,9 @@ export type RestoreMetadata = {
   candidateSsim: number[];
   ssim: number;
   chroma: { meanChroma: number; chromaStd: number; isMonochrome: boolean };
-  input: { width: number; height: number; trimmed: boolean; upscaled: boolean };
+  input: { width: number; height: number; trimmed: boolean; upscaled: boolean; cropped: boolean };
+  framing: FramingResult | null;
+  framingMs?: number;
   output: { width: number; height: number };
   usage: { imageTokens: number; visionTokens: number };
   faceCheck: { original: number; restored: number; ok: boolean } | null;
@@ -168,6 +180,49 @@ export async function likenessCheck(original: Buffer, restored: Buffer, signal?:
   }
 }
 
+/**
+ * Finds the photograph inside a photo-of-a-photo. Returns null when the model says nothing usable — the
+ * caller then leaves the upload alone, which is the safe answer.
+ */
+export async function findPhotograph(input: Buffer, signal?: AbortSignal): Promise<{ result: FramingResult | null; tokens: number }> {
+  const a = (await fitLongEdge(input, 1024)).toString('base64');
+  const res = await openai().responses.create(
+    {
+      model: VISION_MODEL,
+      reasoning: { effort: 'low' },
+      input: [
+        {
+          role: 'user',
+          content: [
+            { type: 'input_text', text: FRAMING_PROMPT },
+            { type: 'input_image', image_url: `data:image/jpeg;base64,${a}`, detail: 'high' },
+          ],
+        },
+      ],
+      text: { format: { type: 'json_object' } },
+    },
+    { signal },
+  );
+  const tokens = res.usage?.total_tokens ?? 0;
+  try {
+    const p = JSON.parse(res.output_text) as Partial<FramingResult> & { box?: Partial<Box> };
+    const allowed = ['none', 'frame', 'table', 'hand', 'album', 'scanner', 'other'] as const;
+    const surround = (allowed as readonly string[]).includes(String(p.surround)) ? (p.surround as FramingResult['surround']) : 'other';
+    return {
+      tokens,
+      result: {
+        surround,
+        confident: Boolean(p.confident),
+        box: { x: Number(p.box?.x ?? 0), y: Number(p.box?.y ?? 0), w: Number(p.box?.w ?? 1), h: Number(p.box?.h ?? 1) },
+        angled: Boolean(p.angled),
+        notes: String(p.notes ?? ''),
+      },
+    };
+  } catch {
+    return { result: null, tokens };
+  }
+}
+
 /** Colourisation pass on an already restored image. */
 export async function colourise(restored: Buffer, quality: ImageQuality = 'medium', signal?: AbortSignal): Promise<{ image: Buffer; tokens: number; ms: number }> {
   const t0 = Date.now();
@@ -194,7 +249,35 @@ export async function restore(input: Buffer, opts: RestoreOptions = {}): Promise
       const norm = await normaliseToJpeg(input);
       if (Math.max(norm.dims.width, norm.dims.height) < 400) throw new RestoreError('too_small', 'image under 400 px');
       const trimmed = await trimScannerBorder(norm.jpeg, norm.dims);
-      const sized = await ensureMinimumSize(trimmed.jpeg, trimmed.dims, 1200);
+
+      // 1b. A phone photo of a framed print is still a photo of a wall. Find the photograph itself and cut
+      //     the frame, the glass edge and the wall away before restoring, or the customer is offered a print
+      //     of a framed picture hanging on someone's wall. Cropping only happens on a confident answer.
+      let framing: FramingResult | null = null;
+      let framingMs: number | undefined;
+      let framingTokens = 0;
+      let cut = { jpeg: trimmed.jpeg, dims: trimmed.dims, cropped: false };
+      if (opts.findFraming !== false) {
+        const tf = Date.now();
+        try {
+          const found = await findPhotograph(trimmed.jpeg, controller.signal);
+          framing = found.result;
+          framingTokens = found.tokens;
+          if (framing && framing.confident && framing.surround !== 'none') {
+            // A print photographed straight on gets a hair of margin so the cut lands in the frame rather
+            // than in the picture. A slanted one is a trapezoid inside a rectangular box, so the box always
+            // catches some frame on one side: there we cut slightly *in*. Losing a millimetre of the
+            // photograph's own edge beats printing a piece of somebody's picture frame.
+            cut = await cropToBox(trimmed.jpeg, trimmed.dims, framing.box, framing.angled ? -0.02 : 0.012);
+          }
+        } catch (e) {
+          if (controller.signal.aborted) throw e;   // a real timeout must not be swallowed
+          console.error('framing check failed', e); // anything else: restore the upload as it came
+        }
+        framingMs = Date.now() - tf;
+      }
+
+      const sized = await ensureMinimumSize(cut.jpeg, cut.dims, 1200);
       const original = sized.jpeg;
       const chroma = await chromaStats(original);
 
@@ -252,9 +335,11 @@ export async function restore(input: Buffer, opts: RestoreOptions = {}): Promise
           candidateSsim: ssims,
           ssim: ssims[candidateId],
           chroma,
-          input: { ...sized.dims, trimmed: trimmed.trimmed, upscaled: sized.upscaled },
+          input: { ...sized.dims, trimmed: trimmed.trimmed, upscaled: sized.upscaled, cropped: cut.cropped },
+          framing,
+          framingMs,
           output: outDims,
-          usage: { imageTokens: imageTokens + (colour?.tokens ?? 0), visionTokens: like?.tokens ?? 0 },
+          usage: { imageTokens: imageTokens + (colour?.tokens ?? 0), visionTokens: (like?.tokens ?? 0) + framingTokens },
           faceCheck,
           likeness: like?.result ?? null,
           needsManualReview: reasons.length > 0,

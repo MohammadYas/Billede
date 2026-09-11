@@ -8,7 +8,14 @@ export const CTA = {
   own: 'Se dit billede restaureret gratis',
   first: 'Se resultatet gratis først',
   look: 'Se restaureringen gratis',
+  // Every cold CTA above leads with "gratis", and the button is the loudest promise in an ad — the price
+  // sits beside it in small type like a footnote. Three days bought exactly what that says: 129 link clicks,
+  // ten finished previews, and not one person who touched a size, a frame or a payment. Free is a reason to
+  // trust the offer, not the offer itself, so here the product and the price lead and "free" reassures.
+  qualified: 'Få det hjem i ramme · fra 599 kr.',
 };
+/** The free preview, demoted to the small line beside a qualified CTA. */
+export const FREE_FIRST = 'Se resultatet, før du bestiller';
 const scene = (name) => `work/ads/creatives/${name}-1080x1350.jpg`;
 export const pairSrc = (id, side) => `public/examples/${id}-${side}-1400.jpg`;
 /** The colourised version of an example pair. Only two exist; the colour concept may use no other. */
@@ -97,6 +104,28 @@ export const CONCEPTS = [
     visual: { kind: 'scene', src: scene('have-1976-paa-vaeggen'), pos: '50% 15%', shift: 100 }, text: 'top', stack1x1: true,
     pair: 'have-1976', pairPos: '50% 40%',
     reel: { open: { kind: 'before' }, line: 'Print, ramme og fri fragt fra 599 kr.' },
+  },
+  // The two price-qualified cold ads (2026-09-11). Same proof as `colour` and `physical`, opposite emphasis:
+  // the button names the product and the price, the free preview is the small line under it. Built to buy
+  // fewer and better clicks after three days of cheap ones.
+  {
+    key: 'farvepris', motive: 'Colour reveal, price-qualified (cold)', stage: 'cold', style: 'polished',
+    hooks: ['Du har aldrig set hendes øjne i farver.', 'Har du også et billede, du kun har set i gråt?'],
+    sub: 'Du vælger selv sort-hvid eller farver.',
+    cta: CTA.qualified, price: FREE_FIRST,
+    visual: { kind: 'colourCard', pair: 'portraet-1962', pos: '50% 16%' }, text: 'bottom',
+    pair: 'portraet-1962', pairPos: '50% 22%',
+  },
+  {
+    key: 'vaegpris', motive: 'The framed print itself, price-qualified (cold)', stage: 'cold', style: 'polished',
+    // "Fra skuffen til væggen" reads as a mood, not an offer: a stranger sees a framed family photo on a
+    // wall and cannot tell whether we photograph, print or sell frames. The hook has to name the three
+    // things we actually do — old photograph, restored, home in a frame — or the picture sells nothing.
+    hooks: ['Vi restaurerer det gamle billede og sender det hjem i ramme.', 'Det falmede billede, restaureret og i ramme.'],
+    sub: 'Et foto med mobilen er nok. Originalen bliver hjemme hos dig.',
+    cta: CTA.qualified, price: FREE_FIRST,
+    visual: { kind: 'scene', src: scene('have-1976-paa-vaeggen'), pos: '50% 15%', shift: 100 }, text: 'top', stack1x1: true,
+    pair: 'have-1976', pairPos: '50% 40%',
   },
   ...(offer.active ? [{
     key: 'offer', motive: 'Offer (only while lib/config.ts says the launch offer is on)', stage: 'offer', style: 'polished',

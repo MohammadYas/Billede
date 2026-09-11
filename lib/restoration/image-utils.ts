@@ -79,6 +79,43 @@ export async function trimScannerBorder(jpeg: Buffer, dims: Dimensions): Promise
   return { jpeg, dims, trimmed: false };
 }
 
+export type Box = { x: number; y: number; w: number; h: number };
+
+/**
+ * Crop to a box given in fractions of the image, with a small outward margin so the cut always lands in
+ * the frame rather than in the photograph. Refuses anything that looks wrong: a box outside the image, one
+ * that keeps less than a third of the area, or one that barely removes anything. Any doubt keeps the original.
+ */
+export async function cropToBox(jpeg: Buffer, dims: Dimensions, box: Box, margin = 0.012): Promise<{ jpeg: Buffer; dims: Dimensions; cropped: boolean }> {
+  const keep = { jpeg, dims, cropped: false };
+  const finite = [box.x, box.y, box.w, box.h].every((n) => Number.isFinite(n));
+  if (!finite || box.w <= 0 || box.h <= 0) return keep;
+
+  // grow by the margin, then clamp to the image
+  const x0 = Math.max(0, box.x - margin);
+  const y0 = Math.max(0, box.y - margin);
+  const x1 = Math.min(1, box.x + box.w + margin);
+  const y1 = Math.min(1, box.y + box.h + margin);
+  const fw = x1 - x0;
+  const fh = y1 - y0;
+  if (fw <= 0 || fh <= 0) return keep;
+  if (fw * fh < 0.33) return keep;            // a box this small is a misread, not a frame
+  if (fw > 0.98 && fh > 0.98) return keep;    // nothing worth removing
+
+  const left = Math.round(x0 * dims.width);
+  const top = Math.round(y0 * dims.height);
+  const width = Math.min(dims.width - left, Math.round(fw * dims.width));
+  const height = Math.min(dims.height - top, Math.round(fh * dims.height));
+  if (width < 200 || height < 200) return keep;
+
+  try {
+    const { data, info } = await sharp(jpeg).extract({ left, top, width, height }).jpeg({ quality: 95, mozjpeg: true }).toBuffer({ resolveWithObject: true });
+    return { jpeg: data, dims: { width: info.width, height: info.height }, cropped: true };
+  } catch {
+    return keep;
+  }
+}
+
 /** Upscale inputs under `minLongEdge` on the long edge (lanczos3) so the model sees enough pixels. */
 export async function ensureMinimumSize(jpeg: Buffer, dims: Dimensions, minLongEdge = 1200): Promise<{ jpeg: Buffer; dims: Dimensions; upscaled: boolean }> {
   const long = Math.max(dims.width, dims.height);
