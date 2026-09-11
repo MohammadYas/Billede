@@ -93,6 +93,9 @@ export default async function Page() {
               {jul && c.hero.deadline && <p className="deadline">{c.hero.deadline}</p>}
               <div className="hero-cta">
                 <OpenFlowButton>{c.hero.cta}</OpenFlowButton>
+                {/* most of the audience is scrolling Facebook while the photograph lies in a drawer at home;
+                    without this the visit is simply over (three days of ads: 11 of 86 opened the upload, 2 had a picture) */}
+                <OpenFlowButton className="link-btn hero-nophoto" detail="nophoto">{c.upload.noPhoto}</OpenFlowButton>
                 <ul className="hero-trust" aria-label="Det skal du vide">
                   {c.hero.trust.map((t) => <li key={t}>{t}</li>)}
                 </ul>

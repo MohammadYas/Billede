@@ -24,8 +24,12 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const f = req.nextUrl.searchParams.get('f');
   const fr = req.nextUrl.searchParams.get('fr');
   const rendered = (order.preview_meta as { mockups?: Record<string, string> } | null)?.mockups ?? {};
-  // ?f=40x50&fr=eg picks that size in that frame; anything missing falls back to the order's own mockup
-  const mockup = kind === 'mockup' && isFormat(f) ? (isFrame(fr) ? rendered[`${f}:${fr}`] : undefined) ?? rendered[f] : undefined;
+  // ?f=40x50&fr=eg picks that size in that frame, &c=farve the colourised wall; anything missing falls back
+  // one step at a time — colour wall → black-and-white wall → the order's own mockup
+  const wantColour = req.nextUrl.searchParams.get('c') === 'farve';
+  const mockup = kind === 'mockup' && isFormat(f)
+    ? (isFrame(fr) ? (wantColour ? rendered[`${f}:${fr}:farve`] : undefined) ?? rendered[`${f}:${fr}`] : undefined) ?? rendered[f]
+    : undefined;
   const path = mockup ?? order[KINDS[kind]];
   if (!path) return new NextResponse('Not found', { status: 404 });
   const buf = await getObject(path);

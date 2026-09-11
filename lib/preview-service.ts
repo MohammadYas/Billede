@@ -41,13 +41,14 @@ const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
  * Customer-facing image URLs are same-origin and gated by session cookie or share token
  * (app/api/preview/[id]/image). The token rides along so the page works wherever its URL does.
  */
-export function imageUrl(order: Order, kind: 'original' | 'preview' | 'colour' | 'mockup', format?: Format, frame?: Frame): string {
+export function imageUrl(order: Order, kind: 'original' | 'preview' | 'colour' | 'mockup', format?: Format, frame?: Frame, colour?: boolean): string {
   const token = metaOf(order).share_token;
-  return `/api/preview/${order.id}/image?kind=${kind}${format ? `&f=${format}` : ''}${frame ? `&fr=${frame}` : ''}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}${token ? `&t=${encodeURIComponent(token)}` : ''}`;
+  return `/api/preview/${order.id}/image?kind=${kind}${format ? `&f=${format}` : ''}${frame ? `&fr=${frame}` : ''}${colour ? '&c=farve' : ''}&v=${encodeURIComponent((order.updated_at ?? '').slice(0, 19))}${token ? `&t=${encodeURIComponent(token)}` : ''}`;
 }
 
-/** `30x40:sort` → the wall mockup for that size in that frame. Combinations rendered before this order existed fall back. */
-export const mockupKey = (format: Format, frame: Frame) => `${format}:${frame}`;
+/** `30x40:sort` → the wall mockup for that size in that frame; `30x40:sort:farve` is the same wall with the
+ *  colourised picture in it, rendered by the colour job. Combinations rendered before this order existed fall back. */
+export const mockupKey = (format: Format, frame: Frame, colour = false) => `${format}:${frame}${colour ? ':farve' : ''}`;
 
 export function mockupUrls(order: Order): Record<string, string> {
   const rendered = metaOf(order).mockups ?? {};
@@ -56,6 +57,9 @@ export function mockupUrls(order: Order): Record<string, string> {
     for (const fr of FRAMES) {
       const key = mockupKey(f, fr);
       out[key] = rendered[key] ? imageUrl(order, 'mockup', f, fr) : rendered[f] ? imageUrl(order, 'mockup', f) : imageUrl(order, 'mockup');
+      // the colour wall exists only after the customer has asked for colour; the route falls back to the
+      // black-and-white file, so the key is always safe to ask for
+      out[mockupKey(f, fr, true)] = rendered[mockupKey(f, fr, true)] ? imageUrl(order, 'mockup', f, fr, true) : out[key];
     }
   }
   return out;
@@ -252,8 +256,19 @@ export async function processColour(orderId: string): Promise<void> {
     const path = objectPath(order.id, 'colourised');
     const fullPath = objectPath(order.id, 'colourised');
     await Promise.all([putObject(path, previewColour), putObject(fullPath, image)]);
+    // the wall shots follow the choice: a customer who picks colour must not meet a black-and-white frame
+    // two sections further down. Pure compositing, so this costs seconds and no model call.
+    const { makeMockup } = await heavy();
+    const colourMockups: Record<string, string> = {};
+    for (const fmt of customerFormats()) {
+      for (const frame of FRAMES) {
+        const mp = objectPath(order.id, 'mockup');
+        await putObject(mp, await makeMockup(image, { format: fmt, frame: frameColour(frame), watermark: true }));
+        colourMockups[mockupKey(fmt, frame, true)] = mp;
+      }
+    }
     const fresh = (await getOrder(orderId)) ?? order;
-    await updateOrder(order.id, { colourised_path: path, preview_meta: { ...metaOf(fresh), colourised_full_path: fullPath } });
+    await updateOrder(order.id, { colourised_path: path, preview_meta: { ...metaOf(fresh), colourised_full_path: fullPath, mockups: { ...(metaOf(fresh).mockups ?? {}), ...colourMockups } } });
     await setJob(orderId, { kind: 'colour', state: 'done', finishedAt: new Date().toISOString() });
   } catch (e) {
     console.error('colour failed', orderId, e);

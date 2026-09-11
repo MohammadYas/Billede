@@ -256,7 +256,12 @@ html { scroll-behavior: smooth; }
 .ba-switch button { min-height: 52px; border: 0; background: var(--paper); color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 17px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background-color 100ms ease-out, color 100ms ease-out; }
 .ba-switch button + button { border-left: 1px solid var(--ink); }
 .ba-switch button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
-.pv-toggle { display: flex; align-items: center; gap: var(--s5); min-height: 44px; }
+.pv-toggle { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s4) var(--s5); min-height: 44px; }
+/* the colour job takes about forty seconds: the line has to look like work in progress, not a dead button */
+.pv-wait { display: flex; align-items: baseline; gap: var(--s3); }
+.pv-wait-dot { flex: none; width: 9px; height: 9px; border-radius: 999px; background: var(--accent); animation: pv-pulse 1.6s ease-out infinite; }
+@keyframes pv-pulse { 0% { box-shadow: 0 0 0 0 rgba(31, 90, 60, 0.35); } 100% { box-shadow: 0 0 0 9px rgba(31, 90, 60, 0); } }
+@media (prefers-reduced-motion: reduce) { .pv-wait-dot { animation: none; } }
 .pv-toggle .link-btn[disabled] { text-decoration: none; }
 .pv-grid { display: grid; gap: var(--s5); }
 .pv-cta { display: grid; gap: var(--s2); }

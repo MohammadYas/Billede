@@ -4,8 +4,11 @@
 .nav { position: relative; z-index: 20; background: var(--paper); border-bottom: 1px solid var(--hairline); }
 @media (min-width: 768px) { .nav { position: sticky; top: 0; } }
 .nav-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); min-height: 60px; }
-.nav-right { display: flex; align-items: center; gap: var(--s5); }
-.nav-right .caption { white-space: nowrap; }
+.nav-right { display: flex; align-items: center; gap: var(--s5); min-width: 0; }
+/* the line may wrap: kept on one line it pushed past a 320 px screen, and while the wordmark font was still
+   loading its wider fallback ran straight into it — a collision the customer saw on every slow connection */
+.nav-right .caption { text-align: right; text-wrap: pretty; }
+.nav-row .wordmark { flex: 0 1 auto; min-width: 0; }
 .nav-cta { display: none; }
 @media (min-width: 768px) { .nav-cta { display: inline-flex; } .nav-row { min-height: 68px; } }
 
@@ -15,6 +18,8 @@
 .hero-copy h1 { max-width: 11em; }
 .hero-copy .lead { max-width: 26em; color: var(--ink-2); }
 .hero-cta { display: grid; gap: var(--s3); justify-items: start; padding-top: var(--s2); }
+/* the second way on, for the visitor whose photograph is in a drawer and not on the phone */
+.hero-nophoto { display: inline-flex; align-items: center; min-height: 44px; margin: 0; }
 .hero-cta .btn { min-width: 260px; }
 .hero-note { max-width: 28em; }
 .hero-note b { color: var(--ink); font-weight: 600; }

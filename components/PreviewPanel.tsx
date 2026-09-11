@@ -77,9 +77,22 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   const variants = landscape ? c.variants.landscape : c.variants.portrait;
   const v = variants.find((x) => x.format === format) ?? variants[0];
   const label = landscape ? `${v.label} ${c.preview.landscape}` : v.label;
-  // one wall mockup per size and frame; an order from before they existed has only its own
+  // Colour is made only when the customer asks for it: the model call costs money, and most people never
+  // tap it. Once it exists it is a free switch, and the choice rides to Stripe as `chosen_colour`.
+  const [colourUrl, setColourUrl] = useState<string | null>(data.colour);
+  const [colourOn, setColourOn] = useState(Boolean(data.colour) && data.chosenColour);
+  const [colourBusy, setColourBusy] = useState(false);
+  const [colourErr, setColourErr] = useState(false);
+  const colourTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (colourTimer.current) window.clearTimeout(colourTimer.current); }, []);
+
+  // one wall mockup per size and frame; an order from before they existed has only its own. The colour walls
+  // are asked for by a parameter, so the page never has to refetch its payload when colour arrives.
   const mockupKey = `${format}:${frame}`;
-  const mockupSrcs = data.mockups[mockupKey] ? data.mockups : { [mockupKey]: data.mockup };
+  const base = data.mockups[mockupKey] ? data.mockups : { [mockupKey]: data.mockup };
+  const mockupSrcs = Object.fromEntries(Object.entries(base)
+    .filter(([key]) => !key.endsWith(':farve'))
+    .map(([key, url]) => [key, colourOn && !url.includes('&c=farve') ? `${url}&c=farve` : url]));
   const mockup = mockupSrcs[mockupKey];
 
   // the bottom bar waits until the picture has been looked at: it slides in once the picture's lower edge has
@@ -108,7 +121,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   }, []);
 
   /** The order row follows what the customer is looking at, so admin — and a recovered checkout — sees it. */
-  const persist = (patch: { format?: Format; frame?: Frame; extraPrints?: number }) => {
+  const persist = (patch: { format?: Format; frame?: Frame; extraPrints?: number; colour?: boolean }) => {
     fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) }).catch(() => {});
   };
   const pickFormat = (next: Format) => {
@@ -118,6 +131,32 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
+  const chooseColour = (on: boolean) => { setColourOn(on); persist({ colour: on }); };
+  /** First tap starts the colour job and polls for it; every tap after that is a free switch. */
+  const askColour = async () => {
+    if (colourBusy) return;
+    if (colourUrl) { chooseColour(!colourOn); return; }
+    setColourBusy(true); setColourErr(false);
+    track('ColourViewed', {}, { serverLog: true });
+    const started = Date.now();
+    const poll = async (): Promise<void> => {
+      try {
+        const r = await fetch(`/api/preview/${data.orderId}${q}`, { cache: 'no-store' });
+        const j = (await r.json()) as { job?: { kind?: string; state?: string } | null; payload?: { colour?: string | null } | null };
+        if (j.payload?.colour) { setColourUrl(j.payload.colour); setColourBusy(false); chooseColour(true); return; }
+        if (j.job?.kind === 'colour' && j.job.state === 'failed') { setColourBusy(false); setColourErr(true); return; }
+        if (Date.now() - started > 150_000) { setColourBusy(false); setColourErr(true); return; }
+      } catch { /* a dropped connection is not an answer: keep asking until the deadline */ }
+      colourTimer.current = window.setTimeout(() => { void poll(); }, 3000);
+    };
+    try {
+      const r = await fetch(`/api/preview/${data.orderId}/colour${q}`, { method: 'POST' });
+      const j = (await r.json().catch(() => ({}))) as { colour?: string | null };
+      if (j.colour) { setColourUrl(j.colour); setColourBusy(false); chooseColour(true); return; }
+      if (!r.ok) throw new Error('colour');
+      colourTimer.current = window.setTimeout(() => { void poll(); }, 3000);
+    } catch { setColourBusy(false); setColourErr(true); }
+  };
   // the size and frame chosen on the landing page: applied once, only while the order still sits on its defaults
   useEffect(() => { if (paid) forgetResume(); }, [paid]);
   useEffect(() => {
@@ -167,7 +206,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     orderBusy.current = true;
     setOrdering(true); setError(null);
     try {
-      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: false, format, frame, extraPrints: copies, t: token }) });
+      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: colourOn, format, frame, extraPrints: copies, t: token }) });
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
@@ -278,7 +317,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         <p className="cfg-label"><span className="n">4</span>{c.preview.summaryTitle}</p>
         <div className="bill-head">
           <img src={mockup} alt={c.preview.yourPhoto} width={96} height={77} />
-          <p><b>{c.preview.yourPhoto}</b><span>{label} · {frame === 'eg' ? 'egetræsramme' : 'sort ramme'} · {1 + extraPrints} {extraPrints === 0 ? c.preview.copiesOne : c.preview.copiesMany}</span></p>
+          <p><b>{c.preview.yourPhoto}</b><span>{label} · {frame === 'eg' ? 'egetræsramme' : 'sort ramme'}{data.isMonochrome ? ` · ${colourOn ? c.preview.summaryColour : c.preview.summaryMono}` : ''} · {1 + extraPrints} {extraPrints === 0 ? c.preview.copiesOne : c.preview.copiesMany}</span></p>
         </div>
         <dl className="bill-lines">
           {bill.lines.map((l) => (
@@ -334,14 +373,20 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         </ol>
         <h1 style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.h2}</h1>
         <p className="caption measure">{c.preview.howTo}</p>
-        <div ref={picRef}><BeforeAfter before={data.original} after={data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain rest={0} controls priority zoom={zoom ? 2.2 : 1} /></div>
-        <a href="#videre" className="btn btn-quiet btn-block pv-next" onClick={(e) => { const el = document.getElementById('videre'); if (!el) return; e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
-        {!paid && <p className="caption measure">{c.preview.watermarkNote}</p>}
+        <div ref={picRef}><BeforeAfter before={data.original} after={colourOn && colourUrl ? colourUrl : data.preview} alt="Dit billede før og efter" beforeLabel={c.preview.before} afterLabel={c.preview.after} aspect={`${data.width} / ${data.height}`} contain rest={0} controls priority zoom={zoom ? 2.2 : 1} /></div>
         <div className="pv-toggle">
+          {data.isMonochrome && (
+            <button type="button" className="btn btn-quiet btn-sm" onClick={() => void askColour()} aria-pressed={colourOn} disabled={colourBusy}>
+              {colourBusy ? c.preview.colourBusy : colourOn ? c.preview.colourBack : c.preview.colourCta}
+            </button>
+          )}
           <button type="button" className="link-btn" onClick={() => setZoom((z) => !z)} aria-pressed={zoom}>{zoom ? c.preview.zoomOut : c.preview.zoomIn}</button>
         </div>
-        {/* colour is a post-purchase option: offered in the approval mail, produced by a person, no extra charge */}
-        {data.isMonochrome && <p className="caption measure">{c.preview.colourLater}</p>}
+        {colourBusy && <p className="caption measure pv-wait" role="status"><span className="pv-wait-dot" aria-hidden />{c.preview.colourWait}</p>}
+        {colourErr && <p className="caption measure error" role="alert">{c.preview.colourFailed}</p>}
+        {colourOn && <p className="caption measure">{c.preview.colourNote}</p>}
+        <a href="#videre" className="btn btn-quiet btn-block pv-next" onClick={(e) => { const el = document.getElementById('videre'); if (!el) return; e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
+        {!paid && <p className="caption measure">{c.preview.watermarkNote}</p>}
         <p className="caption measure">{c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
         <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>
