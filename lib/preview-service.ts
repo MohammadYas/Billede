@@ -55,11 +55,13 @@ export function mockupUrls(order: Order): Record<string, string> {
   const out: Record<string, string> = {};
   for (const f of customerFormats()) {
     for (const fr of FRAMES) {
-      const key = mockupKey(f, fr);
-      out[key] = rendered[key] ? imageUrl(order, 'mockup', f, fr) : rendered[f] ? imageUrl(order, 'mockup', f) : imageUrl(order, 'mockup');
-      // the colour wall exists only after the customer has asked for colour; the route falls back to the
-      // black-and-white file, so the key is always safe to ask for
-      out[mockupKey(f, fr, true)] = rendered[mockupKey(f, fr, true)] ? imageUrl(order, 'mockup', f, fr, true) : out[key];
+      // Always ask for the size and frame by name, even when that wall has not been rendered yet: the five
+      // other combinations finish a few seconds after the preview appears, and a customer is redirected the
+      // moment it is ready. Baking the fallback into the URL froze their page on the default wall for the
+      // whole visit, so picking a size changed the price and nothing else. The route falls back server-side
+      // instead, and starts serving the right file the moment it exists.
+      out[mockupKey(f, fr)] = imageUrl(order, 'mockup', f, fr);
+      out[mockupKey(f, fr, true)] = imageUrl(order, 'mockup', f, fr, true);
     }
   }
   return out;
