@@ -3,7 +3,7 @@
 // (small). 9:16 keeps everything inside a centred 1080×1350 stage (Reels-safe) over a blurred backdrop.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { pairSrc } from './concepts.mjs';
+import { pairSrc, colourSrc } from './concepts.mjs';
 
 const b64 = (p, mime) => `data:${mime};base64,${readFileSync(p).toString('base64')}`;
 export const jpg = (p) => b64(p, 'image/jpeg');
@@ -24,6 +24,20 @@ function picture(pic, W, SH) {
   const k = SH / 1350;
   if (pic.kind === 'scene') { const sh = Math.round((pic.shift ?? 0) * k); return `${sh ? `<img class="ph fill" src="${jpg(pic.src)}" alt="">` : ''}<img class="ph" src="${jpg(pic.src)}" style="object-position:${pic.pos ?? '50% 50%'}; top:${sh}px; height:calc(100% - ${sh}px)" alt="">`; }
   if (pic.kind === 'pair') return `<img class="ph" src="${jpg(pairSrc(pic.pair, pic.side))}" style="object-position:${pic.pos ?? '50% 30%'}" alt="">`;
+  // colour: the restored picture in colour, with the grey print it came from lying in front of it — the whole
+  // face stays whole, and the old photograph is the evidence rather than a diagram.
+  if (pic.kind === 'colourCard') {
+    const cw = Math.round(330 * k);
+    return `
+    <img class="ph" src="${jpg(colourSrc(pic.pair))}" style="object-position:${pic.pos ?? '50% 20%'}" alt="">
+    <div class="card" style="left:${Math.round(56 * k)}px; bottom:${Math.round((pic.cardBottom ?? 470) * k)}px; width:${cw}px; padding:${Math.round(14 * k)}px; transform:rotate(-6deg)"><img src="${jpg(pairSrc(pic.pair, 'before'))}" alt=""></div>`;
+  }
+  // colour: the same face, grey on one side and colour on the other. The seam is the product's own line.
+  if (pic.kind === 'colour') return `
+    <img class="ph" src="${jpg(colourSrc(pic.pair))}" style="object-position:${pic.pos}" alt="">
+    <img class="ph" src="${jpg(pairSrc(pic.pair, 'after'))}" style="object-position:${pic.pos}; clip-path: inset(0 ${100 - pic.seam}% 0 0)" alt="">
+    <div class="seam" style="left:${pic.seam}%"></div>
+    <div class="lbl" style="left:${28 * k}px">Sort-hvid</div><div class="lbl" style="right:${28 * k}px">I farver</div>`;
   if (pic.kind === 'split') return `
     <img class="ph" src="${jpg(pairSrc(pic.pair, 'after'))}" style="object-position:${pic.pos}" alt="">
     <img class="ph" src="${jpg(pairSrc(pic.pair, 'before'))}" style="object-position:${pic.pos}; clip-path: inset(0 ${100 - pic.seam}% 0 0)" alt="">
@@ -96,7 +110,7 @@ export function render(c, { W, H, pic, text, where = 'top' }) {
   const top = Math.round((H - SH) / 2);
   const k = SH / 1350;
   const ugc = c.style === 'ugc';
-  const backdrop = pic && H !== SH ? `<img class="backdrop" src="${pic.kind === 'scene' ? jpg(pic.src) : pic.kind === 'split' || pic.kind === 'pair' || pic.kind === 'print' ? jpg(pairSrc(pic.pair, pic.side ?? 'after')) : WALL}" alt="">` : '';
+  const backdrop = pic && H !== SH ? `<img class="backdrop" src="${pic.kind === 'scene' ? jpg(pic.src) : pic.kind === 'colour' ? jpg(colourSrc(pic.pair)) : pic.kind === 'split' || pic.kind === 'pair' || pic.kind === 'print' ? jpg(pairSrc(pic.pair, pic.side ?? 'after')) : WALL}" alt="">` : '';
   const css = `
 ${FONTS}
 * { margin: 0; padding: 0; box-sizing: border-box; }

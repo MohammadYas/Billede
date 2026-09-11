@@ -11,6 +11,8 @@ export const CTA = {
 };
 const scene = (name) => `work/ads/creatives/${name}-1080x1350.jpg`;
 export const pairSrc = (id, side) => `public/examples/${id}-${side}-1400.jpg`;
+/** The colourised version of an example pair. Only two exist; the colour concept may use no other. */
+export const colourSrc = (id) => `public/examples/${id}-colour.jpg`;
 
 /** The launch offer is read from lib/config.ts (env first): the offer concept exists only while it is on. */
 export function campaign() {
@@ -63,6 +65,14 @@ export const CONCEPTS = [
     hooks: ['Så tydeligt har du ikke set hende i 60 år.', 'Nogle billeder bliver ved med at betyde noget, selv når papiret falmer.'],
     cta: CTA.own, price: PRICE,
     visual: { kind: 'split', pair: 'portraet-1962', pos: '50% 18%', seam: 50 }, text: 'bottom',
+  },
+  {
+    key: 'colour', motive: 'Colour: the face stops being a historical object', stage: 'cold', style: 'polished',
+    hooks: ['Har du også et billede, du kun har set i gråt?', 'Du har aldrig set hendes øjne i farver.'],
+    sub: 'Du vælger selv sort-hvid eller farver.',
+    cta: CTA.own, price: 'Print i ramme fra 599 kr.',
+    visual: { kind: 'colourCard', pair: 'portraet-1962', pos: '50% 16%' }, text: 'bottom',
+    pair: 'portraet-1962', pairPos: '50% 22%',
   },
   {
     key: 'trust', motive: 'Trust / likeness', stage: 'retargeting', style: 'polished',

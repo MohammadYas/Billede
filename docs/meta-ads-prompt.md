@@ -140,6 +140,17 @@ Overskrift: `Se resultatet gratis først` · Beskrivelse: `I ramme fra 599 kr.`
 
 Overskrift: `Se dit billede restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
 
+**`FINAL_COLD_04`** (farve: ansigtet holder op med at være et historisk objekt) — lavet 2026-09-11, ikke lagt op endnu
+
+> Har du også et billede, du kun har set i gråt?
+>
+> Tag et foto af det med mobilen, og se det restaureret gratis. Vil du se det i farver, laver vi også den version — farverne er et kvalificeret gæt, og du vælger selv sort-hvid eller farve. Kan du lide resultatet, sender vi det hjem i ramme fra 599 kr. inkl. fragt.
+
+Overskrift: `Se dit billede restaureret gratis` · Beskrivelse: `I ramme fra 599 kr.`
+Filer: `work/ads/final/colour-{4x5,1x1,9x16}.jpg` (`node scripts/ads/static.mjs colour`).
+Farveeksemplet er sitets eget `portraet-1962`, kørt gennem den samme farvelægning kunden selv kan slå til —
+aldrig et kundebillede. At farverne er et gæt står i brødteksten, ikke brændt ind i billedet.
+
 Droppet fra launch (filerne ligger stadig i `work/ads/final/`): original, physical, trust, offer, ugc-*.
 
 ## Fase 4: gennemgang, og stop
