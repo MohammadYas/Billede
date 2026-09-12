@@ -7,7 +7,6 @@ import ColourExample from '@/components/ColourExample';
 import Framed from '@/components/Framed';
 import SizePicker from '@/components/SizePicker';
 import Promo from '@/components/Promo';
-import LaunchOffer from '@/components/LaunchOffer';
 import ResumeBanner from '@/components/ResumeBanner';
 import UploadFlow from '@/components/UploadFlow';
 import OpenFlowButton from '@/components/OpenFlowButton';
@@ -301,7 +300,10 @@ export default async function Page() {
         {c.offer.kontakt && <div className="wrap" style={{ paddingBottom: 'var(--s6)' }}><div className="container"><MailLine className="caption" text={c.offer.kontakt} email={c.email} href={c.emailHref} /></div></div>}
       </main>
       <Footer />
-      {hero && <LaunchOffer campaign={c.campaign} cta={c.hero.cta} before={src(hero, 'before', '(min-width: 720px) 300px, 100vw')} after={src(hero, 'after', '(min-width: 720px) 300px, 100vw')} alt={`Før og efter: ${hero.caption.replace(/\.$/, '')}`} />}
+      {/* The launch offer used to open by itself 1,8 s after the page painted — a modal in front of the
+          picture, for an audience arriving from Facebook on a phone. It is ordinary content now: the
+          bar at the top of this page, the Promo block by the price, and the step beside the size on
+          the order page. Nothing interrupts. */}
       <ResumeBanner working={c.resume.working} ready={c.resume.ready} cta={c.resume.cta} again={c.resume.again} retry={c.resume.retry} />
       <UploadFlow c={c} />
       <StickyCtaMount label={c.sticky} />

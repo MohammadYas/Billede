@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { approveByToken, isOldToken, orderByToken } from '@/lib/approval';
 import { copy } from '@/lib/copy';
 import { CONFIG, deliveryPromise } from '@/lib/config';
-import { orderDescription } from '@/lib/order-summary';
+import { isDigitalOrder, orderDescription } from '@/lib/order-summary';
 import Footer from '@/components/Footer';
 import SiteHeader from '@/components/SiteHeader';
 import SubmitButton from '@/components/SubmitButton';
@@ -39,6 +39,8 @@ export default async function Godkend({ params, searchParams }: { params: Promis
     notFound();
   }
   const meta = (order.preview_meta ?? {}) as { approval_version?: number };
+  // a file order has no parcel: the page says download, not delivery
+  const digital = isDigitalOrder(order);
   const sentAt = order.awaiting_approval_at ? new Date(order.awaiting_approval_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' }) : null;
   const approveWithToken = approve.bind(null, token);
 
@@ -62,12 +64,12 @@ export default async function Godkend({ params, searchParams }: { params: Promis
     const fileReady = Boolean(order.final_path) && ['APPROVED', 'IN_PRODUCTION', 'SHIPPED', 'COMPLETED'].includes(order.status);
     const sent = order.status === 'SHIPPED' || order.status === 'COMPLETED';
     return shell(<>
-      <h1>{sent ? 'Dit billede er sendt.' : 'Tak. Vi printer og sender.'}</h1>
-      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}{sent ? 'Pakken er på vej til dig.' : <>Du får en mail, når pakken er sendt – leveret {deliveryPromise()}.</>} Ordre {order.id.slice(0, 8)}.</p>
+      <h1>{digital ? 'Tak. Filen er din.' : sent ? 'Dit billede er sendt.' : 'Tak. Vi printer og sender.'}</h1>
+      <p className="lead measure">{r === 'approved' ? 'Dit ja er registreret. ' : ''}{digital ? 'Hent den herunder – der bliver ikke printet eller sendt noget.' : sent ? 'Pakken er på vej til dig.' : <>Du får en mail, når pakken er sendt – leveret {deliveryPromise()}.</>} Ordre {order.id.slice(0, 8)}.</p>
       {fileReady && (
         <div style={{ display: 'grid', gap: 'var(--s3)', justifyItems: 'start' }}>
           <a className="btn" href={`/godkend/${token}/fil`}>Hent din fil i høj opløsning</a>
-          <p className="caption measure">Den restaurerede fil, som vi printer fra. Gem den et sikkert sted – vi sletter vores kopi {CONFIG.retentionCompletedDays} dage efter levering, og så virker linket ikke længere.</p>
+          <p className="caption measure">{digital ? 'Den restaurerede fil i fuld opløsning, uden vandmærke.' : 'Den restaurerede fil, som vi printer fra.'} Gem den et sikkert sted – vi sletter vores kopi {CONFIG.retentionCompletedDays} dage efter {digital ? 'godkendelsen' : 'levering'}, og så virker linket ikke længere.</p>
         </div>
       )}
       <p className="measure small muted">Skal noget alligevel ændres, så skriv til os med det samme{c.email ? <> på <a href={c.emailHref}>{c.email}</a></> : null} – vi svarer inden 24 timer.</p>
@@ -75,7 +77,9 @@ export default async function Godkend({ params, searchParams }: { params: Promis
   }
   return shell(<>
     <h1 style={{ maxWidth: '14em' }}>Ligner det?</h1>
-    <p className="measure">Det her er det billede, vi printer: {orderDescription(order)}. Tryk Godkend, og vi printer, indrammer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, vi printer ikke, før du siger ja – og vil du slet ikke have det, får du hele beløbet tilbage.</p>
+    <p className="measure">{digital
+      ? <>Det her er den fil, du får: {orderDescription(order)}. Tryk Godkend, og den er klar til download med det samme. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, og vil du slet ikke have den, får du hele beløbet tilbage.</>
+      : <>Det her er det billede, vi printer: {orderDescription(order)}. Tryk Godkend, og vi printer, indrammer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, vi printer ikke, før du siger ja – og vil du slet ikke have det, får du hele beløbet tilbage.</>}</p>
     <form action={approveWithToken} style={{ display: 'grid', gap: 'var(--s3)' }}>
       <SubmitButton label="Godkend" pending="Sender dit ja…" />
       <a href={`/godkend/${token}/aendring`} className="btn btn-block btn-quiet">Jeg vil have en ændring</a>

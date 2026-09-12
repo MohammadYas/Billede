@@ -7,6 +7,7 @@ import { isEmailConfigured, sendMail } from '@/lib/email/send';
 import { esc, siteUrl } from '@/lib/email/templates';
 import { getFounder, fornavn } from '@/lib/founder';
 import { CONFIG } from '@/lib/config';
+import { logEvent } from '@/lib/analytics/events';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,5 +47,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     console.error('save-link mail failed');
     return NextResponse.json({ error: 'mail_unavailable' }, { status: 503 });
   }
+  // logged only after the mail actually left: "saved" must mean the customer has the link
+  await logEvent('PreviewSaved', { sessionId: sid, orderId: order.id, utm: order.utm });
   return NextResponse.json({ ok: true });
 }

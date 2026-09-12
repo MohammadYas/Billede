@@ -371,6 +371,15 @@ html { scroll-behavior: smooth; }
 .guarantee li { font-size: var(--fs-small); padding: var(--s2) 0 var(--s2) 1.6em; border-top: 1px solid var(--hairline); position: relative; }
 .guarantee li:last-child { border-bottom: 1px solid var(--hairline); }
 .guarantee li::before { content: ''; position: absolute; left: 0.15em; top: 1.05em; width: 0.5em; height: 0.28em; border-left: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: rotate(-45deg); }
+/* What happens after the button, in the order it happens: the one place the whole path is stated.
+   A numbered rail rather than another bullet list, so it does not read as more promises. */
+.pv-after { margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--hairline); display: grid; gap: var(--s3); }
+.pv-after-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); counter-reset: step; }
+.pv-after-steps li { display: grid; gap: 2px; padding-left: 2.2em; position: relative; counter-increment: step; }
+.pv-after-steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 1.55em; height: 1.55em; display: grid; place-items: center; border-radius: 999px; background: var(--paper-2); border: 1px solid var(--hairline); font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.pv-after-steps b { font-family: var(--sans); font-size: var(--fs-small); font-weight: 700; letter-spacing: 0.01em; }
+.pv-after-steps span { font-size: var(--fs-small); color: var(--ink-2); max-width: 34em; }
+
 @media (min-width: 1024px) {
   .pv { grid-template-columns: 7fr 5fr; gap: var(--s8); align-items: start; padding-top: var(--s6); }
   /* the photograph stays while the choices scroll: the object is the argument, the column of decisions is the work */

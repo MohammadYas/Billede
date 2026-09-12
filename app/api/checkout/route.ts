@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => ({}))) as { orderId?: string; colour?: boolean; format?: string; frame?: string; extraPrints?: number; t?: string };
+  const body = (await req.json().catch(() => ({}))) as { orderId?: string; colour?: boolean; product?: string; format?: string; frame?: string; extraPrints?: number; t?: string };
   if (!body.orderId || !/^[0-9a-f-]{36}$/.test(body.orderId)) return NextResponse.json({ error: 'order' }, { status: 400 });
   const [order, sid, utm, consent] = await Promise.all([getOrder(body.orderId), readSessionId(), readUtm(), readConsent()]);
   if (!order || !ownsOrder(order, sid, body.t ?? null)) return NextResponse.json({ error: 'not found' }, { status: 404 });
@@ -28,10 +28,13 @@ export async function POST(req: NextRequest) {
   // The page sends a configuration, never a price. The quote is built here from PRICING, and the
   // the banner's latest answer rides on the order: the webhook that marks it paid has no cookie to read (lib/analytics/capi.ts)
   const meta = { ...(order.preview_meta ?? {}), ...(consent ? { consent } : {}) } as Record<string, unknown>;
-  const q = quote({ format: body.format ?? order.format, frame: body.frame, extraPrints: body.extraPrints, landscape: isLandscape(order), campaign: campaignActive() });
+  // The product is decided here, not by the browser: `sellableProduct` inside quote() turns a digital
+  // request into the framed parcel whenever the offer is off, so an unapproved price cannot be charged
+  // by anybody who can open developer tools.
+  const q = quote({ product: body.product ?? (meta.product as string | undefined), format: body.format ?? order.format, frame: body.frame, extraPrints: body.extraPrints, landscape: isLandscape(order), campaign: campaignActive() });
   // the lines are stored as they were agreed: /tak, the mails and admin render this snapshot, so a later
   // price change cannot make an old receipt contradict its own total
-  const updated = await updateOrder(order.id, { format: q.format, chosen_colour: chosen, amount: q.totalOere, currency: 'dkk', payment_provider: paymentProvider().name, preview_meta: { ...meta, addons: q.addons, quote: { lines: q.lines, totalOere: q.totalOere, at: new Date().toISOString() } } });
+  const updated = await updateOrder(order.id, { format: q.format, chosen_colour: chosen, amount: q.totalOere, currency: 'dkk', payment_provider: paymentProvider().name, preview_meta: { ...meta, product: q.product, addons: q.addons, quote: { lines: q.lines, totalOere: q.totalOere, at: new Date().toISOString() } } });
   const base = CONFIG.siteUrl.replace(/\/$/, '');
   // Stripe fetches product images itself; a 15-min signed URL is enough for that fetch.
   const previewImageUrl = order.preview_path ? await signedUrl(order.preview_path) : undefined;

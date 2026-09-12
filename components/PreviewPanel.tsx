@@ -5,7 +5,8 @@ import { PRODUCT, track } from '@/lib/analytics/client';
 import MailLine from './MailLine';
 import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
-import { quote, formatOere, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, type Format, type Frame } from '@/lib/pricing';
+import { quote, formatOere, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, type DigitalOffer, type Format, type Frame, type Product } from '@/lib/pricing';
+import { viewKind } from '@/lib/analytics/funnel';
 import { PICK_KEY } from './SizePicker';
 import Promo from './Promo';
 import { forgetResume } from './ResumeBanner';
@@ -51,7 +52,7 @@ function Mockup({ srcs, current, alt }: { srcs: Record<string, string>; current:
   );
 }
 
-export default function PreviewPanel({ c, data: initial, cancelled, paid, token }: { c: Copy; data: PreviewPayload; cancelled: boolean; paid: boolean; token?: string }) {
+export default function PreviewPanel({ c, data: initial, cancelled, paid, token, digital }: { c: Copy; data: PreviewPayload; cancelled: boolean; paid: boolean; token?: string; digital: DigitalOffer }) {
   const q = token ? `?t=${encodeURIComponent(token)}` : '';
   const [saveEmail, setSaveEmail] = useState('');
   const [saveState, setSaveState] = useState<'idle' | 'sending' | 'done' | 'invalid' | 'failed'>('idle');
@@ -67,10 +68,12 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   // The configuration. `quote()` is the same pure function the server runs before Stripe sees anything,
   // so the total under the finger and the amount on the card are one piece of arithmetic, not two guesses.
+  const [product, setProduct] = useState<Product>(digital.enabled ? data.product : 'framed');
   const [format, setFormat] = useState<Format>(data.format);
   const [frame, setFrame] = useState<Frame>(data.addons.frame);
   const [extraPrints, setExtraPrints] = useState(data.addons.extraPrints);
-  const bill = quote({ format, frame, extraPrints, campaign: c.campaign.active });
+  const bill = quote({ product, digital, format, frame, extraPrints, campaign: c.campaign.active });
+  const isDigital = bill.product === 'digital';
 
   // landscape photographs are printed landscape: "40×30 cm (liggende)"
   const landscape = data.width > data.height;
@@ -132,21 +135,71 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     document.body.classList.add('has-pv-bar');
     if (!viewed.current) { // one view per visit, whatever the runtime does with effects
       viewed.current = true;
-      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints, campaign: c.campaign.active }).totalOere / 100 });
+      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ product: data.product, digital, format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints, campaign: c.campaign.active }).totalOere / 100 });
     }
     return () => document.body.classList.remove('has-pv-bar');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * "The customer saw their result" — the step the funnel never had. Not an API status and not a
+   * navigation: the restored picture has to be decoded and at least half of it standing in the
+   * viewport for a second. Until 2026-09-12 `PreviewShown` fired when the job finished, which is how
+   * eleven finished photographs and zero proven looks read as the same number.
+   *
+   * A reload inside the half hour is the same look (viewKind), so one customer cannot become four.
+   */
+  const [pictureReady, setPictureReady] = useState(false);
+  const [inView, setInView] = useState(false);
+  const viewLogged = useRef(false);
+  useEffect(() => {
+    const el = picRef.current;
+    if (!el) return;
+    const imgs = Array.from(el.querySelectorAll('img'));
+    const decoded = () => imgs.some((i) => i.complete && i.naturalWidth > 0);
+    if (decoded()) { setPictureReady(true); return; }
+    const on = () => { if (decoded()) setPictureReady(true); };
+    for (const i of imgs) i.addEventListener('load', on);
+    return () => { for (const i of imgs) i.removeEventListener('load', on); };
+  }, []);
+  useEffect(() => {
+    const el = picRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setInView(true); return; }
+    const io = new IntersectionObserver((entries) => { for (const e of entries) setInView(e.isIntersecting); }, { threshold: 0.5 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!pictureReady || !inView || viewLogged.current) return;
+    const t = window.setTimeout(() => {
+      if (viewLogged.current) return;
+      viewLogged.current = true;
+      let store: Storage | null = null;
+      try { store = window.localStorage; } catch { /* private mode: every visit is a first view */ }
+      const kind = viewKind(store, `gf_viewed:${data.orderId}`);
+      if (kind === 'same') return;
+      track(kind === 'first' ? 'PreviewViewed' : 'PreviewReopened', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], colour: colourOn }, { serverLog: true });
+    }, 1000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pictureReady, inView]);
+
   /** The order row follows what the customer is looking at, so admin — and a recovered checkout — sees it. */
-  const persist = (patch: { format?: Format; frame?: Frame; extraPrints?: number; colour?: boolean }) => {
+  const persist = (patch: { product?: Product; format?: Format; frame?: Frame; extraPrints?: number; colour?: boolean }) => {
     fetch(`/api/preview/${data.orderId}/choose${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) }).catch(() => {});
+  };
+  /** Digital or framed. The server re-decides it (sellableProduct), so this is a request, not a price. */
+  const pickProduct = (next: Product) => {
+    if (next === product) return;
+    setProduct(next); persist({ product: next });
+    track('ProductSelected', { ...PRODUCT, content_name: next, content_ids: [next === 'digital' ? 'digital' : format], value: quote({ product: next, digital, format, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
   const pickFormat = (next: Format) => {
     if (next === format) return;
     setFormat(next); persist({ format: next });
     // the size is the price ladder: this is the real AddToCart, and it was the one step nobody measured
-    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ product, digital, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    track('ProductSelected', { ...PRODUCT, content_name: 'framed', content_ids: [next], value: quote({ product, digital, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, pixel: false });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   // A black-and-white photograph turning into a person is the strongest thing on this page, so it is what
@@ -232,24 +285,20 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     if (n === extraPrints) return;
     const up = n > extraPrints;
     setExtraPrints(n); persist({ extraPrints: n });
-    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ product, digital, format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
 
-  // One question before payment, asked once: an extra copy. A yes writes the copy on the order (persist) and goes
-  // straight on; a no goes straight on. Nothing is pre-ticked, nothing is asked twice.
-  const [upsell, setUpsell] = useState(false);
-  const upsellAsked = useRef(false);
-  const upsellRef = useRef<HTMLDialogElement>(null);
-  useEffect(() => { const d = upsellRef.current; if (!d) return; if (upsell && !d.open) d.showModal(); if (!upsell && d.open) d.close(); }, [upsell]);
+  /**
+   * The buy button goes to payment. It used to open a modal first — "skal der et ekstra eksemplar
+   * med?" — between the decision and the till, on a phone, for an audience of 45–70. The extra copy
+   * is an option beside the size and the frame now, priced and counted where the rest of the
+   * configuration is, and nothing stands between the button and Stripe.
+   */
   const order = () => {
     if (orderBusy.current || paid) return;
-    if (extraPrints === 0 && !upsellAsked.current) { upsellAsked.current = true; setUpsell(true); return; }
+    // logged before anything network-shaped happens: a click that dies at Stripe is still a click
+    track('CheckoutClicked', { ...PRODUCT, content_name: bill.product, content_ids: [isDigital ? 'digital' : format], value: bill.totalOere / 100 }, { serverLog: true, pixel: false });
     void checkout(extraPrints);
-  };
-  const answerUpsell = (yes: boolean) => {
-    setUpsell(false);
-    if (yes) setExtras(1);
-    void checkout(yes ? 1 : 0);
   };
   // back from Stripe (bfcache restores the page as it was, mid-"Åbner betaling…"): the button must work again
   useEffect(() => {
@@ -262,11 +311,15 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
     orderBusy.current = true;
     setOrdering(true); setError(null);
     try {
-      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: colourOn, format, frame, extraPrints: copies, t: token }) });
+      const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: colourOn, product, format, frame, extraPrints: copies, t: token }) });
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
+      const value = quote({ product, digital, format, frame, extraPrints: copies, campaign: c.campaign.active }).totalOere / 100;
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
-      track('InitiateCheckout', { ...PRODUCT, content_ids: [format], value: quote({ format, frame, extraPrints: copies, campaign: c.campaign.active }).totalOere / 100 }, { eventId: j.sessionId });
+      track('InitiateCheckout', { ...PRODUCT, content_ids: [isDigital ? 'digital' : format], value }, { eventId: j.sessionId });
+      // …and a created session is not a payment page anyone saw. This is the last thing we can observe
+      // before the browser leaves: everything after it belongs to Stripe and to the webhook.
+      track('CheckoutRedirected', { ...PRODUCT, content_name: bill.product, value }, { serverLog: true, pixel: false });
       window.location.assign(j.url);
     } catch {
       // never a server string: one calm message with a second door (e-mail)
@@ -305,9 +358,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   // the address in the error is a mailto link (in-app browsers do not auto-link anything)
   const errorLine = error && <MailLine className="alert" role="alert" text={error} email={c.email} href={c.emailHref} />;
+  // the button says the action and the amount it will charge, so nothing about the next screen is a surprise
   const button = (
     <button type="button" className="btn btn-block" onClick={order} disabled={ordering || paid}>
-      {paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : <>{c.preview.ctaShort} <span aria-hidden>·</span> <Total oere={bill.totalOere} /></>}
+      {paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : <>{isDigital ? c.preview.ctaDigital : c.preview.ctaShort} <span aria-hidden>·</span> <Total oere={bill.totalOere} /></>}
     </button>
   );
 
@@ -316,14 +370,34 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
       {errorLine}
       <p className="caption" style={{ textAlign: 'center' }}>{c.preview.payment}</p>
       {button}
-      <p className="caption" style={{ textAlign: 'center' }}>{c.preview.under} {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>
+      <p className="caption" style={{ textAlign: 'center' }}>{c.preview.under} {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {isDigital ? c.preview.payWhenPostDigital : c.preview.payWhenPost}</p>
     </div>
   );
 
+  // The steps are numbered as they are shown: the product choice only exists while the digital offer
+  // is on, and a "2 Størrelse" under no step 1 reads as a page that lost something.
+  let step = 0;
+  const n = () => <span className="n">{++step}</span>;
+
   const config = (
     <div className="config">
+      {digital.enabled && (
+        <fieldset className="cfg">
+          <legend className="cfg-label">{n()}{c.preview.productTitle}</legend>
+          <div className="frames-row">
+            {([['framed', c.preview.productFramed, c.preview.productFramedHint], ['digital', c.preview.productDigital, c.preview.productDigitalHint]] as [Product, string, string][]).map(([key, name, hint]) => (
+              <label key={key} className={`frame${key === product ? ' is-on' : ''}`}>
+                <input type="radio" name="produkt" value={key} checked={key === product} onChange={() => pickProduct(key)} />
+                <span className="frame-text"><b>{name}</b><span className="caption">{hint}</span></span>
+              </label>
+            ))}
+          </div>
+          <p className="caption">{c.preview.productNote}</p>
+        </fieldset>
+      )}
+      {!isDigital && (
       <fieldset className="cfg">
-        <legend className="cfg-label"><span className="n">1</span>{c.preview.sizeTitle}</legend>
+        <legend className="cfg-label">{n()}{c.preview.sizeTitle}</legend>
         <div className="sizes-row">
           {variants.map((x) => (
             <label key={x.format} className={`size${x.format === format ? ' is-on' : ''}${x.recommended ? ' is-recommended' : ''}`}>
@@ -337,9 +411,11 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         </div>
         <p className="caption">{c.preview.sizeNote}</p>
       </fieldset>
+      )}
 
+      {!isDigital && (
       <fieldset className="cfg">
-        <legend className="cfg-label"><span className="n">2</span>{c.preview.frameTitle}</legend>
+        <legend className="cfg-label">{n()}{c.preview.frameTitle}</legend>
         <div className="frames-row">
           {([['sort', c.preview.frameSort, c.preview.frameSortHint], ['eg', c.preview.frameEg, c.preview.frameEgHint]] as [Frame, string, string][]).map(([key, name, hint]) => (
             <label key={key} className={`frame${key === frame ? ' is-on' : ''}`}>
@@ -351,9 +427,11 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         </div>
         <p className="caption">{c.preview.frameNote}</p>
       </fieldset>
+      )}
 
+      {!isDigital && (
       <div className="cfg extra">
-        <p className="cfg-label"><span className="n">3</span>{c.preview.extraLabel}</p>
+        <p className="cfg-label">{n()}{c.preview.extraLabel}</p>
         <p className="cfg-title">{c.preview.extraTitle}</p>
         <p className="caption measure">{c.preview.extraLead}</p>
         <Promo campaign={c.campaign} compact />
@@ -369,11 +447,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
           </div>
         )}
       </div>
+      )}
       <div className="cfg bill">
-        <p className="cfg-label"><span className="n">4</span>{c.preview.summaryTitle}</p>
+        <p className="cfg-label">{n()}{c.preview.summaryTitle}</p>
         <div className="bill-head">
-          <img src={mockup} alt={c.preview.yourPhoto} width={96} height={77} />
-          <p><b>{c.preview.yourPhoto}</b><span>{label} · {frame === 'eg' ? 'egetræsramme' : 'sort ramme'}{data.isMonochrome ? ` · ${colourOn ? c.preview.summaryColour : c.preview.summaryMono}` : ''} · {1 + extraPrints} {extraPrints === 0 ? c.preview.copiesOne : c.preview.copiesMany}</span></p>
+          <img src={isDigital ? (colourOn && colourUrl ? colourUrl : data.preview) : mockup} alt={c.preview.yourPhoto} width={96} height={77} />
+          <p><b>{c.preview.yourPhoto}</b><span>{isDigital
+            ? <>{c.preview.digitalSummary}{data.isMonochrome ? ` · ${colourOn ? c.preview.summaryColour : c.preview.summaryMono}` : ''}</>
+            : <>{label} · {frame === 'eg' ? 'egetræsramme' : 'sort ramme'}{data.isMonochrome ? ` · ${colourOn ? c.preview.summaryColour : c.preview.summaryMono}` : ''} · {1 + extraPrints} {extraPrints === 0 ? c.preview.copiesOne : c.preview.copiesMany}</>}</span></p>
         </div>
         <dl className="bill-lines">
           {bill.lines.map((l) => (
@@ -382,13 +463,23 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
               <dd className="tabular">{formatOere(l.amountOere)}</dd>
             </div>
           ))}
-          <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
+          {isDigital
+            ? <div><dt>{c.preview.deliveryDigital}</dt><dd>{c.preview.deliveryDigitalValue}</dd></div>
+            : <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>}
         </dl>
         <p className="bill-total"><span>{c.preview.total}</span> <b><Total oere={bill.totalOere} /></b></p>
         <p className="caption">{c.preview.vat}</p>
         {/* the three promises, where the doubt is: right above the button */}
-        <ul className="guarantee">{c.preview.trust.map((t) => <li key={t}>{t}</li>)}</ul>
-        <p className="caption measure">{c.preview.gift}</p>
+        <ul className="guarantee">{(isDigital ? c.preview.trustDigital : c.preview.trust).map((t) => <li key={t}>{t}</li>)}</ul>
+        {/* the whole path from this button to the thing in their hands, in the order it happens */}
+        <div className="pv-after">
+          <p className="cfg-title">{c.preview.afterTitle}</p>
+          <ol className="pv-after-steps">
+            {(isDigital ? c.preview.afterStepsDigital : c.preview.afterSteps).map(([k, v2]) => <li key={k}><b>{k}</b><span>{v2}</span></li>)}
+          </ol>
+          <p className="caption measure">{c.preview.afterHelp}</p>
+        </div>
+        {!isDigital && <p className="caption measure">{c.preview.gift}</p>}
       </div>
     </div>
   );
@@ -412,16 +503,6 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
 
   return (
     <div className="container pv">
-      <dialog ref={upsellRef} className="offer-dialog upsell" aria-labelledby="upsell-title" onClose={() => setUpsell(false)} onClick={(e) => { if (e.target === e.currentTarget) setUpsell(false); }}>
-        <div className="offer-text">
-          {c.campaign.active && <span className="promo-tag">{c.campaign.tag}</span>}
-          <h2 id="upsell-title">{c.preview.upsellTitle}</h2>
-          <div className="upsell-pair" aria-hidden><img src={mockup} alt="" width={160} height={119} /><img src={mockup} alt="" width={160} height={119} /></div>
-          <p>{c.preview.upsellBody}</p>
-          <button type="button" className="btn btn-block" onClick={() => answerUpsell(true)}>{c.preview.upsellYes}</button>
-          <button type="button" className="btn btn-block btn-quiet" onClick={() => answerUpsell(false)}>{c.preview.upsellNo}</button>
-        </div>
-      </dialog>
       <div className="pv-left">
         {cancelled && <p className="small notice" role="status">{c.preview.cancelled}</p>}
         <ol className="pv-steps" aria-label="Hvor du er i bestillingen">
@@ -441,28 +522,33 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
         {colourBusy && <p className="caption measure pv-wait" role="status"><span className="pv-wait-dot" aria-hidden />{c.preview.colourWait}</p>}
         {colourErr && <p className="caption measure error" role="alert">{c.preview.colourFailed}</p>}
         {colourOn && <p className="caption measure">{c.preview.colourNote}</p>}
-        <a href="#videre" className="btn btn-quiet btn-block pv-next" onClick={(e) => { const el = document.getElementById('videre'); if (!el) return; e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
+        <a href="#videre" className="btn btn-quiet btn-block pv-next" onClick={(e) => { const el = document.getElementById('videre'); if (!el) return; e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{isDigital ? c.preview.nextStepDigital : c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
         {!paid && <p className="caption measure">{c.preview.watermarkNote}</p>}
-        <p className="caption measure">{c.preview.next}</p>
+        <p className="caption measure">{isDigital ? c.preview.nextDigital : c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}
-        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {c.preview.payWhenPost}</p>
+        <p className="small measure pv-money"><b style={{ fontWeight: 600 }}>{c.preview.under}</b> {c.preview.payWhenPre} <Total oere={bill.totalOere} /> {isDigital ? c.preview.payWhenPostDigital : c.preview.payWhenPost}</p>
       </div>
       <div className="pv-right">
         {/* desktop: the decision first, the object and the label under it */}
         <div className="pv-desktop-cta">{cta}</div>
         <div className="pv-grid">
-          {/* the object first, then what it is, then the price — the decisions come after the value */}
-          <h2 id="videre" style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{c.preview.hang}</h2>
-          <Mockup srcs={mockupSrcs} current={mockupKey} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
-          <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
-          <p className="caption measure">{c.produkt.lead}</p>
-          {/* a phone gets the spec as one line and a link; a desktop has the room for the rows */}
-          <div className={`spec${specOpen ? ' open' : ''}`}>
-            <p className="spec-line small">{label} · {c.preview.specTail} <button type="button" className="link-btn spec-toggle" aria-expanded={specOpen} aria-controls="spec-rows" onClick={() => setSpecOpen((o) => !o)}>{specOpen ? c.preview.specLess : c.preview.specMore}</button></p>
-            <dl id="spec-rows" className="label small spec-rows">
-              {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
-            </dl>
-          </div>
+          {/* the object first, then what it is, then the price — the decisions come after the value.
+              A customer who has chosen the file is not shown a wall and a frame they are not buying. */}
+          <h2 id="videre" style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{isDigital ? c.preview.digitalSummary : c.preview.hang}</h2>
+          {isDigital
+            ? <p className="caption measure">{c.preview.digitalNote}</p>
+            : <>
+                <Mockup srcs={mockupSrcs} current={mockupKey} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
+                <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>
+                <p className="caption measure">{c.produkt.lead}</p>
+                {/* a phone gets the spec as one line and a link; a desktop has the room for the rows */}
+                <div className={`spec${specOpen ? ' open' : ''}`}>
+                  <p className="spec-line small">{label} · {c.preview.specTail} <button type="button" className="link-btn spec-toggle" aria-expanded={specOpen} aria-controls="spec-rows" onClick={() => setSpecOpen((o) => !o)}>{specOpen ? c.preview.specLess : c.preview.specMore}</button></p>
+                  <dl id="spec-rows" className="label small spec-rows">
+                    {v.rows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
+                  </dl>
+                </div>
+              </>}
           {config}
           {/* desktop: the button again, right under the total it belongs to */}
           <div className="pv-desktop-cta">{cta}</div>

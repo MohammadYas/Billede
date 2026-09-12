@@ -13,7 +13,7 @@ export default function Privatliv() {
     f.email || missing('e-mail'),
   ].filter(Boolean).join(', ');
   return (
-    <LegalPage title="Sådan behandler vi dine oplysninger" updated="3. september 2026">
+    <LegalPage title="Sådan behandler vi dine oplysninger" updated="12. september 2026">
       <p>Billedearv restaurerer gamle fotografier og leverer dem som indrammede print. For at gøre det behandler vi nogle personoplysninger. Her står hvilke, hvorfor, hvor længe – og hvad du kan kræve.</p>
 
       <h2>Dataansvarlig</h2>

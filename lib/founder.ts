@@ -8,6 +8,12 @@ export type Founder = {
   portrait: string | null; why: string[];
   /** true when every legally required field is filled (no TODO). */
   complete: boolean;
+  /**
+   * Fields whose line in founder.md still carries the owner's own TODO marker. The value is shown —
+   * "4241 Vemmelev" is better than nothing — but it is not finished, and the legal pages say so rather
+   * than wearing a blanket "udkast" label that tells a hesitant customer nothing they can act on.
+   */
+  pending: string[];
 };
 
 const FILE = path.join(process.cwd(), 'assets', 'founder', 'founder.md');
@@ -23,7 +29,10 @@ export function getFounder(): Founder {
   if (cache) return cache;
   let text = '';
   try { text = fs.readFileSync(FILE, 'utf8'); } catch { /* no file */ }
-  const get = (k: string) => clean(text.match(new RegExp(`^${k}:\\s*(.*)$`, 'mi'))?.[1]);
+  const raw = (k: string) => (text.match(new RegExp(`^${k}:\\s*(.*)$`, 'mi'))?.[1] ?? '').trim();
+  const get = (k: string) => clean(raw(k));
+  /** the owner's own "(TODO – …)" on a line: filled in enough to show, not finished */
+  const isPending = (k: string) => /\btodo\b/i.test(raw(k));
   const whyBlock = text.split(/^why:\s*$/mi)[1] ?? '';
   const why = whyBlock.split('\n').map((l) => l.replace(/^\s*-\s*/, '').trim()).filter((l) => l && !/^todo\b/i.test(l));
   const portraitName = get('portrait');
@@ -36,6 +45,7 @@ export function getFounder(): Founder {
     company: get('company'),
     portrait, why,
     complete: Boolean(name && get('city') && get('cvr') && get('email') && get('address')),
+    pending: (['name', 'cvr', 'address', 'email'] as const).filter((k) => !get(k) || isPending(k)),
   };
   return cache;
 }

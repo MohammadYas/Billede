@@ -94,6 +94,36 @@ export const MAX_EXTRA_PRINTS = 3;
  * new picture costs what a picture costs. A third, conditional price is where surprises come from.
  */
 
+/* ---------------------------------------------------------------------------
+ * The two products.
+ *
+ * `framed` is the parcel that exists today: restoration, print, frame, file, shipping.
+ * `digital` is the same restoration without the parcel — the high-resolution file and nothing else.
+ * It is finished code behind a flag, because the price is the owner's to set and a price nobody has
+ * approved must never reach a customer. Both halves are required: a flag without a price is off, and
+ * a price without the flag is off. Everything downstream asks `sellableProduct`, so a browser that
+ * posts `product: "digital"` while the offer is off buys the framed parcel at the framed price.
+ * ------------------------------------------------------------------------- */
+export const PRODUCTS = ['framed', 'digital'] as const;
+export type Product = (typeof PRODUCTS)[number];
+export const DEFAULT_PRODUCT: Product = 'framed';
+export function isProduct(v: unknown): v is Product {
+  return v === 'framed' || v === 'digital';
+}
+
+export type DigitalOffer = { enabled: boolean; priceDkk: number };
+
+/** Reads the digital offer out of the environment. Both halves required; anything else is off. */
+export function digitalOffer(env: Record<string, string | undefined> = process.env): DigitalOffer {
+  const priceDkk = Math.max(0, Math.trunc(Number(env.NEXT_PUBLIC_DIGITAL_PRICE_DKK ?? 0)) || 0);
+  return { enabled: env.NEXT_PUBLIC_DIGITAL_ENABLED === 'true' && priceDkk > 0, priceDkk };
+}
+
+/** The product an order is allowed to be (anything else, or a disabled offer, is the framed parcel). */
+export function sellableProduct(value: unknown, offer: DigitalOffer = digitalOffer()): Product {
+  return value === 'digital' && offer.enabled ? 'digital' : DEFAULT_PRODUCT;
+}
+
 export type AddOns = { frame: Frame; extraPrints: number };
 export const DEFAULT_ADDONS: AddOns = { frame: 'sort', extraPrints: 0 };
 
@@ -108,7 +138,13 @@ export function readAddOns(value: unknown): AddOns {
 
 /** `name` is what Stripe and the receipt print; `short` is what the bill on the page shows. */
 export type QuoteLine = { key: string; name: string; short: string; note?: string; quantity: number; unitOere: number; amountOere: number };
-export type Quote = { format: Format; /** "30×40 cm" or "40×30 cm" — the frame follows the photograph */ label: string; addons: AddOns; lines: QuoteLine[]; totalOere: number };
+export type Quote = {
+  product: Product;
+  format: Format; /** "30×40 cm" or "40×30 cm" — the frame follows the photograph */ label: string;
+  addons: AddOns; lines: QuoteLine[]; totalOere: number;
+  /** Stripe asks for a delivery address only when something is actually posted. */
+  needsAddress: boolean;
+};
 
 /**
  * Launch offer (lib/config.ts `campaignEndDate`): while it runs, the first extra copy is in the parcel at 0 kr.
@@ -118,11 +154,27 @@ export type Quote = { format: Format; /** "30×40 cm" or "40×30 cm" — the fra
 export const CAMPAIGN_FREE_EXTRA_COPIES = 1;
 
 /** The one place an order's amount is decided. Input is untrusted; output is always sellable. */
-export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: unknown; landscape?: boolean; campaign?: boolean } = {}): Quote {
+export function quote(input: { product?: unknown; digital?: DigitalOffer; format?: unknown; frame?: unknown; extraPrints?: unknown; landscape?: boolean; campaign?: boolean } = {}): Quote {
+  const offer = input.digital ?? digitalOffer();
+  const product = sellableProduct(input.product, offer);
   const format = sellableFormat(input.format);
   const addons = readAddOns({ frame: input.frame, extraPrints: input.extraPrints });
   const landscape = Boolean(input.landscape);
   const label = formatLabelFor(format, landscape);
+  // The digital file has no size, no frame and no parcel: one line, one price, and the print add-ons
+  // are dropped rather than ignored, so the bill on the page and the order row say the same thing.
+  if (product === 'digital') {
+    const lines: QuoteLine[] = [{
+      key: 'digital',
+      name: 'Restaureret familiebillede, digital fil i høj opløsning',
+      short: 'Restaureret billede, digital fil',
+      note: 'Fil i høj opløsning uden vandmærke · klar til download, når du har godkendt billedet',
+      quantity: 1,
+      unitOere: offer.priceDkk * 100,
+      amountOere: offer.priceDkk * 100,
+    }];
+    return { product, format, label, addons: { ...DEFAULT_ADDONS }, lines, totalOere: lines[0].amountOere, needsAddress: false };
+  }
   const lines: QuoteLine[] = [
     {
       key: 'print',
@@ -162,7 +214,7 @@ export function quote(input: { format?: unknown; frame?: unknown; extraPrints?: 
     }
   }
   const totalOere = lines.reduce((sum, l) => sum + l.amountOere, 0);
-  return { format, label, addons, lines, totalOere };
+  return { product, format, label, addons, lines, totalOere, needsAddress: true };
 }
 
 export function formatOere(oere: number): string {

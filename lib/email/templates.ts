@@ -1,7 +1,7 @@
 import { CONFIG, deliveryPromise } from '@/lib/config';
 import { getFounder, fornavn } from '@/lib/founder';
 import type { Format } from '@/lib/pricing';
-import { orderDescription, orderLabel, orderLines, repeatLink } from '@/lib/order-summary';
+import { isDigitalOrder, orderDescription, orderLabel, orderLines, repeatLink } from '@/lib/order-summary';
 
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
@@ -53,23 +53,27 @@ export function orderConfirmation(opts: { order: Order }): { subject: string; ht
   const mockup = o.mockup_path && meta.share_token ? siteUrl(`/api/preview/${o.id}/image?kind=mockup&t=${encodeURIComponent(meta.share_token)}`) : null;
   const previewLink = meta.share_token ? siteUrl(`/p/${o.id}?t=${encodeURIComponent(meta.share_token)}`) : null;
   const gift = (o.preview_meta as { gift_note?: string } | null)?.gift_note;
+  // a file order has no parcel: no wall shot, no delivery promise, no shipping line and no address
+  const digitalOrder = isDigitalOrder(o);
   const html = shell(subject, [
     h1('Tak for din bestilling.'),
     p(`${esc(navn)} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne.`),
     p('Inden 48 timer får du en mail med det færdige billede. Du godkender det – eller beder om en ændring – før vi printer noget.'),
-    p(`Derefter printer vi det i ${esc(orderLabel(o))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`),
-    mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #E2DDD4;">` : '',
+    digitalOrder
+      ? p('Når du har sagt ja, kan du hente filen i høj opløsning uden vandmærke fra godkendelsessiden med det samme. Der bliver ikke printet eller sendt noget.')
+      : p(`Derefter printer vi det i ${esc(orderLabel(o))}, indrammer det og sender det hjem til dig med fri fragt – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`),
+    !digitalOrder && mockup ? `<img src="${mockup}" alt="Sådan hænger det" style="display:block;width:100%;height:auto;margin:8px 0 24px;border:1px solid #E2DDD4;">` : '',
     `<p style="margin:0 0 6px;font-weight:600;">Din bestilling</p>`,
-    p(orderLines(o).map((l) => esc(l)).join('<br>') + (amount ? `<br><strong>I alt ${esc(amount)}</strong> inkl. moms og fragt` : '')),
+    p(orderLines(o).map((l) => esc(l)).join('<br>') + (amount ? `<br><strong>I alt ${esc(amount)}</strong> inkl. moms${digitalOrder ? '' : ' og fragt'}` : '')),
     p(`${esc(orderDescription(o))}<br>` +
-      (address ? `Leveres til: ${esc(address)}<br>` : '') +
+      (address && !digitalOrder ? `Leveres til: ${esc(address)}<br>` : '') +
       `Ordre ${esc(o.id.slice(0, 8))} · betalt ${esc(o.paid_at ? new Date(o.paid_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }) : 'i dag')}` +
       (gift ? `<br>Hilsen på kortet i pakken: “${esc(gift)}”` : '')),
     p(`Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. <a href="${siteUrl('/handelsbetingelser')}" style="color:#1F5A3C;">Handelsbetingelser</a>${previewLink ? ` · <a href="${previewLink}" style="color:#1F5A3C;">Dit preview</a>` : ''}`),
     f.email ? p(`Spørgsmål? Skriv til ${esc(kontakt)} på <a href="mailto:${esc(f.email)}" style="color:#1F5A3C;">${esc(f.email)}</a> – eller svar på denne mail. Vi svarer inden 24 timer.`) : '',
     repeatLink(o) ? `<hr style="border:0;border-top:1px solid #E2DDD4;margin:32px 0 20px;">${p(`<strong>Har I flere billeder?</strong> De ligger sjældent alene i skuffen. Har du et mere, kan du sende det ind herfra – samme arbejde, samme godkendelse.`)}${blockButton(repeatLink(o)!, 'Se billede nummer to', true)}` : '',
   ].join(''));
-  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne. Inden 48 timer får du en mail med det færdige billede til godkendelse. Vi printer først, når du siger ja – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms og fragt · ${orderDescription(o)}${address ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Send det næste ind her: ${repeatLink(o)}` : ''}`;
+  const text = `Tak for din bestilling.\n\n${navn} kigger på dit billede inden 24 timer og gennemgår det – især ansigterne. Inden 48 timer får du en mail med det færdige billede til godkendelse. ${digitalOrder ? 'Når du har sagt ja, kan du hente filen i høj opløsning uden vandmærke fra godkendelsessiden med det samme. Der bliver ikke printet eller sendt noget.' : `Vi printer først, når du siger ja – leveret ${deliveryPromise()} efter dit ja. Den digitale fil i høj opløsning henter du på godkendelsessiden, så snart du har sagt ja.`}\n\nDin bestilling:\n${orderLines(o).join('\n')}\nI alt ${amount} inkl. moms${digitalOrder ? '' : ' og fragt'} · ${orderDescription(o)}${address && !digitalOrder ? `\nLeveres til: ${address}` : ''}\nOrdre ${o.id.slice(0, 8)}\n\nIndtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage. ${siteUrl('/handelsbetingelser')}${previewLink ? `\nDit preview: ${previewLink}` : ''}${f.email ? `\nSkriv til os: ${f.email}` : ''}${repeatLink(o) ? `\n\nHar I flere billeder? Send det næste ind her: ${repeatLink(o)}` : ''}`;
   return { subject, html, text };
 }
 

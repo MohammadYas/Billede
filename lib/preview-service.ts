@@ -13,13 +13,13 @@ const heavy = async () => {
 };
 import { logEvent, type Utm } from '@/lib/analytics/events';
 import { sendServerEvent, eventSourceUrl } from '@/lib/analytics/capi';
-import { customerFormat, customerFormats, isFormat, readAddOns, FRAMES, frameColour, type AddOns, type Format, type Frame } from '@/lib/pricing';
+import { customerFormat, customerFormats, isFormat, readAddOns, sellableProduct, FRAMES, frameColour, type AddOns, type Format, type Frame, type Product } from '@/lib/pricing';
 import { getJob, setJob, enqueue, type JobState } from '@/lib/jobs';
 
 export type PreviewPayload = {
   orderId: string; original: string; preview: string; mockup: string; colour: string | null;
   /** what the order is currently configured as, and one wall mockup per size and frame */
-  format: Format; addons: AddOns; mockups: Record<string, string>;
+  product: Product; format: Format; addons: AddOns; mockups: Record<string, string>;
   isMonochrome: boolean; chosenColour: boolean; status: Order['status'];
   /** share token, so the URL the customer sees (and copies to a sister) opens on any phone */
   token: string | null;
@@ -73,7 +73,7 @@ export async function payloadFor(order: Order): Promise<PreviewPayload | null> {
   return {
     orderId: order.id,
     original: imageUrl(order, 'original'), preview: imageUrl(order, 'preview'), mockup: imageUrl(order, 'mockup'),
-    format: isFormat(order.format) ? order.format : customerFormat(), addons: readAddOns(meta.addons), mockups: mockupUrls(order),
+    product: sellableProduct(meta.product), format: isFormat(order.format) ? order.format : customerFormat(), addons: readAddOns(meta.addons), mockups: mockupUrls(order),
     colour: order.colourised_path ? imageUrl(order, 'colour') : null,
     isMonochrome: Boolean(order.is_monochrome), chosenColour: order.chosen_colour, status: order.status,
     token: meta.share_token ?? null,
@@ -201,7 +201,11 @@ export async function processRestore(orderId: string): Promise<void> {
         const cm = objectPath(order.id, 'mockup');
         await putObject(cm, await makeMockup(image, { format: startFormat, frame: frameColour(startFrame), watermark: true }));
         colourMockups[mockupKey(startFormat, startFrame, true)] = cm;
-      } catch (e) { console.error('colour up front failed', orderId, e); }
+        await logEvent('ColourReady', { sessionId, orderId, utm: order.utm, meta: { upfront: true } });
+      } catch (e) {
+        console.error('colour up front failed', orderId, e);
+        await logEvent('ColourFailed', { sessionId, orderId, utm: order.utm, meta: { upfront: true } });
+      }
     }
 
     const ready = await setStatus(order.id, 'PREVIEW_READY', {
@@ -257,6 +261,10 @@ export async function processRestore(orderId: string): Promise<void> {
       await setJob(orderId, { kind: 'restore', state: 'failed', reason });
     }
     await logEvent('PreviewFallback', { sessionId, orderId, utm: order.utm, meta: { reason } });
+    // PreviewFallback covers both "a human should look at this" and "the job died". The funnel needs
+    // the second one on its own: a customer who never got a picture is a different loss from one who
+    // was handed to the mail form. The older event keeps its meaning; this one is added beside it.
+    await logEvent('GenerationFailed', { sessionId, orderId, utm: order.utm, meta: { reason } });
   }
 }
 
@@ -316,9 +324,12 @@ export async function processColour(orderId: string): Promise<void> {
     const fresh = (await getOrder(orderId)) ?? order;
     await updateOrder(order.id, { colourised_path: path, preview_meta: { ...metaOf(fresh), colourised_full_path: fullPath, mockups: { ...(metaOf(fresh).mockups ?? {}), ...colourMockups } } });
     await setJob(orderId, { kind: 'colour', state: 'done', finishedAt: new Date().toISOString() });
+    await logEvent('ColourReady', { sessionId: metaOf(order).session_id ?? null, orderId, utm: order.utm });
   } catch (e) {
     console.error('colour failed', orderId, e);
-    await setJob(orderId, { kind: 'colour', state: 'failed', reason: e instanceof RestoreError ? e.code : 'error' });
+    const reason = e instanceof RestoreError ? e.code : 'error';
+    await setJob(orderId, { kind: 'colour', state: 'failed', reason });
+    await logEvent('ColourFailed', { sessionId: metaOf(order).session_id ?? null, orderId, utm: order.utm, meta: { reason } });
   }
 }
 

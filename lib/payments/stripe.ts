@@ -41,7 +41,7 @@ export class StripeProvider implements PaymentProvider {
           product_data: {
             name: l.name,
             description: i === 0
-              ? `${l.note ?? ''}. Du godkender det færdige billede, før vi printer.`
+              ? `${l.note ?? ''}. ${q.product === 'digital' ? 'Du godkender det færdige billede, før filen bliver din.' : 'Du godkender det færdige billede, før vi printer.'}`
               : l.note,
             images: i === 0 && previewImageUrl ? [previewImageUrl] : undefined,
           },
@@ -60,20 +60,25 @@ export class StripeProvider implements PaymentProvider {
       currency: 'dkk',
       client_reference_id: order.id,
       line_items: this.lineItems(opts.quote, opts.previewImageUrl),
-      shipping_address_collection: { allowed_countries: ['DK'] },
+      // A file is not posted anywhere: asking a 60-year-old for a delivery address they do not need is
+      // a form field between them and the payment, and an address we have no reason to store.
+      ...(opts.quote.needsAddress ? { shipping_address_collection: { allowed_countries: ['DK' as const] } } : {}),
       // the phone is required (owner, 2026-09-10): the approval mail is the one step that needs an answer, and a
       // 60-year-old who never opens the spam folder must be reachable by SMS or a call before the order stalls
       phone_number_collection: { enabled: true },
       consent_collection: { terms_of_service: 'required' },
       custom_text: {
         terms_of_service_acceptance: {
-          message: `Du kan fortryde og få hele beløbet tilbage, indtil du har godkendt det færdige billede på mail. Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres, og at printet fremstilles specielt til mig. [Handelsbetingelser](${CONFIG.siteUrl.replace(/\/$/, '')}/handelsbetingelser)`,
+          message: opts.quote.product === 'digital'
+            ? `Du kan fortryde og få hele beløbet tilbage, indtil du har godkendt det færdige billede på mail. Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres. [Handelsbetingelser](${CONFIG.siteUrl.replace(/\/$/, '')}/handelsbetingelser)`
+            : `Du kan fortryde og få hele beløbet tilbage, indtil du har godkendt det færdige billede på mail. Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres, og at printet fremstilles specielt til mig. [Handelsbetingelser](${CONFIG.siteUrl.replace(/\/$/, '')}/handelsbetingelser)`,
         },
       },
       success_url: opts.successUrl,
       cancel_url: opts.cancelUrl,
       metadata: {
         order_id: order.id,
+        product: opts.quote.product,
         format: order.format,
         size: opts.quote.label,
         frame: opts.quote.addons.frame,

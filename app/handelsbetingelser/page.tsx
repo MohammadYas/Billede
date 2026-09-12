@@ -1,13 +1,13 @@
 import LegalPage from '@/components/LegalPage';
 import { getFounder, missing } from '@/lib/founder';
 import { CONFIG, formatCutoffDate } from '@/lib/config';
-import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK } from '@/lib/pricing';
+import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK, digitalOffer } from '@/lib/pricing';
 
 export const metadata = { title: 'Handelsbetingelser – Billedearv' };
 
 export default function Handelsbetingelser() {
   const f = getFounder();
-  const fmt = customerFormat();
+  const digital = digitalOffer();
   // e-handelsloven §7 requires name, address and CVR. Each missing field says so out loud, because
   // a partial identity that *looks* complete is the failure mode: name + e-mail alone renders as if
   // nothing were missing.
@@ -18,7 +18,7 @@ export default function Handelsbetingelser() {
     f.email || missing('e-mail'),
   ].filter(Boolean).join(', ');
   return (
-    <LegalPage title="Handelsbetingelser" updated="3. september 2026">
+    <LegalPage title="Handelsbetingelser" updated="12. september 2026">
       <h2>Sælger</h2>
       <p>{saelger}.</p>
 
@@ -29,16 +29,23 @@ export default function Handelsbetingelser() {
           <li key={f2}>{formatLabel(f2)}: {formatDkk(PRICING[f2].priceDkk)}</li>
         ))}
         <li>Ekstra eksemplar af samme billede i samme størrelse og ramme: {formatDkk(EXTRA_PRINT_DKK[customerFormat()])} pr. stk., op til tre.</li>
+        {digital.enabled && <li>Kun den digitale fil, uden print og ramme: {formatDkk(digital.priceDkk)}. Der sendes ingen pakke, og du skal ikke oplyse en leveringsadresse.</li>}
       </ul>
-      <p>Restaureringen laves af en automatisk billedmodel (AI) og gennemgås manuelt, før den printes. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p>
+      <p>Restaureringen laves af en automatisk billedmodel (AI) og gennemgås manuelt, før den leveres. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p>
 
       <h2>Sådan foregår det</h2>
       <ul>
-        <li>Du uploader og ser et preview med vandmærke. Prisen er den samme, uanset hvor beskadiget billedet er.</li>
-        <li>Du betaler. Inden 48 timer sender vi det færdige billede til godkendelse på mail.</li>
+        <li>Du uploader og ser et preview med vandmærke, i skærmopløsning. Det er gratis, og prisen er den samme, uanset hvor beskadiget billedet er.</li>
+        <li>Du betaler ved bestillingen.</li>
+        <li>Vi fremstiller derefter den færdige fil i trykkvalitet ud fra dit oprindelige foto. Den er ikke en forstørrelse af previewet, men en ny, større udgave af den samme restaurering, og den kan derfor afvige en smule fra previewet. Vi gennemgår den manuelt – især ansigterne – og retter til, hvis restaureringen har ændret et ansigt.</li>
+        <li>Inden 48 timer sender vi det færdige billede til godkendelse på mail.</li>
         <li>Du godkender – eller beder om en ændring, så mange gange det er rimeligt. Vi printer først, når du har godkendt. Hører vi ikke fra dig inden 21 dage efter godkendelsesmailen, refunderer vi hele beløbet, og bestillingen lukkes.</li>
         <li>Efter godkendelse printer, indrammer og sender vi. Levering inden {CONFIG.deliveryDaysMax} hverdage. Bestillinger afgivet senest {formatCutoffDate()} og godkendt inden 48 timer efter godkendelsesmailen leveres inden jul.</li>
+        {digital.enabled && <li>Har du kun købt den digitale fil, kan du hente den fra godkendelsessiden, så snart du har godkendt. Der printes og sendes ikke noget.</li>}
       </ul>
+
+      <h2>Hvis vi ikke kan lave et resultat</h2>
+      <p>Nogle fotos kan vi ikke arbejde med – for uskarpe, for mørke, eller noget vi vil se på i hånden først. Så får du i stedet en mail fra os inden 24 timer, og du har ikke betalt noget. Det koster aldrig noget at prøve.</p>
 
       <h2>Fortrydelsesret</h2>
       <p>Du har som forbruger 14 dages fortrydelsesret fra bestillingen. Fordi den digitale fil leveres, når du godkender, og printet fremstilles specielt til dig, bortfalder fortrydelsesretten, når den digitale fil er leveret, og for printet, når produktionen er sat i gang efter din godkendelse. Det accepterer du udtrykkeligt ved betalingen. Indtil du har godkendt, kan du fortryde uden begrundelse og få hele beløbet retur.</p>

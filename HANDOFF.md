@@ -7,6 +7,17 @@ unverified. Items in **bold** block the test.
 
 Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
 
+## Status 2026-09-12, evening — organic / social
+
+**The social work has its own handoff: `work/social/STATUS.md`. Read that before touching anything social.** Short version:
+
+- **Facebook page and Instagram both have exactly one post** — the 1962 wedding carousel, damaged first, restored second. Pinned on Facebook. Four shorter posts were published and deleted the same day; the owner rejected them as too short, and rejected `33-telefon-fotograferer` as an image outright.
+- **Instagram `@billedearv` exists** (BUSINESS, id `27530437379962750`), follows 17 relevant Danish accounts, and is **not yet linked to the Facebook page** in Business Suite — until it is, ads cannot use IG placements.
+- **30 Facebook groups joined, all as the Billedearv PAGE, not the personal profile.** The `i_user` cookie pointed at the page id throughout, and a scripted profile switch would not stick. The owner has decided he will only post as the page. That is the weakest possible sender in local-history groups, and it is a deliberate choice.
+- **Two group posts submitted, both awaiting admin approval**: Kjellerup og Omegn (4.900) and Gamle billeder fra Als (9.700). A page's first post in a group is reviewed regardless of how it is sent, so nothing is gained by automating the rest.
+- **Group rules were read word for word.** Gamle København (160k) requires images older than 30 years with source and provenance; Slægtsforskning (45k) bans AI-generated material outright. Neither opens with better copy — they need an agreement with the admin, and that message has not been sent (it needs the owner's ok, being a message to strangers).
+- **Owner decisions that override older text:** no AI labelling anywhere; TikTok dropped (`tiktok/` is now `reels/`); posts must be long enough to be worth reading.
+
 ## Status 2026-09-12, middag (read this first)
 
 **Four days in: 398,10 kr. spent of the 1.500 kr. limit, 0 customers.** Still running — 58,20 kr. by 11:38 UTC today against 170,28 kr. yesterday. Exactly one order has ever been paid: `17b47d56`, 8 Sep, 599 kr., the owner's own test, still awaiting refund.

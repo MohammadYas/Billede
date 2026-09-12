@@ -5,6 +5,7 @@ import { ADMIN_COOKIE, isAdmin, makeSessionCookie, passwordOk, rateLimited, reco
 import { listOrders } from '@/lib/db/orders';
 import { supabaseAdmin } from '@/lib/db/supabase';
 import type { Utm } from '@/lib/analytics/events';
+import { FUNNEL_STEPS, funnel } from '@/lib/analytics/funnel';
 import { signedUrl } from '@/lib/db/storage';
 import { formatLabel } from '@/lib/pricing';
 import { readAddOns } from '@/lib/pricing';
@@ -74,13 +75,33 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   type Ev = { name: string; order_id: string | null; session_id: string | null; utm: Utm | null };
   const ev: Ev[] = [];
   for (let from = 0; from < 30000; from += 1000) {
-    const { data } = await supabaseAdmin().from('events').select('name, order_id, session_id, utm').in('name', ['PageView', 'FlowOpened', 'PreviewShown', 'InitiateCheckout', 'Purchase']).gte('created_at', since).order('created_at', { ascending: false }).range(from, from + 999);
+    const { data } = await supabaseAdmin().from('events').select('name, order_id, session_id, utm').in('name', [...FUNNEL_STEPS]).gte('created_at', since).order('created_at', { ascending: false }).range(from, from + 999);
     ev.push(...((data ?? []) as Ev[]));
     if (!data || data.length < 1000) break;
   }
   const distinct = (n: string) => new Set(ev.filter((e) => e.name === n).map((e) => e.order_id ?? e.session_id).filter(Boolean)).size;
   const shown = distinct('PreviewShown'), started = distinct('InitiateCheckout'), bought = distinct('Purchase');
   const ratio = shown ? Math.round((started / shown) * 100) : null;
+  /**
+   * The whole funnel in one table, in distinct sessions — the report that answers "where do they fall
+   * off". Our own tests are excluded (?utm_source=pwtest), because 17 of 38 orders in the launch week
+   * were ours and they buried the handful of real ones.
+   *
+   * The step that matters is "Så sit billede": until 2026-09-12 the report stopped at "billedet blev
+   * færdigt", which is a job finishing, not a customer looking at anything.
+   */
+  const STEP_DA: Record<string, string> = {
+    PageView: 'Åbnede siden', FlowOpened: 'Åbnede upload', UploadStarted: 'Valgte et billede',
+    ProcessingStarted: 'Restaurering startet', PreviewShown: 'Billedet blev færdigt', PreviewViewed: 'Så sit billede',
+    ProductSelected: 'Valgte produkt', CheckoutClicked: 'Trykkede bestil', InitiateCheckout: 'Betalingsside oprettet', Purchase: 'Betalte',
+  };
+  const real = ev.filter((e) => e.utm?.utm_source !== 'pwtest');
+  const steps = funnel(real.map((e) => ({ name: e.name, session_id: e.session_id })));
+  const sawResult = steps.find((r) => r.step === 'PreviewViewed')?.sessions ?? 0;
+  // revenue per person who actually saw a result. Ad spend lives in Meta and never reaches this database,
+  // so this is turnover per viewer, not profit — the caption says so rather than implying otherwise.
+  const revenueOere = orders.filter((o) => o.created_at >= since && o.paid_at).reduce((sum, o) => sum + (o.amount ?? 0), 0);
+  const perViewer = sawResult ? Math.round(revenueOere / 100 / sawResult) : null;
   const active = sp.status || sp.alle ? orders.filter((o) => o.status !== 'ABANDONED' || sp.status === 'ABANDONED') : orders.filter((o) => !ANALYTICS.includes(o.status));
   const age = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / 864e5);
   // a thumbnail per listed order: the customer's picture is what the owner recognises an order by
@@ -113,12 +134,13 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const sources = [...bySource.entries()].sort((a, b) => b[1].paid - a[1].paid || b[1].previews - a[1].previews);
   // and where the visitors came from, before anyone ordered: distinct sessions per step, per link — the
   // three launch ads show up as three rows (utm_content = the ad's name). Playwright test traffic is left out.
-  const STEPS = ['PageView', 'FlowOpened', 'PreviewShown', 'Purchase'] as const;
+  const STEPS = ['PageView', 'FlowOpened', 'PreviewShown', 'PreviewViewed', 'Purchase'] as const;
+  const emptyRow = () => ({ PageView: new Set<string>(), FlowOpened: new Set<string>(), PreviewShown: new Set<string>(), PreviewViewed: new Set<string>(), Purchase: new Set<string>() });
   const visits = new Map<string, Record<(typeof STEPS)[number], Set<string>>>();
   for (const e of ev) {
     if (!(STEPS as readonly string[]).includes(e.name) || e.utm?.utm_source === 'pwtest') continue;
     const k = srcKey(e.utm);
-    const row = visits.get(k) ?? { PageView: new Set<string>(), FlowOpened: new Set<string>(), PreviewShown: new Set<string>(), Purchase: new Set<string>() };
+    const row = visits.get(k) ?? emptyRow();
     row[e.name as (typeof STEPS)[number]].add(e.order_id ?? e.session_id ?? '');
     visits.set(k, row);
   }
@@ -140,6 +162,39 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <p className="cfg-label">Preview → betaling · 30 dage</p>
             <p style={{ fontFamily: 'var(--display)', fontSize: 'var(--fs-display)', lineHeight: 1, fontWeight: 300 }} className="tabular">{ratio === null ? '–' : `${ratio} %`}</p>
             <p className="small muted">{started} af {shown} viste previews gik videre til betaling · {bought} køb. Kilde: vores egen eventlog (PreviewShown → InitiateCheckout), ikke Meta.</p>
+          </section>
+        )}
+        {!sp.status && (
+          <section className="adm-sources" style={{ display: 'grid', gap: 'var(--s3)' }}>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Trin for trin · 30 dage</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="tabular">
+                <thead><tr><th>Trin</th><th>Personer</th><th>Faldt fra</th><th>Videre</th></tr></thead>
+                <tbody>
+                  {steps.map((r, i) => {
+                    const before = i === 0 ? null : steps[i - 1].sessions;
+                    return (
+                      <tr key={r.step}>
+                        <td>{STEP_DA[r.step] ?? r.step}</td>
+                        <td>{r.sessions}</td>
+                        <td>{i === 0 ? '—' : r.lost || '—'}</td>
+                        <td>{before ? `${Math.round((r.sessions / before) * 100)} %` : '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="caption">
+              Unikke sessioner pr. trin, vores egen eventlog, test (utm_source=pwtest) fraregnet. «Billedet blev færdigt» er
+              jobbet, der blev færdigt; «Så sit billede» er det restaurerede billede indlæst og synligt på skærmen i mindst
+              et sekund. Forskellen mellem de to linjer er dem, der aldrig så resultatet.
+            </p>
+            <p className="small muted">
+              Omsætning pr. person, der så sit billede: {perViewer === null ? '–' : `${perViewer.toLocaleString('da-DK')} kr.`}
+              {' '}({(revenueOere / 100).toLocaleString('da-DK')} kr. betalt ÷ {sawResult} personer). Annonceforbrug ligger hos Meta
+              og indgår ikke her, så det er omsætning, ikke indtjening.
+            </p>
           </section>
         )}
         {!sp.status && (
@@ -182,10 +237,10 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
             <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Besøg · 30 dage</h2>
             <div style={{ overflowX: 'auto' }}>
               <table className="tabular">
-                <thead><tr><th>Kilde · kampagne · annonce</th><th>Besøg</th><th>Åbnede upload</th><th>Så preview</th><th>Købte</th></tr></thead>
+                <thead><tr><th>Kilde · kampagne · annonce</th><th>Besøg</th><th>Åbnede upload</th><th>Billede klar</th><th>Så det</th><th>Købte</th></tr></thead>
                 <tbody>
-                  {visitRows.map(([k, r]) => <tr key={k}><td>{k}</td><td>{r.PageView.size}</td><td>{r.FlowOpened.size}</td><td>{r.PreviewShown.size}</td><td>{r.Purchase.size}</td></tr>)}
-                  {visitRows.length === 0 && <tr><td colSpan={5} className="muted">Ingen besøg de sidste 30 dage.</td></tr>}
+                  {visitRows.map(([k, r]) => <tr key={k}><td>{k}</td><td>{r.PageView.size}</td><td>{r.FlowOpened.size}</td><td>{r.PreviewShown.size}</td><td>{r.PreviewViewed.size}</td><td>{r.Purchase.size}</td></tr>)}
+                  {visitRows.length === 0 && <tr><td colSpan={6} className="muted">Ingen besøg de sidste 30 dage.</td></tr>}
                 </tbody>
               </table>
             </div>

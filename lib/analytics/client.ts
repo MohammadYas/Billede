@@ -1,6 +1,6 @@
 'use client';
 
-export type ClientEvent = 'PageView' | 'ViewContent' | 'FlowOpened' | 'UploadStarted' | 'UploadCompleted' | 'ProcessingStarted' | 'PreviewShown' | 'PreviewFallback' | 'ColourViewed' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
+export type ClientEvent = 'PageView' | 'ViewContent' | 'FlowOpened' | 'UploadStarted' | 'UploadCompleted' | 'ProcessingStarted' | 'PreviewShown' | 'PreviewViewed' | 'PreviewReopened' | 'PreviewFallback' | 'ColourViewed' | 'ColourReady' | 'ColourFailed' | 'ProductSelected' | 'CheckoutClicked' | 'AddToCart' | 'InitiateCheckout' | 'CheckoutRedirected' | 'Purchase';
 
 declare global {
   interface Window { fbq?: (...args: unknown[]) => void; _fbq?: unknown; __gfConsent?: 'yes' | 'no' | null; }

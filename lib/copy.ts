@@ -1,7 +1,7 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
 import { CONFIG, campaignActive, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
-import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, RECOMMENDED_FORMAT, type Format } from '@/lib/pricing';
+import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, RECOMMENDED_FORMAT, digitalOffer, type Format } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
 
 /**
@@ -85,6 +85,10 @@ export function copy(season: Season = currentSeason()) {
     };
   };
   const priceFrom = sizes.length > 1 ? `fra ${price}` : price;
+  // The digital file: off until the owner sets a price (lib/pricing.ts digitalOffer). Every line that
+  // mentions it is built here, so turning it on is one environment variable and no code change.
+  const digital = digitalOffer();
+  const digitalPrice = formatDkk(digital.priceDkk);
 
   return {
     season,
@@ -179,7 +183,10 @@ export function copy(season: Season = currentSeason()) {
       carry: 'Dit valg følger med til bestillingssiden. Du kan skifte igen, når du har set dit billede.',
       note: `Restaurering, print, ramme, indpakning og fragt – ét beløb per billede.`,
     },
-    eksempler: { h2: 'Det kunne være jeres.', how: 'Billederne skifter selv mellem før og efter. Tryk på et billede, hvis du selv vil skifte.', colourOn: 'Se den i farver', colourOff: 'Se den i sort-hvid', detail: 'Nærbillede', lead: 'Bryllupsbilledet, barnet på trappen, bedsteforældrene i haven. Gulnet, ridset eller falmet – tag et foto af det, og se selv, hvad der kan gøres.', syntheticNote: 'Eksemplerne er ikke kundebilleder. Originalerne er fremstillet til at vise, hvad restaureringen gør ved folder, pletter og falmede farver – og selve restaureringen er kørt gennem præcis den samme proces som dit billede.', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
+    eksempler: { h2: 'Det kunne være jeres.', how: 'Billederne skifter selv mellem før og efter. Tryk på et billede, hvis du selv vil skifte.', colourOn: 'Se den i farver', colourOff: 'Se den i sort-hvid', detail: 'Nærbillede', lead: 'Bryllupsbilledet, barnet på trappen, bedsteforældrene i haven. Gulnet, ridset eller falmet – tag et foto af det, og se selv, hvad der kan gøres.', // Owner's correction, 2026-09-12: the "before" pictures are real old photographs with real damage,
+// not originals made up to demonstrate the repair. The note said the opposite and undersold the
+// proof. It still does not claim they are customers' photographs — that is a separate permission.
+syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – folder, ridser, gulstik og falmede farver. Hver restaurering her er kørt gennem præcis den samme proces som dit billede.', placeholderNote: 'Vi er nystartede og viser ikke kundebilleder, vi ikke har fået lov til at vise. Eksemplerne her er arkivfotos fra nordiske museer, Wikimedia Commons og Library of Congress – kørt gennem præcis den samme proces som dit. Dit eget resultat ser du om halvandet minut, før du bestiller noget.' },
     offer: {
       line: `Restaureret og indrammet, i den størrelse du vælger. Digital fil inkluderet. Fri fragt. Leveret ${levering}, efter du har godkendt billedet på mail.`,
       deadline: jul && days > 0 ? `Bestil senest ${dato} – så ligger det under træet.` : '',
@@ -220,6 +227,8 @@ export function copy(season: Season = currentSeason()) {
       again: 'Din upload blev afbrudt, før billedet nåede frem. Vælg det igen – det tager et øjeblik.',
       retry: 'Prøv igen',
     },
+    /** The digital-only product. `enabled: false` means no surface may offer it (lib/pricing.ts). */
+    digital: { enabled: digital.enabled, priceDkk: digital.priceDkk, price: digitalPrice },
     campaign: {
       active: kampagne,
       until: kampagneDato,
@@ -233,12 +242,6 @@ export function copy(season: Season = currentSeason()) {
       body: 'Ét til dig. Ét til den, der også husker det.',
       terms: `Det første ekstra eksemplar af samme billede, størrelse og ramme er gratis (værdi ${formatDkk(EXTRA_PRINT_DKK[format])}). Tilføjes med ét tryk på bestillingssiden.`,
       extra: `Lanceringstilbud til og med ${kampagneDato}: det første ekstra eksemplar er med i pakken uden beregning.`,
-      /** the dialog's three lines: the free look, the paid object with its price, the control before print */
-      points: [
-        'Tag et foto af det gamle billede, og se det restaureret gratis, før du beslutter noget.',
-        `Bestiller du – i ramme ${priceFrom} inkl. fragt – får du ét ekstra eksemplar med i pakken, til den der også husker det.`,
-        'Du godkender ansigterne, før vi printer.',
-      ],
     },
     hvem: { h2: 'Hvem står bag' },
     spoergsmaal: {
@@ -353,13 +356,16 @@ export function copy(season: Season = currentSeason()) {
     },
     processing: {
       stages: { uploading: 'Uploader', sending: 'Restaurerer', restoring: 'Restaurerer', preparing: 'Gør preview klar' } as Record<string, string>,
+      // "Ansigterne rører vi ikke ved" was not true and contradicted the FAQ two screens down, which
+      // explains that a changed face is corrected before print. What we can promise is the aim and the
+      // check, not that the model leaves faces alone.
       sentences: {
         uploading: 'Billedet er på vej til os.',
-        sending: 'Vi retter ridserne og henter kontrasten tilbage. Ansigterne rører vi ikke ved.',
-        restoring: 'Vi retter ridserne og henter kontrasten tilbage. Ansigterne rører vi ikke ved.',
+        sending: 'Vi retter ridserne og henter kontrasten tilbage. Ansigterne skal stadig ligne dem.',
+        restoring: 'Vi retter ridserne og henter kontrasten tilbage. Ansigterne skal stadig ligne dem.',
         preparing: 'Gør dit preview klar.',
       } as Record<string, string>,
-      more: ['Vi fjerner ridser, pletter og folder – ikke rynker.', 'Bagefter kigger et menneske på ansigterne, før noget bliver printet.'],
+      more: ['Vi fjerner ridser, pletter og folder – ikke rynker.', 'Bestiller du, kigger et menneske på ansigterne, før noget bliver printet.'],
       wait: 'Det tager omkring halvandet minut. Du kan roligt lukke siden – billedet ligger klar på forsiden, når du kommer tilbage.',
       slow: 'Det tager lidt længere i dag – billedet er stadig i gang. Du kan roligt lukke siden og komme tilbage om lidt.',
       steps: ['Modtager billedet', 'Restaurerer', 'Gør klar'],
@@ -381,20 +387,55 @@ export function copy(season: Season = currentSeason()) {
       h2: 'Her er dit billede.',
       howTo: 'Tryk på Før og Efter for at sammenligne.',
       nextStep: 'Se det i ramme og vælg størrelse',
+      nextStepDigital: 'Videre til bestilling',
       watermarkNote: 'Skriften hen over billedet er et vandmærke. Det er kun på skærmen – printet og din fil er uden.',
-      upsellTitle: 'Skal der et ekstra eksemplar med?',
-      upsellBody: kampagne ? 'Under lanceringstilbuddet er det første ekstra eksemplar gratis: samme billede, samme ramme, i samme pakke. Til den, der også husker det.' : `Samme billede, samme ramme, i samme pakke – ${formatDkk(EXTRA_PRINT_DKK[format])}. Til den, der også husker det.`,
-      upsellYes: kampagne ? 'Ja tak – læg ét med (0 kr.)' : `Ja tak – læg ét med (${formatDkk(EXTRA_PRINT_DKK[format])})`,
-      upsellNo: 'Nej tak, videre til betaling',
       hang: 'Sådan ser det ud i ramme.',
       specTail: 'ramme med passepartout og glas · digital fil · fri fragt',
       specMore: 'Se alt, der er med',
       specLess: 'Vis mindre',
 
-      next: `Det her er AI'ens første forslag. Bestiller du, gennemgår ${navn} billedet – især ansigterne – og du godkender det færdige billede på mail, før vi printer.`,
+      /**
+       * What the customer is looking at, said once and said straight. Three facts, none of them
+       * flattering by omission: this is the real restoration but at screen size and with a watermark;
+       * ordering makes the print-quality file, which is a second, better run rather than an upscale of
+       * this one; and a person looks at that file before anything is printed. The old line ("AI'ens
+       * første forslag") made the picture they had just fallen for sound like a draft.
+       */
+      next: `Sådan ser din restaurering ud. Bestiller du, laver vi den færdige fil i trykkvalitet, og ${navn} gennemgår den – især ansigterne. Du ser det færdige billede på mail og siger ja, før vi printer.`,
+      nextDigital: `Sådan ser din restaurering ud. Bestiller du, laver vi den færdige fil i trykkvalitet uden vandmærke, og ${navn} gennemgår den – især ansigterne. Du ser det færdige billede på mail og siger ja, før filen bliver din.`,
       headNote: 'Fri fragt · du godkender før print',
       payWhenPre: 'Du betaler',
       payWhenPost: 'nu. Vi printer først, når du har set det færdige billede og sagt ja.',
+      payWhenPostDigital: 'nu. Du får filen, når du har set det færdige billede og sagt ja.',
+      /**
+       * The whole path from this page to the thing in their hands, in the order it happens. One list,
+       * one voice: every other surface (the order mail, /tak, the approval page) says the same four
+       * things in the same order.
+       */
+      afterTitle: 'Sådan foregår det herfra',
+      afterSteps: [
+        ['Du betaler nu', `${pay} via Stripe. Beløbet trækkes ved bestillingen.`],
+        ['Inden 24 timer', `${cap(navn)} laver den færdige fil i trykkvalitet og gennemgår den – især ansigterne.`],
+        ['Inden 48 timer', 'Du får det færdige billede på mail. Godkend det, eller bed om en ændring – så mange gange det skal være.'],
+        ['Efter dit ja', `Vi printer, rammer ind og sender – leveret ${levering}. Den digitale fil i høj opløsning kan du hente med det samme.`],
+      ] as [string, string][],
+      afterStepsDigital: [
+        ['Du betaler nu', `${pay} via Stripe. Beløbet trækkes ved bestillingen.`],
+        ['Inden 24 timer', `${cap(navn)} laver den færdige fil i trykkvalitet og gennemgår den – især ansigterne.`],
+        ['Inden 48 timer', 'Du får det færdige billede på mail. Godkend det, eller bed om en ændring – så mange gange det skal være.'],
+        ['Efter dit ja', 'Filen i høj opløsning uden vandmærke er klar til download med det samme. Intet bliver sendt med posten.'],
+      ] as [string, string][],
+      afterHelp: email ? `Går noget galt, så ${skrivTil} på ${email}. Vi svarer inden 24 timer, og indtil du har godkendt, kan du få hele beløbet tilbage.` : 'Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.',
+      /** The product choice, shown only while the digital offer is on. */
+      productTitle: 'Hvad skal du have?',
+      productFramed: 'I ramme, sendt hjem',
+      productFramedHint: `Print, ramme, glas og fri fragt – og den digitale fil oveni. ${cap(priceFrom)}`,
+      productDigital: 'Kun den digitale fil',
+      productDigitalHint: `Filen i høj opløsning uden vandmærke. Ingen pakke, ingen fragt. ${digitalPrice}`,
+      productNote: 'Du kan skifte, så længe du ikke har betalt.',
+      digitalSummary: 'Digital fil i høj opløsning',
+      digitalNote: 'Filen er klar til download, når du har godkendt det færdige billede – ikke med det samme.',
+      ctaDigital: 'Køb den digitale fil',
       sizeTitle: 'Størrelse',
       recommended: 'Anbefalet',
       copiesOne: 'eksemplar',
@@ -421,8 +462,15 @@ export function copy(season: Season = currentSeason()) {
         'Ligner det ikke, får du hele beløbet tilbage',
         `Billedet bruges kun til din bestilling – og slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller`,
       ] as string[],
+      trustDigital: [
+        'Du godkender det færdige billede på mail, før filen bliver din',
+        'Ligner det ikke, får du hele beløbet tilbage',
+        `Billedet bruges kun til din bestilling – og slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller`,
+      ] as string[],
       shipping: 'Fragt og indpakning',
       shippingFree: 'Inkluderet',
+      deliveryDigital: 'Levering',
+      deliveryDigitalValue: 'Download efter din godkendelse',
       total: 'I alt',
       vat: 'inkl. moms',
       steps: ['Dit billede', 'Størrelse og ramme', 'Betaling'] as string[],

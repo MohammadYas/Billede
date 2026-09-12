@@ -1,9 +1,19 @@
 import { CONFIG, campaignActive } from '@/lib/config';
 import type { Order } from '@/lib/db/orders';
-import { formatLabelFor, formatOere, quote, readAddOns, type Quote, type QuoteLine } from '@/lib/pricing';
+import { formatLabelFor, formatOere, quote, readAddOns, type Product, type Quote, type QuoteLine } from '@/lib/pricing';
 
-type Meta = { addons?: unknown; repeat_of?: string; share_token?: string; gift_note?: string; output?: { width?: number; height?: number }; quote?: { lines?: QuoteLine[]; totalOere?: number } };
+type Meta = { product?: unknown; addons?: unknown; repeat_of?: string; share_token?: string; gift_note?: string; output?: { width?: number; height?: number }; quote?: { lines?: QuoteLine[]; totalOere?: number } };
 const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
+
+/**
+ * What this order is: the framed parcel or the file alone. Read from the order, not from today's
+ * configuration — an order placed while the digital offer was on stays a digital order after it is
+ * switched off again, or its own receipt would start describing a frame nobody bought.
+ */
+export function orderProduct(o: Order): Product {
+  return metaOf(o).product === 'digital' ? 'digital' : 'framed';
+}
+export const isDigitalOrder = (o: Order): boolean => orderProduct(o) === 'digital';
 
 /**
  * The order's own quote. Once checkout has run, the lines are whatever the customer agreed to — read
@@ -24,7 +34,10 @@ export function orderLabel(o: Order): string {
 export function orderQuote(o: Order): Quote {
   const m = metaOf(o);
   const a = readAddOns(m.addons);
-  const live = quote({ format: o.format, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(o), campaign: campaignActive() });
+  // the stored product is re-quoted with the offer forced on: an order that was digital stays digital,
+  // whatever the flag says today, and its snapshot lines are what the receipt prints anyway
+  const product = orderProduct(o);
+  const live = quote({ product, digital: product === 'digital' ? { enabled: true, priceDkk: Math.round((o.amount ?? 0) / 100) } : undefined, format: o.format, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(o), campaign: campaignActive() });
   const snap = m.quote;
   if (snap?.lines?.length && typeof snap.totalOere === 'number') return { ...live, lines: snap.lines, totalOere: snap.totalOere };
   return live;
@@ -33,6 +46,8 @@ export function orderQuote(o: Order): Quote {
 /** "30×40 cm · sort ramme · i farver · 2 ekstra eksemplarer" — for mails, admin and the print checklist. */
 export function orderDescription(o: Order): string {
   const a = readAddOns(metaOf(o).addons);
+  // a file has no size, no frame and no copies; only the colour choice survives
+  if (isDigitalOrder(o)) return ['Digital fil i høj opløsning', o.chosen_colour ? 'i farver' : 'sort-hvid'].join(' · ');
   return [
     orderLabel(o),
     isLandscape(o) ? 'liggende' : '',
