@@ -7,7 +7,28 @@ unverified. Items in **bold** block the test.
 
 Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
 
-## Status 2026-09-11, aften (read this first)
+## Status 2026-09-12, middag (read this first)
+
+**Four days in: 398,10 kr. spent of the 1.500 kr. limit, 0 customers.** Still running — 58,20 kr. by 11:38 UTC today against 170,28 kr. yesterday. Exactly one order has ever been paid: `17b47d56`, 8 Sep, 599 kr., the owner's own test, still awaiting refund.
+
+**The break is confirmed, and it is after the picture.** Real Facebook traffic over 48 h: 87 sessions → 20 opened the flow → 10 uploaded → **10 got a finished preview** → **0 chose a size** → 0 reached payment. Direct traffic over the same window: 110 → 7 → 5 → 5 → 1 → 1. Delivery is not the problem — ten uploads produced ten previews. The next click is. At ~35 kr. per delivered preview the traffic price is fine; one buyer in ten at 599 kr. would carry it. `n = 10`, so this is a signal, not a proof — but it is now the same answer two days running.
+
+**Spend is badly distributed.** Cost per link click over the campaign's life: FINAL_COLD_01 1,23 kr. (30 clicks, 37 kr.), FINAL_COLD_03 1,81 (70, 127 kr.), FINAL_COLD_02 2,82 (4, 11 kr.), FINAL_COLD_04 4,43 (27, 120 kr.), FINAL_COLD_05_farvepris **11,49** (9, 103 kr.). COLD_04 and COLD_05 took 56 % of the money for 26 % of the clicks; COLD_01 is nine times cheaper than COLD_05 and has had 37 kr. **Owner: pause FINAL_COLD_05_farvepris, pause or halve FINAL_COLD_04, leave the rest running.**
+
+**Meta still sees about an eighth.** Four days: 4 view_content, 1 landing_page_view. The site logged 128 ViewContent with UTM in 48 h.
+
+**Four bugs found in the data and fixed (commits `90fa0df`, `f273ccd`, pushed to `billedarv-redesign`; `npm run build` and `tsc --noEmit` both green).**
+
+- **Attribution was broken.** `UploadCompleted`, `PreviewShown` and `PreviewFallback` are logged from the background job, which has no request cookie, so they carried no UTM at all — 0 of 32 previews could be traced to an ad, and ROAS per ad could not be measured. They read the UTM off the order now (`orders.utm` is populated: 32 of 38).
+- **The progress bar sat at 100 % for the half minute 'preparing' takes** — that stage fell through to the final `: 100` in the pct expression (`UploadFlow.tsx`). It has its own 90→99 curve now; only PREVIEW_READY claims 100.
+- **Choosing colour then another size dropped the wall mockup to black-and-white** for 40x50 and 50x70, and cached it for a quarter of an hour. Only the starting size gets its colour wall inside the preview job. The image route now borrows the colour wall from another frame in the same size first, and a fallen-back response is sent `no-store`.
+- **The cookie banner landed on the Før|Efter switch** in the second the picture arrives (`body.has-pv-bar:not(.pv-bar-on) .consent { bottom: 0 }`). The preview page holds it until the order bar is up, or ten seconds, whichever comes first.
+
+**Tooling corrections.** Composio's Meta Ads **reads work** — `METAADS_GET_INSIGHTS` returned per-ad spend and actions without trouble (the older "API access blocked" note is wrong for reads; writes are still unavailable). Supabase SQL through Composio (`supabase_jonas-espial`, `SUPABASE_BETA_RUN_SQL_QUERY`, project `xsdgbjheochbneauhado`) is the fastest way to the funnel — always exclude `utm->>'utm_source' = 'pwtest'`, which was 17 of 38 orders and 10 of 11 checkouts in this window. A push to `main` was refused by the auto-mode classifier; Netlify builds `billedarv-redesign`, so deploys are unaffected and `main` is only cosmetically behind.
+
+Full write-up with the funnel and the ledger: https://claude.ai/code/artifact/053b9214-799c-4791-a1c4-1204dbbfeee0
+
+## Status 2026-09-11, aften
 
 **The question was "8 previews, 0 sales". The break is before the decision, not at the price.** Every ad session that reached a finished picture opened it — ten of them — and not one touched a size, a frame, a colour toggle or a payment. Three went back and uploaded another photograph instead; one did it three times. Stripe has fourteen checkout sessions since 9 Sep and every one traces to an agent test order: no real visitor has ever opened a payment page.
 
