@@ -74,6 +74,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
   const runRef = useRef(0); // bumped on every close: an in-flight start() sees it and stops
   const pollRef = useRef<number | null>(null);
   const sendingAt = useRef(0); // when the restoration was accepted: the bar's estimate counts from here
+  const preparingAt = useRef(0); // when the server reached 'preparing': the last stretch counts from here
   const [now, setNow] = useState(0);
   useEffect(() => {
     if (state.kind !== 'processing') return;
@@ -210,6 +211,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
         if (myRun !== runRef.current) return;
         if (st.status === 'PREVIEW_READY' && st.payload) {
           track('UploadCompleted', {}); track('PreviewShown', { monochrome: st.payload.isMonochrome }, { eventId: orderId }); // same event_id as the CAPI copy
+          preparingAt.current = 0; // the last stretch is over: the bar may claim 100 now
           setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'preparing', percent: 100 } : cur));
           router.push(`/p/${orderId}?t=${encodeURIComponent(token)}`);
           return;
@@ -222,6 +224,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
           fail(file, thumb, c.processing.timeout, c.processing.timeoutTitle, orderId, token);
           return;
         }
+        if (st.job?.stage === 'preparing' && !preparingAt.current) preparingAt.current = Date.now();
         if (st.job?.stage) setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: st.job?.stage === 'preparing' ? 'preparing' : 'sending', percent: 100 } : cur));
       } catch { /* transient: keep polling */ }
       if (myRun !== runRef.current) return;
@@ -241,6 +244,7 @@ export default function UploadFlow({ c }: { c: Copy }) {
     track('ProcessingStarted', {}, { serverLog: true }); // the file is in the bucket and the restoration was accepted
     if (runAtCall !== runRef.current) return;
     sendingAt.current = Date.now();
+    preparingAt.current = 0;
     setState({ kind: 'processing', stage: 'sending', percent: 100, file, thumb, orderId, token });
     poll(orderId, token, file, thumb);
   };
@@ -327,9 +331,11 @@ export default function UploadFlow({ c }: { c: Copy }) {
   if (state.kind === 'closed') return null;
   const processing = state.kind === 'processing';
   // upload 0–30 %, then an estimate that climbs towards 90 % over the model's ~60 s (a curve, so it never stops moving
-  // and never claims done), 94 % once stored, 100 % when the preview is ready
+  // and never claims done), 94 % once stored, a last curve towards 99 % while the file is prepared, 100 % only when the
+  // preview is ready — 'preparing' can run half a minute, so the bar must keep moving through it
   const elapsed = processing && state.stage === 'sending' ? Math.max(0, (now || Date.now()) - sendingAt.current) : 0;
-  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? Math.min(90, 30 + 60 * (1 - Math.exp(-elapsed / 40_000))) : state.stage === 'restoring' ? 94 : 100) : 0;
+  const preparingFor = processing && state.stage === 'preparing' && preparingAt.current ? Math.max(0, (now || Date.now()) - preparingAt.current) : 0;
+  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? Math.min(90, 30 + 60 * (1 - Math.exp(-elapsed / 40_000))) : state.stage === 'restoring' ? 94 : state.stage === 'preparing' && preparingAt.current ? Math.min(99, 90 + 9 * (1 - Math.exp(-preparingFor / 15_000))) : 100) : 0;
   const stepIndex = processing ? (state.stage === 'uploading' ? 0 : state.stage === 'preparing' ? 2 : 1) : 0;
   const sentence = processing ? (state.stage === 'sending' && phase > 0 ? c.processing.more[phase - 1] : c.processing.sentences[state.stage]) : '';
 

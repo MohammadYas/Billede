@@ -157,7 +157,7 @@ export async function processRestore(orderId: string): Promise<void> {
       await putObject(restoredPath, result.restored);
       await setStatus(order.id, 'MANUAL_REVIEW', { original_path: originalPath, restored_path: restoredPath, is_monochrome: result.isMonochrome, preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta } });
       await setJob(orderId, { kind: 'restore', state: 'done', reason: result.meta.reviewReasons.join(',') });
-      await logEvent('PreviewFallback', { sessionId, orderId, meta: { reasons: result.meta.reviewReasons } });
+      await logEvent('PreviewFallback', { sessionId, orderId, utm: order.utm, meta: { reasons: result.meta.reviewReasons } });
       await notifyOwner(`Manuel vurdering · ordre ${order.id.slice(0, 8)}`, [`Årsag: ${result.meta.reviewReasons.join(', ')}`, 'Kunden får en mail-formular; svar inden 24 timer.'], order.id);
       return;
     }
@@ -211,8 +211,10 @@ export async function processRestore(orderId: string): Promise<void> {
       preview_meta: { ...metaOf((await getOrder(orderId))!), ...result.meta, mockups: { ...mockups, ...colourMockups }, ...(colourPaths ? { colourised_full_path: colourPaths.full } : {}) },
     });
     await setJob(orderId, { kind: 'restore', state: 'done', finishedAt: new Date().toISOString() });
-    await logEvent('UploadCompleted', { sessionId, orderId });
-    await logEvent('PreviewShown', { sessionId, orderId, meta: { ms: result.meta.durationMs, ssim: result.meta.ssim } });
+    // the background job has no request cookie, so the UTM has to come off the order — without it these three
+    // events land unattributed and no ad can be measured past the upload
+    await logEvent('UploadCompleted', { sessionId, orderId, utm: order.utm });
+    await logEvent('PreviewShown', { sessionId, orderId, utm: order.utm, meta: { ms: result.meta.durationMs, ssim: result.meta.ssim } });
     // the one event the first campaign optimises for: server-side too, same event_id as the pixel's copy
     await sendServerEvent('PreviewShown', { eventId: order.id, order: ready, sourceUrl: eventSourceUrl(`/p/${order.id}`) });
 
@@ -254,7 +256,7 @@ export async function processRestore(orderId: string): Promise<void> {
       await setStatus(order.id, 'MANUAL_REVIEW', { preview_meta: { ...metaOf((await getOrder(orderId)) ?? order), error: String(e instanceof Error ? e.message : e) } });
       await setJob(orderId, { kind: 'restore', state: 'failed', reason });
     }
-    await logEvent('PreviewFallback', { sessionId, orderId, meta: { reason } });
+    await logEvent('PreviewFallback', { sessionId, orderId, utm: order.utm, meta: { reason } });
   }
 }
 
