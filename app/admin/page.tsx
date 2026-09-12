@@ -190,6 +190,15 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
               jobbet, der blev færdigt; «Så sit billede» er det restaurerede billede indlæst og synligt på skærmen i mindst
               et sekund. Forskellen mellem de to linjer er dem, der aldrig så resultatet.
             </p>
+            {/* Two honest caveats. Without them the table invites two wrong readings, and a number that
+                can be misread is worse than no number. */}
+            <p className="caption">
+              To forbehold. <b>Trinene er ikke strengt indlejrede:</b> nogle trin skrives af browseren (åbnede upload, valgte
+              billede, valgte produkt, trykkede bestil) og andre af serveren (billedet blev færdigt, betalingsside oprettet,
+              betalte), og de to kilder mister ikke det samme. Et servertrin kan derfor stå højere end browsertrinnet over
+              det – sammenlign nabolinjer, ikke kolonnens top og bund. <b>«Så sit billede» blev først målt 12. september:</b>
+              alt før den dato tæller nul på den linje, uanset hvor mange der rent faktisk så deres billede.
+            </p>
             <p className="small muted">
               Omsætning pr. person, der så sit billede: {perViewer === null ? '–' : `${perViewer.toLocaleString('da-DK')} kr.`}
               {' '}({(revenueOere / 100).toLocaleString('da-DK')} kr. betalt ÷ {sawResult} personer). Annonceforbrug ligger hos Meta
