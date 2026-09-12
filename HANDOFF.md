@@ -15,6 +15,8 @@ Nothing in this list is code. The code is done and verified; each line below is 
 
 **Spend is badly distributed.** Cost per link click over the campaign's life: FINAL_COLD_01 1,23 kr. (30 clicks, 37 kr.), FINAL_COLD_03 1,81 (70, 127 kr.), FINAL_COLD_02 2,82 (4, 11 kr.), FINAL_COLD_04 4,43 (27, 120 kr.), FINAL_COLD_05_farvepris **11,49** (9, 103 kr.). COLD_04 and COLD_05 took 56 % of the money for 26 % of the clicks; COLD_01 is nine times cheaper than COLD_05 and has had 37 kr. **Owner: pause FINAL_COLD_05_farvepris, pause or halve FINAL_COLD_04, leave the rest running.**
 
+**How far they actually got — this is the sharpest number we have.** Over 72 h, **11 Facebook sessions loaded the finished preview page**, and in 10 of the 11 the last event ever logged is that page's own PageView. **Not one of the eleven touched the colour toggle or a size.** The eleventh came back to the front page nineteen minutes later and started over with another picture. For contrast, the colour toggle was used in 15 sessions on 11 Sep — none of them from an ad. That rules the price out as the explanation: they never reached it. What is left is the picture itself, or the page it lands on — and on that page the cookie banner sat on the Før|Efter switch, the first thing anyone can touch, in the second the picture arrived. Fixed and live as of 12 Sep 11:50 UTC (verified: `pv-consent-hold .consent{display:none}` is in the deployed CSS bundle).
+
 **Meta still sees about an eighth.** Four days: 4 view_content, 1 landing_page_view. The site logged 128 ViewContent with UTM in 48 h.
 
 **Four bugs found in the data and fixed (commits `90fa0df`, `f273ccd`, pushed to `billedarv-redesign`; `npm run build` and `tsc --noEmit` both green).**
