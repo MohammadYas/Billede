@@ -3,7 +3,7 @@ import { isAdmin } from '@/lib/admin/auth';
 import { getOrder } from '@/lib/db/orders';
 import { signedUrl } from '@/lib/db/storage';
 import { FORMATS, formatLabel, PRICING } from '@/lib/pricing';
-import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
+import { orderProduct, orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
 import { STATUS_FLOW } from '@/lib/db/orders';
 import { ManualProvider } from '@/lib/fulfillment/manual';
 import { actionCheckPayment, actionFulfillment, actionNote, actionRedraw, actionSendApproval, actionSetFormat, actionSetStatus, actionToggleColour } from '@/lib/admin/actions';
@@ -33,6 +33,10 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
     final: order.final_path ? await signedUrl(order.final_path) : null,
   };
   const checklist = order.final_path ? new ManualProvider().checklist(order, urls.final ?? '') : null;
+  // what was actually bought. The framed parcel is the only one with a size, a frame and a courier;
+  // showing those controls on a 99 kr. file invites the owner to change something that does not exist.
+  const product = orderProduct(order);
+  const posted = product !== 'digital';
   const addr = order.shipping_address as Record<string, string> | null;
   const likeness = meta.likeness as Record<string, unknown> | undefined;
   const job = getJob(order);
@@ -40,7 +44,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const next: string | null = order.status === 'PAID' ? 'Næste: generér eller upload final, send godkendelsesmail (inden 48 timer fra betaling).'
     : order.status === 'CHANGE_REQUESTED' ? 'Næste: ret efter kundens besked, upload ny final, send ny godkendelsesmail (inden 48 timer).'
     : order.status === 'AWAITING_APPROVAL' ? `Venter på kundens ja${days(order.awaiting_approval_at) !== null ? ` i ${days(order.awaiting_approval_at)} dage` : ''}. Efter 7 dage: skriv personligt til kunden.`
-    : order.status === 'APPROVED' ? 'Næste: bestil print hos partneren (tjekliste nederst), sæt IN_PRODUCTION.'
+    : order.status === 'APPROVED' ? (posted ? 'Næste: bestil print hos partneren (tjekliste nederst), sæt IN_PRODUCTION.' : 'Næste: kunden har hentet filen selv. Der skal ikke bestilles eller sendes noget – sæt FULDFØRT.')
     : order.status === 'IN_PRODUCTION' ? 'Næste: når pakken er sendt, gem tracking og sæt SHIPPED (mailen går automatisk).'
     : order.status === 'MANUAL_REVIEW' ? 'Næste: vurder billedet, svar kunden på mail inden 24 timer.'
     : null;
@@ -52,7 +56,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         {msg && <p className="small notice" role="status">{msg}</p>}
         <div style={{ display: 'grid', gap: 'var(--s2)' }}>
           <h1 style={{ fontSize: 'var(--fs-h2)' }}>Ordre {order.id.slice(0, 8)} <span className="adm-status">{statusDa(order.status)}</span></h1>
-          <p className="small">{orderDescription(order)}{order.amount ? ` · ${(order.amount / 100).toLocaleString('da-DK')} kr.` : ''}</p>
+          <p className="small"><b>{product === 'digital' ? 'KUN DIGITAL FIL' : product === 'print' ? 'LØST PRINT – INGEN RAMME' : 'I RAMME'}</b> · {orderDescription(order)}{order.amount ? ` · ${(order.amount / 100).toLocaleString('da-DK')} kr.` : ''}</p>
         </div>
 
         {next && <p className="notice" style={{ fontWeight: 600 }}>{next}</p>}
@@ -100,6 +104,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
             <p className="caption">“Sendt” sender “Dit billede er på vej” (gem tracking først). “Refunderet” refunderer via Stripe og skriver til kunden.</p>
           </form>
 
+          {product === 'framed' && (
           <form action={actionSetFormat.bind(null, order.id)} className="adm-card">
             <h3>Format</h3>
             <div className="field"><label htmlFor="format">Størrelse</label>
@@ -108,6 +113,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
               </select></div>
             <button className="btn btn-quiet" type="submit">Skift format</button>
           </form>
+          )}
 
           <div className="adm-card">
             <h3>Færdig fil</h3>
@@ -128,6 +134,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
             {order.approval_token && <p className="caption">Kundens link: /godkend/{order.approval_token}</p>}
           </form>
 
+          {posted && (
           <form action={actionFulfillment.bind(null, order.id)} className="adm-card">
             <h3>Print og forsendelse</h3>
             <div className="field"><label htmlFor="reference">Ordrereference hos laboratoriet</label><input id="reference" name="reference" defaultValue={order.fulfillment_reference ?? ''} /></div>
@@ -135,6 +142,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
             <div className="field"><label htmlFor="tracking_url">Tracking-link</label><input id="tracking_url" name="tracking_url" type="url" defaultValue={order.tracking_url ?? ''} /></div>
             <button className="btn btn-quiet" type="submit">Gem</button>
           </form>
+          )}
 
           <form action={actionNote.bind(null, order.id)} className="adm-card">
             <h3>Intern note</h3>
@@ -145,7 +153,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
 
         {checklist && (
           <section>
-            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>Tjekliste – bestil print</h2>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600 }}>{posted ? 'Tjekliste – bestil print' : 'Tjekliste – digital levering'}</h2>
             <ol className="small" style={{ paddingLeft: '1.2em', display: 'grid', gap: 'var(--s2)', maxWidth: '50em' }}>
               {checklist.map((c, i) => <li key={i}>{c}</li>)}
             </ol>

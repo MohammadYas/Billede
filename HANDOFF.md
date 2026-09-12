@@ -7,6 +7,33 @@ unverified. Items in **bold** block the test.
 
 Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
 
+## Status 2026-09-12, nat — leveringssiden af de nye produkter
+
+**The two small products were in the shop before they were on the packing bench. Four things were wrong, all fixed.** None of them had reached a customer — the products went live a few hours earlier and nobody has bought one — but every one of them would have, on the first order.
+
+- **The bench checklist told the owner to order a framed print at CEWE for every order.** For a 99 kr. file that is an instruction to buy and post a frame — more than the order is worth — addressed to "(adresse mangler)", because a file collects no address. For the 250 kr. loose print it ordered the wrong product: "Billede i ramme … ramme: SORT … passepartout". Each product now has its own list: the file says check the download and set FULDFØRT, the loose print says LØST PRINT, no frame, no glass, packed flat between card.
+- **The shipping mail told a customer who bought a file that their parcel was "printet, indrammet og pakket".** `shippedNotice` returns `null` for a digital order now — there is no parcel, so there is no mail — and for a loose print it says posted flat between card, and asks about a bent print rather than broken glass.
+- **Changing the size in admin on an unpaid digital order rewrote 99 kr. to 599 kr.**, because the re-quote ran on the framed ladder. It carries the order's own product now.
+- **"Godkendt – bestil print"** went to the owner for an order with nothing to print. It says "filen er hentet frem … sæt ordren til FULDFØRT" for a file.
+
+**Admin no longer shows controls for things a product does not have.** The size picker only appears for the framed parcel, the tracking card only for something that is actually posted, the checklist heading follows what the list asks for, and the order's headline now says `KUN DIGITAL FIL` / `LØST PRINT – INGEN RAMME` / `I RAMME` before anything else.
+
+**The delivery path is verified, not assumed.** `tests/delivery.browser.mjs` drives a fixture order through the approval page and the download for both new products — 26/26 — and puts it back exactly as it found it. It pays for nothing, generates nothing and sends no customer mail: the order is moved through the state machine directly and `final_path` points at the restoration already in storage. The file really downloads: HTTP 200, `image/jpeg`, 216 kB.
+
+**The payment route now has the tests it never had.** `tests/checkout.test.mts`, 8 of them, on the only route where a mistake costs money: the amount is built on the server whatever the browser sends (a body carrying `amount: 1` is charged 999 kr.), a product whose offer is off cannot be bought however it is asked for, only a finished unpaid preview can be paid, somebody else's preview is "not found" rather than "forbidden", and a Checkout tab left open is expired before a new one is made. They were mutation-tested: deliberately letting the browser pick the product turns two of them red.
+
+### **Owner, a date is going to change the site by itself: 1 October**
+
+`CHRISTMAS_START_DATE` is **2026-10-01** in Netlify production, while `lib/config.ts` defaults to **2026-11-14**. Nobody is wrong — they simply disagree, and the deployed one wins. On 1 October, with no deploy and nobody watching, the live site becomes a Christmas shop: the hero eyebrow turns into "Julegaven 2026 · bestil senest 2. december, så er den under træet", the FAQ and the closing line change, and **every delivery promise on the site becomes "inden jul" instead of "inden 10 hverdage"**. The same day, the launch offer (`CAMPAIGN_END_DATE=2026-09-30`) switches off. Two changes of character at once.
+
+Nothing is broken by it — the promise is true with 62 days to spare, and the arithmetic is now pinned by `tests/campaign.test.mts` (the offer ends on its last day and never restarts, a broken date turns it off rather than leaving it on forever, the countdown never promises a day that has passed, and the copy stops saying "gratis" the moment the offer ends). It is a marketing decision that happens on a date nobody chose to be watching. **Pick one:**
+
+```bash
+npx netlify env:set CHRISTMAS_START_DATE 2026-11-14 --context production
+```
+
+— or leave it and know that the site changes on 1 October.
+
 ## Status 2026-09-12, sen aften — konverteringsrunden (read this first)
 
 **What this round went at.** The break is after the picture: eleven ad sessions loaded a finished preview over 72 h and not one touched a size. So the result page became the place you buy, the measurement learned to tell "the job finished" from "a person looked at it", and the price ladder got two cheap rungs under it.

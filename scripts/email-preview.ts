@@ -13,9 +13,11 @@ async function main() {
     change: changeReceived({ text: 'Min mors øjne er blevet for mørke.' }),
     refund: refundNotice({ amount: 599 }),
     approval: approvalRequest({ imageUrl: 'file://' + process.cwd() + '/public/examples/olesen-after.jpg', approveUrl: 'https://billedearv.dk/godkend/x', changeUrl: 'https://billedearv.dk/godkend/x/aendring' }),
-    shipped: shippedNotice({ trackingNumber: '00570123456789', trackingUrl: 'https://tracking.postnord.com/?id=00570123456789' }),
+    shipped: shippedNotice({ product: 'framed', trackingNumber: '00570123456789', trackingUrl: 'https://tracking.postnord.com/?id=00570123456789' }),
+    shippedPrint: shippedNotice({ product: 'print', trackingNumber: '00570123456789', trackingUrl: 'https://tracking.postnord.com/?id=00570123456789' }),
   };
-  for (const [k, m] of Object.entries(mails)) await fs.writeFile(`work/emails/${k}.html`, m.html);
+  // a digital order has no shipping mail at all, so the map can hold a null
+  for (const [k, m] of Object.entries(mails)) if (m) await fs.writeFile(`work/emails/${k}.html`, m.html);
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'], proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' } : undefined });
   const page = await browser.newPage({ viewport: { width: 600, height: 900 } });
   await page.goto('file://' + process.cwd() + '/work/emails/approval.html');

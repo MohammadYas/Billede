@@ -6,7 +6,7 @@ import { isFormat, quote, readAddOns } from '@/lib/pricing';
 import { sendApprovalMail } from '@/lib/approval';
 import { refundNotice, shippedNotice, siteUrl } from '@/lib/email/templates';
 import { reconcileOrder } from '@/lib/reconcile';
-import { isLandscape } from '@/lib/order-summary';
+import { isLandscape, orderProduct } from '@/lib/order-summary';
 import { sendMail } from '@/lib/email/send';
 import { paymentProvider } from '@/lib/payments/stripe';
 
@@ -30,8 +30,9 @@ export async function actionSetStatus(id: string, formData: FormData) {
     back(id, 'Refunderet via Stripe – kunden har fået besked');
   }
   if (status === 'SHIPPED' && order.customer_email) {
-    const mail = shippedNotice({ trackingNumber: order.tracking_number, trackingUrl: order.tracking_url, fileUrl: order.approval_token && order.final_path ? siteUrl(`/godkend/${order.approval_token}/fil`) : null });
-    await sendMail({ to: order.customer_email, ...mail }).catch((e) => console.error(e));
+    // a digital order has nothing in the post, so shippedNotice returns null rather than promising a parcel
+    const mail = shippedNotice({ product: orderProduct(order), trackingNumber: order.tracking_number, trackingUrl: order.tracking_url, fileUrl: order.approval_token && order.final_path ? siteUrl(`/godkend/${order.approval_token}/fil`) : null });
+    if (mail) await sendMail({ to: order.customer_email, ...mail }).catch((e) => console.error(e));
   }
   await setStatus(id, status);
   back(id, `Status: ${status}`);
@@ -55,7 +56,11 @@ export async function actionSetFormat(id: string, formData: FormData) {
   // format was changed after payment so nobody has to work out why the numbers differ
   const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
   const a = readAddOns(meta.addons);
-  const q = quote({ format: f, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(order) });
+  // the product comes off the order: re-quoting a digital order on the framed ladder would rewrite
+  // 99 kr. to 599 kr. because somebody touched a size that product does not even have
+  const product = orderProduct(order);
+  const paidDkk = Math.round((order.amount ?? 0) / 100);
+  const q = quote({ product, offers: { print: { enabled: product === 'print', priceDkk: paidDkk }, digital: { enabled: product === 'digital', priceDkk: paidDkk } }, format: f, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(order) });
   const paid = Boolean(order.paid_at);
   await updateOrder(id, paid
     ? { format: f, internal_notes: `${order.internal_notes ?? ''}\nFormat ændret til ${f} efter betaling; beløbet står uændret.`.trim() }

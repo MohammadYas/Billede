@@ -1,6 +1,6 @@
 import { CONFIG, deliveryPromise } from '@/lib/config';
 import { getFounder, fornavn } from '@/lib/founder';
-import type { Format } from '@/lib/pricing';
+import type { Format, Product } from '@/lib/pricing';
 import { isDigitalOrder, orderProduct, orderDescription, orderLabel, orderLines, repeatLink } from '@/lib/order-summary';
 
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
@@ -130,20 +130,30 @@ export function approvalRequest(opts: { imageUrl: string; approveUrl: string; ch
  * Tracking is printed only when the owner has typed one in; nothing is ever made up. Without one, the
  * mail says so, so the customer is not left refreshing a page that does not exist.
  */
-export function shippedNotice(opts: { trackingNumber: string | null; trackingUrl: string | null; fileUrl?: string | null }): { subject: string; html: string; text: string } {
+export function shippedNotice(opts: { product?: Product; trackingNumber: string | null; trackingUrl: string | null; fileUrl?: string | null }): { subject: string; html: string; text: string } | null {
+  // Nothing was posted, so there is no shipping mail to send. The file was delivered on approval and
+  // the customer already has the link; a "din pakke er på vej" would be a parcel that never arrives.
+  if (opts.product === 'digital') return null;
+  const framed = opts.product !== 'print';
   const subject = 'Dit billede er på vej';
   const track = opts.trackingUrl
     ? `<a href="${opts.trackingUrl}" style="color:#1F5A3C;">${esc(opts.trackingNumber ?? 'Følg pakken')}</a>`
     : esc(opts.trackingNumber ?? '');
   const noTrack = 'Der er ikke noget sporingsnummer på denne pakke. Hører du ikke fra fragtfirmaet inden for et par hverdage, så svar på denne mail.';
+  const packed = framed
+    ? 'Det er printet, indrammet og pakket. Nu er det hos fragtfirmaet.'
+    : 'Det er printet og pakket fladt mellem pap, så det ikke bukker undervejs. Nu er det hos fragtfirmaet.';
+  const damage = framed
+    ? 'Er rammen eller glasset beskadiget, når pakken kommer, så tag et foto og svar på denne mail – så sender vi et nyt.'
+    : 'Er printet bøjet eller beskadiget, når det kommer, så tag et foto og svar på denne mail – så sender vi et nyt.';
   const html = shell(subject, [
     h1('Dit billede er på vej.'),
-    p('Det er printet, indrammet og pakket. Nu er det hos fragtfirmaet.'),
+    p(packed),
     track ? p(`Tracking: ${track}`) : p(noTrack),
     opts.fileUrl ? p(`Din digitale fil i høj opløsning: <a href="${opts.fileUrl}" style="color:#1F5A3C;">hent den her</a>. Gem den et sikkert sted – vi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.`) : '',
-    p('Er rammen eller glasset beskadiget, når pakken kommer, så tag et foto og svar på denne mail – så sender vi et nyt.'),
+    p(damage),
   ].join(''));
-  const text = `Dit billede er på vej.\n\nDet er printet, indrammet og pakket.${opts.trackingNumber ? `\nTracking: ${opts.trackingNumber}${opts.trackingUrl ? ` – ${opts.trackingUrl}` : ''}` : `\n${noTrack}`}${opts.fileUrl ? `\n\nDin digitale fil i høj opløsning: ${opts.fileUrl}\nVi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.` : ''}\n\nEr noget beskadiget ved levering, så svar på denne mail med et foto, så sender vi et nyt.`;
+  const text = `Dit billede er på vej.\n\n${packed}${opts.trackingNumber ? `\nTracking: ${opts.trackingNumber}${opts.trackingUrl ? ` – ${opts.trackingUrl}` : ''}` : `\n${noTrack}`}${opts.fileUrl ? `\n\nDin digitale fil i høj opløsning: ${opts.fileUrl}\nVi sletter vores kopi ${CONFIG.retentionCompletedDays} dage efter levering.` : ''}\n\n${damage}`;
   return { subject, html, text };
 }
 

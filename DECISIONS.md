@@ -558,3 +558,39 @@ The ads went live 2026-09-09. Everything in this pass came from the owner lookin
 - **Tabular figures made "kr." look broken.** `font-variant-numeric: tabular-nums` gives every glyph a digit's
   width, including the full stop, so "599 kr." set large read as "599 kr .". Only the total animates, so only
   the total needs fixed-width figures: `dkkParts` splits the figures from the unit and the unit is set normally.
+
+## The delivery side of the small products, 2026-09-12 (night)
+
+- **A product is not shipped when the page can sell it.** The two small products went live in the shop
+  before anything downstream knew they existed, and every piece of that downstream was written when
+  there was exactly one product. The checklist the owner packs from told him to order a framed print
+  at CEWE for a 99 kr. file and post it to "(adresse mangler)"; the shipping mail told that customer
+  their parcel was printed, framed and posted; an admin size change re-quoted a digital order on the
+  framed ladder and turned 99 kr. into 599 kr.; and the approval notification said "bestil print" for
+  a download. None had reached a customer, because nobody had bought one yet — which is the only
+  reason this is a note and not an incident.
+- **The rule that would have caught all four: every surface that describes an order asks the order
+  what it is.** `orderProduct(order)` reads `preview_meta.product` and nothing else — not today's
+  configuration, not the format, not whether a `shipping_address` happens to exist. The one derived
+  helper, `isPostedOrder`, answers the only question most surfaces actually have.
+- **`shippedNotice` returns `null` for a digital order** rather than taking a flag. There is no parcel,
+  so there is no mail, and a caller that forgets to check gets nothing to send instead of a wrong
+  thing to send. The admin action checks the null.
+- **Admin hides controls a product does not have** (size for anything but the framed parcel, tracking
+  for anything not posted) rather than disabling them. A disabled control still says "this order has
+  one of these"; an absent one says what is true. The order's headline names the product in capitals
+  before anything else, because the difference between the three is the whole packing instruction.
+- **The delivery test moves the order through the state machine directly.** Driving it through a real
+  payment would cost a real payment, and driving it through the approval *mail* would send mail to
+  whatever address the fixture carried. So the test refuses to run on an order that has a
+  `customer_email`, points `final_path` at the restoration already in storage rather than generating a
+  print-quality file, and restores every column it touched. What it proves is the part that actually
+  faces the customer: the approval page's words, the yes, and that the file really downloads.
+- **The checkout tests were mutation-tested before being believed.** Eight assertions passing on the
+  first run is a reason for suspicion, not confidence: letting the browser choose the product turns
+  exactly two of them red, which is the pair that exists for that bug.
+- **The Christmas date is documented, not changed.** Production says 1 October, the code says
+  14 November, and the deployed value wins — so on 1 October the site starts selling Christmas and
+  promising "inden jul" with nobody watching. Which date is right is a marketing decision, so the
+  behaviour is pinned in tests, the divergence is written in `.env.example` where the next person will
+  read it, and HANDOFF gives the one command that changes it.

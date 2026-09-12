@@ -3,6 +3,7 @@ import { signedUrl } from '@/lib/db/storage';
 import { approvalRequest, changeReceived, siteUrl } from '@/lib/email/templates';
 import { sendMail } from '@/lib/email/send';
 import { notifyOwner } from '@/lib/email/owner';
+import { isDigitalOrder } from '@/lib/order-summary';
 
 /**
  * Sends "Dit færdige billede er klar" with token buttons and sets AWAITING_APPROVAL.
@@ -32,7 +33,17 @@ export async function approveByToken(token: string): Promise<'approved' | 'alrea
   if (!order) return (await isOldToken(token)) ? 'stale' : 'missing';
   const updated = await transition(order.id, ['AWAITING_APPROVAL'], 'APPROVED', { approval_status: 'APPROVED' });
   if (!updated) return order.status === 'APPROVED' || order.status === 'IN_PRODUCTION' || order.status === 'SHIPPED' || order.status === 'COMPLETED' ? 'already' : 'stale';
-  await notifyOwner(`Godkendt – bestil print · ordre ${updated.id.slice(0, 8)}`, [`${updated.customer_name ?? ''} · ${updated.customer_email ?? ''}`, 'Leveringsløftet tæller fra nu. Bestil printet i dag.'], updated.id);
+  // a file order has nothing to order: the customer can already download it, and the only thing left
+  // is for the owner to see that it went through and close the order
+  const digital = isDigitalOrder(updated);
+  await notifyOwner(
+    digital ? `Godkendt – filen er hentet frem · ordre ${updated.id.slice(0, 8)}` : `Godkendt – bestil print · ordre ${updated.id.slice(0, 8)}`,
+    [
+      `${updated.customer_name ?? ''} · ${updated.customer_email ?? ''}`,
+      digital ? 'Kun den digitale fil. Der skal ikke bestilles eller sendes noget – sæt ordren til FULDFØRT.' : 'Leveringsløftet tæller fra nu. Bestil printet i dag.',
+    ],
+    updated.id,
+  );
   return 'approved';
 }
 

@@ -60,7 +60,8 @@ export async function markPaid(orderId: string, s: VerifiedSession, ctx: { ip?: 
   const addr = (updated.shipping_address ?? {}) as Record<string, string | null | undefined>;
   notifyOwner(`Ny betaling ${typeof updated.amount === 'number' ? formatDkk(updated.amount / 100) : '(beløb ukendt)'} · ordre ${updated.id.slice(0, 8)}`, [
     `${updated.customer_name ?? addr.name ?? ''} · ${updated.customer_email ?? ''} · ${updated.customer_phone ?? ''}`,
-    `${[addr.line1, addr.postal_code, addr.city].filter(Boolean).join(', ')}`,
+    // a digital order collected no address, so the line is left out rather than sent empty
+    [addr.line1, addr.postal_code, addr.city].filter(Boolean).join(', ') || 'Ingen leveringsadresse (digitalt produkt)',
     orderDescription(updated),
     ...orderLines(updated),
     ...(s.giftNote ? [`Gavehilsen: “${s.giftNote}”`] : []),
