@@ -5,7 +5,7 @@ import { PRODUCT, track } from '@/lib/analytics/client';
 import MailLine from './MailLine';
 import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
-import { quote, formatOere, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, type DigitalOffer, type Format, type Frame, type Product } from '@/lib/pricing';
+import { quote, formatOere, oereParts, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, sellableProduct, PRINT_FORMAT, formatLabelFor, type Offers, type Format, type Frame, type Product } from '@/lib/pricing';
 import { viewKind } from '@/lib/analytics/funnel';
 import { PICK_KEY } from './SizePicker';
 import Promo from './Promo';
@@ -37,7 +37,9 @@ function Total({ oere }: { oere: number }) {
     raf.current = requestAnimationFrame(step);
     return () => { if (raf.current) cancelAnimationFrame(raf.current); };
   }, [oere]);
-  return <span className="tabular">{formatOere(shown)}</span>;
+  const [amount, unit] = oereParts(shown);
+  // only the figures are tabular: see dkkParts in lib/pricing.ts
+  return <><span className="tabular">{amount}</span>&nbsp;{unit}</>;
 }
 
 /** All six wall mockups are in the page from the start, stacked; a size or a frame only changes which one is on top,
@@ -52,7 +54,7 @@ function Mockup({ srcs, current, alt }: { srcs: Record<string, string>; current:
   );
 }
 
-export default function PreviewPanel({ c, data: initial, cancelled, paid, token, digital }: { c: Copy; data: PreviewPayload; cancelled: boolean; paid: boolean; token?: string; digital: DigitalOffer }) {
+export default function PreviewPanel({ c, data: initial, cancelled, paid, token, offers }: { c: Copy; data: PreviewPayload; cancelled: boolean; paid: boolean; token?: string; offers: Offers }) {
   const q = token ? `?t=${encodeURIComponent(token)}` : '';
   const [saveEmail, setSaveEmail] = useState('');
   const [saveState, setSaveState] = useState<'idle' | 'sending' | 'done' | 'invalid' | 'failed'>('idle');
@@ -68,12 +70,16 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
 
   // The configuration. `quote()` is the same pure function the server runs before Stripe sees anything,
   // so the total under the finger and the amount on the card are one piece of arithmetic, not two guesses.
-  const [product, setProduct] = useState<Product>(digital.enabled ? data.product : 'framed');
+  const [product, setProduct] = useState<Product>(sellableProduct(data.product, offers));
   const [format, setFormat] = useState<Format>(data.format);
   const [frame, setFrame] = useState<Frame>(data.addons.frame);
   const [extraPrints, setExtraPrints] = useState(data.addons.extraPrints);
-  const bill = quote({ product, digital, format, frame, extraPrints, campaign: c.campaign.active });
+  const bill = quote({ product, offers, format, frame, extraPrints, campaign: c.campaign.active });
+  // three products, and only the framed parcel has a size, a frame and extra copies
   const isDigital = bill.product === 'digital';
+  const isPrint = bill.product === 'print';
+  const isFramed = bill.product === 'framed';
+  const anySmall = offers.print.enabled || offers.digital.enabled;
 
   // landscape photographs are printed landscape: "40×30 cm (liggende)"
   const landscape = data.width > data.height;
@@ -97,6 +103,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
     .filter(([key]) => !key.endsWith(':farve'))
     .map(([key, url]) => [key, colourOn && !url.includes('&c=farve') ? `${url}&c=farve` : url]));
   const mockup = mockupSrcs[mockupKey];
+  // " · i farver" / " · sort-hvid", only for a photograph that had a choice to make
+  const colourTail = data.isMonochrome ? ` · ${colourOn ? c.preview.summaryColour : c.preview.summaryMono}` : '';
 
   // the bottom bar waits until the picture has been looked at: it slides in once the picture's lower edge has
   // scrolled clear of where the bar sits, so nothing is sold over the thing being judged
@@ -135,7 +143,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
     document.body.classList.add('has-pv-bar');
     if (!viewed.current) { // one view per visit, whatever the runtime does with effects
       viewed.current = true;
-      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ product: data.product, digital, format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints, campaign: c.campaign.active }).totalOere / 100 });
+      track('ViewContent', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], value: quote({ product: data.product, offers, format: data.format, frame: data.addons.frame, extraPrints: data.addons.extraPrints, campaign: c.campaign.active }).totalOere / 100 });
     }
     return () => document.body.classList.remove('has-pv-bar');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,14 +200,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   const pickProduct = (next: Product) => {
     if (next === product) return;
     setProduct(next); persist({ product: next });
-    track('ProductSelected', { ...PRODUCT, content_name: next, content_ids: [next === 'digital' ? 'digital' : format], value: quote({ product: next, digital, format, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    track('ProductSelected', { ...PRODUCT, content_name: next, content_ids: [next === 'digital' ? 'digital' : format], value: quote({ product: next, offers, format, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
   const pickFormat = (next: Format) => {
     if (next === format) return;
     setFormat(next); persist({ format: next });
     // the size is the price ladder: this is the real AddToCart, and it was the one step nobody measured
-    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ product, digital, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
-    track('ProductSelected', { ...PRODUCT, content_name: 'framed', content_ids: [next], value: quote({ product, digital, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, pixel: false });
+    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ product, offers, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    track('ProductSelected', { ...PRODUCT, content_name: 'framed', content_ids: [next], value: quote({ product, offers, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, pixel: false });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   // A black-and-white photograph turning into a person is the strongest thing on this page, so it is what
@@ -285,7 +293,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
     if (n === extraPrints) return;
     const up = n > extraPrints;
     setExtraPrints(n); persist({ extraPrints: n });
-    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ product, digital, format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ product, offers, format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
   };
 
   /**
@@ -314,7 +322,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
       const r = await fetch(`/api/checkout${q}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: data.orderId, colour: colourOn, product, format, frame, extraPrints: copies, t: token }) });
       const j = (await r.json().catch(() => ({}))) as { url?: string; sessionId?: string };
       if (!r.ok || !j.url) throw new Error('checkout');
-      const value = quote({ product, digital, format, frame, extraPrints: copies, campaign: c.campaign.active }).totalOere / 100;
+      const value = quote({ product, offers, format, frame, extraPrints: copies, campaign: c.campaign.active }).totalOere / 100;
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
       track('InitiateCheckout', { ...PRODUCT, content_ids: [isDigital ? 'digital' : format], value }, { eventId: j.sessionId });
       // …and a created session is not a payment page anyone saw. This is the last thing we can observe
@@ -361,7 +369,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   // the button says the action and the amount it will charge, so nothing about the next screen is a surprise
   const button = (
     <button type="button" className="btn btn-block" onClick={order} disabled={ordering || paid}>
-      {paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : <>{isDigital ? c.preview.ctaDigital : c.preview.ctaShort} <span aria-hidden>·</span> <Total oere={bill.totalOere} /></>}
+      {paid ? 'Bestilt' : ordering ? 'Åbner betaling…' : <>{isDigital ? c.preview.ctaDigital : isPrint ? c.preview.ctaPrint : c.preview.ctaShort} <span aria-hidden>·</span> <Total oere={bill.totalOere} /></>}
     </button>
   );
 
@@ -374,6 +382,19 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
     </div>
   );
 
+  /**
+   * The three products, each shown as the object it is rather than as a sentence with a price at the
+   * end of it. The audience is 45–70 on a phone: a small picture of a framed print, a loose print and
+   * the picture on a screen answers "what am I actually getting" before any words do, and the price
+   * gets its own line under the name instead of hiding in grey body text.
+   */
+  const pic = colourOn && colourUrl ? colourUrl : data.preview;
+  const productChoices = ([
+    { key: 'framed' as Product, name: c.preview.productFramed, price: c.preview.productFramedPrice, hint: c.preview.productFramedHint, thumb: <img src={mockup} alt="" /> },
+    ...(offers.print.enabled ? [{ key: 'print' as Product, name: c.preview.productPrint, price: c.preview.productPrintPrice, hint: c.preview.productPrintHint, thumb: <span className="thumb-paper"><img src={pic} alt="" /></span> }] : []),
+    ...(offers.digital.enabled ? [{ key: 'digital' as Product, name: c.preview.productDigital, price: c.preview.productDigitalPrice, hint: c.preview.productDigitalHint, thumb: <span className="thumb-screen"><img src={pic} alt="" /></span> }] : []),
+  ]);
+
   // The steps are numbered as they are shown: the product choice only exists while the digital offer
   // is on, and a "2 Størrelse" under no step 1 reads as a page that lost something.
   let step = 0;
@@ -381,21 +402,30 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
 
   const config = (
     <div className="config">
-      {digital.enabled && (
+      {anySmall && (
         <fieldset className="cfg">
           <legend className="cfg-label">{n()}{c.preview.productTitle}</legend>
-          <div className="frames-row">
-            {([['framed', c.preview.productFramed, c.preview.productFramedHint], ['digital', c.preview.productDigital, c.preview.productDigitalHint]] as [Product, string, string][]).map(([key, name, hint]) => (
-              <label key={key} className={`frame${key === product ? ' is-on' : ''}`}>
+          <div className="products-row">
+            {productChoices.map(({ key, name, price, hint, thumb }) => (
+              <label key={key} className={`product${key === product ? ' is-on' : ''}`}>
                 <input type="radio" name="produkt" value={key} checked={key === product} onChange={() => pickProduct(key)} />
-                <span className="frame-text"><b>{name}</b><span className="caption">{hint}</span></span>
+                <span className="pick-dot" aria-hidden />
+                <span className={`product-thumb is-${key}`} aria-hidden>{thumb}</span>
+                <span className="product-text">
+                  {key === 'framed' && <span className="tag">{c.preview.recommended}</span>}
+                  <b>{name}</b>
+                  {/* static, so no tabular figures: nothing here animates, and tabular punctuation
+                      pushes the stop in "kr." a digit's width away from the r */}
+                  <span className="product-price">{price}</span>
+                  <span className="caption">{hint}</span>
+                </span>
               </label>
             ))}
           </div>
           <p className="caption">{c.preview.productNote}</p>
         </fieldset>
       )}
-      {!isDigital && (
+      {isFramed && (
       <fieldset className="cfg">
         <legend className="cfg-label">{n()}{c.preview.sizeTitle}</legend>
         <div className="sizes-row">
@@ -413,7 +443,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
       </fieldset>
       )}
 
-      {!isDigital && (
+      {isFramed && (
       <fieldset className="cfg">
         <legend className="cfg-label">{n()}{c.preview.frameTitle}</legend>
         <div className="frames-row">
@@ -429,7 +459,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
       </fieldset>
       )}
 
-      {!isDigital && (
+      {isFramed && (
       <div className="cfg extra">
         <p className="cfg-label">{n()}{c.preview.extraLabel}</p>
         <p className="cfg-title">{c.preview.extraTitle}</p>
@@ -451,10 +481,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
       <div className="cfg bill">
         <p className="cfg-label">{n()}{c.preview.summaryTitle}</p>
         <div className="bill-head">
-          <img src={isDigital ? (colourOn && colourUrl ? colourUrl : data.preview) : mockup} alt={c.preview.yourPhoto} width={96} height={77} />
-          <p><b>{c.preview.yourPhoto}</b><span>{isDigital
-            ? <>{c.preview.digitalSummary}{data.isMonochrome ? ` · ${colourOn ? c.preview.summaryColour : c.preview.summaryMono}` : ''}</>
-            : <>{label} · {frame === 'eg' ? 'egetræsramme' : 'sort ramme'}{data.isMonochrome ? ` · ${colourOn ? c.preview.summaryColour : c.preview.summaryMono}` : ''} · {1 + extraPrints} {extraPrints === 0 ? c.preview.copiesOne : c.preview.copiesMany}</>}</span></p>
+          <img src={isFramed ? mockup : (colourOn && colourUrl ? colourUrl : data.preview)} alt={c.preview.yourPhoto} width={96} height={77} />
+          <p><b>{c.preview.yourPhoto}</b><span>{isFramed
+            ? <>{label} · {frame === 'eg' ? 'egetræsramme' : 'sort ramme'}{colourTail} · {1 + extraPrints} {extraPrints === 0 ? c.preview.copiesOne : c.preview.copiesMany}</>
+            : <>{isPrint ? `${c.preview.printSummary}` : c.preview.digitalSummary}{colourTail}</>}</span></p>
         </div>
         <dl className="bill-lines">
           {bill.lines.map((l) => (
@@ -475,11 +505,11 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
         <div className="pv-after">
           <p className="cfg-title">{c.preview.afterTitle}</p>
           <ol className="pv-after-steps">
-            {(isDigital ? c.preview.afterStepsDigital : c.preview.afterSteps).map(([k, v2]) => <li key={k}><b>{k}</b><span>{v2}</span></li>)}
+            {(isDigital ? c.preview.afterStepsDigital : isPrint ? c.preview.afterStepsPrint : c.preview.afterSteps).map(([k, v2]) => <li key={k}><b>{k}</b><span>{v2}</span></li>)}
           </ol>
           <p className="caption measure">{c.preview.afterHelp}</p>
         </div>
-        {!isDigital && <p className="caption measure">{c.preview.gift}</p>}
+        {isFramed && <p className="caption measure">{c.preview.gift}</p>}
       </div>
     </div>
   );
@@ -534,9 +564,20 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
         <div className="pv-grid">
           {/* the object first, then what it is, then the price — the decisions come after the value.
               A customer who has chosen the file is not shown a wall and a frame they are not buying. */}
-          <h2 id="videre" style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{isDigital ? c.preview.digitalSummary : c.preview.hang}</h2>
+          <h2 id="videre" style={{ fontSize: 'var(--fs-h2)', maxWidth: '14em' }}>{isDigital ? c.preview.digitalSummary : isPrint ? c.preview.printTitle : c.preview.hang}</h2>
           {isDigital
             ? <p className="caption measure">{c.preview.digitalNote}</p>
+            : isPrint
+            ? <>
+                {/* a loose print shown as one: white margin, soft shadow — the same object the landing
+                    page uses in "Fra skuffen til væggen", never a wall frame nobody is buying */}
+                <div className="pv-print"><span className="print"><img src={colourOn && colourUrl ? colourUrl : data.preview} alt={`Dit billede som løst print i ${formatLabelFor(PRINT_FORMAT, landscape)}`} width={data.width} height={data.height} decoding="async" /></span></div>
+                <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{c.preview.printSpecTitle}</h2>
+                <p className="caption measure">{c.preview.printNote}</p>
+                <dl className="label small spec-rows is-open">
+                  {c.preview.printRows.map(([k, val]) => <div key={k}><dt>{k}</dt><dd>{val}</dd></div>)}
+                </dl>
+              </>
             : <>
                 <Mockup srcs={mockupSrcs} current={mockupKey} alt={`Dit billede indrammet i ${label}, ${frame === 'eg' ? 'egetræsramme' : 'sort ramme'}`} />
                 <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--display)', fontWeight: 500 }}>{v.specTitle}</h2>

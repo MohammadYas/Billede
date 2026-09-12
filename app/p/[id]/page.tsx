@@ -3,7 +3,7 @@ import { copy } from '@/lib/copy';
 import { getOrder } from '@/lib/db/orders';
 import { readSessionId } from '@/lib/session';
 import { ownsOrder, payloadFor } from '@/lib/preview-service';
-import { digitalOffer } from '@/lib/pricing';
+import { productOffers } from '@/lib/pricing';
 import PreviewPanel from '@/components/PreviewPanel';
 import Footer from '@/components/Footer';
 import SiteHeader from '@/components/SiteHeader';
@@ -37,7 +37,7 @@ export default async function PreviewPage({ params, searchParams }: { params: Pr
       {/* the price lives in the bill on this page; the header carries the promise instead */}
       <SiteHeader note={c.preview.headNote} bar={c.campaign.active ? c.campaign.bar : undefined} />
       <main className="wrap">
-        <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} token={t} digital={digitalOffer()} />
+        <PreviewPanel c={c} data={payload} cancelled={cancelled === '1'} paid={paid} token={t} offers={productOffers()} />
       </main>
       <Footer />
       <Consent text={c.cookie.text} accept={c.cookie.accept} decline={c.cookie.decline} />

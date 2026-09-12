@@ -9,7 +9,7 @@ const stubs = {
   '@/lib/approval': `export const orderByToken=async()=>({id:'00000000-0000-4000-8000-000000000001',status:globalThis.__auditApproval.status,final_path:globalThis.__auditApproval.final?'final.jpg':null,change_request_text:null,awaiting_approval_at:null,is_monochrome:false,chosen_colour:false,preview_meta:{}}); export const isOldToken=async()=>false; export const approveByToken=async()=>'approved'; export const requestChangeByToken=async()=>'ok';`,
   '@/lib/copy': `export const copy=()=>({email:'audit@example.invalid',emailHref:'mailto:audit@example.invalid'});`,
   '@/lib/config': `export const CONFIG={retentionCompletedDays:90}; export const deliveryPromise=()=>'inden 10 hverdage';`,
-  '@/lib/order-summary': `export const orderDescription=()=>'30×40 cm, sort ramme';`,
+  '@/lib/order-summary': `export const orderDescription=()=>'30×40 cm, sort ramme';export const orderProduct=()=>'framed';export const isDigitalOrder=()=>false;`,
   '@/components/Footer': `export default function Footer(){return null}`,
   '@/components/Wordmark': `export default function Wordmark(){return null}`,
   '@/components/SubmitButton': `export default function SubmitButton(){return null}`,

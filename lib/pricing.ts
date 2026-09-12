@@ -47,6 +47,19 @@ export function formatDkk(dkk: number): string {
   return `${new Intl.NumberFormat('da-DK', { maximumFractionDigits: 0 }).format(dkk)} kr.`;
 }
 
+/**
+ * The same price split in two, for anywhere it is set large in the display face. Tabular figures give
+ * every glyph a digit's width — including the full stop in "kr.", which then floats a space away from
+ * the r. Only the figures need the fixed width (so the total does not shuffle as it counts), so only
+ * the figures get it: `["599", "kr."]`.
+ */
+export function dkkParts(dkk: number): [string, string] {
+  return [new Intl.NumberFormat('da-DK', { maximumFractionDigits: 0 }).format(dkk), 'kr.'];
+}
+export function oereParts(oere: number): [string, string] {
+  return dkkParts(Math.round(oere / 100));
+}
+
 export function formatLabel(format: Format): string {
   return `${PRICING[format].widthCm}×${PRICING[format].heightCm} cm`;
 }
@@ -95,33 +108,54 @@ export const MAX_EXTRA_PRINTS = 3;
  */
 
 /* ---------------------------------------------------------------------------
- * The two products.
+ * The three products.
  *
- * `framed` is the parcel that exists today: restoration, print, frame, file, shipping.
- * `digital` is the same restoration without the parcel — the high-resolution file and nothing else.
- * It is finished code behind a flag, because the price is the owner's to set and a price nobody has
- * approved must never reach a customer. Both halves are required: a flag without a price is off, and
- * a price without the flag is off. Everything downstream asks `sellableProduct`, so a browser that
- * posts `product: "digital"` while the offer is off buys the framed parcel at the framed price.
+ * `framed`  — the parcel the site was built around: restoration, print, frame with mount and glass,
+ *             the high-resolution file, free shipping. From 599 kr., four sizes.
+ * `print`   — the same photograph as a loose 20×30 print with the file. No frame, no glass, so it
+ *             goes in a flat envelope: the cheapest thing that still arrives in somebody's hands.
+ * `digital` — the file alone. Nothing is posted, so Stripe is not asked for an address.
+ *
+ * The two small ones are configuration, not code. Both halves are required — a flag without a price
+ * is off, and a price without the flag is off — so a price nobody approved can never be charged, and
+ * either can be withdrawn without a deploy. Everything downstream asks `sellableProduct`, so a
+ * browser posting `product: "digital"` while that offer is off buys the framed parcel at its price.
  * ------------------------------------------------------------------------- */
-export const PRODUCTS = ['framed', 'digital'] as const;
+export const PRODUCTS = ['framed', 'print', 'digital'] as const;
 export type Product = (typeof PRODUCTS)[number];
 export const DEFAULT_PRODUCT: Product = 'framed';
 export function isProduct(v: unknown): v is Product {
-  return v === 'framed' || v === 'digital';
+  return typeof v === 'string' && (PRODUCTS as readonly string[]).includes(v);
 }
 
-export type DigitalOffer = { enabled: boolean; priceDkk: number };
+/** The loose print has one size. It is not part of the framed ladder, which stays as it is. */
+export const PRINT_FORMAT: Format = '20x30';
 
-/** Reads the digital offer out of the environment. Both halves required; anything else is off. */
-export function digitalOffer(env: Record<string, string | undefined> = process.env): DigitalOffer {
-  const priceDkk = Math.max(0, Math.trunc(Number(env.NEXT_PUBLIC_DIGITAL_PRICE_DKK ?? 0)) || 0);
-  return { enabled: env.NEXT_PUBLIC_DIGITAL_ENABLED === 'true' && priceDkk > 0, priceDkk };
+export type ProductOffer = { enabled: boolean; priceDkk: number };
+export type Offers = { print: ProductOffer; digital: ProductOffer };
+
+/** Reads both small offers out of the environment. Both halves required, per product. */
+export function productOffers(env: Record<string, string | undefined> = process.env): Offers {
+  const read = (flag: string | undefined, price: string | undefined): ProductOffer => {
+    const priceDkk = Math.max(0, Math.trunc(Number(price ?? 0)) || 0);
+    return { enabled: flag === 'true' && priceDkk > 0, priceDkk };
+  };
+  return {
+    print: read(env.NEXT_PUBLIC_PRINT_ENABLED, env.NEXT_PUBLIC_PRINT_PRICE_DKK),
+    digital: read(env.NEXT_PUBLIC_DIGITAL_ENABLED, env.NEXT_PUBLIC_DIGITAL_PRICE_DKK),
+  };
 }
 
-/** The product an order is allowed to be (anything else, or a disabled offer, is the framed parcel). */
-export function sellableProduct(value: unknown, offer: DigitalOffer = digitalOffer()): Product {
-  return value === 'digital' && offer.enabled ? 'digital' : DEFAULT_PRODUCT;
+/**
+ * The product an order is allowed to be (anything else, or an offer that is off, is the framed
+ * parcel). The price is checked here as well as in `productOffers`, because an `Offers` object can
+ * be hand-built by a caller and a product with no price is a product that cannot be charged for.
+ */
+const sellable = (o: ProductOffer) => o.enabled && o.priceDkk > 0;
+export function sellableProduct(value: unknown, offers: Offers = productOffers()): Product {
+  if (value === 'digital' && sellable(offers.digital)) return 'digital';
+  if (value === 'print' && sellable(offers.print)) return 'print';
+  return DEFAULT_PRODUCT;
 }
 
 export type AddOns = { frame: Frame; extraPrints: number };
@@ -154,27 +188,35 @@ export type Quote = {
 export const CAMPAIGN_FREE_EXTRA_COPIES = 1;
 
 /** The one place an order's amount is decided. Input is untrusted; output is always sellable. */
-export function quote(input: { product?: unknown; digital?: DigitalOffer; format?: unknown; frame?: unknown; extraPrints?: unknown; landscape?: boolean; campaign?: boolean } = {}): Quote {
-  const offer = input.digital ?? digitalOffer();
-  const product = sellableProduct(input.product, offer);
+export function quote(input: { product?: unknown; offers?: Offers; format?: unknown; frame?: unknown; extraPrints?: unknown; landscape?: boolean; campaign?: boolean } = {}): Quote {
+  const offers = input.offers ?? productOffers();
+  const product = sellableProduct(input.product, offers);
+  const landscape = Boolean(input.landscape);
+  // A small product has one line, one price and no add-ons. The print options are dropped rather than
+  // ignored, so the bill on the page, the order row and Stripe all say the same thing.
+  if (product !== 'framed') {
+    const single = (key: string, name: string, short: string, note: string, priceDkk: number, fmt: Format, needsAddress: boolean): Quote => ({
+      product, format: fmt, label: formatLabelFor(fmt, landscape), addons: { ...DEFAULT_ADDONS }, needsAddress,
+      lines: [{ key, name, short, note, quantity: 1, unitOere: priceDkk * 100, amountOere: priceDkk * 100 }],
+      totalOere: priceDkk * 100,
+    });
+    if (product === 'digital') {
+      return single('digital',
+        'Restaureret familiebillede, digital fil i høj opløsning',
+        'Restaureret billede, digital fil',
+        'Fil i høj opløsning uden vandmærke · klar til download, når du har godkendt billedet',
+        offers.digital.priceDkk, sellableFormat(input.format), false);
+    }
+    const printLabel = formatLabelFor(PRINT_FORMAT, landscape);
+    return single('print_only',
+      `Restaureret familiebillede, print ${printLabel} uden ramme`,
+      `Restaureret billede, print ${printLabel}`,
+      'Mat fotopapir, uden ramme · digital fil i høj opløsning inkluderet · fri fragt',
+      offers.print.priceDkk, PRINT_FORMAT, true);
+  }
   const format = sellableFormat(input.format);
   const addons = readAddOns({ frame: input.frame, extraPrints: input.extraPrints });
-  const landscape = Boolean(input.landscape);
   const label = formatLabelFor(format, landscape);
-  // The digital file has no size, no frame and no parcel: one line, one price, and the print add-ons
-  // are dropped rather than ignored, so the bill on the page and the order row say the same thing.
-  if (product === 'digital') {
-    const lines: QuoteLine[] = [{
-      key: 'digital',
-      name: 'Restaureret familiebillede, digital fil i høj opløsning',
-      short: 'Restaureret billede, digital fil',
-      note: 'Fil i høj opløsning uden vandmærke · klar til download, når du har godkendt billedet',
-      quantity: 1,
-      unitOere: offer.priceDkk * 100,
-      amountOere: offer.priceDkk * 100,
-    }];
-    return { product, format, label, addons: { ...DEFAULT_ADDONS }, lines, totalOere: lines[0].amountOere, needsAddress: false };
-  }
   const lines: QuoteLine[] = [
     {
       key: 'print',

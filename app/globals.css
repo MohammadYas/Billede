@@ -277,9 +277,15 @@ html { scroll-behavior: smooth; }
 .cfg:first-child { box-shadow: none; padding-top: var(--s2); }
 .cfg legend { float: left; width: 100%; }
 .cfg-title { margin: 0; font-family: var(--display); font-size: 19px; font-weight: 500; letter-spacing: -0.01em; }
-.cfg-label { margin: 0; font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); padding: 0; }
-/* the step number, in the display face like the numbers in "Sådan fungerer det": one sequence, one hand */
-.cfg-label .n { font-family: var(--display); font-weight: 500; font-size: 15px; letter-spacing: 0; text-transform: none; color: var(--ink); margin-right: var(--s2); font-variant-numeric: oldstyle-nums; }
+/**
+ * The step headings. They used to be 13 px uppercase letter-spaced grey — a filing tab, not a
+ * question. The audience is 45–70 on a phone, and the difference between "1 STØRRELSE" and a line
+ * they can read at arm's length is whether the page feels like a form or like someone talking. Same
+ * ink, same face, same hairlines: only the size and the case changed.
+ */
+.cfg-label { margin: 0; font-family: var(--display); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; text-transform: none; color: var(--ink); padding: 0; display: flex; align-items: center; gap: var(--s3); }
+/* the step number as a counted chip, the same one the "Sådan foregår det herfra" list uses below */
+.cfg-label .n { flex: none; width: 1.55em; height: 1.55em; display: grid; place-items: center; border-radius: 999px; background: var(--paper-2); box-shadow: inset 0 0 0 1px var(--hairline); font-family: var(--sans); font-weight: 700; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink-2); margin-right: 0; }
 
 /* three real radios, so keyboard and VoiceOver get the semantics for free */
 .sizes-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }
@@ -289,18 +295,45 @@ html { scroll-behavior: smooth; }
 .size .size-price { font-size: var(--fs-small); font-weight: 600; }
 .size .caption { line-height: 1.3; }
 .size.is-on { background: var(--paper-2); box-shadow: inset 0 0 0 2px var(--ink); }
-.size:active, .frame:active { transform: scale(0.99); }
-.size:has(input:focus-visible), .frame:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
-@media (hover: hover) { .size:hover, .frame:hover { box-shadow: inset 0 0 0 1px var(--ink-2); } }
+.size:active, .frame:active, .product:active { transform: scale(0.99); }
+.size:has(input:focus-visible), .frame:has(input:focus-visible), .product:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (hover: hover) { .size:hover, .frame:hover, .product:hover { box-shadow: inset 0 0 0 1px var(--ink-2); } }
 /* narrow in-app browsers (Facebook ~360px): the size label stays on one line and the cards do not hyphenate */
 @media (max-width: 399px) { .size b { font-size: 15px; white-space: nowrap; } .size, .frame { hyphens: manual; -webkit-hyphens: manual; } }
 @media (max-width: 359px) { .size { padding: var(--s2) var(--s3); min-height: 84px; } .size .caption { display: none; } }
 
 /* frame: the swatch is the moulding itself, mount and all */
 .frames-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s2); }
-.frame { position: relative; display: flex; align-items: center; gap: var(--s3); padding: var(--s3); min-height: 60px; cursor: pointer; background: var(--paper); box-shadow: inset 0 0 0 1px var(--hairline); transition: box-shadow 140ms ease-out, background 140ms ease-out, transform 120ms ease-out; }
-.frame input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.frame.is-on { background: var(--paper-2); box-shadow: inset 0 0 0 2px var(--ink); }
+/**
+ * The product choice: three different physical things, so each one shows itself. A framed print on a
+ * wall, a photographic print with a white margin, the picture on a screen — the customer's own
+ * photograph in all three, because a generic icon proves nothing and this page already has the file.
+ *
+ * One per row (two side by side on a 360 px phone is four lines of hyphenated Danish), a filled dot
+ * so it is obvious these are choices, and the price on its own line under the name where the eye goes.
+ */
+.products-row { display: grid; gap: var(--s2); }
+.product { display: grid; grid-template-columns: 22px 64px minmax(0, 1fr); align-items: center; gap: var(--s3); padding: var(--s3); min-height: 84px; }
+.pick-dot { flex: none; width: 22px; height: 22px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--ink-2); background: var(--paper); transition: box-shadow 140ms ease-out; }
+.product.is-on .pick-dot { box-shadow: inset 0 0 0 7px var(--ink); }
+.product-thumb { width: 64px; height: 64px; display: grid; place-items: center; overflow: hidden; background: var(--paper-2); box-shadow: inset 0 0 0 1px var(--hairline); }
+.product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+/* the loose print: a white paper margin and one soft shadow, the same object as .pv-print */
+.thumb-paper { display: block; width: 76%; padding: 9%; background: #fff; box-shadow: 0 2px 7px rgba(23, 22, 20, 0.22); }
+.thumb-paper img { height: auto; object-fit: contain; }
+/* the file: the picture on a screen, so "kun billedet" is a thing and not an absence */
+.thumb-screen { display: block; width: 84%; padding: 4px; border-radius: 7px; background: var(--ink); }
+.thumb-screen img { height: auto; object-fit: contain; border-radius: 3px; }
+.product-text { display: grid; gap: 1px; min-width: 0; }
+.product-text b { font-family: var(--display); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.product-text .tag { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.product-price { font-family: var(--display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+.product-text .caption { line-height: 1.3; margin-top: 2px; }
+@media (max-width: 359px) { .product { grid-template-columns: 20px 52px minmax(0, 1fr); gap: var(--s2); } .product-thumb { width: 52px; height: 52px; } }
+.frame { position: relative; display: flex; align-items: center; gap: var(--s3); padding: var(--s3); min-height: 60px; }
+.frame, .product { position: relative; cursor: pointer; background: var(--paper); box-shadow: inset 0 0 0 1px var(--hairline); transition: box-shadow 140ms ease-out, background 140ms ease-out, transform 120ms ease-out; }
+.frame input, .product input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.frame.is-on, .product.is-on { background: var(--paper-2); box-shadow: inset 0 0 0 2px var(--ink); }
 .frame .swatch { flex: none; width: 30px; height: 38px; background: #F4F0E8; }
 .swatch-sort { border: 5px solid #181614; }
 .swatch-eg { border: 5px solid #8A6A46; }
@@ -371,6 +404,15 @@ html { scroll-behavior: smooth; }
 .guarantee li { font-size: var(--fs-small); padding: var(--s2) 0 var(--s2) 1.6em; border-top: 1px solid var(--hairline); position: relative; }
 .guarantee li:last-child { border-bottom: 1px solid var(--hairline); }
 .guarantee li::before { content: ''; position: absolute; left: 0.15em; top: 1.05em; width: 0.5em; height: 0.28em; border-left: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: rotate(-45deg); }
+/* The loose print, shown as the object it is: a photographic print with a white margin lying on the
+   paper ground, one soft shadow. Deliberately not the wall mockup — that frame is not being bought.
+   Same construction as .chain-media.is-print on the landing page. */
+.pv-print { padding: 8% 10%; background: var(--paper-2); }
+.pv-print .print { display: block; width: 100%; padding: 4%; background: #fbfaf7; box-shadow: var(--shadow-object); }
+.pv-print .print img { display: block; width: 100%; height: auto; }
+/* the print's spec has no phone/desktop split to make: there are six short rows and no wall above them */
+.spec-rows.is-open { display: grid; }
+
 /* What happens after the button, in the order it happens: the one place the whole path is stated.
    A numbered rail rather than another bullet list, so it does not read as more promises. */
 .pv-after { margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--hairline); display: grid; gap: var(--s3); }

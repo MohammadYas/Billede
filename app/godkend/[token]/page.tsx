@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { approveByToken, isOldToken, orderByToken } from '@/lib/approval';
 import { copy } from '@/lib/copy';
 import { CONFIG, deliveryPromise } from '@/lib/config';
-import { isDigitalOrder, orderDescription } from '@/lib/order-summary';
+import { isDigitalOrder, orderProduct, orderDescription } from '@/lib/order-summary';
 import Footer from '@/components/Footer';
 import SiteHeader from '@/components/SiteHeader';
 import SubmitButton from '@/components/SubmitButton';
@@ -39,8 +39,10 @@ export default async function Godkend({ params, searchParams }: { params: Promis
     notFound();
   }
   const meta = (order.preview_meta ?? {}) as { approval_version?: number };
-  // a file order has no parcel: the page says download, not delivery
+  // a file order has no parcel: the page says download, not delivery. A loose print is posted, but
+  // nothing about it is framed, so the page must not say "indrammer".
   const digital = isDigitalOrder(order);
+  const loosePrint = orderProduct(order) === 'print';
   const sentAt = order.awaiting_approval_at ? new Date(order.awaiting_approval_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' }) : null;
   const approveWithToken = approve.bind(null, token);
 
@@ -79,6 +81,8 @@ export default async function Godkend({ params, searchParams }: { params: Promis
     <h1 style={{ maxWidth: '14em' }}>Ligner det?</h1>
     <p className="measure">{digital
       ? <>Det her er den fil, du får: {orderDescription(order)}. Tryk Godkend, og den er klar til download med det samme. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, og vil du slet ikke have den, får du hele beløbet tilbage.</>
+      : loosePrint
+      ? <>Det her er det billede, vi printer: {orderDescription(order)}. Tryk Godkend, og vi printer det og sender det fladt mellem pap. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, vi printer ikke, før du siger ja – og vil du slet ikke have det, får du hele beløbet tilbage.</>
       : <>Det her er det billede, vi printer: {orderDescription(order)}. Tryk Godkend, og vi printer, indrammer og sender det. Er der noget, du vil have ændret, så skriv det. Rettelser er med i prisen, vi printer ikke, før du siger ja – og vil du slet ikke have det, får du hele beløbet tilbage.</>}</p>
     <form action={approveWithToken} style={{ display: 'grid', gap: 'var(--s3)' }}>
       <SubmitButton label="Godkend" pending="Sender dit ja…" />

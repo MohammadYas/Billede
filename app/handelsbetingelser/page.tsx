@@ -1,13 +1,13 @@
 import LegalPage from '@/components/LegalPage';
 import { getFounder, missing } from '@/lib/founder';
 import { CONFIG, formatCutoffDate } from '@/lib/config';
-import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK, digitalOffer } from '@/lib/pricing';
+import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK, PRINT_FORMAT, formatLabelFor, productOffers } from '@/lib/pricing';
 
 export const metadata = { title: 'Handelsbetingelser – Billedearv' };
 
 export default function Handelsbetingelser() {
   const f = getFounder();
-  const digital = digitalOffer();
+  const offers = productOffers();
   // e-handelsloven §7 requires name, address and CVR. Each missing field says so out loud, because
   // a partial identity that *looks* complete is the failure mode: name + e-mail alone renders as if
   // nothing were missing.
@@ -29,7 +29,8 @@ export default function Handelsbetingelser() {
           <li key={f2}>{formatLabel(f2)}: {formatDkk(PRICING[f2].priceDkk)}</li>
         ))}
         <li>Ekstra eksemplar af samme billede i samme størrelse og ramme: {formatDkk(EXTRA_PRINT_DKK[customerFormat()])} pr. stk., op til tre.</li>
-        {digital.enabled && <li>Kun den digitale fil, uden print og ramme: {formatDkk(digital.priceDkk)}. Der sendes ingen pakke, og du skal ikke oplyse en leveringsadresse.</li>}
+        {offers.print.enabled && <li>Løst print uden ramme, {formatLabel(PRINT_FORMAT)} på mat fotopapir: {formatDkk(offers.print.priceDkk)} inkl. fri fragt. Den digitale fil er med. Der følger ingen ramme, glas eller passepartout.</li>}
+        {offers.digital.enabled && <li>Kun den digitale fil, uden print og ramme: {formatDkk(offers.digital.priceDkk)}. Der sendes ingen pakke, og du skal ikke oplyse en leveringsadresse.</li>}
       </ul>
       <p>Restaureringen laves af en automatisk billedmodel (AI) og gennemgås manuelt, før den leveres. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p>
 
@@ -41,7 +42,8 @@ export default function Handelsbetingelser() {
         <li>Inden 48 timer sender vi det færdige billede til godkendelse på mail.</li>
         <li>Du godkender – eller beder om en ændring, så mange gange det er rimeligt. Vi printer først, når du har godkendt. Hører vi ikke fra dig inden 21 dage efter godkendelsesmailen, refunderer vi hele beløbet, og bestillingen lukkes.</li>
         <li>Efter godkendelse printer, indrammer og sender vi. Levering inden {CONFIG.deliveryDaysMax} hverdage. Bestillinger afgivet senest {formatCutoffDate()} og godkendt inden 48 timer efter godkendelsesmailen leveres inden jul.</li>
-        {digital.enabled && <li>Har du kun købt den digitale fil, kan du hente den fra godkendelsessiden, så snart du har godkendt. Der printes og sendes ikke noget.</li>}
+        {offers.print.enabled && <li>Har du købt det løse print, printer vi det efter din godkendelse og sender det fladt mellem pap – uden ramme og glas. Den digitale fil henter du på godkendelsessiden.</li>}
+        {offers.digital.enabled && <li>Har du kun købt den digitale fil, kan du hente den fra godkendelsessiden, så snart du har godkendt. Der printes og sendes ikke noget.</li>}
       </ul>
 
       <h2>Hvis vi ikke kan lave et resultat</h2>

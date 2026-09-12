@@ -1,7 +1,7 @@
 // Locked Danish copy (spec §4–§6). Placeholders render from config and founder.md.
 // Conversion attack #1 (QA.md) changed: hero, trust row, product label, FAQ, sheet, wait, preview bar, /tak.
 import { CONFIG, campaignActive, currentSeason, daysToCutoff, deliveryPromise, formatCutoffDate, type Season } from '@/lib/config';
-import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, RECOMMENDED_FORMAT, digitalOffer, type Format } from '@/lib/pricing';
+import { formatDkk, PRICING, customerFormat, customerFormats, formatLabel, formatLabelFor, EXTRA_PRINT_DKK, RECOMMENDED_FORMAT, PRINT_FORMAT, productOffers, type Format } from '@/lib/pricing';
 import { fornavn, getFounder } from '@/lib/founder';
 
 /**
@@ -85,10 +85,13 @@ export function copy(season: Season = currentSeason()) {
     };
   };
   const priceFrom = sizes.length > 1 ? `fra ${price}` : price;
-  // The digital file: off until the owner sets a price (lib/pricing.ts digitalOffer). Every line that
-  // mentions it is built here, so turning it on is one environment variable and no code change.
-  const digital = digitalOffer();
-  const digitalPrice = formatDkk(digital.priceDkk);
+  // The two small products: the loose print and the file alone. Off until the owner sets a price
+  // (lib/pricing.ts productOffers). Every line that mentions either is built here, so switching one
+  // on or off is an environment variable and no code change.
+  const offers = productOffers();
+  const digitalPrice = formatDkk(offers.digital.priceDkk);
+  const printPrice = formatDkk(offers.print.priceDkk);
+  const printLabel = formatLabel(PRINT_FORMAT);
 
   return {
     season,
@@ -227,8 +230,12 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
       again: 'Din upload blev afbrudt, før billedet nåede frem. Vælg det igen – det tager et øjeblik.',
       retry: 'Prøv igen',
     },
-    /** The digital-only product. `enabled: false` means no surface may offer it (lib/pricing.ts). */
-    digital: { enabled: digital.enabled, priceDkk: digital.priceDkk, price: digitalPrice },
+    /** The two small products. `enabled: false` means no surface may offer that one (lib/pricing.ts). */
+    offers: {
+      print: { ...offers.print, price: printPrice, label: printLabel },
+      digital: { ...offers.digital, price: digitalPrice },
+      any: offers.print.enabled || offers.digital.enabled,
+    },
     campaign: {
       active: kampagne,
       until: kampagneDato,
@@ -257,8 +264,18 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
         },
         {
           q: 'Hvad koster det, og hvad får jeg?',
-          a: `${sizes.map((x) => `${formatLabel(x)} for ${formatDkk(PRICING[x].priceDkk)}`).join(', ')}. Beløbet dækker restaureringen, et menneskes gennemgang af ansigterne, print på mat fotopapir, ramme i sort eller eg med passepartout og glas, den restaurerede fil i høj opløsning og fri fragt i Danmark. Ingen tillæg.`,
+          a: `${sizes.map((x) => `${formatLabel(x)} for ${formatDkk(PRICING[x].priceDkk)}`).join(', ')}. Beløbet dækker restaureringen, et menneskes gennemgang af ansigterne, print på mat fotopapir, ramme i sort eller eg med passepartout og glas, den restaurerede fil i høj opløsning og fri fragt i Danmark. Ingen tillæg.${
+            offers.print.enabled || offers.digital.enabled
+              ? ` Vil du have det billigere, kan du vælge ${[offers.print.enabled ? `et løst print i ${printLabel} uden ramme for ${printPrice}` : '', offers.digital.enabled ? `kun den digitale fil for ${digitalPrice}` : ''].filter(Boolean).join(' eller ')} – det vælger du, når du har set dit billede.`
+              : ''
+          }`,
         },
+        ...(offers.print.enabled || offers.digital.enabled
+          ? [{
+              q: 'Kan jeg nøjes med noget billigere end rammen?',
+              a: `Ja.${offers.print.enabled ? ` Et løst print i ${printLabel} på mat fotopapir, uden ramme og glas, koster ${printPrice} med fri fragt – den digitale fil er med. Det sendes fladt mellem pap, så du kan sætte det i din egen ramme.` : ''}${offers.digital.enabled ? ` Vil du kun have filen, koster den ${digitalPrice}; så bliver der ikke sendt noget, og du skal ikke oplyse en adresse.` : ''} Arbejdet er det samme: restaureringen, gennemgangen af ansigterne og din godkendelse, før noget bliver printet eller udleveret. Du vælger, når du har set dit billede.`,
+            }]
+          : []),
         {
           q: 'Hvornår betaler jeg?',
           a: `Ved bestilling, efter du har set previewet på skærmen. Vi printer først, når du har set det færdige billede på mail og sagt ja – og indtil da kan du fortryde og få hele beløbet tilbage.`,
@@ -426,16 +443,42 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
         ['Efter dit ja', 'Filen i høj opløsning uden vandmærke er klar til download med det samme. Intet bliver sendt med posten.'],
       ] as [string, string][],
       afterHelp: email ? `Går noget galt, så ${skrivTil} på ${email}. Vi svarer inden 24 timer, og indtil du har godkendt, kan du få hele beløbet tilbage.` : 'Indtil du har godkendt det færdige billede, kan du fortryde og få hele beløbet tilbage.',
-      /** The product choice, shown only while the digital offer is on. */
+      /** The product choice, shown only while at least one small product is on. */
       productTitle: 'Hvad skal du have?',
-      productFramed: 'I ramme, sendt hjem',
-      productFramedHint: `Print, ramme, glas og fri fragt – og den digitale fil oveni. ${cap(priceFrom)}`,
-      productDigital: 'Kun den digitale fil',
-      productDigitalHint: `Filen i høj opløsning uden vandmærke. Ingen pakke, ingen fragt. ${digitalPrice}`,
+      // the price is its own line on the card, never the tail of a grey sentence: it is the second
+      // thing the eye needs and the first thing a 60-year-old goes looking for
+      productFramed: 'I ramme, hjem til dig',
+      productFramedPrice: cap(priceFrom),
+      productFramedHint: 'Printet i ramme med glas, klar til at hænge op. Fri fragt, og den digitale fil er med.',
+      productPrint: 'Print uden ramme',
+      productPrintPrice: printPrice,
+      productPrintHint: `${printLabel} på mat fotopapir til din egen ramme. Fri fragt, og den digitale fil er med.`,
+      productDigital: 'Kun billedet på skærmen',
+      productDigitalPrice: digitalPrice,
+      productDigitalHint: 'Filen i høj opløsning, til telefon, computer eller dit eget trykkeri. Der bliver ikke sendt noget.',
       productNote: 'Du kan skifte, så længe du ikke har betalt.',
       digitalSummary: 'Digital fil i høj opløsning',
       digitalNote: 'Filen er klar til download, når du har godkendt det færdige billede – ikke med det samme.',
       ctaDigital: 'Køb den digitale fil',
+      printSummary: `Print ${printLabel}, uden ramme`,
+      printTitle: 'Sådan kommer printet.',
+      printNote: `${printLabel} på mat fotopapir, uden ramme og glas. Det sendes fladt mellem pap, så det ikke bukker – klar til din egen ramme eller opslagstavlen.`,
+      printSpecTitle: `Det får du for ${printPrice}`,
+      printRows: [
+        ['Print', `${printLabel} på mat fotopapir, farveægte`],
+        ['Ramme', 'Ingen – printet er løst, så du kan sætte det i din egen'],
+        ['Fil', 'Den restaurerede fil i høj opløsning – din at hente, så snart du har godkendt'],
+        ['Godkendelse', `${cap(navn)} gennemgår billedet og tjekker ansigterne. Du ser det færdige billede og siger ja, før vi printer`],
+        ['Levering', `${cap(levering)}, efter du har sagt ja. Fri fragt i Danmark, sendt fladt mellem pap`],
+        ['Garanti', 'Ligner det ikke, får du pengene tilbage'],
+      ] as [string, string][],
+      ctaPrint: 'Bestil mit print',
+      afterStepsPrint: [
+        ['Du betaler nu', `${pay} via Stripe. Beløbet trækkes ved bestillingen.`],
+        ['Inden 24 timer', `${cap(navn)} laver den færdige fil i trykkvalitet og gennemgår den – især ansigterne.`],
+        ['Inden 48 timer', 'Du får det færdige billede på mail. Godkend det, eller bed om en ændring – så mange gange det skal være.'],
+        ['Efter dit ja', `Vi printer og sender det fladt mellem pap – leveret ${levering}. Den digitale fil i høj opløsning kan du hente med det samme.`],
+      ] as [string, string][],
       sizeTitle: 'Størrelse',
       recommended: 'Anbefalet',
       copiesOne: 'eksemplar',

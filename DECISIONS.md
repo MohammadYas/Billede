@@ -497,3 +497,64 @@ The ads went live 2026-09-09. Everything in this pass came from the owner lookin
 - **The preview timeout is a hang guard, not a pace (90 s → 150 s).** Two passes moved inside the customer wait this week — colourisation in front of the preview, then the framing check in front of that. The old 90 s ceiling would have started failing slow runs exactly the way 45 s once did, turning a slow minute at OpenAI into a lead form. The page has always said "about a minute and a half", and a run that lands at 100 s is worth far more than one that dies at 90.
 - **"Gratis" moved out of the cold CTA (2026-09-11).** Three days of ads bought 129 link clicks for about 280 kr and produced ten finished previews and nobody who touched a size, a frame or a payment. The button is the loudest promise in an ad, every cold CTA led with "gratis", and the price sat beside it in small type like a footnote — so the ad asked for curiosity and got it. Two new cold concepts invert that: the button names the product and the price, the free preview reassures underneath. The wall concept also had to say what the service *is* — "Fra skuffen til væggen" is a mood, and a stranger cannot tell from it whether we photograph, print or sell frames.
 - **The ad set's conversion event was left alone, against the plan.** The owner approved moving it from ViewContent to the upload event. Working through the numbers afterwards showed why that would backfire: both the pixel and the Conversions API are gated on the Meta consent, only 2 of 12 real ad orders consented, and Meta recorded 3 ViewContent against 25 link clicks in a day. The current event is already being optimised on about an eighth of reality; the upload event would give Meta roughly one signal every three days and reset the learning phase to get it. At 150 kr/day the creative is the only lever that works. The consent rate is the thing to fix before any optimisation change is worth making — and it must be fixed honestly, not by making "Ok" easier to hit than "Nej tak".
+
+## Conversion round, 2026-09-12 (the result page as the place you buy)
+
+- **Why this round exists.** Eleven ad sessions over 72 h loaded a finished preview and not one touched a size,
+  a frame, a colour toggle or a payment. The delivery chain is not the problem; the step after the picture is.
+  Everything below either removes something standing between the picture and the till, or makes the funnel able
+  to say where people actually stop.
+- **`PreviewShown` was never a view.** It fires when the background job finishes. So "ten people saw their
+  restoration" was ten jobs completing, and the one number the whole test turns on could not be read. It keeps
+  its name and meaning — it is the ad set's conversion event and renaming a live event silently is how you lose
+  a week — and **`PreviewViewed`** is added beside it: the restored picture decoded and at least half of it in
+  the viewport for one second, client-side, IntersectionObserver. A reload or a Back from Stripe inside half an
+  hour is the same look (`viewKind` in `lib/analytics/funnel.ts`), because a customer who reloads four times is
+  one customer. A browser that refuses storage reports the view every page load: an unmeasurable visit must
+  still be a working visit, and over-counting one step beats a page that throws.
+- **The rest of the new events are the steps nobody could see.** `ProductSelected`, `CheckoutClicked` (before
+  anything network-shaped, so a click that dies at Stripe is still a click), `CheckoutRedirected` (a created
+  session is not a payment page anyone saw), `GenerationFailed` (distinct from `PreviewFallback`, which also
+  covers "a human should look at this"), `ColourReady`, `ColourFailed`, `PreviewSaved`, `PreviewReopened`. The
+  allow-list in `/api/track` is a list, not a shape check, so a page cannot invent a step.
+- **The upsell modal is gone.** "Skal der et ekstra eksemplar med?" stood between the buy button and Stripe, on
+  a phone, for an audience of 45–70. The extra copy is an option beside the size and the frame now, priced and
+  counted where the rest of the configuration is. Nothing is pre-ticked, which was the reason the modal existed.
+- **The launch-offer dialog no longer opens by itself.** It arrived 1,8 s after paint, over the picture, for
+  people who had just clicked an ad. The offer is unchanged as content: the announce bar, the Promo block by the
+  price, the step beside the size. The dialog's styles went with it rather than sitting dead in the CSS.
+- **Three products, two of them behind flags.** `framed` (fra 599 kr.), `print` — a loose 20×30 on matte paper,
+  no frame or glass, posted flat, file included (250 kr.) — and `digital`, the file alone (99 kr.). Owner's
+  prices, 12 Sep. Each small product needs **both** an `_ENABLED` flag and a price above zero; `sellableProduct`
+  is asked by the page, the choose route, the checkout route and the receipt alike, so a browser posting
+  `product: "digital"` while that offer is off buys the framed parcel at the framed price. `needsAddress` on the
+  quote decides whether Stripe collects a delivery address — a file is not posted, and a form field between a
+  60-year-old and the payment is a form field for nothing.
+- **An order remembers which product it was.** Read from `preview_meta.product`, never from today's
+  configuration: an order placed while an offer was on must keep describing itself correctly after it is
+  switched off, or its own receipt starts promising a frame nobody bought.
+- **The landing page still quotes "fra 599 kr."** That is the framed product's price and what every live ad
+  promises. The cheaper rungs are disclosed in the FAQ and offered at the point of choice. Moving the hero to
+  "fra 99 kr." would contradict the running campaign; that is a decision about the ads, not a repair.
+- **"Det her er AI'ens første forslag" was doing real damage.** It described the picture the customer had just
+  fallen for as a draft, at the exact moment they were deciding. What is true is more useful: this *is* the
+  restoration, at screen size with a watermark; ordering makes the print-quality file, which is a second, larger
+  run rather than an upscale of this one and can differ slightly; and a person checks the faces before anything
+  is printed. All three are now on the page and in the terms. The wait screen's "Ansigterne rører vi ikke ved"
+  was simply false and contradicted the FAQ; it says the aim ("Ansigterne skal stadig ligne dem") instead.
+- **The legal pages' "Udkast – gennemgås af advokat" stamp is gone, and not by deleting the word.** It was set
+  by a hand-written environment variable, so it would have outlived the review it was waiting for, and it was
+  the first line a hesitant customer read on the page they opened to check whether we are real. The content was
+  completed instead; what remains open is a fact (the street address is still TODO in `founder.md`), so the page
+  names that fact and clears itself when the line is filled in.
+- **The examples note claimed the originals were fabricated.** Owner's correction: they are real old photographs
+  with real damage. The note says that now, and still does not claim they are customers' pictures — that is a
+  separate permission nobody has given.
+- **The product picker shows objects, not sentences.** Three products that differ physically were three grey
+  captions with the price at the tail. Each row now carries the customer's own photograph as the thing they
+  would get — framed on a wall, as a print with a white margin, on a screen — the price on its own line in the
+  display face, and a filled dot. The step headings went from 13 px letter-spaced uppercase grey to sentence
+  case at 17 px: the audience is 45–70 on a phone, and that is the difference between a form and someone talking.
+- **Tabular figures made "kr." look broken.** `font-variant-numeric: tabular-nums` gives every glyph a digit's
+  width, including the full stop, so "599 kr." set large read as "599 kr .". Only the total animates, so only
+  the total needs fixed-width figures: `dkkParts` splits the figures from the unit and the unit is set normally.

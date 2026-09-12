@@ -69,9 +69,8 @@ export class StripeProvider implements PaymentProvider {
       consent_collection: { terms_of_service: 'required' },
       custom_text: {
         terms_of_service_acceptance: {
-          message: opts.quote.product === 'digital'
-            ? `Du kan fortryde og få hele beløbet tilbage, indtil du har godkendt det færdige billede på mail. Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres. [Handelsbetingelser](${CONFIG.siteUrl.replace(/\/$/, '')}/handelsbetingelser)`
-            : `Du kan fortryde og få hele beløbet tilbage, indtil du har godkendt det færdige billede på mail. Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres, og at printet fremstilles specielt til mig. [Handelsbetingelser](${CONFIG.siteUrl.replace(/\/$/, '')}/handelsbetingelser)`,
+          // the print sentence belongs only to an order that actually has a print in it
+          message: `Du kan fortryde og få hele beløbet tilbage, indtil du har godkendt det færdige billede på mail. Jeg accepterer, at fortrydelsesretten bortfalder, når den digitale fil leveres${opts.quote.product === 'digital' ? '' : ', og at printet fremstilles specielt til mig'}. [Handelsbetingelser](${CONFIG.siteUrl.replace(/\/$/, '')}/handelsbetingelser)`,
         },
       },
       success_url: opts.successUrl,

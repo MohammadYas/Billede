@@ -1,6 +1,6 @@
 import { CONFIG, campaignActive } from '@/lib/config';
 import type { Order } from '@/lib/db/orders';
-import { formatLabelFor, formatOere, quote, readAddOns, type Product, type Quote, type QuoteLine } from '@/lib/pricing';
+import { formatLabelFor, formatOere, quote, readAddOns, PRINT_FORMAT, type Product, type Quote, type QuoteLine } from '@/lib/pricing';
 
 type Meta = { product?: unknown; addons?: unknown; repeat_of?: string; share_token?: string; gift_note?: string; output?: { width?: number; height?: number }; quote?: { lines?: QuoteLine[]; totalOere?: number } };
 const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
@@ -11,9 +11,12 @@ const metaOf = (o: Order): Meta => (o.preview_meta ?? {}) as Meta;
  * switched off again, or its own receipt would start describing a frame nobody bought.
  */
 export function orderProduct(o: Order): Product {
-  return metaOf(o).product === 'digital' ? 'digital' : 'framed';
+  const p = metaOf(o).product;
+  return p === 'digital' || p === 'print' ? p : 'framed';
 }
 export const isDigitalOrder = (o: Order): boolean => orderProduct(o) === 'digital';
+/** Anything that goes in the post: the framed parcel and the loose print, never the file alone. */
+export const isPostedOrder = (o: Order): boolean => orderProduct(o) !== 'digital';
 
 /**
  * The order's own quote. Once checkout has run, the lines are whatever the customer agreed to — read
@@ -28,7 +31,8 @@ export function isLandscape(o: Order): boolean {
 
 /** "30×40 cm" or "40×30 cm" for this order. */
 export function orderLabel(o: Order): string {
-  return formatLabelFor(o.format, isLandscape(o));
+  // a loose print has one size of its own; the framed ladder does not apply to it
+  return formatLabelFor(orderProduct(o) === 'print' ? PRINT_FORMAT : o.format, isLandscape(o));
 }
 
 export function orderQuote(o: Order): Quote {
@@ -37,7 +41,9 @@ export function orderQuote(o: Order): Quote {
   // the stored product is re-quoted with the offer forced on: an order that was digital stays digital,
   // whatever the flag says today, and its snapshot lines are what the receipt prints anyway
   const product = orderProduct(o);
-  const live = quote({ product, digital: product === 'digital' ? { enabled: true, priceDkk: Math.round((o.amount ?? 0) / 100) } : undefined, format: o.format, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(o), campaign: campaignActive() });
+  const paidDkk = Math.round((o.amount ?? 0) / 100);
+  const offers = { print: { enabled: product === 'print', priceDkk: paidDkk }, digital: { enabled: product === 'digital', priceDkk: paidDkk } };
+  const live = quote({ product, offers, format: o.format, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(o), campaign: campaignActive() });
   const snap = m.quote;
   if (snap?.lines?.length && typeof snap.totalOere === 'number') return { ...live, lines: snap.lines, totalOere: snap.totalOere };
   return live;
@@ -48,6 +54,11 @@ export function orderDescription(o: Order): string {
   const a = readAddOns(metaOf(o).addons);
   // a file has no size, no frame and no copies; only the colour choice survives
   if (isDigitalOrder(o)) return ['Digital fil i høj opløsning', o.chosen_colour ? 'i farver' : 'sort-hvid'].join(' · ');
+  // the loose print: a size and a colour, and the absence of a frame said out loud — the print
+  // checklist is what the owner packs from, and "uden ramme" is the whole difference in the parcel
+  if (orderProduct(o) === 'print') {
+    return [formatLabelFor(PRINT_FORMAT, isLandscape(o)), isLandscape(o) ? 'liggende' : '', 'uden ramme', o.chosen_colour ? 'i farver' : 'sort-hvid'].filter(Boolean).join(' · ');
+  }
   return [
     orderLabel(o),
     isLandscape(o) ? 'liggende' : '',
