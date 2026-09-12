@@ -386,6 +386,9 @@ html { scroll-behavior: smooth; }
 @media (min-width: 1024px) { .pv-cta-bar { display: none; } }
 body.has-pv-bar { --bar-h: calc(var(--cta-height) + var(--s3) * 2 + var(--s2) + 18px + var(--safe-bottom)); padding-bottom: var(--bar-h); }
 body.has-pv-bar:not(.pv-bar-on) .consent { bottom: 0; }
+/* …and at bottom 0 it covers the Før|Efter switch exactly when the picture lands, so the preview page holds it
+   back for a moment (PreviewPanel: until the order bar is up, or ten seconds). */
+body.pv-consent-hold .consent { display: none; }
 .pv-money { color: var(--ink-2); }
 @media (min-width: 1024px) { .pv-money { display: none; } }
 @media (min-width: 1024px) { body.has-pv-bar { --bar-h: 0px; padding-bottom: 0; } }

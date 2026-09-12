@@ -109,6 +109,15 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token 
   }, []);
   // the cookie banner sits on the order bar only while the bar is up; before that it stays at the bottom, off the picture and its switch
   useEffect(() => { document.body.classList.toggle('pv-bar-on', barOn); return () => document.body.classList.remove('pv-bar-on'); }, [barOn]);
+  // …and until the bar is up it would land on the Før|Efter switch in the one second the picture arrives. Hold it
+  // until they have scrolled that far, or ten seconds, whichever comes first — never longer, because the pixel and
+  // the Conversions API are both gated on the answer and an unasked visitor is an invisible one.
+  useEffect(() => {
+    if (barOn) { document.body.classList.remove('pv-consent-hold'); return; }
+    document.body.classList.add('pv-consent-hold');
+    const t = setTimeout(() => document.body.classList.remove('pv-consent-hold'), 10_000);
+    return () => { clearTimeout(t); document.body.classList.remove('pv-consent-hold'); };
+  }, [barOn]);
   // The wait is long enough that people scroll while it runs, and a client-side navigation keeps the old
   // position — so the page whose whole job is to show the picture opened halfway down the receipt.
   useEffect(() => { window.scrollTo(0, 0); }, []);
