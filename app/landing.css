@@ -263,3 +263,16 @@
 .ligne-text { display: grid; gap: var(--s4); align-content: center; }
 .ligne-text .lead { max-width: 26em; color: var(--ink-2); }
 @media (min-width: 1024px) { .ligne { grid-template-columns: 5fr 6fr; gap: var(--s9); align-items: center; } }
+
+/* Photographs of the physical product (components/ProductPhotos.tsx). Plain and large: the whole point
+   is that these are not composited, so nothing about the treatment should look art-directed. */
+.prod-shots { display: grid; gap: var(--s5); }
+.prod-shots-head { display: grid; gap: var(--s3); max-width: 34em; }
+.prod-shots-grid { display: grid; gap: var(--s4); grid-template-columns: repeat(2, 1fr); }
+.prod-shots-grid figure { margin: 0; display: grid; gap: var(--s2); }
+.prod-shot { position: relative; background: var(--paper-2); aspect-ratio: 4 / 3; overflow: hidden; }
+.prod-shot img { width: 100%; height: 100%; object-fit: cover; }
+/* a staged shot says so on its face, never only in a caption somebody may not read */
+.prod-shot-tag { position: absolute; left: var(--s2); bottom: var(--s2); padding: 4px 8px; background: rgba(23, 22, 20, 0.82); color: var(--paper); font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+@media (min-width: 900px) { .prod-shots-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 419px) { .prod-shots-grid { grid-template-columns: 1fr; } }

@@ -18,6 +18,8 @@ import MailLine from '@/components/MailLine';
 import Wordmark from '@/components/Wordmark';
 import DeletedNotice from '@/components/DeletedNotice';
 import JsonLd from '@/components/JsonLd';
+import ProductPhotos from '@/components/ProductPhotos';
+import { getProductPhotos } from '@/lib/product-photos';
 
 // Static, regenerated hourly: an ad click hits the CDN, not a cold function. The ?order= resume lives in UploadFlow.
 export const revalidate = 3600;
@@ -64,6 +66,8 @@ export default async function Page() {
   // the face that proves "it still looks like them": the hero's own close-up, the same crop before and after
   const face = examples.find((e) => e.detail && /ansigt|øjne/i.test(e.detail.label))?.detail ?? hero?.detail ?? null;
   const heroH = hero ? Math.round((480 * hero.height) / hero.width) : 0;
+  // photographs of the real object, if the owner has taken any yet (public/produkt/README.md)
+  const productPhotos = getProductPhotos();
 
   return (
     <>
@@ -254,6 +258,9 @@ export default async function Page() {
             </div>
           </div>
         </section>
+
+        {/* The object as a photograph, not a render. Renders nothing until the owner has shot it. */}
+        <ProductPhotos photos={productPhotos} title="Sådan kommer det frem til dig." lead="Billeder af det, vi rent faktisk sender – ikke tegninger." />
 
         {/* Gaven — why this is the gift they cannot buy themselves */}
         <section className="wrap section section-quiet" aria-labelledby="gave">

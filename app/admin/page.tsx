@@ -72,10 +72,10 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   // to payment. Distinct orders per event, last 30 days, from our own event log (not Meta's).
   const since = new Date(Date.now() - 30 * 864e5).toISOString();
   // PostgREST hands out at most 1000 rows per request, so the log is read in pages (newest first).
-  type Ev = { name: string; order_id: string | null; session_id: string | null; utm: Utm | null };
+  type Ev = { name: string; order_id: string | null; session_id: string | null; utm: Utm | null; meta: { content_name?: string } | null };
   const ev: Ev[] = [];
   for (let from = 0; from < 30000; from += 1000) {
-    const { data } = await supabaseAdmin().from('events').select('name, order_id, session_id, utm').in('name', [...FUNNEL_STEPS]).gte('created_at', since).order('created_at', { ascending: false }).range(from, from + 999);
+    const { data } = await supabaseAdmin().from('events').select('name, order_id, session_id, utm, meta').in('name', [...FUNNEL_STEPS]).gte('created_at', since).order('created_at', { ascending: false }).range(from, from + 999);
     ev.push(...((data ?? []) as Ev[]));
     if (!data || data.length < 1000) break;
   }
@@ -102,6 +102,25 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   // so this is turnover per viewer, not profit — the caption says so rather than implying otherwise.
   const revenueOere = orders.filter((o) => o.created_at >= since && o.paid_at).reduce((sum, o) => sum + (o.amount ?? 0), 0);
   const perViewer = sawResult ? Math.round(revenueOere / 100 / sawResult) : null;
+  /**
+   * Which of the three products people pick, and which they pay for. "Valgt" comes from the browser
+   * (a tap on the product card) and "betalt" from the orders table, so the two are different kinds of
+   * fact: the first says what tempts, the second says what sells. Both are needed to answer the only
+   * question the cheap products exist to settle — whether 99 kr. brings in money the 599 kr. parcel
+   * was never going to get, or only takes it from orders that would have been 599 kr.
+   */
+  const PRODUCT_DA: Record<string, string> = { framed: 'I ramme', print: 'Løst print', digital: 'Kun filen' };
+  const chosen = new Map<string, Set<string>>();
+  for (const e of real) {
+    if (e.name !== 'ProductSelected') continue;
+    const name = e.meta?.content_name;
+    if (!name || !(name in PRODUCT_DA)) continue;
+    (chosen.get(name) ?? chosen.set(name, new Set()).get(name)!).add(e.session_id ?? e.order_id ?? '');
+  }
+  const productRows = Object.keys(PRODUCT_DA).map((key) => {
+    const paidOrders = orders.filter((o) => o.created_at >= since && o.paid_at && ((o.preview_meta as { product?: string } | null)?.product ?? 'framed') === key);
+    return { key, chosen: chosen.get(key)?.size ?? 0, paid: paidOrders.length, oere: paidOrders.reduce((s, o) => s + (o.amount ?? 0), 0) };
+  });
   const active = sp.status || sp.alle ? orders.filter((o) => o.status !== 'ABANDONED' || sp.status === 'ABANDONED') : orders.filter((o) => !ANALYTICS.includes(o.status));
   const age = (iso: string) => Math.floor((Date.now() - Date.parse(iso)) / 864e5);
   // a thumbnail per listed order: the customer's picture is what the owner recognises an order by
@@ -198,6 +217,28 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
               betalte), og de to kilder mister ikke det samme. Et servertrin kan derfor stå højere end browsertrinnet over
               det – sammenlign nabolinjer, ikke kolonnens top og bund. <b>«Så sit billede» blev først målt 12. september:</b>
               alt før den dato tæller nul på den linje, uanset hvor mange der rent faktisk så deres billede.
+            </p>
+            <h2 style={{ fontSize: 'var(--fs-lead)', fontFamily: 'var(--sans)', fontWeight: 600, marginTop: 'var(--s4)' }}>Produkter · 30 dage</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="tabular">
+                <thead><tr><th>Produkt</th><th>Valgte det</th><th>Betalte</th><th>Omsætning</th></tr></thead>
+                <tbody>
+                  {productRows.map((r) => (
+                    <tr key={r.key}>
+                      <td>{PRODUCT_DA[r.key]}</td>
+                      <td>{r.chosen || '—'}</td>
+                      <td>{r.paid || '—'}</td>
+                      <td>{r.oere ? `${(r.oere / 100).toLocaleString('da-DK')} kr.` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="caption">
+              «Valgte det» er unikke sessioner, der trykkede på produktet på resultatsiden – hvad der frister. «Betalte» er
+              ordrer med en gennemført betaling – hvad der sælger. De to tal kommer fra hver sin kilde og skal ikke lægges
+              sammen. Spørgsmålet de er sat til at besvare: henter de billige produkter penge ind, som rammen aldrig ville
+              have fået, eller tager de penge fra ordrer der ellers var blevet 599 kr.?
             </p>
             <p className="small muted">
               Omsætning pr. person, der så sit billede: {perViewer === null ? '–' : `${perViewer.toLocaleString('da-DK')} kr.`}

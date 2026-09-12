@@ -5,7 +5,10 @@ export function clientMetadata(input: unknown): Record<string, unknown> | undefi
   const out: Record<string, unknown> = {};
   const enums: Record<string, readonly string[]> = {
     cta: ['A', 'B', 'C'], currency: ['DKK'], content_type: ['product'],
-    content_name: ['Restaureret og indrammet familiebillede', 'preview', 'ekstra_eksemplar', 'hero'],
+    // The three products were added 2026-09-12: without them `ProductSelected` lands in the table
+    // with no product on it, and the funnel can count the step but not tell a 99 kr. file from a
+    // 599 kr. parcel. The older names stay, because events already written carry them.
+    content_name: ['Restaureret og indrammet familiebillede', 'preview', 'ekstra_eksemplar', 'hero', 'framed', 'print', 'digital'],
     type: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', ''],
   };
   for (const [key, values] of Object.entries(enums)) if (typeof m[key] === 'string' && values.includes(m[key])) out[key] = m[key];
@@ -14,7 +17,8 @@ export function clientMetadata(input: unknown): Record<string, unknown> | undefi
     if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max) out[key] = value;
   }
   if (Array.isArray(m.content_ids)) {
-    const ids = m.content_ids.filter(v => typeof v === 'string' && ['20x30', '30x40', '40x50', '50x70'].includes(v));
+    // sizes, plus the two small products, which have no size to be identified by
+    const ids = m.content_ids.filter(v => typeof v === 'string' && ['20x30', '30x40', '40x50', '50x70', 'print', 'digital'].includes(v));
     if (ids.length) out.content_ids = [...new Set(ids)];
   }
   return Object.keys(out).length ? out : undefined;

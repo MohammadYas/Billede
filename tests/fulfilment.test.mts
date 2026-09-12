@@ -79,3 +79,43 @@ test('the shipping mail describes the parcel that was actually sent', () => {
 test('a digital order has no shipping mail to send', () => {
   assert.equal(shippedNotice({ product: 'digital', trackingNumber: null, trackingUrl: null, fileUrl: 'x' }), null);
 });
+
+/* ---------------------------------------------------------------------------
+ * Photographs of the physical product. The slot has to stay empty rather than
+ * fill itself: a placeholder in the section that exists to prove we send real
+ * things is the one lie that would matter most.
+ * ------------------------------------------------------------------------- */
+test('no manifest, no section — never a placeholder', async () => {
+  const { getProductPhotos } = await import('../lib/product-photos');
+  // there is no public/produkt/produkt.json yet, and that is the state this must survive
+  assert.deepEqual(getProductPhotos(), []);
+});
+
+test('a manifest entry whose file is missing is skipped, not rendered broken', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const dir = path.join(process.cwd(), 'public', 'produkt');
+  const file = path.join(dir, 'produkt.json');
+  const existed = fs.existsSync(file);
+  const real = 'README.md'; // a file that is definitely in the folder, standing in for a photograph
+  try {
+    fs.writeFileSync(file, JSON.stringify([
+      { file: real, alt: 'a', caption: 'b' },
+      { file: 'aldrig-taget.jpg', alt: 'a', caption: 'b' },
+      { file: real, alt: 'a', caption: 'b', product: 'print' },
+      { nonsense: true },
+      'not an object',
+    ]));
+    // the module caches nothing, but the import does: read it through a fresh query string
+    const mod = await import(`../lib/product-photos.ts?t=${Date.now()}`);
+    const all = mod.getProductPhotos();
+    assert.equal(all.length, 2, 'the missing file and the two malformed entries are dropped');
+    assert.equal(mod.getProductPhotos('framed').length, 1, 'a print-only photo is not shown for the framed parcel');
+    assert.equal(mod.getProductPhotos('print').length, 2);
+    fs.writeFileSync(file, 'not json at all');
+    const broken = await import(`../lib/product-photos.ts?t=${Date.now()}b`);
+    assert.deepEqual(broken.getProductPhotos(), [], 'a broken manifest empties the section rather than throwing');
+  } finally {
+    if (!existed) fs.rmSync(file, { force: true });
+  }
+});

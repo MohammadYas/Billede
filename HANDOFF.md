@@ -9,6 +9,14 @@ Nothing in this list is code. The code is done and verified; each line below is 
 
 ## Status 2026-09-12, nat — leveringssiden af de nye produkter
 
+### **Owner, four photographs is the cheapest thing left on this list**
+
+Everything the site shows of the physical product is drawn by code: `makeMockup` puts the restoration onto `public/mockup/wall.jpg`, a room none of us has stood in. Honest as a visualisation, useless as proof — and the audience is 45–70, buying an object from a Danish company they have never heard of. One photograph of a real parcel does what no render can, and two of the three products now have no photograph at all.
+
+**The slot is built and empty.** `public/produkt/README.md` says exactly what to shoot — a framed 30×40 held *in a hand* (not on a wall: that is what makes it physical), the opened parcel as it looks in the hallway, the loose 20×30 print between its two pieces of card, and the same frame hung up at your place. A phone in daylight is enough; an ordinary Danish daylight picture beats a good advertising photo here. Drop them in `public/produkt/` with a line each in `produkt.json` and the section appears. Until then it renders **nothing** — no placeholder stands there quietly becoming the proof, and a file listed in the manifest but missing from the folder is skipped rather than shown broken. A staged shot gets `"demo": true` and the page writes «Opstillet foto» across it.
+
+
+
 **The two small products were in the shop before they were on the packing bench. Four things were wrong, all fixed.** None of them had reached a customer — the products went live a few hours earlier and nobody has bought one — but every one of them would have, on the first order.
 
 - **The bench checklist told the owner to order a framed print at CEWE for every order.** For a 99 kr. file that is an instruction to buy and post a frame — more than the order is worth — addressed to "(adresse mangler)", because a file collects no address. For the 250 kr. loose print it ordered the wrong product: "Billede i ramme … ramme: SORT … passepartout". Each product now has its own list: the file says check the download and set FULDFØRT, the loose print says LØST PRINT, no frame, no glass, packed flat between card.

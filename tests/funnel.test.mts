@@ -95,3 +95,45 @@ test('a reload is the same look at the picture; a return half an hour later is a
   assert.equal(viewKind(broken, key), 'first');
   assert.equal(viewKind(null, key), 'first');
 });
+
+/* ---------------------------------------------------------------------------
+ * What is allowed to be stored from a browser event.
+ *
+ * /api/track is a public endpoint: anything a page can send, anyone can send. The allow-list is the
+ * whole defence, so it is asserted from both directions — the things the funnel needs must survive
+ * it, and everything else must not, whatever shape it arrives in.
+ * ------------------------------------------------------------------------- */
+test('the product survives into the event log, so the funnel can tell the three apart', async () => {
+  const { clientMetadata } = await import('../lib/analytics/client-metadata');
+  for (const product of ['framed', 'print', 'digital']) {
+    assert.equal(clientMetadata({ content_name: product })?.content_name, product, product);
+  }
+  assert.deepEqual(clientMetadata({ content_ids: ['digital'] })?.content_ids, ['digital']);
+  assert.deepEqual(clientMetadata({ content_ids: ['50x70'] })?.content_ids, ['50x70']);
+  // the older names still pass, because events already in the table were written with them
+  assert.equal(clientMetadata({ content_name: 'preview' })?.content_name, 'preview');
+  assert.equal(clientMetadata({ content_name: 'ekstra_eksemplar' })?.content_name, 'ekstra_eksemplar');
+});
+
+test('nothing else a browser can send is ever stored', async () => {
+  const { clientMetadata } = await import('../lib/analytics/client-metadata');
+  const junk = {
+    // the two things that must never reach the events table
+    t: 'sYqW3n2k9Lp4Rt7xVb1c',                       // a share token
+    token: 'sYqW3n2k9Lp4Rt7xVb1c',
+    image: 'data:image/jpeg;base64,/9j/4AAQSkZJRg==', // image content
+    src: 'https://example.test/api/preview/x/image?t=secret',
+    // and the ordinary ways a field grows legs
+    email: 'kirsten@example.dk',
+    content_name: 'framed"; drop table events; --',
+    content_ids: ['50x70', 'noget-andet', 42, null],
+    value: -1, bytes: 99 * 1024 * 1024, num_items: 999,
+    cta: 'Z', currency: 'USD', type: 'application/pdf',
+  };
+  const out = clientMetadata(junk) ?? {};
+  assert.deepEqual(Object.keys(out).sort(), ['content_ids'], JSON.stringify(out));
+  assert.deepEqual(out.content_ids, ['50x70'], 'only the ids we recognise, and the rest dropped');
+  for (const bad of [null, undefined, 'a string', 42, [], [{ t: 'x' }]]) {
+    assert.equal(clientMetadata(bad), undefined, JSON.stringify(bad));
+  }
+});

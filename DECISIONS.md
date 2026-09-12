@@ -594,3 +594,13 @@ The ads went live 2026-09-09. Everything in this pass came from the owner lookin
   promising "inden jul" with nobody watching. Which date is right is a marketing decision, so the
   behaviour is pinned in tests, the divergence is written in `.env.example` where the next person will
   read it, and HANDOFF gives the one command that changes it.
+- **The product-photo slot renders nothing rather than something.** Every depiction of the physical
+  product is composited onto a stock room, which is fine as a visualisation and worthless as proof.
+  The section that would carry real photographs exists now, reads a manifest, skips any entry whose
+  file is not actually on disk, and disappears entirely when there is nothing — because a placeholder
+  in the one section whose whole job is to prove we send real things is the lie that would matter
+  most. A staged shot is labelled on its face, not only in a caption.
+- **What the owner is asked for is four specific pictures, not "some product photos".** A framed
+  30×40 in a hand rather than on a wall (that is what reads as physical), the opened parcel in a
+  hallway, the loose print between its two pieces of card — the only image of the 250 kr. product
+  that can exist — and the frame hung up at his own place. `public/produkt/README.md` carries it.
