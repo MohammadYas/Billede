@@ -80,6 +80,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   const isPrint = bill.product === 'print';
   const isFramed = bill.product === 'framed';
   const anySmall = offers.print.enabled || offers.digital.enabled;
+  /**
+   * What a product is called in an event. The framed parcel is identified by the size on the price
+   * ladder, because that is the thing that varies and the thing Meta groups on. The two small ones
+   * have no ladder — the loose print is always 20×30 — so they are identified by themselves. Sending
+   * the framed size for a loose print, which is what it used to do, files a 250 kr. order under
+   * whichever framed size the page happened to be sitting on.
+   */
+  const contentId = (p: Product = bill.product) => (p === 'framed' ? format : p);
 
   // landscape photographs are printed landscape: "40×30 cm (liggende)"
   const landscape = data.width > data.height;
@@ -186,7 +194,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
       try { store = window.localStorage; } catch { /* private mode: every visit is a first view */ }
       const kind = viewKind(store, `gf_viewed:${data.orderId}`);
       if (kind === 'same') return;
-      track(kind === 'first' ? 'PreviewViewed' : 'PreviewReopened', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], colour: colourOn }, { serverLog: true });
+      track(kind === 'first' ? 'PreviewViewed' : 'PreviewReopened', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], colour: colourOn }, { serverLog: true, orderId: data.orderId });
     }, 1000);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -200,14 +208,14 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   const pickProduct = (next: Product) => {
     if (next === product) return;
     setProduct(next); persist({ product: next });
-    track('ProductSelected', { ...PRODUCT, content_name: next, content_ids: [next === 'digital' ? 'digital' : format], value: quote({ product: next, offers, format, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    track('ProductSelected', { ...PRODUCT, content_name: next, content_ids: [contentId(next)], value: quote({ product: next, offers, format, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, orderId: data.orderId });
   };
   const pickFormat = (next: Format) => {
     if (next === format) return;
     setFormat(next); persist({ format: next });
     // the size is the price ladder: this is the real AddToCart, and it was the one step nobody measured
-    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ product, offers, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
-    track('ProductSelected', { ...PRODUCT, content_name: 'framed', content_ids: [next], value: quote({ product, offers, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, pixel: false });
+    track('AddToCart', { ...PRODUCT, content_ids: [next], value: quote({ product, offers, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, orderId: data.orderId });
+    track('ProductSelected', { ...PRODUCT, content_name: 'framed', content_ids: [next], value: quote({ product, offers, format: next, frame, extraPrints, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, pixel: false, orderId: data.orderId });
   };
   const pickFrame = (next: Frame) => { if (next === frame) return; setFrame(next); persist({ frame: next }); };
   // A black-and-white photograph turning into a person is the strongest thing on this page, so it is what
@@ -254,7 +262,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
     if (colourBusy) return;
     if (colourUrl) { chooseColour(!colourOn); return; }
     setColourBusy(true); setColourErr(false);
-    track('ColourViewed', {}, { serverLog: true });
+    track('ColourViewed', {}, { serverLog: true, orderId: data.orderId });
     const started = Date.now();
     const poll = async (): Promise<void> => {
       try {
@@ -293,7 +301,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
     if (n === extraPrints) return;
     const up = n > extraPrints;
     setExtraPrints(n); persist({ extraPrints: n });
-    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ product, offers, format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true });
+    if (up) track('AddToCart', { ...PRODUCT, content_name: 'ekstra_eksemplar', content_ids: [format], value: quote({ product, offers, format, frame, extraPrints: n, campaign: c.campaign.active }).totalOere / 100 }, { serverLog: true, orderId: data.orderId });
   };
 
   /**
@@ -305,7 +313,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   const order = () => {
     if (orderBusy.current || paid) return;
     // logged before anything network-shaped happens: a click that dies at Stripe is still a click
-    track('CheckoutClicked', { ...PRODUCT, content_name: bill.product, content_ids: [isDigital ? 'digital' : format], value: bill.totalOere / 100 }, { serverLog: true, pixel: false });
+    track('CheckoutClicked', { ...PRODUCT, content_name: bill.product, content_ids: [contentId()], value: bill.totalOere / 100 }, { serverLog: true, pixel: false, orderId: data.orderId });
     void checkout(extraPrints);
   };
   // back from Stripe (bfcache restores the page as it was, mid-"Åbner betaling…"): the button must work again
@@ -324,10 +332,10 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
       if (!r.ok || !j.url) throw new Error('checkout');
       const value = quote({ product, offers, format, frame, extraPrints: copies, campaign: c.campaign.active }).totalOere / 100;
       // same event_id as the server-side copy, so Meta counts one InitiateCheckout
-      track('InitiateCheckout', { ...PRODUCT, content_ids: [isDigital ? 'digital' : format], value }, { eventId: j.sessionId });
+      track('InitiateCheckout', { ...PRODUCT, content_name: bill.product, content_ids: [contentId()], value }, { eventId: j.sessionId, orderId: data.orderId });
       // …and a created session is not a payment page anyone saw. This is the last thing we can observe
       // before the browser leaves: everything after it belongs to Stripe and to the webhook.
-      track('CheckoutRedirected', { ...PRODUCT, content_name: bill.product, value }, { serverLog: true, pixel: false });
+      track('CheckoutRedirected', { ...PRODUCT, content_name: bill.product, value }, { serverLog: true, pixel: false, orderId: data.orderId });
       window.location.assign(j.url);
     } catch {
       // never a server string: one calm message with a second door (e-mail)

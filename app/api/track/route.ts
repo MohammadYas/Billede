@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logEvent, type EventName } from '@/lib/analytics/events';
 import { readSessionId, readUtm } from '@/lib/session';
+import { getOrder } from '@/lib/db/orders';
 import { clientMetadata } from '@/lib/analytics/client-metadata';
 
 export const runtime = 'nodejs';
@@ -21,9 +22,25 @@ const CLIENT_ALLOWED: EventName[] = [
 ];
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => null)) as { name?: EventName; meta?: Record<string, unknown> } | null;
+  const body = (await req.json().catch(() => null)) as { name?: EventName; orderId?: string; meta?: Record<string, unknown> } | null;
   if (!body?.name || !CLIENT_ALLOWED.includes(body.name)) return NextResponse.json({ ok: true });
   const [sessionId, utm] = await Promise.all([readSessionId(), readUtm()]);
-  await logEvent(body.name, { sessionId, utm, meta: clientMetadata(body.meta) });
+  /**
+   * The order these steps belong to, so a session's own events can be joined to what it bought
+   * without a guess. It is attached only when this session is the one that made the preview: an
+   * order id is a UUID somebody could post at random, and an event filed against a stranger's order
+   * is worse than an event filed against nothing.
+   *
+   * No token is accepted here and none is stored. The consequence is a known and deliberate gap: a
+   * saved link opened on another device has a different session, so its events carry the session but
+   * not the order. Sending the share token into the logging path to close that would put an access
+   * token one mistake away from the events table, which is a worse trade.
+   */
+  let orderId: string | null = null;
+  if (sessionId && typeof body.orderId === 'string' && /^[0-9a-f-]{36}$/.test(body.orderId)) {
+    const order = await getOrder(body.orderId).catch(() => null);
+    if ((order?.preview_meta as { session_id?: string } | null)?.session_id === sessionId) orderId = order!.id;
+  }
+  await logEvent(body.name, { sessionId, orderId, utm, meta: clientMetadata(body.meta) });
   return NextResponse.json({ ok: true });
 }

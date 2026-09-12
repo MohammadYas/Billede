@@ -604,3 +604,17 @@ The ads went live 2026-09-09. Everything in this pass came from the owner lookin
   30×40 in a hand rather than on a wall (that is what reads as physical), the opened parcel in a
   hallway, the loose print between its two pieces of card — the only image of the 250 kr. product
   that can exist — and the frame hung up at his own place. `public/produkt/README.md` carries it.
+- **A product is identified by the thing that varies.** The framed parcel varies by size, so its
+  `content_ids` is the size; the loose print is always 20×30 and the file has no size at all, so they
+  are identified by themselves. Sending the framed size for a small product filed a 250 kr. order
+  under a 599 kr. one, in our own report and at Meta. One helper (`contentId`) decides it, so no call
+  site can drift apart from the others again.
+- **An order id on a client event is a hint, not a claim.** `/api/track` is public: anything a page
+  can post, anyone can post. So the order is attached only when the posting session is the one that
+  made the preview. Accepting the share token instead would close the last gap — a saved link opened
+  on another device — but it would put an access token one mistake away from the events table, which
+  is the trade the privacy page promises we do not make.
+- **A test that cries wolf is worse than no test.** The journey leaves our origin for Stripe's hosted
+  checkout, and their in-flight fetch rejects when we navigate back. Attributing page errors to the
+  origin they happened on keeps the assertion meaningful instead of teaching the next person to
+  ignore a red line.

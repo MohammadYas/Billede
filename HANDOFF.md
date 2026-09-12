@@ -7,6 +7,19 @@ unverified. Items in **bold** block the test.
 
 Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
 
+## Status 2026-09-12, nat — "virker alt?"
+
+Everything was run again against the live site, and two real things came out of it.
+
+- **A loose print was being filed under a framed size.** `ProductSelected`, `CheckoutClicked` and `InitiateCheckout` identified a product by `content_ids`, and for the 250 kr. print they sent whichever framed size the page happened to be sitting on — so the order Meta and our own report saw was a 30×40 parcel. One helper decides it now (`contentId`): the framed parcel by its size, because that is what varies, and the two small ones by themselves. Verified in the live event log: `["digital"]` at 99 and `["print"]` at 250.
+- **Client-side events carried no order id.** Only the server's events did, so a customer's own steps could be joined to what they bought by session alone. `/api/track` now accepts an order id and attaches it **only when that session is the one that made the preview** — an order id is a UUID anybody could post, and an event filed against a stranger's order is worse than one filed against nothing. No token is accepted and none is stored; the deliberate consequence is that a saved link opened on another device carries the session but not the order.
+
+**One test failure turned out to be the test's fault, and it is fixed rather than excused.** The journey walks out to Stripe's hosted checkout and comes back, and an in-flight fetch on *their* page rejects when we navigate away — `api.stripe.com`, not ours, and intermittent. The error listener did not know which origin it was on, so it would have cried wolf on every future run. Errors are attributed now: ours fail the run, theirs are printed as a note so they stay visible.
+
+**The state of it, live, after the deploy:** 80 unit tests, build, and in WebKit at 390×780 — the full customer journey 48/48 (real upload, real restoration, every funnel event read back out of Supabase, a real Stripe session opened and left unpaid), the two small products 60/60, delivery 26/26, shared links 18/18, six viewport widths, and the result page clean at 360×560, 390×780 and 1280×900.
+
+**Still not tested, and cannot be from here:** Safari on a physical phone, any physical device, Facebook's actual in-app browser (only its viewport and user agent), and a completed payment — nobody has ever paid for one of the new products, so the webhook path for them is unit-tested and unexercised in production.
+
 ## Status 2026-09-12, nat — leveringssiden af de nye produkter
 
 ### **Owner, four photographs is the cheapest thing left on this list**

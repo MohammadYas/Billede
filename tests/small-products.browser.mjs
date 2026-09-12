@@ -37,9 +37,22 @@ await sb.from('orders').update({ preview_meta: before.meta }).eq('id', orderId);
 
 const b = await webkit.launch();
 const ctx = await b.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 780 } });
+// the customer's own browser, not a forwarded link: that is the path that carries a session, and a
+// session is what lets the server file these events against the order. A link opened on somebody
+// else's phone deliberately does not — tests/shared-link.browser.mjs covers that half.
+if (order.preview_meta?.session_id) await ctx.addCookies([{ name: 'gf_sid', value: order.preview_meta.session_id, url: base }]);
 const p = await ctx.newPage();
 const errors = [];
-p.on('pageerror', (e) => errors.push(String(e).slice(0, 140)));
+// Errors are attributed to the origin the page was on. This suite walks out to Stripe's hosted
+// checkout and comes back, and an in-flight fetch on their page rejects when we navigate away —
+// their error, our navigation, and not something the site can fix. Ours fail the run; theirs are
+// printed so they stay visible.
+const foreign = [];
+p.on('pageerror', (e) => {
+  const where = (() => { try { return new URL(p.url()).host; } catch { return ''; } })();
+  const line = `${where}: ${String(e).slice(0, 120)}`;
+  if (where.includes('billedearv') || where.includes('localhost')) errors.push(line); else foreign.push(line);
+});
 
 const url = `${base}/p/${orderId}?t=${encodeURIComponent(token)}&utm_source=pwtest`;
 const open = async () => { await p.goto(url, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(2500); };
@@ -145,9 +158,26 @@ ok('frame picker is back', (await p.locator('.frames-row input[name="ramme"]').c
 ok('the wall mockup is back', (await p.locator('.pv-mock').count()) === 1);
 const framedTotal = await p.locator('.bill-total').innerText();
 ok('and the framed price is back', /599|799|999/.test(framedTotal), framedTotal.replace(/\s+/g, ' '));
-ok('no page errors anywhere', errors.length === 0, errors.slice(0, 3).join(' | '));
+ok('no page errors on our own pages', errors.length === 0, errors.slice(0, 3).join(' | '));
+if (foreign.length) console.log('  note  ', foreign.length, 'error(s) on a page that is not ours (Stripe checkout, interrupted by going Back):', foreign[0]);
 
-console.log('\n== 8. Putting the order back as it was found ==');
+console.log('\n== 8. The event log can tell the three products apart ==');
+// The whole reason the cheap products exist is to find out whether they earn money the parcel would
+// not have. A 250 kr. print filed under whichever framed size the page was sitting on answers that
+// question wrongly and quietly, which is the worst way for a measurement to be wrong.
+const { data: evs } = await sb.from('events').select('name, meta, created_at')
+  .in('name', ['ProductSelected', 'CheckoutClicked']).eq('order_id', orderId)
+  .gte('created_at', new Date(Date.now() - 20 * 60_000).toISOString()).order('created_at');
+const seen = new Map();
+for (const e of evs ?? []) if (e.meta?.content_name) seen.set(e.meta.content_name, e.meta);
+for (const [product, price] of [['digital', DIGITAL_DKK], ['print', PRINT_DKK]]) {
+  const m = seen.get(product);
+  ok(`${product}: the event carries the product`, Boolean(m), m ? JSON.stringify(m.content_ids) : 'no event logged');
+  ok(`${product}: identified by itself, not by a framed size`, m?.content_ids?.[0] === product, JSON.stringify(m?.content_ids));
+  ok(`${product}: the value is its own price`, m?.value === price, String(m?.value));
+}
+
+console.log('\n== 9. Putting the order back as it was found ==');
 await sb.from('orders').update({ format: before.format, amount: null, payment_session_id: null, preview_meta: before.meta }).eq('id', orderId);
 const { data: restored } = await sb.from('orders').select('format, preview_meta').eq('id', orderId).single();
 ok('order restored to the framed product', (restored?.preview_meta?.product ?? 'framed') === 'framed', String(restored?.preview_meta?.product));

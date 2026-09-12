@@ -25,7 +25,16 @@ const b = await webkit.launch();
 const ctx = await b.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 780 } });
 const p = await ctx.newPage();
 const errors = [];
-p.on('pageerror', (e) => errors.push(String(e).slice(0, 140)));
+// Errors are attributed to the origin the page was on. This suite walks out to Stripe's hosted
+// checkout and comes back, and an in-flight fetch on their page rejects when we navigate away —
+// their error, our navigation, and not something the site can fix. Ours fail the run; theirs are
+// printed so they stay visible.
+const foreign = [];
+p.on('pageerror', (e) => {
+  const where = (() => { try { return new URL(p.url()).host; } catch { return ''; } })();
+  const line = `${where}: ${String(e).slice(0, 120)}`;
+  if (where.includes('billedearv') || where.includes('localhost')) errors.push(line); else foreign.push(line);
+});
 p.on('console', (m) => { if (m.type() === 'error' && !/favicon|fbevents|facebook|Failed to load resource/i.test(m.text())) errors.push(m.text().slice(0, 140)); });
 const bad = [];
 p.on('response', (r) => { const u = new URL(r.url()); if (r.status() >= 400 && (u.hostname === 'localhost' || u.host.includes('billedearv'))) bad.push(`${r.status()} ${r.url().slice(-70)}`); });
@@ -144,7 +153,8 @@ ok('the order records the product', order?.preview_meta?.product === 'framed', S
 ok('the order kept the size the customer chose', order?.format === '50x70' && order?.amount === 99900, `${order?.format} ${order?.amount}`);
 
 console.log('\n== 9. Errors seen along the way ==');
-ok('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+ok('no page errors on our own pages', errors.length === 0, errors.slice(0, 3).join(' | '));
+if (foreign.length) console.log('  note  ', foreign.length, 'error(s) on a page that is not ours (Stripe checkout, interrupted by going Back):', foreign[0]);
 ok('no failed requests', bad.length === 0, bad.slice(0, 3).join(' | '));
 
 await p.screenshot({ path: `${out}/result-page.png`, fullPage: false });

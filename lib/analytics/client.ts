@@ -68,7 +68,7 @@ function fire(name: ClientEvent, params: Record<string, unknown>, eventId?: stri
 }
 
 /** Fires the Meta event (now if consented, later if undecided, never if declined) and logs the funnel event server-side (always, anonymous session). */
-export function track(name: ClientEvent, params: Record<string, unknown> = {}, opts: { serverLog?: boolean; eventId?: string; pixel?: boolean } = {}) {
+export function track(name: ClientEvent, params: Record<string, unknown> = {}, opts: { serverLog?: boolean; eventId?: string; pixel?: boolean; orderId?: string } = {}) {
   try {
     const c = consent();
     if (opts.pixel === false) { /* explicitly server-only */ }
@@ -77,7 +77,8 @@ export function track(name: ClientEvent, params: Record<string, unknown> = {}, o
   } catch { /* never break the flow */ }
   if (opts.serverLog !== false) {
     try {
-      const body = JSON.stringify({ name, meta: params });
+      // the order is a hint, not a claim: the server attaches it only if this session owns it
+      const body = JSON.stringify({ name, orderId: opts.orderId, meta: params });
       if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
       else fetch('/api/track', { method: 'POST', body, headers: { 'content-type': 'application/json' }, keepalive: true });
     } catch { /* ignore */ }

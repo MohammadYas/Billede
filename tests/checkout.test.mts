@@ -152,3 +152,43 @@ test('the lines Stripe is given are stored on the order as they were agreed', as
   assert.ok(snapshot, 'the receipt renders this snapshot, so a later price change cannot rewrite an old order');
   assert.equal(snapshot!.totalOere, (calls.created[0] as { totalOere: number }).totalOere);
 });
+
+/* ---------------------------------------------------------------------------
+ * After the payment: the alarm that fires when the card was charged something other than the bill.
+ * It compares `order.amount` with `orderQuote(order).totalOere`, so a product whose price the quote
+ * cannot reconstruct would set it off on every single order — a false "BELØB AFVIGER" mail for each
+ * customer, which is how a real one stops being read.
+ * ------------------------------------------------------------------------- */
+test('a paid order of any product reconciles against its own quote', async () => {
+  const { orderQuote } = await import('../lib/order-summary');
+  const paid = (product: string, amount: number, quoteSnapshot = true) => ({
+    format: product === 'print' ? '20x30' : '30x40',
+    amount,
+    preview_meta: {
+      product,
+      addons: { frame: 'sort', extraPrints: 0 },
+      output: { width: 900, height: 1200 },
+      ...(quoteSnapshot ? { quote: { lines: [{ key: 'x', name: 'n', short: 's', quantity: 1, unitOere: amount, amountOere: amount }], totalOere: amount } } : {}),
+    },
+  }) as never;
+
+  for (const [product, amount] of [['framed', 59900], ['print', 25000], ['digital', 9900]] as const) {
+    // with the snapshot checkout wrote: the receipt and the alarm both read it, so they must agree
+    assert.equal(orderQuote(paid(product, amount)).totalOere, amount, `${product} with snapshot`);
+    // and without one (an order from before snapshots, or a snapshot that failed to store): the quote
+    // must still rebuild the amount that was charged rather than the framed price
+    assert.equal(orderQuote(paid(product, amount, false)).totalOere, amount, `${product} without snapshot`);
+  }
+});
+
+test('a digital order keeps describing itself after the offer is switched off', async () => {
+  // the owner can withdraw a product with one environment variable; orders already placed must not
+  // start calling themselves framed parcels the moment he does
+  delete process.env.NEXT_PUBLIC_DIGITAL_ENABLED;
+  delete process.env.NEXT_PUBLIC_DIGITAL_PRICE_DKK;
+  const { orderQuote, orderDescription, orderProduct } = await import('../lib/order-summary');
+  const order = { format: '30x40', amount: 9900, chosen_colour: true, preview_meta: { product: 'digital', quote: { lines: [], totalOere: 9900 } } } as never;
+  assert.equal(orderProduct(order), 'digital');
+  assert.equal(orderQuote(order).totalOere, 9900, 'not 59900');
+  assert.match(orderDescription(order), /Digital fil/);
+});

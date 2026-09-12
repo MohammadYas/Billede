@@ -40,7 +40,16 @@ const b = await webkit.launch();
 const ctx = await b.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 780 } });
 const p = await ctx.newPage();
 const errors = [];
-p.on('pageerror', (e) => errors.push(String(e).slice(0, 140)));
+// Errors are attributed to the origin the page was on. This suite walks out to Stripe's hosted
+// checkout and comes back, and an in-flight fetch on their page rejects when we navigate away —
+// their error, our navigation, and not something the site can fix. Ours fail the run; theirs are
+// printed so they stay visible.
+const foreign = [];
+p.on('pageerror', (e) => {
+  const where = (() => { try { return new URL(p.url()).host; } catch { return ''; } })();
+  const line = `${where}: ${String(e).slice(0, 120)}`;
+  if (where.includes('billedearv') || where.includes('localhost')) errors.push(line); else foreign.push(line);
+});
 
 /** Put the order where the approval mail would have left it, without sending an approval mail. */
 const arm = async (product, amountOere) => {
@@ -96,7 +105,8 @@ for (const [product, amountOere, label] of [['digital', 9900, 'den digitale fil'
 }
 
 console.log('\n== Clean-up ==');
-ok('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+ok('no page errors on our own pages', errors.length === 0, errors.slice(0, 3).join(' | '));
+if (foreign.length) console.log('  note  ', foreign.length, 'error(s) on a page that is not ours (Stripe checkout, interrupted by going Back):', foreign[0]);
 await restore();
 const { data: back } = await sb.from('orders').select(COLUMNS).eq('id', orderId).single();
 ok('order put back to its old status', back?.status === original.status, `${back?.status}`);
