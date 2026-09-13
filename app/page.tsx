@@ -99,7 +99,20 @@ export default async function Page() {
                 {/* most of the audience is scrolling Facebook while the photograph lies in a drawer at home;
                     without this the visit is simply over (three days of ads: 11 of 86 opened the upload, 2 had a picture) */}
                 <OpenFlowButton className="link-btn hero-nophoto" detail="nophoto">{c.upload.noPhoto}</OpenFlowButton>
-                {c.alternatives && <p className="caption">{c.alternatives.replace(/\.$/, '')}. Du vælger efter dit gratis preview.</p>}
+                {c.hero.priceLadder.length > 0 && (
+                  <div className="hero-price-ladder" aria-label="Priser efter gratis preview">
+                    <p className="hero-price-lead">{c.hero.priceLadderLead}</p>
+                    <div className="hero-price-options">
+                      {c.hero.priceLadder.map((option) => (
+                        <span key={option.key} className={`hero-price-option is-${option.key}`}>
+                          <b>{option.label}</b>
+                          <strong>{option.price}</strong>
+                          <small>{option.detail}</small>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <ul className="hero-trust" aria-label="Det skal du vide">
                   {c.hero.trust.map((t) => <li key={t}>{t}</li>)}
                 </ul>

@@ -56,7 +56,7 @@ De aktive annoncer var `FINAL_COLD_01` og `FINAL_COLD_03`; de øvrige tre var pa
 
 ## Verifikation og begrænsninger
 
-Fortsættelsen er kontrolleret med 88 beståede unit-tests, en bestået produktionsbuild, 10 isolerede browserscenarier fordelt på Chromium og WebKit samt alle 12 viewport-kontroller på forside og preview. Mobilens produktgenvej blev desuden kontrolleret visuelt ved 390×780; alle tre priser var synlige, og browseren viste ingen konsolfejl. Den uafhængige kodegennemgang fandt ingen handlingskrævende problemer. Checkout-testene sender ingen rigtige betalinger, og de isolerede preview-tests foretager ingen eksterne writes.
+Fortsættelsen er kontrolleret med 90 beståede unit-tests, en bestået produktionsbuild, 10 isolerede browserscenarier fordelt på Chromium og WebKit samt alle 12 viewport-kontroller på forside og preview. Mobilens produktgenvej blev desuden kontrolleret visuelt ved 390×780; alle tre priser var synlige, og browseren viste ingen konsolfejl. Forsiden viser nu samme prisstige ved den første handling: indrammet fra 599 kr., løst print 250 kr. og digital fil 99 kr., alle med tydelig timing efter gratis preview. Den uafhængige kodegennemgang fandt ingen handlingskrævende problemer. Checkout-testene sender ingen rigtige betalinger, og de isolerede preview-tests foretager ingen eksterne writes.
 
 Verifikationen af første runde:
 

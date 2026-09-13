@@ -93,6 +93,13 @@ export function copy(season: Season = currentSeason()) {
   const printPrice = formatDkk(offers.print.priceDkk);
   const printLabel = formatLabel(PRINT_FORMAT);
   const alternatives = [offers.print.enabled ? `Print uden ramme ${printPrice} inkl. fragt` : '', offers.digital.enabled ? `Digital fil ${digitalPrice}` : ''].filter(Boolean).join(' · ');
+  // The first screen keeps the framed offer as the anchor, while making every paid outcome explicit
+  // before the visitor uploads. The cheapest price is never presented without its object or timing.
+  const priceLadder = [
+    { key: 'framed', label: 'Indrammet', price: priceFrom, detail: 'inkl. fragt' },
+    ...(offers.print.enabled ? [{ key: 'print', label: 'Print uden ramme', price: printPrice, detail: 'inkl. fragt' }] : []),
+    ...(offers.digital.enabled ? [{ key: 'digital', label: 'Digital fil', price: digitalPrice, detail: 'ingen levering' }] : []),
+  ];
 
   return {
     season,
@@ -114,6 +121,8 @@ export function copy(season: Season = currentSeason()) {
       sub: `Tag et foto med mobilen og se restaureringen gratis. Kan du lide resultatet, gennemgår vi det og sender det hjem til dig i ramme ${priceFrom} inkl. fragt.`,
       cta,
       ctaShort: PRIMARY_CTA_SHORT,
+      priceLadderLead: 'Efter dit gratis preview vælger du selv:',
+      priceLadder,
       /** under the button: the two objections a cold visitor has, and the price so "gratis" never stands alone */
       trust: ['Originalen bliver hjemme', 'Du godkender før print', `${cap(priceFrom)} inkl. fragt`],
       /** the value line beside any repeated button */

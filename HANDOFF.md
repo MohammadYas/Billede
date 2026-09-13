@@ -4,6 +4,8 @@
 
 The owner's correction matters: the earlier 72-hour sample contained **14 campaign-tagged generating sessions (18 generations)**, not only the two newest previews. The all-time read returned 15 sessions / 19 generations. Campaign UTM identifies attribution, but untagged tests can remain; the 17 recent PageView sessions are not 17 verified paid-ad visitors. Meta's four attributed landing-page views are a different metric. Both active ads were inspected in the logged-in Meta browser and promise free preview plus framing from 599 kr.; no campaign configuration was changed.
 
+The front page now shows a compact price ladder at the first CTA: framed from 599 kr. (the campaign anchor), loose print 250 kr. and digital file 99 kr.; the lead says the visitor chooses after the free preview. This makes the low-price paths visible without making the Meta promise look like a 99 kr. frame.
+
 Continuation fixes: `/api/checkout` now retains the newly agreed product and quote when saving the Stripe session, instead of overwriting them with pre-checkout metadata. `PreviewViewed` waits for the restored image to decode, a half-visible picture for one second, and a visible tab; new events carry `preview_measurement: 2`. `ViewContent` remains unchanged. The checkout regression reads the final saved order for all three products; `tests/preview-viewed.browser.mts` exercises the real component with isolated Chromium and WebKit fixtures, without external writes. See the audit's continuation section for evidence and limitations.
 
 ## Status 2026-09-13 — audit af købsflow med Composio og browser
