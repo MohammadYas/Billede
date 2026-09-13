@@ -1,0 +1,25 @@
+node_modules/
+.next/
+out/
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.log
+.DS_Store
+work/
+assets/originals/*
+!assets/originals/.gitkeep
+!assets/originals/README.md
+assets/founder/*.jpg
+assets/founder/*.png
+assets/founder/*.heic
+__pycache__/
+*.pyc
+.impeccable/
+next-env.d.ts
+
+# Local Netlify folder
+.netlify
+.playwright-mcp/

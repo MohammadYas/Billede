@@ -1,0 +1,138 @@
+'use server';
+import { redirect } from 'next/navigation';
+import { ADMIN_COOKIE, isAdmin } from './auth';
+import { getOrder, setStatus, updateOrder, type OrderStatus } from '@/lib/db/orders';
+import { isFormat, quote, readAddOns } from '@/lib/pricing';
+import { sendApprovalMail } from '@/lib/approval';
+import { refundNotice, shippedNotice, siteUrl } from '@/lib/email/templates';
+import { reconcileOrder } from '@/lib/reconcile';
+import { isLandscape, orderProduct } from '@/lib/order-summary';
+import { sendMail } from '@/lib/email/send';
+import { paymentProvider } from '@/lib/payments/stripe';
+
+export async function actionLogout() {
+  const { cookies } = await import('next/headers');
+  (await cookies()).delete(ADMIN_COOKIE);
+  redirect('/admin');
+}
+
+async function guard() { if (!(await isAdmin())) throw new Error('unauthorized'); }
+const back = (id: string, msg?: string) => redirect(`/admin/orders/${id}${msg ? `?msg=${encodeURIComponent(msg)}` : ''}`);
+
+export async function actionSetStatus(id: string, formData: FormData) {
+  await guard();
+  const status = String(formData.get('status')) as OrderStatus;
+  const order = await getOrder(id); if (!order) return;
+  if (status === 'REFUNDED' && order.payment_intent && order.status !== 'REFUNDED') {
+    const r = await paymentProvider().refund(order.payment_intent);
+    await setStatus(id, 'REFUNDED', { internal_notes: `${order.internal_notes ?? ''}\nRefund ${r.id} (${r.status})`.trim() });
+    if (order.customer_email) await sendMail({ to: order.customer_email, ...refundNotice({ amount: (order.amount ?? 0) / 100 }) }).catch((e) => console.error(e));
+    back(id, 'Refunderet via Stripe – kunden har fået besked');
+  }
+  if (status === 'SHIPPED' && order.customer_email) {
+    // a digital order has nothing in the post, so shippedNotice returns null rather than promising a parcel
+    const mail = shippedNotice({ product: orderProduct(order), trackingNumber: order.tracking_number, trackingUrl: order.tracking_url, fileUrl: order.approval_token && order.final_path ? siteUrl(`/godkend/${order.approval_token}/fil`) : null });
+    if (mail) await sendMail({ to: order.customer_email, ...mail }).catch((e) => console.error(e));
+  }
+  await setStatus(id, status);
+  back(id, `Status: ${status}`);
+}
+
+/** "Farver" / "Sort-hvid": what the print final is generated as. Set after the customer asks for colour from the approval mail. */
+export async function actionToggleColour(id: string) {
+  await guard();
+  const order = await getOrder(id); if (!order) return;
+  await updateOrder(id, { chosen_colour: !order.chosen_colour, final_path: null } as never);
+  back(id, order.chosen_colour ? 'Sat til sort-hvid – generér final igen' : 'Sat til farver – generér final igen');
+}
+
+export async function actionSetFormat(id: string, formData: FormData) {
+  await guard();
+  const f = String(formData.get('format'));
+  if (!isFormat(f)) return;
+  const order = await getOrder(id);
+  if (!order) return;
+  // an unpaid order follows the new price; a paid one keeps what was charged, and the note says the
+  // format was changed after payment so nobody has to work out why the numbers differ
+  const meta = (order.preview_meta ?? {}) as Record<string, unknown>;
+  const a = readAddOns(meta.addons);
+  // the product comes off the order: re-quoting a digital order on the framed ladder would rewrite
+  // 99 kr. to 599 kr. because somebody touched a size that product does not even have
+  const product = orderProduct(order);
+  const paidDkk = Math.round((order.amount ?? 0) / 100);
+  const q = quote({ product, offers: { print: { enabled: product === 'print', priceDkk: paidDkk }, digital: { enabled: product === 'digital', priceDkk: paidDkk } }, format: f, frame: a.frame, extraPrints: a.extraPrints, landscape: isLandscape(order) });
+  const paid = Boolean(order.paid_at);
+  await updateOrder(id, paid
+    ? { format: f, internal_notes: `${order.internal_notes ?? ''}\nFormat ændret til ${f} efter betaling; beløbet står uændret.`.trim() }
+    : { format: f, amount: q.totalOere, preview_meta: { ...meta, quote: { lines: q.lines, totalOere: q.totalOere, at: new Date().toISOString() } } });
+  back(id, `Format: ${f}`);
+}
+
+export async function actionFulfillment(id: string, formData: FormData) {
+  await guard();
+  await updateOrder(id, {
+    fulfillment_provider: 'manual',
+    fulfillment_reference: String(formData.get('reference') ?? '').trim() || null,
+    tracking_number: String(formData.get('tracking') ?? '').trim() || null,
+    tracking_url: String(formData.get('tracking_url') ?? '').trim() || null,
+  });
+  back(id, 'Fulfillment gemt');
+}
+
+export async function actionNote(id: string, formData: FormData) {
+  await guard();
+  await updateOrder(id, { internal_notes: String(formData.get('notes') ?? '').slice(0, 5000) });
+  back(id, 'Note gemt');
+}
+
+export async function actionCheckPayment(id: string) {
+  await guard();
+  const order = await getOrder(id); if (!order) return;
+  try {
+    const r = await reconcileOrder(order);
+    back(id, r === 'paid' ? 'Stripe siger betalt – ordren er sat til PAID' : r === 'unpaid' ? 'Stripe: ikke betalt' : 'Ingen Checkout-session på ordren');
+  } catch (e) { back(id, `Stripe-fejl: ${e instanceof Error ? e.message : e}`); }
+}
+
+export async function actionRedraw(id: string) {
+  await guard();
+  try {
+    const { redrawDerived } = await import('@/lib/preview-service');
+    const r = await redrawDerived(id);
+    back(id, `Preview og ${r.mockups} rammebilleder tegnet igen`);
+  } catch (e) { back(id, `Fejl: ${e instanceof Error ? e.message : e}`); }
+}
+
+export async function actionReply(thread: string, formData: FormData) {
+  await guard();
+  const text = String(formData.get('text') ?? '').trim();
+  const back = (m: string) => redirect(`/admin/beskeder/${encodeURIComponent(thread)}?msg=${encodeURIComponent(m)}`);
+  if (text.length < 2) back('Skriv et svar først.');
+  try {
+    const { replyToThread } = await import('@/lib/inbox');
+    await replyToThread(thread, text);
+  } catch (e) { back(`Svaret blev ikke sendt: ${e instanceof Error ? e.message : e}`); }
+  back('Svar sendt.');
+}
+
+export async function actionCompose(formData: FormData) {
+  await guard();
+  const to = String(formData.get('to') ?? '').trim().toLowerCase();
+  const subject = String(formData.get('subject') ?? '').trim();
+  const text = String(formData.get('text') ?? '').trim();
+  const backList = (m: string) => redirect(`/admin/beskeder?msg=${encodeURIComponent(m)}`);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) backList('Skriv en gyldig e-mail.');
+  if (text.length < 2) backList('Skriv en besked først.');
+  try {
+    const { sendNewMessage } = await import('@/lib/inbox');
+    await sendNewMessage(to, subject, text);
+  } catch (e) { backList(`Beskeden blev ikke sendt: ${e instanceof Error ? e.message : e}`); }
+  redirect(`/admin/beskeder/${encodeURIComponent(to)}?msg=${encodeURIComponent('Besked sendt.')}`);
+}
+
+export async function actionSendApproval(id: string) {
+  await guard();
+  const order = await getOrder(id); if (!order) return;
+  try { await sendApprovalMail(order); } catch (e) { back(id, `Fejl: ${e instanceof Error ? e.message : e}`); }
+  back(id, 'Godkendelsesmail sendt');
+}

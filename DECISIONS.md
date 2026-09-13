@@ -1,0 +1,620 @@
+# DECISIONS
+
+One line of reasoning per non-obvious decision. Newest at the bottom.
+
+- **Branch.** Work was pushed to `claude/openai-gdpr-mobile-ntfhjo` (the session's designated branch), based on the existing skills branch, not directly to `main`: the owner merges after reading HANDOFF.md.
+- **Skills.** `apple-skills` is installed as `apple-design`; `ui-ux-pro-max` and `impeccable` present. The impeccable "concept roll" ritual was skipped because the brief pins the direction (Nordic editorial); a pinned brief beats the roll per the skill's own rule.
+- **Originals missing.** `assets/originals/` was empty. The spec says stop, the owner said "one shot". Compromise: the pipeline and quality gate were validated on six public-domain archive photographs (Wikimedia Commons / Library of Congress), clearly labelled as such in QUALITY_REPORT.md. The site's example slots read from `public/examples/examples.json`; the archive photos are exported there with honest provenance captions ("Arkivfoto, Library of Congress, ca. 1913") **as a placeholder that must be replaced with consented family photos before the Meta test** (HANDOFF.md, bold). No invented "Indsendt af Kirsten, Vejle" captions.
+- **Founder data.** Name, phone and email read from the Stripe account via Composio; city, CVR, address, portrait and the three "why" lines are TODO in `assets/founder/founder.md`. The founder section and footer render what exists and hide what does not.
+- **Image model.** `gpt-image-2` (verified live): keeps the input aspect ratio with `size: "auto"`, most faithful output. `gpt-image-1.5` accepts `input_fidelity` but snaps to 1536×1024 and reframes the photograph — rejected.
+- **Preview quality = medium, final = high.** Measured: n=2 medium ≈ 33 s; high ≈ 85–100 s. The 45 s hard limit makes "high" impossible for the instant preview; the print final is regenerated at "high" from the admin (async, no time limit).
+- **Colourisation is a second request.** Running it inside the preview call would push the total past 45 s. The client requests `/api/preview/[id]/colour` after the preview is shown; the "Vis i farver" toggle appears when it is ready.
+- **Face check via vision JSON.** Instead of a separate face-detector dependency, the likeness prompt returns `face_count_a` / `face_count_b`. Same rule as the spec: mismatch, or faces lost, → manual review.
+- **Print resolution.** The API returns ≈1475 px on the long edge for "auto" and accepts explicit sizes up to at least 1536×2048. The final is requested at the largest supported size and upscaled with lanczos3 to ≥2400 px (30×40 cm ≈ 150 dpi). Recorded in README as a known limit.
+- **Rate limit.** The OpenAI org is limited to 5 input images/min on gpt-image-2 (observed 429). Runtime retries with the server's suggested wait; the quality runner is sequential. This caps live previews at ≈2/min — see HANDOFF.md.
+- **Group photos.** The quality gate correctly flags a large group photo (120+ faces) as manual review: the model invented faces. The fallback copy covers this case.
+- **Wall photo for the mockup.** No real wall photograph is available in the repo; `lib/restoration/mockup.ts` uses `public/mockup/wall.jpg` when present and otherwise renders a neutral warm-grey wall with a light falloff. The owner should shoot a plain wall (HANDOFF.md).
+- **Supabase project.** `xsdgbjheochbneauhado` ("MohammadYas's Project", eu-west-1, created 2026-09-03 18:30 UTC) is the only project on the default Composio account and was created right before this session → used as the Billedearv project. Region is EU (Ireland).
+- **Stripe.** Account `acct_1UBgmTJNJnc6lpkL` (billedearv.dk): country DK, currency DKK, charges and payouts enabled, statement descriptor BILLEDEARV.DK. **MobilePay is not in the capability list** (card, Klarna, Link, Revolut Pay, etc. are). No products, prices or webhooks exist yet. Read-only via Composio; nothing was created through Composio.
+- **Resend is not connected in Composio.** Email code uses the SDK behind `RESEND_API_KEY`; domain DNS status could not be checked — records listed in HANDOFF.md.
+- **Fonts.** First pick Fraunces + Instrument Sans; impeccable's detector (`detect.mjs`) flags both as saturated. Switched to Newsreader + Public Sans, both on the brief's allowed list. Detector re-run clean.
+- **Likeness prompt tuning (the one allowed round).** The judge penalised reconstruction of destroyed areas that the restoration brief explicitly allows (background, clothing, hair texture). One clarifying sentence aligned the two; faces, people, objects and text stay strict. Both runs are kept in QUALITY_REPORT.md.
+- **Preview latency.** Measured 41.6 s end to end in journey A (hard limit 45 s, spec target 25 s). Kept `medium` quality for face fidelity; the in-sheet copy says "normalt 20–40 sekunder". Owner picks between `PREVIEW_IMAGE_QUALITY=low` (~18 s) and rewording the hero sub-line (QA.md).
+- **CSP in development.** React dev mode needs `'unsafe-eval'`; it is added to `script-src` only when `NODE_ENV !== 'production'`.
+- **Headless QA browser.** The sandbox's Chromium needed the HTTPS proxy to load signed Supabase images; the screenshot/journey scripts pass `HTTPS_PROXY` to Playwright when set. Production browsers are unaffected.
+- **Preview images are same-origin.** Customer preview/original/colour/mockup are streamed through `/api/preview/[id]/image` (session-gated, private cache 15 min) instead of exposing Supabase signed URLs to the browser. Fewer third-party hosts in the customer's browser, one CSP source. Admin keeps 15-min signed URLs.
+
+## Second pass (impeccable critique, dual-agent)
+
+- **Critique method.** Assessment A (design review, isolated agent) and Assessment B (detector + browser + Lighthouse, isolated agent) ran in parallel per the impeccable playbook; reports in `work/critique-a/report.md` and `work/critique-b/report.md`, synthesis in QA.md.
+- **Preview is a page, not a sheet.** `/p/<orderId>` (session-gated) replaces the preview state inside the bottom sheet. The buy button was below the fold of a 1 286 px sheet; a page gives the slider its own proportions, a sticky price bar on mobile, a two-column layout on desktop, survives an evening interruption and is where Stripe's cancel URL returns to.
+- **The customer's photo is never cropped.** The payload carries the restored image's width/height; the slider uses the photo's own aspect with `object-fit: contain`.
+- **Christmas window.** `CHRISTMAS_START_DATE` (default 1 Nov) added; before it the site says "inden 5 hverdage" (owner's number, `DELIVERY_DAYS_MAX`), not "under juletræet".
+- **"20 sekunder" was factually wrong** (measured 38–42 s). Sub-line and step 2 now say "under et minut"; the processing state says "normalt 30–45 sekunder". The spec allows changing locked copy when it is wrong for the repo.
+- **Steps show the object, not an icon and not the hero again.** Damaged print → restored screen → framed mockup, from the second example, 112/160 px.
+- **Price as an object.** Newsreader 300 at 88–168 px, ink not green (green is for links), right-aligned on desktop opposite the offer line.
+- **Founder section renders only when it is real** (portrait + at least one line). Contact stays in the footer.
+- **Processing state keeps the photograph** at 45 % with the progress line on its bottom edge, a sentence per real stage, a creeping bar during restoration (28 s linear, honest about the wait), and "Afbryd". A dropped connection is a retry state, never the manual-review copy.
+- **Sheet gestures.** Enter spring (critically damped, response 0.35 s) from the live transform; 10 px drag hysteresis; a downward drag dismisses only when content is scrolled to the top; horizontal intent and upward drags fall through to scrolling; `touch-action: pan-y`.
+- **Desktop composition.** Hero photo left-set in a photo-book spread with the caption column at its bottom edge; every text section uses a 5/12 + 7/12 editorial grid with a sticky heading.
+- **Captions.** Subject in ink, date in ink-2, archive credit moved to `title` and to one honest line under the examples ("Eksemplerne er arkivfotos …").
+- **Performance.** Responsive `<picture>` sets (480/800/1400, WebP + JPEG) with `sizes`; metric-compatible fallback fonts (`size-adjust`, `ascent-override`) to remove swap CLS; the slider handle moves with `transform`.
+- **Tap targets.** Inline links carry a `.tap` class (10 px vertical padding, negative margin) so every link is ≥ 44 px tall without changing the text rhythm.
+- **Legal draft stamp** is shown unless `LEGAL_DRAFT=false`; the owner flips it after the lawyer's review.
+
+## Third pass (premium presentation, richer comparisons)
+
+- **More originals.** Four Library of Congress tintypes (1860s–1880s, public domain, LOC "no known restrictions") were pulled from the master TIFFs through the same pipeline: a mother with two children, a boy beside a chair, a three-person group, a woman in a hat on a corroded plate. They add children, groups, ovals/arches and sepia to the set. Still placeholders until the owner's family photos arrive (HANDOFF §1).
+- **Four ways to compare, one per example.** Wipe (hero and one example), lens (the damaged original in a round window under the finger), hold (press to see the original, 220 ms crossfade), fade (slow dissolve every 4 s, paused off-screen and while touched; behaves like hold under reduced motion). The motion rule in ANTI_SLOP F4 is amended: comparison is the product's argument, so each example may carry its own comparison motion; nothing else on the page moves.
+- **"Tæt på".** 2× detail crops (before | after) around a point named in each sidecar (`detail: x,y`, `detailLabel:`). Faces, freckles, buttons, handwriting: where a customer judges quality. Exported at 700 px by `scripts/export-examples.ts`.
+- **Colour example.** One example carries the pipeline's colourised version behind the same "Vis i farver" toggle the customer gets (`colour: yes` in the sidecar).
+- **"Det får du".** The framed mockup at full column width and a gallery-label list (print, ramme, fil, hænder, godkendelse, fragt, garanti) plus the photographer comparison from the brief (145–600 kr. for restoration alone). Claims stay within what the manual CEWE fulfilment delivers: matte photo paper, black frame with mount, high-resolution file, hand adjustment, approval, free shipping, money back.
+- **Premium details.** Photographs in the examples grid carry a hairline outline like mounted prints; the preview page repeats the product label under the offer paragraph so the price is justified at the decision point.
+
+## Fourth pass (Nordic examples, two conversion attacks)
+
+- **Nordic faces.** The owner asked for the example set to look like the audience's own albums. Eight Europeana pairs (Domkirkeodden, Museene i Nord-Østerdalen, Grenna Museum; CC BY / public domain, credited in the caption) replaced the American studio portraits in the visible grid; all eight pass the quality gate (QUALITY_REPORT.md, set 3). The Library of Congress tintypes stay in `examples.json` after the first seven and are not rendered on the landing page.
+- **Hero = Gunhild og Ole Christian, 1935.** A landscape snapshot of a Nordic mother hugging her child: the photograph the headline talks about ("Mors gamle billede"), and landscape means 4:3 on a phone, which is what lets the first screen at 390×664 (Safari with its chrome) hold the headline, the lead, the price line and the button (CTA bottom 644 px, measured). The cracked 1916 soldier portrait, the most dramatic damage demo, opens the examples grid instead.
+- **Conversion attack, two rounds.** An adversarial CRO agent walked the live site on an iPhone profile (390×844 and 390×664) and desktop, ran a real restoration, and wrote `work/attack-1/report.md`; every HIGH and MEDIUM finding was fixed, then a second agent verified the fixes and hunted again (`work/attack-2/report.md`, summary in QA.md). What changed, in the order the customer meets it:
+  - Slider knob bug: `.ba .handle` had `width: 0`, so the percentage translate moved nothing; the knob sat at 0 % on every slider on the site. Handle is now full-width and the knob sits on the seam. Reveal settles at 35 % instead of 62 %.
+  - Headline rewritten for a cold visitor: "Mors gamle billede. Skarpt igen, i ramme, hjemme hos dig." Lead names the mechanism; the price line under the button says it costs nothing to look ("gratis" stays banned).
+  - The first name is used only once the person is on the page (portrait + why lines in founder.md); until then the copy says "vi" (`fornavn()`). The full name stays in the footer and the legal pages.
+  - Product label: "Det får du for 599 kr.", a "Levering" row, "Manuelt tjek" instead of "Hænder"; the photographer comparison (145–600 kr.) dropped, because the low number anchored the reader downward and could not be sourced.
+  - Price block on a phone: price → note → phone → line → button, and "Det koster ikke noget at se. Du bestiller først, når du har set resultatet."
+  - Sheet: "Det koster ikke noget at se …" under the buttons and under "Vis mig resultatet", a quality-check line under the thumbnail, the privacy note links to /privatliv, and "Jeg har ikke billedet lige nu" collects an e-mail and mails a link to the site (`/api/lead` with `kind: 'nophoto'`; the order is a MANUAL_REVIEW row with note "link requested, no photo yet").
+  - The wait: the request-in-flight stage is labelled "Restaurerer" with the 28 s creeping bar (the model call is what takes the time; "Sender billedet" with a frozen bar read as a stalled upload). After 45 s: "Det tager lidt længere i dag – billedet er stadig i gang." Cancel says "Afbryd (billedet slettes)".
+  - Preview page: the share token is created with the order and rides in the URL the app navigates to (`/p/<id>?t=…`) and in every image URL, so the address bar itself is shareable; a URL without token gives a Danish 404 that explains why. One line under the slider says what the preview is and what happens next; the money answer ("Pengene tilbage … Du betaler 599 kr. nu. Indtil du har godkendt …") sits in the content on a phone and under the button on desktop; the fixed bar carries "MobilePay, Apple Pay eller kort · Ingen oprettelse" and the order button; a failed checkout renders a visible alert in the bar with the phone number and "Dit preview er gemt" (never a server string). Colour version is preloaded before the toggle enables. Landscape photographs are labelled "40×30 cm (liggende)".
+  - Watermark: one row of small text along the bottom edge plus a corner mark, not a diagonal tile across the face.
+  - /tak unverified: links back to the customer's preview (newest order for the session cookie) and shows the phone; "i dag" became "inden 24 timer" on /tak and in the order mail.
+  - Consent banner stacks above the sticky CTA / order bar (`--bar-h` set by `body.sticky-on` and `body.has-pv-bar`).
+  - FAQ: "Hvad er forskellen på det her og en app?", a new "Virker det også på farvebilleder fra 70'erne og 80'erne?", and the refund answer now states when you pay.
+- **Round 2 (verification + new leaks).** The second agent's real run hit the 45 s server limit, so the timeout is now 90 s (route `maxDuration` 120 — on Vercel Hobby the function limit is 60 s, so use Pro or another host, HANDOFF §6), the bar creeps for 60 s, and a timeout is a retry state with the file kept, never "your photo needs hands". The hero now settles at 50 % so the seam runs between the child (before) and the mother (after); "Tæt på" opens with the cracked soldier pair; the hero caption says "arkivfoto" out loud. The consent banner appears after the first scroll and never over the sheet. The save route accepts the share token. Desktop preview puts the order button at the top of the right column.
+- **Kept against the attack's advice.** One gesture for all examples: the owner explicitly asked for several comparison forms, so the four forms stay. "Gratis": banned by the brief. Testimonials, scarcity, urgency: still refused.
+
+## Fifth pass (better before/after, Apple principles)
+
+- **The hero must show damage a phone can see.** The Nordic museum scans are clean (soft, hazy, a few spots); at 390 px their before/after reads as a filter. The cracked, burnt 1916 print is the only pair whose damage is unmistakable at a glance, so it is the hero again — cropped 4:3 with `object-position: 50% 16%` so the faces stay in the crop and the phone's first screen keeps the offer and the button — resting at 30 % so both faces sit on the restored side. The Nordic pairs fill the grid (olesen with its spots under the lens, Gunhild as a wipe). No damage was added to any photograph: the honest fix for "more convincing" is choosing originals that are actually damaged; more of those arrive with the owner's customer photos (HANDOFF §1).
+- **The slider is now a physical object.** Rebuilt after apple-design §1–§10: one critically damped spring re-targeted from the live value for every input (reveal, tap, drag release, label, keyboard), grab offset respected, 1:1 tracking, velocity handoff, momentum projection (d = 0.99), rubber-banding at the edges, feedback on pointer-down, reduced-motion path. The lens got the same treatment in two independent springs. Per-frame work writes CSS custom properties on the node; React state mirrors the settled value only.
+- **Labels became controls.** "Før"/"Efter" are buttons that show the whole side (agency: one tap to see the entire restored image), both always present.
+- **Verified in the browser** (`work/attack-1-fix/physics.mjs`): reveal 88 → 30 settles in ~1.4 s; a 100 px knob drag lands exactly where the finger is; a flick from 40 % lands at 17 %; a tap at 80 % brings the seam to 80 %; 60 px past the edge shows the knob at 104.7 % with the seam clamped at 100 %, springing back on release; label taps land at 100 / 0; keyboard steps; lens press at 20/70 springs to 20/70. No console errors.
+
+## Sixth pass (Netlify, and a third attack on the whole system)
+
+- **Netlify from GitHub is the host.** That fixes three numbers: 10 s (26 s on request) for a synchronous function, 60 s for a streamed one, 6 MB per request body. The NDJSON streaming upload could not survive them (a 40 s restoration and a 5 MB phone photo through one function), so the flow is now: the browser uploads straight into the private bucket with a one-time signed URL; a request only creates the order and starts a job; the job (restoration, colour, print final) runs in a Netlify Background Function with a 15 min limit; the sheet polls the order. In `next dev` and on any plain Node server the same job runs in-process (`JOB_RUNNER=inline`), so there is one code path and one UI. Retention runs as a scheduled function. `vercel.json` and the streaming route are gone.
+- **What this changed for the customer.** Nothing visible on a good day: upload with real progress, "Restaurerer" with the creeping bar, then the preview page. On a bad day it is better: a failed job leaves the upload in the bucket, so "Prøv igen" re-runs the restoration without uploading again; "Afbryd (billedet slettes)" now really deletes (the cancel route drops the objects, or flags a running job to drop them when it finishes).
+- **The customer's "before" is a 1600 px display copy**; the raw upload stays for the print final and is deleted with the order.
+- **Attack 3 (the money path and the operations behind it, `work/attack-3/report.md`).** Fixed: HEIC accepted by the bucket and sniffed server-side (iPhones from the camera roll could not upload at all); Godkend now redirects to a confirmation, is atomic, and a change request has its own page, its own mail and a new token per approval version (an old mail can no longer approve a newer picture); the owner gets one mail per event that needs a human (payment, lead, manual review, change request, approval, failed final, double payment, a customer waiting 10 days); payments are reconciled with Stripe hourly and from admin, a stale Checkout session is expired before a new one is made, the PAID transition is atomic, a second payment is refunded automatically, the cancel URL carries the share token; Meta gets Purchase and InitiateCheckout from the server (CAPI) with matching event ids and advanced matching, the pixel boots on every page, pre-consent events are replayed, the preview page fires ViewContent and shows the consent banner; the order confirmation is a real ordrebekræftelse (amount, address, terms, refund line, mockup); approval mail has the buttons above the picture and a second reminder at 7 days; admin has a "Til handling" list, next-step lines, a Stripe check, and a signed-URL final upload (function bodies are capped at 6 MB); the landing page is static (ISR hourly) and the request path no longer loads sharp/OpenAI; jobs cannot get stuck (queued > 60 s / running > 5 min are retried, failed enqueues are recorded, the sheet gives up at 150 s with "Prøv igen"); housekeeping runs hourly in the background function (deletion, auto-complete 14 days after shipping, reminders, reconciliation); robots/sitemap/noindex; privacy text matches the code (gf_utm, Netlify EU, CAPI).
+
+## Seventh pass (the Christmas gift)
+
+- **The buyer is giving a gift.** The page now sells the gift, not the restoration: an eyebrow with the season and the last order date, "i smug, hvis det er en gave" in the lead, a "Den julegave, de ikke selv kan købe" section (photograph it secretly, write a greeting, send it directly or home, under the tree on time), the deadline and a day countdown in the price block, a closing line "Julegaven er klaret i aften", and three gift questions in the FAQ. Everything is date-gated on the Christmas window (`CHRISTMAS_START_DATE`, default 1 Oct); outside it the gift angle stays without dates.
+- **The greeting is real, not copy.** Stripe Checkout has an optional 200-character field; the text lands on the order, in the owner mail, the ordrebekræftelse, the admin page and the print checklist. A promise on the page must be a thing the owner does.
+- **No MobilePay until it exists.** The payment line reads "Apple Pay, Google Pay eller kort" until `STRIPE_MOBILEPAY_ENABLED=true`; the same flag already controls Checkout.
+- **The first screen still holds the button** at 390×664 (CTA bottom 652 px): the archive credit moved into the photograph on phones so the eyebrow could take its row.
+
+## Eighth pass (no phone number, three sizes, the lens, and Christmas back in its box)
+
+- **No telephone number anywhere.** The owner does not want to sell over the phone, so the number is gone from
+  `founder.md` upward: there is no `phone` field to render. Every place that used to end in "ring til os" now ends in a
+  mailto link — the checkout error ("skriv til os, så sender vi et betalingslink"), the 404, `/tak` when a payment could
+  not be verified on the spot, both approval pages, the footer, the order mail, the reminder mail and the owner's
+  10-day nudge. `MailLine` renders those sentences with the address as a real link, because in-app browsers auto-link
+  nothing. The legal pages name the trader with name, CVR, address and e-mail; e-mail is the contact channel Danish
+  distance-selling rules require us to publish, and we publish the one we actually answer. Stripe still collects the
+  *customer's* phone: that is for the carrier's delivery SMS, not for us to call.
+- **Three sizes, chosen after the customer has seen the restoration.** 30×40 cm 599 kr., 40×50 cm 799 kr., 50×70 cm
+  999 kr. (20×30 stays disabled: a 449 kr. anchor under the price the ads quote costs more than it adds). The landing
+  page quotes "fra 599 kr." and lists the three as a price list, not a card. The choice itself lives on `/p/[id]`, under
+  the wall mockup, where the customer has already seen what they are buying — three real radio inputs, so keyboard and
+  VoiceOver get the semantics for free. Picking a size swaps the mockup, the price on the button, the spec list and the
+  refund line at once.
+- **A mockup per size, rendered up front.** `processRestore` composes one wall mockup for every size on sale (sharp, no
+  model) and stores the paths in `preview_meta.mockups`; the preview page preloads all three, so switching size is
+  instant and the frame really has that size's proportions. `?f=40x50` on the image route serves them.
+- **The price is never taken from the browser.** The page sends a size; `/api/checkout` looks the amount up in
+  `PRICING` for a size that is actually on sale (`sellableFormat`) and writes both onto the order before Stripe sees it.
+- **The lens is fixed.** Two real bugs: the container is `touch-action: pan-y`, so on a phone every vertical drag was
+  handed to the page scroller and the gesture died; and a press outside the ring could stall, because the catch-up
+  branch wrote a new target without restarting the spring. Now the ring is the handle — its own element with
+  `touch-action: none`, hit-tested as a circle, owning the pointer for the whole drag in both axes — a tap anywhere else
+  springs the lens to that point, and a swipe on the photograph still scrolls the page. The centre is clamped by the
+  radius, so the circle can never hang half outside the frame. Verified on an iPhone 13 profile
+  (`work/lens-test.mjs`): drag lands where the finger is, tap lands at the tap, the circle stays inside on all four edges.
+- **Christmas is a layer, not the site.** The headline, the lead, the product and the promise are the same in July and
+  in December. The season only adds an eyebrow with the last order date, the deadline line with a day countdown, the
+  delivery answer in the FAQ and the closing line. The window starts 14 November (`CHRISTMAS_START_DATE`), not 1 October.
+
+## Ninth pass (the shop: add-ons, the second copy, and a bill that adds up under the finger)
+
+- **One quote, two places.** `quote()` in `lib/pricing.ts` is a pure function from a configuration
+  (size, frame, extra copies, repeat) to lines and a total. The browser runs it to draw the bill under the
+  customer's finger; `/api/checkout` runs it again from the same file before Stripe sees anything. The page
+  therefore never sends a price, only a choice — hostile input (`format: 'hack'`, `extraPrints: 99`) falls back to
+  the default size and clamps at three copies (`work/pass9/repeat-guard.mts`).
+- **Add-ons that the owner can actually deliver.** A frame choice (sort or eg, same price — a choice, not an
+  upsell), and *ekstra eksemplar af samme billede* (349 / 449 / 549 kr. by size, up to three). The extra copy is the
+  honest one: the restoration is already paid for, so only the print, the frame and the parcel repeat, and it goes in
+  the same box. Nothing is pre-ticked — the add is a button, never a checkbox someone has to find and clear.
+- **The frame is visible, not a word.** `processRestore` renders a wall mockup for every size *and* frame
+  (six sharp composites, no model), the preview page preloads them all, and picking a frame crossfades the wall.
+  A choice you can see is a choice people make.
+- **The second photograph is a post-purchase offer, not a cart.** Carts, bundled fulfilment and multi-item approval
+  would be a week of risk for an order that is one picture 95 % of the time. Instead the receipt (on /tak and in the
+  ordrebekræftelse) carries a link with the order's own share token: `/?igen=<id>.<token>`. It starts a completely
+  ordinary new order that remembers where it came from, and that memory — validated server-side against a real, paid
+  order — is the only thing that unlocks the 100 kr. repeat price. One order, one approval, one shipment, and an
+  upsell at the moment people are most likely to say yes.
+- **The preview page became a product page.** Where you are (three steps), the object on the wall, the three
+  decisions, and *Din bestilling*: hairline rows, tabular figures, shipping named as included, and a total that counts
+  to its new value over 380 ms instead of jumping (reduced motion sets it straight). The order button carries the same
+  total, so the number under the thumb and the number on the card are never two different numbers.
+- **Risk reversal moved next to the price.** Three lines under the big 599: you see it first, you approve before we
+  print, you get the money back. That is where the doubt is, so that is where the answer belongs.
+- **No dark patterns.** No fake stock, no countdown that is not a real delivery deadline, no pre-selected add-ons, no
+  invented "mest valgt" badge — the size hints are opinions ("Det store, man ser fra døren"), which is what they are.
+
+## Tenth pass (the audit, and everything code could fix)
+
+- **Payment methods belong to Stripe, not to us.** The Checkout session no longer sends a
+  `payment_method_types` list, so Stripe offers whatever the account has enabled and the browser can
+  show — cards, and Apple Pay or Google Pay where the device supports them. The `STRIPE_MOBILEPAY_ENABLED`
+  flag, its config helper, its copy branch and its documentation are gone: one fewer thing that has to be
+  true in two places at once.
+- **The quote is frozen onto the order at checkout.** Receipts were rebuilt from *today's* PRICING against
+  a *frozen* amount, so any future price change would make every old receipt contradict its own total.
+  `preview_meta.quote` now holds the lines the customer agreed to, and `/tak`, both mails and admin read
+  that snapshot.
+- **Stripe line items are asserted.** The repeat discount comes off the first line's *amount* and the unit
+  price is derived from it, so a line with a quantity above 1 can no longer multiply the discount, and the
+  session is refused outright if the items do not add up to the quoted total.
+- **The repeat link is capped at three redemptions.** A receipt can be forwarded; without a cap a leaked
+  link is a permanent public 100-kr. coupon.
+- **A wrong amount in a mail is worse than no amount:** the `?? 59900` fallbacks are gone from the
+  confirmation, the refund notice, the owner mail and the CAPI payload.
+- **Admin's format change keeps the money honest:** an unpaid order is re-quoted, a paid one keeps what was
+  charged and gets a note saying why the two differ.
+- **`CONFIG.siteUrl` falls back to Netlify's own `URL`/`DEPLOY_PRIME_URL`**, so a forgotten
+  `NEXT_PUBLIC_SITE_URL` cannot put localhost into a customer's inbox or a Stripe redirect.
+- **"Se tæt på".** Restoration is judged in the eyes, and a whole-frame slider can hide the work on a
+  photograph whose damage is subtle. One button scales both sides 2.2× from the same origin, so the
+  comparison stays honest; the caption says what to look at.
+- **The image controls share one row**, the save-your-preview form collapsed behind a summary (it was an
+  alternative to buying, sitting between the button and the footer), and the bill sits above the extra-copy
+  offer so the last number before the total is the total.
+- **Smaller by measurement:** the customer's "before" is 1200 px q78 instead of 1400 px q82, the wall
+  mockups are 1040 px instead of 1200 px, and the five combinations nobody is looking at yet are preloaded
+  on an idle callback instead of at mount.
+- **Nothing under 13 px on the product page**, every tappable thing at least 44 px tall, the consent banner
+  appears after six seconds for a visitor who never scrolls, and `/p/[id]` carries a canonical.
+- **The example set gets a colour half — sourced, not invented.** Every one of the seventeen examples is a
+  black-and-white archive photograph from 1850–1935, so a visitor holding a yellowed 1970s snapshot sees no
+  evidence that we can do *her* photograph. Seven U.S. Farm Security Administration colour transparencies
+  from 1940–42 are now committed under `assets/examples-source/`: real families, real Kodachrome fading,
+  public domain, and — since the buyer's own eye is the argument — mostly the same kind of faces the ads
+  will be shown to. The alternative, generating a plausible "before" with the image model and calling it a
+  damaged family photo, was refused: an invented before is a fake result, whatever the after looks like.
+  The restoration itself has not run — the OpenAI account is out of credit (HANDOFF item A0) — so the
+  originals, the sidecars and a one-command rebuild are committed and `examples.json` is untouched.
+- **The example set was a museum; it is now a drawer.** Seven of the seventeen examples were objects no
+  customer owns: a glass negative with "088" inked on it, two press negatives with the subject's name
+  written across the sky, an 1850 daguerreotype, and four tintypes in gilt oval mats. Two more carried the
+  lending museum's accession number (`MINØ.27719`, `MINØ.25058`) printed into the frame. A visitor holding a
+  creased 10×15 from an album learns nothing from a catalogue entry — worse, she reads the whole page as
+  "restoration of antiques", which is not what she came for. The seven are retired (`consent: no` plus a
+  `retired:` line saying why, so the decision survives the next export), the two accession numbers are
+  cropped off, and the hero is now Gunhild and her son: a snapshot, on a porch, in 1935.
+- **A found photograph has no date, and we do not invent one.** The vernacular prints carry
+  `årstal ukendt` where the archive photographs carry a year; the caption parser accepts it rather than
+  forcing a plausible-looking decade into the line.
+- **The examples are ordered by what the pair proves, not by age.** Every restoration that exists was put
+  side by side and judged on one question: is the repair unmistakable at a glance? Soldat og ung kvinde
+  leads — the emulsion has rotted black down one edge of the print, and the "efter" is a clean photograph
+  of two people — because that is the only pair where a cold visitor understands the offer without reading
+  a word. Three pairs whose difference is real but subtle (Pauline og Ingeborg, Lars og Marit, Bryllup
+  1916) sit at the end, where the page never renders them; they stay exported as cover if a better pair
+  has to be pulled.
+- **Portrait cards first in the swipe row.** `.swipe` is a flex row, so one landscape card among portraits
+  left a column of dead paper under it. The row now aligns to the top and the landscape pairs sit mid-row
+  and last, where a taller neighbour is always beside them.
+- **Two more archive edges cropped:** the handwriting on Anna Cooper's plate margin, and the museum
+  accession numbers. What is left is the photograph.
+- **The upsell stopped explaining its own price.** "Restaureringen er lavet én gang, et eksemplar mere
+  er kun billedet, rammen og forsendelsen" answered a question nobody asked and planted a worse one:
+  *hvorfor koster det første så meget?* The offer is now one line — same picture, same size, same parcel —
+  and the button carries the number.
+- **The guarantee stands once, under the button.** The bill repeated the refund three centimetres above
+  the CTA that repeats it again; it now states the payment fact instead (`Vi printer først, når du har set
+  det færdige billede og sagt ja`), and "Pengene tilbage, hvis det ikke ligner" is the last thing read
+  before the tap.
+- **Colourisation is a choice, not a correction.** The old line ("De fleste vælger sort-hvid: det er
+  sådan, billedet blev taget") told the customer which answer was right about their own family photograph.
+- **A production build refuses to publish `[Udfyld: CVR]`.** The seller's identity on the two legal pages
+  falls back to a placeholder when `assets/founder/founder.md` is unfinished — right for the owner, worst
+  possible for a customer checking whether we are a real company. `next.config.ts` now fails a Netlify
+  production build that would ship one, names the missing fields, and offers `LEGAL_DRAFT=true` for a
+  deliberate draft. It invents nothing.
+- **The default order is now asserted, not assumed.** `npm test` (node:test, no new dependency) proves the
+  untouched order is 30×40 / sort / 0 ekstra / 599 kr. from three directions: the pricing module, the
+  add-on shape a freshly created order actually has, and the arithmetic Stripe is handed across all 48
+  combinations. It also proves that nothing a client can send — `null`, `''`, `'abc'`, `NaN`, `-1`, `0.4`,
+  a missing key — turns an extra copy on. `npm run test:order` does the same in a real browser: it reads
+  *every* price rendered anywhere on the page after each change, so a sticky bar that quietly keeps an old
+  number cannot pass, and it asserts the extra-copy control is opt-in on load.
+- **`npm run lint` is gone.** It ran `next lint`, which Next 16 removed; the repo has no ESLint installed
+  or configured, so the script only ever produced "Invalid project directory provided, no such directory:
+  lint". A command that always fails teaches everyone to ignore it.
+- **A production build cannot ship `localhost` any more.** `/privatliv`, `/handelsbetingelser` and
+  `/sitemap.xml` are prerendered, so the canonical tag, `og:url` and every sitemap entry are frozen at
+  *build* time from `CONFIG.siteUrl`. The runtime `console.error` in `lib/config.ts` fires long after the
+  wrong host is already inside the HTML — and a Meta ad pointing at a page whose `og:url` says localhost
+  loses its share card. `next.config.ts` now fails the build instead. Verified both ways: without the
+  variable the build stops; with it, the string `localhost` is gone from the prerendered pages and the
+  sitemap reads `https://billedearv.dk/…`.
+- **Families open the example row.** The visitor now meets a mother holding her baby, a family on a
+  staircase and a family group before she meets anyone's solo portrait. The hero stays the 1916 couple:
+  it is the pair whose damage is legible at a glance, and it is the only argument that works before a
+  single word is read.
+- **The deletion promise now matches what the code does.** Four short lines said the photograph is deleted
+  after 30 days, flat. `/privatliv` has always been precise — 30 days for an upload without an order,
+  90 days after delivery for one with — so the promise was wrong by two months for the only customer who
+  pays. The lines now read the numbers from `CONFIG` and name the case: *bestiller du ikke, slettes
+  billedet efter 30 dage*. It cannot drift from the retention job again.
+- **The 100-kr. discount on a new photograph is gone.** A customer should have to hold two prices in
+  their head, not three: another copy of the same picture is 349 kr., and a new picture costs what a
+  picture costs. A conditional third price that only exists if you came through a particular link is
+  where a surprise at checkout begins. The receipt link stays — it still records which order sent the
+  next one, and it still saves the customer from starting over — it just no longer buys anything.
+  `REPEAT_DISCOUNT_DKK`, the `repeat` flag on the quote, the discount line, its Stripe line-item note and
+  four pieces of copy that advertised it are all removed, and a test now asserts that no quote can
+  contain a negative line at all.
+- **The digital file is delivered, not just promised.** The landing page, the Stripe line item, the terms
+  and the consent sentence all said a high-resolution file was part of the price — and the terms tie the
+  withdrawal right to the moment it is delivered — but nothing ever handed it to a customer; only admin
+  could download it, for fifteen minutes at a time. `/godkend/<token>/fil` now redirects to a short
+  signed download of the print final once the order is APPROVED or later, the approval page shows
+  "Hent din fil i høj opløsning" the moment the customer has said yes, and the shipping mail carries the
+  same link. The approval token is the key because it is the key the customer already holds. After the
+  90-day retention the link says the file is gone, which is what the privacy page promises.
+- **The two mail-sending endpoints have a ceiling.** "Send mig linket" (no photograph at hand) and
+  "Gem dit preview" both mail whatever address they are given. A few per address and per browser a day
+  is every legitimate use; beyond that the form still says "sent" and sends nothing, so nobody can turn
+  our domain into a way of bothering a stranger. Counted in the database, not in memory, because a
+  function instance remembers nothing.
+- **`/founder.jpg` exists.** The landing page rendered `<img src="/founder.jpg">` the moment
+  `founder.md` named a portrait, and no route served it — the one file the owner is told to add would
+  have put a broken image on the front page. The route normalises the file (HEIC from a phone included)
+  and fits it to 600 px.
+- **What a page says about itself is true at 11 px, too.** The cookie banner said "Ingen andre" about
+  cookies while the site sets three technical ones; it now says so. A HEIC picked on Android drew a
+  broken-image icon at the top of the sheet (the browser cannot decode what it uploads perfectly well);
+  the sheet shows the file name in a frame instead. "Slet mit billede nu" returned the customer to the
+  front page without a word; it now says the deletion happened.
+- **The proof moved up, and the page says why before it says how.** A cold visitor from a before/after
+  ad used to meet the hero, the trust row, three steps and the gift story before the second before/after.
+  The order is now hero → *Det kunne være jeres* (six pairs, swipe on a phone) → *Tæt på* → how it
+  works → what you get → price → the gift → questions. The gift section lost its own button: four
+  identical primary buttons down one page is not a hierarchy. Every remaining primary says the same
+  thing, *Se hvad dit billede kan blive til*, because that is what the button does; the sticky bar
+  carries the same words and fits 390 px exactly.
+- **The hero states the outcome and the risk reversal in one breath.** *Du ser resultatet, før du
+  køber* is true (the preview is free, the order comes after), so it now stands under the button and
+  first in the trust row. The sub-line says what happens: a photo with the phone, ninety seconds, and
+  a decision only afterwards.
+- **The sizes are compared, not listed.** The landing page shows the same three boxes the order page
+  uses, with the default marked *Standard* — the word for what it is, not *Mest populære*, which we have
+  no sales to prove. The order page numbers its decisions 1 Størrelse · 2 Ramme · 3 Ekstra eksemplar ·
+  4 Din bestilling, and the bill now comes *after* the last decision, with the three real promises
+  (approve before print, money back, deleted if you do not order) directly above the button. Two
+  paragraphs between the photograph and the wall mockup were cut; the second copy of the spec text went
+  with them.
+- **The second copy has a reason.** *Én til dig. Én til familien.* — the sister or parent who also
+  remembers — then the price. Still a button, still opt-in, still 349 kr. at every size.
+- **The FAQ is ordered by what stops a purchase.** Cost of looking, badly damaged or blurred (with the
+  honest limit: sharpness that was never there cannot be invented), does it look artificial, can I
+  cancel, delivery, what happens to my photo — before sizes, copies, the file, gifts and payment.
+- **The headline belongs to everyone's photograph.** *Mors gamle billede* made the product sound like a
+  gift for one person; *Jeres gamle billede* is the wedding, the parents when they were young, yourself
+  as a child. The eyebrow says what the ad showed — *Dit gamle billede kan blive sådan her.* — and the
+  gift moves to supporting content. The ninety seconds left the hero: nobody should meet a waiting
+  time before the first tap; the sheet and the steps still say it, after the decision to look.
+- **"Du ser resultatet, før du køber" is the sentence under the button**, set in ink, ahead of the
+  price. It is Billedearv's structural advantage, and it is true.
+- **The primary button is one variable.** `CTA_VARIANTS` in lib/copy.ts, chosen by
+  `NEXT_PUBLIC_CTA_VARIANT` at build time and logged on `FlowOpened`, so two deploys can be compared
+  in the events table. No experimentation framework; a redeploy is the test.
+- **40×50 is marked *Anbefalet*, not *Mest populære*.** A recommendation is an opinion we hold; a
+  popularity claim would be a statistic nobody has. The order still starts on 30×40 at 599 kr., so the
+  landing page's *fra*-price is the price a customer meets, and `test:order` keeps asserting it.
+- **The bill starts with the customer's own picture.** Size, frame and number of copies in one line
+  next to the framed mockup, then the lines and the total — *this is exactly what I am buying*. The
+  "Din bestilling er klar / du behøver ikke vælge noget" block is gone: a selected box says it.
+- **Placeholders cannot reach a customer.** `missing()` prints the bracketed reminder only outside
+  production, the legal pages drop an empty field instead of printing *[Udfyld …]*, and the build
+  guard for name, CVR, address and e-mail is now unconditional — `LEGAL_DRAFT` only controls the
+  *Udkast* stamp. On desktop the hero also shows the same photograph framed: old → restored → on the
+  wall, in the first viewport.
+- **The hero is five things, in order.** Transformation, headline, one sentence, the button, the risk
+  reversal. The enumerating sentence went (the headline's *Jeres* already carries it), the trust row
+  stopped repeating the line that stands under the button, and on a phone the framed state of the
+  same photograph sits next to the one sentence at 96 px — so the first screen says old → restored →
+  in a frame without a paragraph.
+- **On the result page the only button-shaped thing is the order button.** *Se tæt på* and *Vis i
+  farver* are text links now; they still work, they just no longer compete. Between *Her er dit
+  billede.* and the decisions stands *Og sådan hænger det hos dig.* over the customer's own framed
+  picture — the caption that used to repeat the frame's spec is gone; the rows below say it once.
+- **Fewer repeats.** The price block no longer lists the other two sizes under the big price (the
+  three boxes above already do), *Du bestiller først, når du har set resultatet* left the price block
+  (the list beside it says the same), *Manuelt tjek* and *Godkendelse* are one row, and the second
+  copy's reason is one line with the price on the button.
+- **The button speaks in the first person.** *Se hvad mit billede kan blive til* is the default
+  variant now: the order button already says *Bestil mit billede* and the sheet *Vis mig
+  resultatet*, so the funnel has one voice from the first tap. A and B stay one env variable away.
+- **Two words less about technology.** The FAQ said *hvis AI'en har ændret noget i et ansigt*; it says
+  *restaureringen* now. The terms and the privacy page keep naming the model and the provider, because
+  there it is a duty, not a pitch. And the line under the button says the whole risk reversal in one
+  breath: *Du ser resultatet, før du køber – det koster ikke noget.*
+- **The hero is the product, the slider is the proof.** Before any ad spend the first screen shows the
+  framed 30×40 print on a living-room wall, under *Gaven, de ikke selv kan købe.* and *Det gamle billede
+  af mor og far. Skarpt igen, i ramme, klar til at give.* The damaged original sits beside the one
+  sentence (phone) or beside the wall (desktop), so old → framed reads without a slider; the slider
+  opens the proof row directly below with the same photograph. No staged photo of a son handing a frame
+  to his mother: that would be a person we invented, so the gift lives in the words.
+- **AI is named, hands are not.** *Sådan gør vi*: AI makes a first proposal in about a minute and a half,
+  a person reviews every picture and checks the faces before it is printed. Every *finjusterer i hånden*,
+  *finpudser* and *håndarbejde* is gone from copy, mails and terms — the human step is review and
+  approval, and the site must not imply hand restoration it does not do.
+- **A price anchor, one line, one constant.** *Til sammenligning: hos en fotograf koster restaureringen
+  alene typisk 300–600 kr. – uden ramme og levering.* is the owner's market figure (`PRICE_ANCHOR`);
+  it is a comparative claim under markedsføringsloven, so the owner keeps the evidence for it, and an
+  empty string removes the line.
+- **PreviewShown is the third server-side event**, sent from the restoration job with the order id as
+  event_id — the same id the pixel's copy carries, so Meta counts one. Admin opens with the one number
+  the test is decided on: distinct previews shown → distinct checkouts started, last 30 days, from our
+  own event log.
+- **One address, one source.** `founder.md` is the only place the contact address lives, so hej@billedearv.dk
+  now prints on the price block, both footers, the 404, /tak, the approval pages and in every mail —
+  and the Resend sender defaults to the same local part. The mailbox has to exist and be read daily; the
+  site promises an answer within 24 hours.
+- **Where the picture is, said plainly.** Storage is in the EU (Supabase, Ireland); the restoration runs
+  at OpenAI, which is not EU-resident. *Det ligger i EU* overstated that, so the sheet and the FAQ now say
+  *gemmes i EU og behandles af vores AI-leverandør*, and the privacy page carries the detail.
+- **No borrowed experience.** *Det, vi ser mest af* implied a track record nobody has yet; the FAQ says
+  what is true instead — *det, restaureringen er bedst til*.
+- **The spec is one line on a phone.** Seven rows between the wall mockup and the size choice pushed the
+  first decision 2.4 screens down at 390 px; a line and *Se alt, der er med* bring it to 1.8. A desktop
+  keeps the rows.
+- **Ten business days and 2 December, until someone signs for less.** The delivery promise has one
+  source (`CONFIG.deliveryDaysMax`, `christmasCutoffDate`) and every surface reads it; the defaults are
+  now the cautious ones. A promise the partner has not confirmed in writing is a refund waiting to happen.
+- **The frame follows the photograph everywhere.** The wall mockup already turned for a landscape
+  picture; the order lines, the Stripe metadata, the confirmation mail and the print checklist still
+  said 30×40 about a 40×30. `isLandscape(order)` reads the restored output's proportions and every
+  label goes through it — same price, and the checklist says *LIGGENDE – rammen vendes* out loud.
+- **The watermark is the whole picture.** One row along the bottom and a corner mark left the faces —
+  the only part anyone screenshots — clean. *BILLEDEARV · PREVIEW* now tiles across the preview at 18 %,
+  and because the zoom view scales the same file it is covered too. The approval mail's picture is
+  1200 px with a lighter mark; the file itself is the download after the yes.
+- **Colour is a post-purchase option.** The toggle on the order page ran an OpenAI job for every
+  black-and-white upload before anyone had paid, and was one more thing to decide. The order page now
+  says it in one line; the approval mail and page offer *Vil du se det i farver?*, which lands as a change
+  request, and admin has *Skift til farver* → new final → new approval mail. Nothing is charged.
+- **An order nobody approves closes itself.** Day 14: a final notice (refund in 7 days unless approved).
+  Day 21: the Stripe refund, the existing refund mail, status REFUNDED, a line in the order's notes and a
+  mail to the owner. The transition is atomic, so a yes in the same minute still wins. The terms say it.
+- **The ODR reference is gone** on the owner's instruction (the platform closed 20 July 2025); Center for
+  Klageløsning stays.
+
+- **Landing page redesigned (2026-09-07, Claude Code).** The owner judged the photo-book spread with archive strangers neither good-looking nor trustworthy and asked for a full redesign. Four directions were put to him (framer's workshop, album page with photo corners, 1970s photo-lab envelope, the category standard); he chose the standard, executed straight: warm white ground, Schibsted Grotesk headings, the wedding pair as a before/after slider in the first viewport beside the button, a two-across grid of six more pairs, three steps on the same photograph, the framed print drawn as an object (`components/Framed.tsx`) instead of on a rendered wall, sizes, swatches, price and guarantee in one column, gift, contact strip, questions, closing block. Landing styles live in `app/landing.css`; the old hero/steps/swipe/offer/product blocks were removed from `globals.css`. DESIGN.md rewritten from the built page. Direction contract in `app/layout.tsx` (seed f6b6e959). Impeccable's finish reviewer and documenter agents are not installed in this harness; the review was an in-thread batched round (390/768/1440, detector clean, no page errors, no overflow), disclosed here.
+- **Example photographs are generated originals, real restorations.** The owner would not put his own family on the site. Seven damaged prints were generated (gpt-image-2 via ChatGPT, prompts in the session log) as *originals* only, dropped in `assets/originals/` with sidecars, and run through the real pipeline (`quality:report` at medium, 34–46 s per restoration, two candidates, vision likeness check); `examples:export` wrote `public/examples/`. Captions end in "Eksempelbillede." and the grid says out loud that these are not customer photographs and that only the originals were made for the purpose — the restoration shown is what the product does. No names, towns or customers invented. ANTI_SLOP D2 is amended accordingly: generated *originals* are allowed when labelled; generated *results* are not. `public/og.jpg` regenerated from the wedding pair. `.env.local` created by the owner with his OpenAI key (git-ignored).
+- **Name: Billedearv (2026-09-07).** genfundet.dk turned out to be taken. DK Hostmaster whois on 2026-09-07 15:40 UTC: fremkaldt.dk registered 2016; billedearv.dk, skuffefoto.dk, rammeklar.dk and fotoarv.dk "No entries found" and without DNS. Chosen: **Billedearv** — one Danish word, calm, says what the product is (the family's pictures as an heirloom), carries the gift angle, sets well in the Newsreader wordmark, no joke in it. Reserve: skuffefoto.dk. Every occurrence of the old name in code, copy, mails, legal pages, env examples and docs was renamed in one pass (178 replacements, 40 files); earlier entries in this file now read "Billedearv" where they said the old name. Kept on purpose: the Supabase bucket `genfundet-private` (infrastructure; renaming it means creating a new bucket and moving objects) and the cookie prefix `gf_`. Still the owner's: register billedearv.dk, and in Stripe change the statement descriptor and public business name from the old name.
+- **Seller identity.** Owner supplied company MIYO Solutions, CVR 46300831, city Vemmelev. `founder.md` gained a `company:` field (lib/founder.ts); the legal pages print "MIYO Solutions v/ Mohammad Yassin, CVR …", the footer and mail signature the company. The street address is still missing: `address:` holds "4241 Vemmelev" so the production build's identity check passes on postcode and town, but e-handelsloven §7 wants a physical address — add the street before the first customer pays.
+- **Polish after the redesign.** Desktop display size 58 → 52 px and hero columns 6/5 so the headline sits in four lines; the header is sticky only from 768 px (a phone keeps its 60 px); the framed stage in "Sådan gør vi" now fills its box like the two prints before it; on a phone the offer reads price → sizes → guarantee → button before the spec rows, on a desk the rows come first (CSS order on `.offer-spec` children); the "Træk i midten" hint is gone, the slider's own reveal does that job; favicon, theme-color and the e-mail templates moved to the new palette.
+- **Launch offer (2026-09-07).** The owner asked for a campaign "so it looks like something special". Chosen: the first extra copy of the same photograph in the parcel at 0 kr. for orders up to and including CAMPAIGN_END_DATE (default 2026-09-30) — a real, dated benefit that fits the gift ("én til dig, én til mor") and costs the owner one print, instead of a struck-through reference price (illegal unless actually charged for 30 days) or a fake countdown (ANTI_SLOP C7). Implemented as `quote({ campaign })`: the caller decides the date once (checkout, order summary, the page via copy()), the arithmetic stays pure and tested; the free copy is a 0 kr. line on our bill and receipt, and Stripe simply does not list it. Nothing is pre-ticked: the customer still adds the copy on the order page, now at 0 kr.
+- **Founder section without a portrait (2026-09-07).** The owner asked for "Hvem står bag" to be filled in. Three lines in his voice were written for him to edit (`assets/founder/founder.md`), and the section now renders on the lines, the name, the company and the CVR; a portrait joins when a real one is dropped in. A generated face for a real, named seller was declined: that is a fake identity photo, not a placeholder. `fornavn()` still needs the portrait, so the copy says "vi" until then.
+- **Wall photograph for the mockup.** `public/mockup/wall.jpg` is a generated backdrop (Higgsfield nano_banana_pro, 2 credits): an empty warm off-white wall with daylight from the left and an oak floor edge, no people, no objects. Provenance is embedded in the file's EXIF description. The frame and the customer's photograph are composited on it by `lib/restoration/mockup.ts` as before.
+- **Company-first, no founder section (2026-09-07).** The owner does not want to appear on the site. The "Hvem står bag" section is removed; the contact strip, footer and mail sender carry the company (MIYO Solutions, CVR). The person is named only on /handelsbetingelser and /privatliv, where e-handelsloven and GDPR require the responsible trader. "Og sådan hænger det hos dig" on the order page became "Sådan ser det ud i ramme": the wall is a generic backdrop, not the customer's room, and the mockup itself stays because a framed preview is the category's standard product shot. Street address deferred by the owner; the production build still passes on postcode and town, the legal requirement stands.
+- **Fading pairs instead of sliders on the landing page (2026-09-07).** The owner: older visitors do not understand a drag handle. Hero and example grid now use `Compare` in fade mode, which already existed (dissolve every 3.2 s, opens on the damaged original in the hero, pauses off-screen, while touched and when the tab is hidden; hold-to-compare under reduced motion), with one solid label that reads "Før" or "Efter". The wipe slider stays on the order page for the customer's own picture. ANTI_SLOP F4 amended by the owner: the loop is comparison content, not decoration.
+- **Launch offer made visible (2026-09-07).** Owner: the offer must sell. A Shopify-style announcement bar above the header on the landing and order pages, and a promo box (title, one sentence, terms) beside the hero button and beside the price. Still a real, dated benefit; no reference price, no countdown.
+- **Clarity pass for a 55-year-old who is not technical (2026-09-07).** Owner's brief. Body 17 px, small/caption 15 px and 56 px buttons on a phone; "Sådan foregår det" moved above the examples with an actionable title per step ("Tag et foto af billedet", "Se resultatet på skærmen", "Godkend – så printer vi og sender"); a line under the fading pair says what it does and what a finger can do; "Det er hele prisen …" under the price; one sentence at the top of the upload sheet that says what to do; one line under the order-page heading ("Kig på billedet. Vælg størrelse og ramme. Tryk på Bestil"); FAQ titled "Ofte stillede spørgsmål".
+- **SEO and assistants (2026-09-07).** Owner: search and AI must find the site. robots.txt names the AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, Claude-User, PerplexityBot, Google-Extended, Applebot-Extended, CCBot, meta-externalagent and more) and allows them the same public pages as everyone else; `/llms.txt` is a route built from the live copy, pricing and config (llmstxt.org shape); JSON-LD on the landing page: Organization, WebSite, Product with one Offer per size (free shipping, 21-day full refund window), HowTo (the three steps) and FAQPage; title, description, keywords, Twitter card, robots meta; sitemap with dates. Private pages stay noindex and disallowed.
+- **Logo mark (2026-09-07).** Owner: the logo looked like the old one; make one. Three marks generated (Higgsfield nano_banana_pro, 6 credits): a picture frame with a lifting corner, one green stroke. Variant 1 chosen for legibility at 28 px; white knocked out, trimmed, written as `public/logo-mark.png` (header, before the Newsreader wordmark), `favicon.png` 64, `apple-touch-icon.png` 180 and `logo.png` 512 (JSON-LD). Raster, not vector: a proper SVG redraw is a small job for a designer later; prompt kept here.
+- **Housekeeping also from the database (2026-09-07).** Owner asked for Supabase cron jobs. `pg_cron` and `pg_net` enabled on the Billedearv project; a Vault secret `billedarv_cron_secret` was generated inside Postgres (never typed into a chat) and the job `billedarv-housekeeping` calls `GET /api/cron/retention` at :30 every hour with it as Bearer. That route now runs the whole housekeeping (Stripe reconciliation, then retention) so it equals the Netlify scheduled function at :00; both stay, both are idempotent, and the shop is tidied even if one host is misconfigured. `CRON_SECRET` in the app env equals the Vault value.
+- **Backend hardening before launch (2026-09-07).** A read-only security review of every API route, the Stripe and Supabase paths, uploads and mail found the shop mostly right (signed webhook, server-side quote, RLS with no policies, private bucket, random tokens, CSP) and four gaps, now closed: (1) `POST /api/preview/<id>/choose` accepted a new size, frame and extra copies on a PAID order and rewrote the amount admin reads — it now answers 409 unless the order is `PREVIEW_READY`; (2) nothing capped how many free restorations one network could start — `/api/preview/start` stamps a salted hash of the client IP on the order (`preview_meta.client`, `lib/api/client.ts`) and refuses the 11th order per hour with 429 (the sheet says "vent en time"), `/api/lead` the 6th lead; (3) `heic-convert` inflated a HEIC in JS before sharp's pixel ceiling applied — the declared `ispe` size is read first and anything above 80 Mpx is refused; (4) the customer status response carried the provider's raw error text — only `reason` is returned now. Also: HSTS header, constant-time comparison of `CRON_SECRET`/`JOB_SECRET` (`secretMatches`), admin login counts the IP the edge saw (`x-nf-client-connection-ip`, else the last `x-forwarded-for` entry) instead of the first, spoofable entry. The cap fails open on a database error: a script is the target, never a customer.
+- **Admin polished for the owner (2026-09-07).** Screenshots of every page at 390 and 1280 px found the customer pages consistent and the admin the odd one out: no wordmark, no way to log out, raw status names (AWAITING_APPROVAL), six forms in one loose grid with mislabelled inputs, and a phone view 18 px wider than the screen because of unbroken links. Now: one bar on every admin page (wordmark, Ordrer, Log ud — `components/admin/AdminBar.tsx`, `actionLogout` clears the cookie), Danish status everywhere (`lib/admin/status.ts`), each control in its own bordered block with a heading and `.field` inputs, the approval button explains why it is disabled, long ids and links wrap, table cells do not. Customer pages unchanged.
+- **Before/after keeps switching under reduced motion; the launch offer gets its own block (2026-09-07).** Owner on the live site: the hero did not alternate, and the offer was not visible enough. The first was the reduced-motion branch: with the OS setting on (common on Windows), `Compare` fell back to hold-to-compare, which the audience does not find. A cut between two stills is not motion, so the fade now alternates in every case — a little slower (4.5 s) and without the dissolve when motion is reduced. The second: the grey promo box became `components/Promo.tsx`, one block used in the hero, beside the price and on the order page — an uppercase tag on the accent, a headline that says what you get ("Ét ekstra eksemplar gratis – værdi 349 kr."), the date in bold accent, on an accent-tinted ground with a single 1 px border; the announcement bar reads at body size. "Gratis" is accurate: the copy carries the condition (with a purchase, first extra copy) and the terms line.
+- **Launch offer as a dialog (2026-09-07).** Owner: the offer must come up at once, built on what is known to work. What the dialog leans on is real and checkable: a dated offer (true scarcity), the extra copy's price against 0 kr. (anchoring), the wedding pair repairing itself inside the dialog (proof before promise), the free preview named as the first step (reciprocity, and a small commitment before the large one), and one button that starts that free step instead of harvesting an e-mail. Refused on purpose: countdown, fake stock, a guilt-worded decline (Forbrugerombudsmanden treats those as dark patterns). Behaviour: appears 1.8 s after the page paints (the headline is read first), once per visit, "Nej tak" holds for seven days, never for a repeat-link or resumed-order arrival, native `<dialog>` for focus and Esc, no entrance animation under reduced motion. `components/LaunchOffer.tsx`.
+- **Size cards show the frame to scale (2026-09-07).** Owner: the three size cards should show the frame getting bigger or smaller. One generated interior (Higgsfield nano_banana_pro, 4 credits for two candidates; the centred one kept as `assets/sizes/wall-sideboard.jpg`: empty lime-plaster wall, light oak sideboard, no objects) and one script, `scripts/size-shots.mts`, that draws the same black frame with the wedding photograph at 30×40, 40×50 and 50×70 cm above the same sideboard, scaled by centimetres from the sideboard's 120 cm. So the only thing that changes between the three cards is the frame's size against a piece of furniture everyone knows the size of — the comparison the customer actually needs. Output `public/sizes/*.jpg|webp`; regenerate with the command in the script's header if the photograph or the frame changes.
+- **The wait, the way back, the mark, the mockup, the question (2026-09-07, owner's test on a phone).** Five things from one real order. (1) *Leaving the page:* the sheet said "bliv på siden", and closing it deleted the order. Now the order survives a closed sheet or tab (only "Afbryd (billedet slettes)" deletes), the sheet writes `{id, token}` to localStorage, and `components/ResumeBanner.tsx` on the front page asks the server how far the picture is and shows "vi arbejder stadig" (polling) or "Dit billede er klar → Se dit billede". Gone after 48 h, payment, deletion or a close. (2) *The bar:* a 10 px accent bar with a percentage that climbs on a curve towards 90 % over the model's minute (never done before it is), and three named steps with ticks; the copy now says you may close the page. (3) *The watermark:* the tiled "BILLEDEARV · PREVIEW" at 18 % read as a rendering fault. Now larger, sparser, and it says what it is: "VANDMÆRKE · FORSVINDER VED BESTILLING" (the approval picture: "VANDMÆRKE · KUN PÅ SKÆRMEN"), plus one line under the picture on the order page saying the mark is only on the screen. (4) *The mockup follows the size:* `lib/restoration/mockup.ts` now draws the frame to scale from centimetres on the sideboard wall (the same backdrop as the size cards), so 30×40 → 50×70 is a visible change on the order page and in the examples (`scripts/remockup-examples.mts` redrew them). (5) *One question before payment:* "Skal der et ekstra eksemplar med?" with the mockup twice, asked once, only when no copy is on the order; yes writes the copy and goes on, no goes on. Also: the birthday-cake example left the grid (its repair is too quiet for a fading pair); the Netlify site URL is the netlify.app host until billedearv.dk resolves (Stripe's return links pointed at a domain with no DNS — "server not found" on the way back); admin got a "Kilder · 30 dage" table (utm_source · utm_campaign → previews, paid, revenue, conversion) and the full UTM in the list. `tests/e2e-flow.browser.mjs` walks the whole path with Playwright, one real restoration, and stops on the Stripe page.
+- **Examples as prints on a table (2026-09-08).** Owner: the grid looked unfinished (five cards, captions at different heights, "Vis i farver" as a bare link) and had to be friendlier for a 55-year-old. Six cards again — the birthday cake shows its close-up, where the repair is visible, in the same frame as the rest — each a print with a white margin and one soft shadow, the caption at body size with the year in ink-2, one line above the grid that says the pictures switch by themselves and can be tapped. The colour choice is a real button on the picture, bottom right; the Før/Efter label moved top-left in the grid so the two never meet. Nothing else on the page changed.
+- **A watermark nobody mistakes, and pictures the owner can redraw (2026-09-08).** Owner on his own order: the mark still looked like a production fault. It is now large (min side / 13), at 32 % with a darker outline, sparser — writing across the picture, read at a glance. Orders made before a change to the mark or the wall keep their old derived pictures, so admin got "Tegn preview og rammer igen" (`redrawDerived`: preview and six mockups from the stored restoration; the restoration is never touched) and `scripts/redraw-order.mts` for batches; the two test orders were redrawn. The admin list shows a thumbnail per order — the picture is how the owner recognises an order.
+- **Billedearv (2026-09-08).** The domain the owner bought and pointed is billedearv.dk — with an e — not billedarv.dk, which has no DNS. The owner chose to keep the domain and change the name: every occurrence of Billedarv in code, copy, mails, legal pages, JSON-LD, llms.txt, docs and the env became Billedearv / billedearv.dk (42 files). Kept as identifiers: the Netlify host billedarv.netlify.app, the branch billedarv-redesign, the Vault secret and the pg_cron job name. Netlify env `NEXT_PUBLIC_SITE_URL=https://billedearv.dk`, `EMAIL_DOMAIN=billedearv.dk`; the Supabase job now calls billedearv.dk. Still the owner's: Stripe webhook URL and descriptor, the Resend domain (mail goes out as hej@billedearv.dk and needs that domain verified), a mailbox for hej@billedearv.dk.
+- **Mockup as a product shot (2026-09-08).** Owner: the wall mockup looked poor — a small frame on a big wall. The camera now moves in: the frame takes 42 / 50 / 58 % of the width for 30×40 / 40×50 / 50×70 (capped at 78 % of the height for the tall one), the sideboard's top edge stays in the bottom of the shot as the scale reference, and the frame gained a bevel, an inner mount shadow, a glass glare and a two-layer shadow. Sizes still grow visibly; the wall and furniture are identical across all six variants, so a change of size or frame on the order page changes exactly one thing. Example mockups and the two existing orders redrawn.
+- **The mark is the brand (2026-09-08).** Two watermarks in two days were wrong: tiled caps read as a rendering fault, one big word read as a stamp. Now the mark is what a photo lab prints on a proof: the frame icon and "Billedearv" on a diagonal grid, white with a dark edge, 26 % on the preview, 26 % on the picture inside the wall mockup (the mockup had no mark — a screenshot of it was the product), 14 % on the approval picture. Never on the site's own examples (`makeMockup({ watermark })` is opt-in). Existing orders redrawn. The greeting-card field left Stripe Checkout and every sentence that promised a card; a gift is sent to the recipient's address instead.
+- **An inbox in admin, and a contact form (2026-09-08).** Owner: all mail in admin, answer from there, and a form somewhere on the site. Resend cannot forward to a mailbox by a switch; it can receive (MX → Resend, webhook `email.received`) and send. So: `messages` table (RLS, no policies), `/api/webhooks/resend` (Svix signature on the raw body, the mail fetched with a full-access key, filed once per Resend id), `/api/contact` behind `/kontakt` (honeypot, five messages per network per hour), admin → Beskeder (threads by the other party's address, unread count in the bar, the customer's orders beside the thread, an answer box that sends from hej@ with In-Reply-To/References so it lands in the customer's thread). The owner still gets one mail per incoming message. Attachments are listed, not stored — Resend keeps them. Link to the form in the footer and the landing page's contact line; in the sitemap and llms.txt.
+- **Beskeder can start a conversation (2026-09-08).** Owner: one must also be able to write from Beskeder, not only answer. A collapsible "Ny besked" card on the list (to, subject, text; opens prefilled from `?til=`), `sendNewMessage` in lib/inbox.ts (from hej@, signature, filed as the thread's first row, linked to the customer's latest order), and on every order page "Skriv til kunden" / "Samtale" beside the customer's address.
+- **The launch campaign as a prompt, not a login (2026-09-08).** Owner asked for a prompt that lets Claude in Chrome build the Meta ads. `docs/meta-ads-prompt.md`: product facts from the live copy, hard rules (nothing published, no tokens in chat, "fra 599 kr.", "gratis" only with its condition, no Christmas before 14 November, no invented customers, Advantage+ creative off), Fase 0 fundament (pixel id, domain tag, CAPI token straight into Netlify, Test Events code, custom conversion PreviewShown, AEM priority), one Sales campaign with one broad DK 45–65+ ad set at 150 kr./day optimised for PreviewShown, four ads on four angles (the gift, your picture can become this, you see it first, the launch offer) with `utm_content={{ad.name}}` so admin → Kilder reads them, and a post-publish checklist with decision rules. Creatives are rendered by `scripts/ads-creatives.mjs` from the site's own example pairs on the paper ground with FØR/EFTER and the honest footer ("Eksempelbillede – restaureringen er ægte"); bryllup-1916 is excluded because the difference is too quiet for an ad. The two test orders were deleted from the database with a scoped script (the admin has no delete on purpose).
+- **Scenes without references (2026-09-08).** Owner: the collages were dull, the prompts too thin, and could the reference images go. One Nano Banana Pro test with references had mirrored the print on the table, so the answer is yes and it is better: the image model now renders only the scene with two flat, frontal, pure-black placeholders, and `scripts/ads-composite.mjs` detects them (connected dark components on a 400 px copy, refined edge by edge at full size) and composites the real `public/examples` pair in, upper field = after, lower = before. The restoration in the ad is therefore always the pipeline's own output; only the room, the hands and the paper are generated. Five prompts rewritten in a fixed nine-part structure (role, scene, placeholders, camera, light, materials, mood, negative, output) so one paragraph can be tuned at a time.
+- **Five creatives, five ads (2026-09-08).** The owner ran the five scene prompts in gpt-image-2 and every scene came back with two clean black fields. The compositor needed two fixes to read them: a phone screen shares its dark component with the phone body, so the placeholder is now the largest solid inner rectangle from row/column projections rather than the whole component; and a portrait photograph in a landscape field must be cropped identically for before and after (`--focus` sets the crop's centre), otherwise the two do not read as one picture. Detected edges are overdrawn by 2 px. The fifth scene (two prints in one pair of hands) was too clear to keep as a reserve, so the campaign has five ads; the Chrome prompt names the exact files.
+- **A phone in an ad shows the product, and the ad carries its own headline (2026-09-08).** Owner: the phones looked bad and the ads had no text. Both were right. A bare photograph on a phone screen reads as a wallpaper; the screen now shows the real preview page — `scripts/ads-phone-screen.mjs` opens `/p/<id>` on the dev server at iPhone size with the example pair swapped into the slider (the test order's own picture never appears), hides consent, dialogs, the mockup column and the footer in `--compact` mode, and sizes the slider to fill what the phone shows; the compositor takes that PNG with `--screen`. Text: `scripts/ads-render.mjs` renders a paper panel under the scene in the site's own type (tag in accent caps, Schibsted Grotesk headline, Public Sans line, Newsreader wordmark; fonts embedded as data URLs because Chromium blocks file:// fonts), 4:5 and 1:1 with a per-format crop anchor. The landscape phone in koncept 1 cannot carry a portrait page, so that scene is regenerated with a portrait phone (prompt v2). Overdraw on placeholder edges raised to 4 px: models draw a thin dark inner border around a print.
+- **The ad is the photograph (2026-09-08).** Owner on the scene ads with panels: still very bad, sells nothing, "this is the only thing people buy". Right: in this category the scroll-stopper is a face, large, half damaged and half restored, and the scenes hid the face on a thumb-sized phone. `scripts/ads-hero.mjs` renders the real example pair full width with the site's own slider seam and knob (the same object the customer will drag on the landing page), Før/Efter chips, the brand chip, and the whole sell in the image: tag, headline, one line, a button ("Prøv med dit eget billede") and the price with the risk reversal ("du betaler først, når du har set det"). Two styles: `overlay-` (text on the photo over a dark gradient, primary for 4:5 feed) and `hero-` (paper panel under the photo, used for 1:1 so no face is covered). Nothing generated, no credits: the pictures are the pipeline's output. The scene pipeline is kept as secondary. Headlines: "Så tydeligt har du ikke set hende i 60 år.", "Mors og fars bryllupsbillede. Skarpt igen.", "Farverne fra 1976. Som de var.", "Som det lå i skuffen. Som det kommer hjem.", "Fem år, lagkage og flag. Reddet." (launch offer).
+- **No price in the picture (2026-09-08).** Owner: think psychologically, is a price in the ad wise? No. The ad's job is the click into the free step; a number in the image anchors a purchase decision before the value has been seen, which is the one advantage Billedearv has (you see it, then you pay). The image now carries the risk reversal instead ("Du betaler først, når du har set det · fri fragt · 21 dages fuld fortrydelse"); "fra 599 kr." stays at the end of the ad's primary text so a reader who expands is pre-qualified before we pay OpenAI for a preview. Lines gained one honest loss-aversion cue ("Hvert år falmer det lidt mere i skuffen") and the two-minute promise.
+- **The ads say only what the terms say (2026-09-08).** While reading the codebase for the owner's landing-page brief (parked on his order: "only pictures, do not touch the site now"; the brief is kept in `docs/landing-brief-2026-09-08.md` with the facts verified against the code), three things in the ad images turned out wrong and were fixed: "21 dages fuld fortrydelse" is not a term (the terms give 14 statutory days, a full refund until the customer approves, and an automatic refund 21 days after an unanswered approval mail) — now "pengene tilbage, hvis det ikke ligner"; "Farverne fra 1976. Som de var." and "Skarpt igen" over-promise — now "Falmet siden 1976. Restaureret i dag." and "Tilbage på væggen"; "Du betaler først, når du har set det" can be read as payment after the final review, which happens before it — now "Gratis prøve. Bestil kun, hvis du vil." The button reads "Se mit billede gratis", the short form of the CTA the owner wants on the site, so ad and page will say the same thing.
+- **Second conversion round: revenue, not uploads (2026-09-08).** Owner's brief after the first ad set: too much "gratis", too little product and price; a cold visitor from "i ramme fra 599 kr." must not land on what looks like an AI preview tool. So the page and the ads now say the same sentence in the same order — the free look, then the paid object with its price: hero body "…se restaureringen gratis. Kan du lide resultatet, gennemgår vi det og sender det hjem til dig i ramme fra 599 kr. inkl. fragt", a trust line under the button that ends on the price, and "Fra skuffen til væggen." as the second thing on the page: the hero photograph four times (as it is, restored, as a print, framed on the wall — all existing assets) and "Det får du fra 599 kr." with the five verified inclusions. "Det skal stadig ligne dem." uses the real wipe on the same face (the hero's close-up), never a group photo split. Objection killers replace empty reassurance: "Gratis prøve. Bestil kun, hvis du vil." is gone; "pengene tilbage, hvis det ikke ligner" left the hero and the trust row (it primes the fear it answers) and stays by the price, in the FAQ and on the order page, where the decision is made. The offer reads "2 indrammede eksemplarer fra 599 kr." — an object with a price, not a "gratis". Ads: six buying motives (emotion, product, gift, faces, original stays home, offer while active), each with the price; splits only on the same face, group photos as two labelled cards, product claims on product scenes; the slider knob removed from every static image. The first-round brief (parked) was executed in the same pass.
+- **Creative-strategy reset: one idea per ad, video first for cold (2026-09-08).** Owner: the ads still read as "a company explaining its product" (logo, before, after, eyebrow, headline, body, CTA, price, shipping, reassurance in one image = brochure); the goal is purchase ROAS, and a cold user must first think of their own picture. Decision: `scripts/ads/` replaces the brochure renderers; a cold creative carries hook + visual proof + one CTA + "I ramme fra 599 kr." and nothing else; the brand mark is small and last; six buying motives (memory, gift, trust, original, physical, offer) plus two UGC looks; 9:16 reels (hook → before → wipe → after → frame → end card) for cold, statics for trust/offer/physical; "gratis" is fine but never without the price in the same creative; refunds and guarantees stay out of cold ads (FAQ, checkout, retargeting keep them); splits only on the same face; no invented customer stories. Ad copy: hooks that sound like something a person would say, CTAs that say what the click gives ("Se dit eget restaureret gratis", not "Se mit billede"). "Tag et foto af det i smug" dropped for "Lån billedet et øjeblik. Resten kan være en overraskelse."
+- **Reels are motion, not slideshows (2026-09-08).** Owner on the first reels (stills with a push-in and crossfades): "virkelig ringe". Decision: `scripts/ads/reel.mjs` renders one animated page frame by frame — hook word by word over the scene, the old print lifts out of the scene and fills the screen, a wipe restores it, the restored picture glides into a frame on the wall, then CTA and price — full-bleed 9:16 with everything inside the Reels-safe band. No zoompan (it shakes), no letterbox, no crossfaded stills. Assets that would lift it further: real footage of a hand, a phone photographing a print, an unboxing.
+
+## Eleventh pass (the campaign is live: the phone after the upload)
+
+The ads went live 2026-09-09. Everything in this pass came from the owner looking at the site on his own phone, from Facebook, the way the audience does, and reporting one thing at a time.
+
+- **Push once (2026-09-09).** Owner: stop pushing after every file — each push is a Netlify build and the credits are his. Rule: commit locally as often as needed, verify locally (dev server, `npm run build`, tests, Playwright), push once per task or when asked, and say when commits are waiting. Netlify's list also showed two builds per push (two webhooks or branch deploys), which the owner can halve in the site settings.
+- **The dialog in Facebook's browser (2026-09-09).** Facebook's in-app browser is about 360×560 px; the launch-offer dialog was `max-height: 100dvh − 32px; overflow: hidden`, so the picture plus the text pushed both buttons off the bottom and nobody could say yes or no. Now the dialog body scrolls, the picture is capped at 30 dvh, and on phones the button is `position: sticky` at the bottom of the scroll area. The same sweep found the hero hyphenating "fami-liebillede" at 360 px (headlines no longer hyphenate) and the size cards breaking "30×40 / cm" (one line under 400 px).
+- **A tap switches, the loop dissolves (2026-09-09).** Owner: before/after did not switch fast enough when tapped. The fade mode's 1,4 s dissolve also ran on a tap, and the `pressed` class that was meant to shorten it was wiped by React's own className update in the same event. The `paused` state — set on every press — now carries an 80 ms transition; the slow dissolve is only for the idle loop.
+- **The admin shows visits, generations and the ad (2026-09-09).** Owner: "the admin must track well" and, later, "I want to see every generation". The sources table only counted orders, so a live campaign with clicks and no purchase looked untracked. Admin now has *Besøg · 30 dage* (distinct sessions per utm_source · campaign · utm_content through PageView → FlowOpened → PreviewShown → Purchase, fbclid without UTM as "facebook (uden utm)", `pwtest` left out), the order table keyed on utm_content as well, and *Genereringer*: every order with a preview, the original beside the restoration, date, status, customer, source. Found on the way: PostgREST returns at most 1000 rows per request, so the event query had silently dropped the newest events; it is paged now. The UTM chain itself was verified end to end: all three ads carry `utm_source=facebook&utm_medium=cpc&utm_campaign=lancering-sep26&utm_content={{ad.name}}` (read in Ads Manager), the live site sets `gf_utm`, and events land with utm_content.
+- **The way back after a closed tab (2026-09-10).** Owner: "Se dit billede" on the front page was gone after closing the page during the upload. The banner knew "job running" and "ready" only; a tab closed mid-upload leaves an order with no file and no job, which showed nothing while the stored key still suppressed the offer dialog. Now an order with a file but no job gets its job started (the run route is idempotent), and an order with no file or a failed job says "Din upload blev afbrudt, før billedet nåede frem. Vælg det igen" with a button that opens the sheet. The processing copy's promise ("du kan roligt lukke siden") is finally kept.
+- **The preview page for the audience (2026-09-10, five rounds on the owner's phone).** (1) The wipe slider was hard to read: the customer now gets a full-width *Før | Efter* switch under the picture that shows the whole picture one side at a time; the slider and its labels stay for those who drag, but the in-picture labels are hidden so there is one set of Før/Efter, and the seam and knob step out of the picture while a whole side shows. 52 px, 17 px type. (2) "Shows the before for a moment": the reveal wipe is gone from the preview, and the original is kept invisible until the restoration's load event, because the smaller file used to arrive first. (3) "Stuck on the first screen": a full-width "Se det i ramme og vælg størrelse ↓" under the switch, scrolling to the framed picture (24 px margin; an 8-second nudge that slid the order bar up was tried and dropped because it covered the switch); the instruction is one sentence; the picture leaves room for switch and button on a 660 px viewport. (4) "Tilføj et eksemplar + 0 kr." was a narrow, top-aligned button with a meaningless price: now full width, "Tilføj et ekstra eksemplar – gratis" while the offer runs, and the stepper it becomes is full width with 48 px buttons. (5) The cookie banner sat on the switch for anyone who had not answered it: it stays at the bottom until the order bar is up. (6) Back from Stripe left the order button on "Åbner betaling…" because iOS restores the page from the back/forward cache; a `pageshow` listener clears it.
+- **Sizes that read on the mockup (2026-09-10).** Owner: sizes and frame colours "do not follow" on the mockup. Two causes, both real. First the drawing: each size was scaled to fill its own share of the shot and the sideboard fell below the crop in all six, so 30×40 and 50×70 looked almost the same on a phone and nothing gave scale. The camera now stays put — one px-per-cm for every size, set by the largest print, every frame hanging the same height above the sideboard, whose top edge is in the shot (`lib/restoration/mockup.ts`); the twelve unpaid previews were redrawn. Second the swap: the event log showed the owner tapping three sizes within a second, and the mockup was replaced only after the new image had been fetched off-screen, so on a phone it lagged or seemed not to move. All six mockups are now in the page from the start, stacked, and a tap changes only which one is on top (instant in Chromium and WebKit; the preload loop is gone). A test order is always put back as it was found.
+- **Testing against production (2026-09-10).** The dev server and every Playwright run use the production Supabase. Rules that follow: tag test visits with `utm_source=pwtest`; never delete production rows without the owner's yes (a deletion of the assistant's own test events was refused by the tool and left alone — admin filters them instead); open a preview page as its owner by setting `gf_sid` to the order's session id. WebKit was installed for Playwright so phone behaviour is tested the way Safari renders it.
+
+## Twelfth pass (three days of real traffic, and what it said)
+
+- **The funnel named the problem, not the design (2026-09-11).** Three days of ads: 86 real clicks, 69 saw the hero, 11 opened the upload, 2 uploaded, 0 bought, median time on site 3 seconds. Nine of the eleven who opened the upload never picked a file, and both who did picked an archive photograph rather than their own. Nobody is failing to understand the page; they are being asked for a thing that is in a drawer at home while they are on the sofa in Facebook. The owner paused the campaign.
+- **A second way on for the empty-handed (2026-09-11).** "Jeg har ikke billedet lige nu" already existed — an e-mail with the link, `kind: 'nophoto'` on /api/lead — but it was reachable only from one FAQ answer and from a small text link inside the upload sheet, which is exactly where the nine were lost. It is now a link directly under the hero button, in the one place the visit is decided.
+- **Colour as a choice, made only when asked (2026-09-11).** The owner asked for colour as an option. The machinery was all there and deliberately post-purchase, because a model call for every black-and-white upload costs money before anyone has paid. On demand keeps both: the button appears only for a monochrome picture, the first tap starts the job and polls (~40 s), and every tap after that is a free switch that rides to Stripe as `chosen_colour` — which `processFinal` already honoured, so the print follows a choice made before payment. One call per order at most, on top of the existing ten-orders-per-hour cap. The six wall mockups are re-rendered in colour by the same job (sharp only, no model call) and asked for with `&c=farve`, falling back to the black-and-white wall, so a customer who picks colour never meets a grey frame two sections down. Asked whether colour should simply be on by default, the answer is no and yes: black-and-white stays what we hand over, because the restoration is faithful and the colour is not, but the colour version is made in the background the moment the preview is ready, so the button answers in 0.3 s instead of asking a 60-year-old to wait (measured end to end: preview at 41 s, colour finished by itself 53 s later). Someone who taps before it is ready gets a pulsing dot and a sentence rather than a dead button, and the receipt in step 4 names the choice (*i farver* / *sort-hvid*) whenever the original is monochrome. The copy says what it has to: *Farverne er et kvalificeret gæt. Vi kan ikke vide, hvilken farve kjolen havde.* Invented colour is the one place this product could quietly break its own promise not to invent.
+- **The header collided with itself while the font loaded (2026-09-11).** Found by screenshotting the preview page before the web fonts had arrived: `.nav-right .caption` was `white-space: nowrap`, so the line could never break. On a 320 px screen it ran past the viewport (hidden by the body's `overflow-x`), and while the wordmark was still drawn in its wider fallback the two ran into each other — which is what every visitor on a slow connection saw for the first moments. The line wraps now and both sides may shrink; measured at 320, 360 and 390 px with the fonts blocked and loaded, the gap stays 16 px and nothing overflows.
+
+## Thirteenth pass (why Meta was blind)
+
+- **The pixel was never the problem (2026-09-11).** Opened billedearv.dk in a browser without an ad blocker, accepted the banner, and watched it work: fbevents 2.9.398, Meta's config for the pixel answering, /tr beacons going out. The thing that had been listed as "unverified" for days is fine.
+- **Consent was the problem, and it was self-inflicted.** The banner waited for 120 px of scroll or six seconds; three days of ads put the median visit at three seconds. Almost nobody was ever asked, and no answer means no pixel and no server-side copy. Meta learned nothing, so it kept buying three-second visits, which meant even fewer answers. The banner now comes after 2.5 s or 60 px — same banner, no harder to decline, only offered while the visitor is still on the page.
+- **PreviewShown has never reached Meta at all.** It is written server-side, so its only route is the Conversions API, and the token has never existed. The ad set has been optimising toward an event Meta has not once received. The first gate on that token, a confirmed business e-mail, was closed this session: hej@billedearv.dk was added to the portfolio and Meta's code was read out of the site's own inbox in admin → Beskeder. The second gate is a personal identity checkpoint on the owner's developer account and is his to clear.
+- **Meta said the quiet part out loud.** Publishing the new ad triggered a dialog: 0 results expected at 150 kr./day, 582 kr./day suggested for one result a day. Declined — it breaks the stop rule. But taken with the missing conversion event it is the same finding twice: no signal and a small budget means no optimisation, and no creative fixes that.
+
+## Fourteenth pass (the measurement chain closed, and the campaign back on)
+
+- **The Conversions API is finally connected (2026-09-11).** Three gates in a row, each closed in order: a business e-mail on the portfolio (hej@billedearv.dk, with Meta's code read out of the site's own inbox), a developer-account identity checkpoint (the owner's, and only his), and then the token itself, scoped to the Billedearv dataset alone. It reached Netlify through `netlify env:set` reading the value straight out of `.env.local`, so it never entered a chat, a screenshot or a commit; a manual build was triggered because functions only pick up env vars at deploy. Verified by posting a real PreviewShown to the Graph API and getting `events_received: 1` back. The first attempt failed with "Invalid parameter" because the test payload carried no user identifier — Meta needs at least one, which the app already sends.
+- **A wall frozen on the default size (2026-09-11).** The end-to-end run caught what a hand test never would: the five other size and frame combinations finish rendering a few seconds after the preview appears, and the customer is redirected the instant it is ready, so the payload baked the fallback into every other URL. Picking a size changed the price and nothing else, for the whole visit. The URL now always names the size and frame and lets the image route fall back server-side. This was the owner's original complaint, still alive under the fix that made the swap instant.
+- **Twenty-seven checks, on the live site, in WebKit.** The whole path is now one script: arriving from an ad, the offer dialog, consent, a real upload and restoration, the preview page, colour, size and frame, a real Stripe session, errors, and what lands in admin. It is the thing to run before any campaign is switched on, and it is what caught the frozen wall and, twice, my own impatient assertions.
+- **What Meta would not allow.** A published ad set cannot change its conversion event. It is stuck on "Visning af indhold", which is close to a landing-page view and is what bought three-second visitors. Optimising for FlowOpened or PreviewShown now requires a new ad set and a fresh learning phase; that is a decision about money and time, so it was left to the owner rather than made for him while he slept.
+
+## Fifteenth pass (the last things the owner caught on his phone)
+
+- **Landing at the bottom of your own picture (2026-09-11).** The wait is long enough that people scroll while it runs, and the client-side navigation to the preview kept that scroll position, so the page whose entire job is to show the restored photograph opened halfway down the receipt. It scrolls to the top on arrival now. Verified by scrolling around through a real 45-second wait: position 0 when the page opened.
+- **Colour that did not answer (2026-09-11).** The colour version is rendered a few seconds after the preview appears, but the page had already loaded and never learned about it, so the first tap sat through the entire job a second time. The page now watches for it quietly and preloads it: 0.1 s, no waiting line.
+- **Colour leads, on the owner's call (2026-09-11).** He judged it converts better, and it is the strongest thing this pipeline can show. A monochrome picture now switches to colour the moment it exists and the choice is written to the order; the instant anyone touches the switch it is theirs and nothing moves it again. The honesty is unchanged and still under the picture: the colours are a qualified guess, and black-and-white is one tap away.
+- **Admin stopped drowning in our own tests (2026-09-11).** Genereringer listed every test the owner and I ever made. It now shows only visits that carried an fbclid or came from facebook — six real against twenty-six tests — says how many are hidden, and keeps a link to all of them.
+- **A repeat link that could not work (2026-09-11).** It resolves only from a paid order, and only a paid customer ever gets one, because it rides in the receipt. Admin printed it on every order, so opening one from an unpaid order looked broken. Checked both cases on live first: from a paid order the upload sheet says *Billede nummer to fra din forrige ordre*; from an unpaid one it said nothing at all. The link is now printed only where it works.
+
+## Sixteenth pass (colour first, not colour later)
+
+- **The colourisation moved in front of the preview (2026-09-11).** The owner wanted the very first picture anyone sees to be the colour one, and he is right that it is the strongest thing this pipeline produces. The job already ran for every monochrome upload a few seconds after the preview appeared, so moving it in front costs no extra model call and no extra money: only the order changed. The wait grows from about 45 s to about 75 s and the page has always promised a minute and a half, so the promise still holds. A failed colourisation is not fatal — the preview goes live in black and white and the background job still tries, which is the honest fallback.
+- **Switching back had to be instant too.** Both versions are preloaded when the page opens, so "Se det i sort-hvid" changes the picture on the tap rather than fetching what it is switching to. Measured at 0.21 s on a real order.
+- **The journey test learned two things.** Step six now asserts the opposite of what it used to: the first picture must be the colour one, the button must offer black and white, and the switch must be immediate. Step three no longer fails on a dev machine, where the consent banner cannot render because no pixel id is configured there; it skips with a printed note and still demands the banner against a real site.
+\n
+## Seventeenth pass (the frame in the picture, and who the ads were buying)
+
+- **A photograph of a framed photograph is cropped to the photograph (2026-09-11).** The restoration prompt says to keep the original framing, which is right for a scan and wrong for the path the site actually recommends: "lay the old picture on the table in daylight and photograph it with your phone". One real customer photographed a wedding portrait hanging in its frame on a wall, and the restorer faithfully kept the frame, the mat and the wall — a 599 kr print of a picture of a picture. A vision call now finds the photograph inside the upload before the restoration runs. It is deliberately timid: it crops only on a confident answer, only when a surround was actually named, never below a third of the area, and any error at all leaves the upload untouched. On a slanted print it cuts inward rather than outward, because a rectangle around a trapezoid always keeps frame on one side and losing a millimetre of the photograph beats printing somebody else's picture frame. Verified over all eight real customer uploads, not on synthetic ones.
+- **The preview timeout is a hang guard, not a pace (90 s → 150 s).** Two passes moved inside the customer wait this week — colourisation in front of the preview, then the framing check in front of that. The old 90 s ceiling would have started failing slow runs exactly the way 45 s once did, turning a slow minute at OpenAI into a lead form. The page has always said "about a minute and a half", and a run that lands at 100 s is worth far more than one that dies at 90.
+- **"Gratis" moved out of the cold CTA (2026-09-11).** Three days of ads bought 129 link clicks for about 280 kr and produced ten finished previews and nobody who touched a size, a frame or a payment. The button is the loudest promise in an ad, every cold CTA led with "gratis", and the price sat beside it in small type like a footnote — so the ad asked for curiosity and got it. Two new cold concepts invert that: the button names the product and the price, the free preview reassures underneath. The wall concept also had to say what the service *is* — "Fra skuffen til væggen" is a mood, and a stranger cannot tell from it whether we photograph, print or sell frames.
+- **The ad set's conversion event was left alone, against the plan.** The owner approved moving it from ViewContent to the upload event. Working through the numbers afterwards showed why that would backfire: both the pixel and the Conversions API are gated on the Meta consent, only 2 of 12 real ad orders consented, and Meta recorded 3 ViewContent against 25 link clicks in a day. The current event is already being optimised on about an eighth of reality; the upload event would give Meta roughly one signal every three days and reset the learning phase to get it. At 150 kr/day the creative is the only lever that works. The consent rate is the thing to fix before any optimisation change is worth making — and it must be fixed honestly, not by making "Ok" easier to hit than "Nej tak".
+
+## Conversion round, 2026-09-12 (the result page as the place you buy)
+
+- **Why this round exists.** Eleven ad sessions over 72 h loaded a finished preview and not one touched a size,
+  a frame, a colour toggle or a payment. The delivery chain is not the problem; the step after the picture is.
+  Everything below either removes something standing between the picture and the till, or makes the funnel able
+  to say where people actually stop.
+- **`PreviewShown` was never a view.** It fires when the background job finishes. So "ten people saw their
+  restoration" was ten jobs completing, and the one number the whole test turns on could not be read. It keeps
+  its name and meaning — it is the ad set's conversion event and renaming a live event silently is how you lose
+  a week — and **`PreviewViewed`** is added beside it: the restored picture decoded and at least half of it in
+  the viewport for one second, client-side, IntersectionObserver. A reload or a Back from Stripe inside half an
+  hour is the same look (`viewKind` in `lib/analytics/funnel.ts`), because a customer who reloads four times is
+  one customer. A browser that refuses storage reports the view every page load: an unmeasurable visit must
+  still be a working visit, and over-counting one step beats a page that throws.
+- **The rest of the new events are the steps nobody could see.** `ProductSelected`, `CheckoutClicked` (before
+  anything network-shaped, so a click that dies at Stripe is still a click), `CheckoutRedirected` (a created
+  session is not a payment page anyone saw), `GenerationFailed` (distinct from `PreviewFallback`, which also
+  covers "a human should look at this"), `ColourReady`, `ColourFailed`, `PreviewSaved`, `PreviewReopened`. The
+  allow-list in `/api/track` is a list, not a shape check, so a page cannot invent a step.
+- **The upsell modal is gone.** "Skal der et ekstra eksemplar med?" stood between the buy button and Stripe, on
+  a phone, for an audience of 45–70. The extra copy is an option beside the size and the frame now, priced and
+  counted where the rest of the configuration is. Nothing is pre-ticked, which was the reason the modal existed.
+- **The launch-offer dialog no longer opens by itself.** It arrived 1,8 s after paint, over the picture, for
+  people who had just clicked an ad. The offer is unchanged as content: the announce bar, the Promo block by the
+  price, the step beside the size. The dialog's styles went with it rather than sitting dead in the CSS.
+- **Three products, two of them behind flags.** `framed` (fra 599 kr.), `print` — a loose 20×30 on matte paper,
+  no frame or glass, posted flat, file included (250 kr.) — and `digital`, the file alone (99 kr.). Owner's
+  prices, 12 Sep. Each small product needs **both** an `_ENABLED` flag and a price above zero; `sellableProduct`
+  is asked by the page, the choose route, the checkout route and the receipt alike, so a browser posting
+  `product: "digital"` while that offer is off buys the framed parcel at the framed price. `needsAddress` on the
+  quote decides whether Stripe collects a delivery address — a file is not posted, and a form field between a
+  60-year-old and the payment is a form field for nothing.
+- **An order remembers which product it was.** Read from `preview_meta.product`, never from today's
+  configuration: an order placed while an offer was on must keep describing itself correctly after it is
+  switched off, or its own receipt starts promising a frame nobody bought.
+- **The landing page still quotes "fra 599 kr."** That is the framed product's price and what every live ad
+  promises. The cheaper rungs are disclosed in the FAQ and offered at the point of choice. Moving the hero to
+  "fra 99 kr." would contradict the running campaign; that is a decision about the ads, not a repair.
+- **"Det her er AI'ens første forslag" was doing real damage.** It described the picture the customer had just
+  fallen for as a draft, at the exact moment they were deciding. What is true is more useful: this *is* the
+  restoration, at screen size with a watermark; ordering makes the print-quality file, which is a second, larger
+  run rather than an upscale of this one and can differ slightly; and a person checks the faces before anything
+  is printed. All three are now on the page and in the terms. The wait screen's "Ansigterne rører vi ikke ved"
+  was simply false and contradicted the FAQ; it says the aim ("Ansigterne skal stadig ligne dem") instead.
+- **The legal pages' "Udkast – gennemgås af advokat" stamp is gone, and not by deleting the word.** It was set
+  by a hand-written environment variable, so it would have outlived the review it was waiting for, and it was
+  the first line a hesitant customer read on the page they opened to check whether we are real. The content was
+  completed instead; what remains open is a fact (the street address is still TODO in `founder.md`), so the page
+  names that fact and clears itself when the line is filled in.
+- **The examples note claimed the originals were fabricated.** Owner's correction: they are real old photographs
+  with real damage. The note says that now, and still does not claim they are customers' pictures — that is a
+  separate permission nobody has given.
+- **The product picker shows objects, not sentences.** Three products that differ physically were three grey
+  captions with the price at the tail. Each row now carries the customer's own photograph as the thing they
+  would get — framed on a wall, as a print with a white margin, on a screen — the price on its own line in the
+  display face, and a filled dot. The step headings went from 13 px letter-spaced uppercase grey to sentence
+  case at 17 px: the audience is 45–70 on a phone, and that is the difference between a form and someone talking.
+- **Tabular figures made "kr." look broken.** `font-variant-numeric: tabular-nums` gives every glyph a digit's
+  width, including the full stop, so "599 kr." set large read as "599 kr .". Only the total animates, so only
+  the total needs fixed-width figures: `dkkParts` splits the figures from the unit and the unit is set normally.
+
+## The delivery side of the small products, 2026-09-12 (night)
+
+- **A product is not shipped when the page can sell it.** The two small products went live in the shop
+  before anything downstream knew they existed, and every piece of that downstream was written when
+  there was exactly one product. The checklist the owner packs from told him to order a framed print
+  at CEWE for a 99 kr. file and post it to "(adresse mangler)"; the shipping mail told that customer
+  their parcel was printed, framed and posted; an admin size change re-quoted a digital order on the
+  framed ladder and turned 99 kr. into 599 kr.; and the approval notification said "bestil print" for
+  a download. None had reached a customer, because nobody had bought one yet — which is the only
+  reason this is a note and not an incident.
+- **The rule that would have caught all four: every surface that describes an order asks the order
+  what it is.** `orderProduct(order)` reads `preview_meta.product` and nothing else — not today's
+  configuration, not the format, not whether a `shipping_address` happens to exist. The one derived
+  helper, `isPostedOrder`, answers the only question most surfaces actually have.
+- **`shippedNotice` returns `null` for a digital order** rather than taking a flag. There is no parcel,
+  so there is no mail, and a caller that forgets to check gets nothing to send instead of a wrong
+  thing to send. The admin action checks the null.
+- **Admin hides controls a product does not have** (size for anything but the framed parcel, tracking
+  for anything not posted) rather than disabling them. A disabled control still says "this order has
+  one of these"; an absent one says what is true. The order's headline names the product in capitals
+  before anything else, because the difference between the three is the whole packing instruction.
+- **The delivery test moves the order through the state machine directly.** Driving it through a real
+  payment would cost a real payment, and driving it through the approval *mail* would send mail to
+  whatever address the fixture carried. So the test refuses to run on an order that has a
+  `customer_email`, points `final_path` at the restoration already in storage rather than generating a
+  print-quality file, and restores every column it touched. What it proves is the part that actually
+  faces the customer: the approval page's words, the yes, and that the file really downloads.
+- **The checkout tests were mutation-tested before being believed.** Eight assertions passing on the
+  first run is a reason for suspicion, not confidence: letting the browser choose the product turns
+  exactly two of them red, which is the pair that exists for that bug.
+- **The Christmas date is documented, not changed.** Production says 1 October, the code says
+  14 November, and the deployed value wins — so on 1 October the site starts selling Christmas and
+  promising "inden jul" with nobody watching. Which date is right is a marketing decision, so the
+  behaviour is pinned in tests, the divergence is written in `.env.example` where the next person will
+  read it, and HANDOFF gives the one command that changes it.
+- **The product-photo slot renders nothing rather than something.** Every depiction of the physical
+  product is composited onto a stock room, which is fine as a visualisation and worthless as proof.
+  The section that would carry real photographs exists now, reads a manifest, skips any entry whose
+  file is not actually on disk, and disappears entirely when there is nothing — because a placeholder
+  in the one section whose whole job is to prove we send real things is the lie that would matter
+  most. A staged shot is labelled on its face, not only in a caption.
+- **What the owner is asked for is four specific pictures, not "some product photos".** A framed
+  30×40 in a hand rather than on a wall (that is what reads as physical), the opened parcel in a
+  hallway, the loose print between its two pieces of card — the only image of the 250 kr. product
+  that can exist — and the frame hung up at his own place. `public/produkt/README.md` carries it.
+- **A product is identified by the thing that varies.** The framed parcel varies by size, so its
+  `content_ids` is the size; the loose print is always 20×30 and the file has no size at all, so they
+  are identified by themselves. Sending the framed size for a small product filed a 250 kr. order
+  under a 599 kr. one, in our own report and at Meta. One helper (`contentId`) decides it, so no call
+  site can drift apart from the others again.
+- **An order id on a client event is a hint, not a claim.** `/api/track` is public: anything a page
+  can post, anyone can post. So the order is attached only when the posting session is the one that
+  made the preview. Accepting the share token instead would close the last gap — a saved link opened
+  on another device — but it would put an access token one mistake away from the events table, which
+  is the trade the privacy page promises we do not make.
+- **A test that cries wolf is worse than no test.** The journey leaves our origin for Stripe's hosted
+  checkout, and their in-flight fetch rejects when we navigate back. Attributing page errors to the
+  origin they happened on keeps the assertion meaningful instead of teaching the next person to
+  ignore a red line.

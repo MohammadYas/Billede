@@ -1,0 +1,278 @@
+/* Landing page (/) — the product page of a single product. Tokens in globals.css. */
+
+/* Header: wordmark, the price line, and on a wide screen the one button. Solid paper, one hairline. */
+.nav { position: relative; z-index: 20; background: var(--paper); border-bottom: 1px solid var(--hairline); }
+@media (min-width: 768px) { .nav { position: sticky; top: 0; } }
+.nav-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); min-height: 60px; }
+.nav-right { display: flex; align-items: center; gap: var(--s5); min-width: 0; }
+/* the line may wrap: kept on one line it pushed past a 320 px screen, and while the wordmark font was still
+   loading its wider fallback ran straight into it — a collision the customer saw on every slow connection */
+.nav-right .caption { text-align: right; text-wrap: pretty; }
+.nav-row .wordmark { flex: 0 1 auto; min-width: 0; }
+.nav-cta { display: none; }
+@media (min-width: 768px) { .nav-cta { display: inline-flex; } .nav-row { min-height: 68px; } }
+
+/* Hero: the claim and the button first on a phone, the proof beside them on a desk. */
+.hero { display: grid; gap: var(--s6); padding-top: var(--s6); padding-bottom: var(--s7); }
+.hero-copy { display: grid; gap: var(--s4); align-content: center; }
+.hero-copy h1 { max-width: 11em; }
+.hero-copy .lead { max-width: 26em; color: var(--ink-2); }
+.hero-cta { display: grid; gap: var(--s3); justify-items: start; padding-top: var(--s2); }
+/* the second way on, for the visitor whose photograph is in a drawer and not on the phone */
+.hero-nophoto { display: inline-flex; align-items: center; min-height: 44px; margin: 0; }
+.hero-cta .btn { min-width: 260px; }
+.hero-note { max-width: 28em; }
+.hero-note b { color: var(--ink); font-weight: 600; }
+.hero-proof { display: grid; gap: var(--s2); margin: 0; }
+.hero-proof .ba { border-radius: 6px; box-shadow: var(--shadow-object); }
+.hero-proof .ba img { object-position: 50% 28%; }
+.hero-proof figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); }
+.hero-proof figcaption .hint { white-space: nowrap; flex: none; }
+@media (min-width: 768px) and (max-width: 1023px) { .hero-proof { max-width: 520px; } }
+@media (min-width: 1024px) {
+  .hero { grid-template-columns: 6fr 5fr; gap: var(--s8); align-items: center; padding-top: var(--s8); padding-bottom: var(--s9); min-height: calc(100vh - 68px); }
+  .hero-copy { order: 0; }
+  .hero-proof { order: 1; }
+  .hero-copy h1 { max-width: 12.5em; }
+}
+
+/* Trust row — one hairline row, the four promises the visitor is about to test */
+.trust { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); padding: var(--s4) 0; display: grid; gap: var(--s2); font-size: var(--fs-small); color: var(--ink-2); }
+.trust span { padding-left: 1.1em; position: relative; }
+.trust span::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--accent); }
+@media (min-width: 768px) { .trust { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); } }
+@media (min-width: 1024px) { .trust { justify-content: space-between; } }
+
+/* Examples — a grid of the same object, each pair a slider at its own proportions */
+.ex-head { display: grid; gap: var(--s3); margin-bottom: var(--s6); }
+.ex-head .lead { max-width: 30em; color: var(--ink-2); }
+/* two across even on a phone: six tall prints in one column made the page twice as long as the argument */
+.ex-how { max-width: 34em; font-size: var(--fs-body); color: var(--ink); }
+.ex-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s5) var(--s3); align-items: stretch; }
+.ex-card { margin: 0; display: grid; grid-template-rows: auto 1fr; gap: var(--s3); padding: var(--s2) var(--s2) var(--s3); background: var(--paper); border-radius: 8px; box-shadow: var(--shadow-object); }
+.ex-media { position: relative; }
+/* in the grid the Før/Efter label sits top-left, so the colour button owns the bottom-right corner on every width */
+.ex-card .cmp-fade .lbl { bottom: auto; top: var(--s2); }
+.ex-cap { align-content: start; }
+.ex-card .cmp { border-radius: 4px; }
+.ex-cap { display: grid; gap: 2px; padding: 0 var(--s1); }
+.ex-cap > .caption:first-child { font-size: var(--fs-small); color: var(--ink); line-height: 1.35; }
+.ex-cap > .caption:first-child b { font-weight: 600; }
+.ex-cap > .caption + .caption { font-size: var(--fs-caption); }
+/* the colour choice sits on the picture, bottom right, opposite the Før/Efter label */
+.ex-actions { position: absolute; right: var(--s2); bottom: var(--s2); }
+.ex-actions .btn-sm { min-height: 40px; padding: 0 var(--s3); font-size: var(--fs-small); background: rgba(251, 250, 247, 0.94); border-color: transparent; box-shadow: 0 1px 4px rgba(23, 22, 20, 0.18); }
+.ex-actions .btn-sm[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.ex-note { padding-top: var(--s5); max-width: 44em; }
+@media (max-width: 479px) { .ex-actions .btn-sm { min-height: 36px; padding: 0 var(--s2); font-size: 13px; } }
+@media (min-width: 640px) { .ex-grid { gap: var(--s6) var(--s5); } .ex-card { padding: var(--s3) var(--s3) var(--s4); gap: var(--s3); } .ex-cap > .caption:first-child { font-size: var(--fs-body); } }
+@media (min-width: 1024px) { .ex-grid { grid-template-columns: repeat(3, 1fr); gap: var(--s6) var(--s5); } }
+
+/* How it works — three stages of the same photograph, numbered because the order is the product */
+.how { display: grid; gap: var(--s6); }
+.how-head { display: grid; gap: var(--s3); }
+.how-head .lead { max-width: 30em; color: var(--ink-2); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s5); counter-reset: step; }
+.step { display: grid; grid-template-columns: 96px 1fr; gap: var(--s4); align-items: start; padding-top: var(--s4); border-top: 1px solid var(--hairline); }
+.step-media { display: grid; place-items: center; width: 96px; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 4px; background: var(--paper-2); }
+.step-media > img { width: 100%; height: 100%; object-fit: cover; }
+/* the framed stage sits on the quiet block at the same visual size as the two prints before it */
+.step-media.is-frame { padding: 7%; }
+.step-media .framed { width: 100%; }
+.step p { font-size: var(--fs-lead); line-height: 1.4; max-width: 22em; }
+.step .n { display: block; font-family: var(--display); font-weight: 650; font-size: var(--fs-small); color: var(--accent); margin-bottom: var(--s2); letter-spacing: 0; }
+@media (min-width: 768px) {
+  .steps { grid-template-columns: repeat(3, 1fr); gap: var(--s6); }
+  .step { grid-template-columns: 1fr; gap: var(--s4); padding-top: var(--s5); }
+  .step-media { width: 100%; max-width: 260px; }
+}
+
+/* The framed print as a product shot: moulding, mount, glass edge, a real shadow. No wall. */
+.framed { display: block; padding: 6%; background: var(--frame, #161412); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), var(--shadow-object); }
+.framed.eg { --frame: #8a6a46; }
+.framed .mat { display: block; padding: 9%; background: #f7f5f0; box-shadow: inset 0 0 0 1px rgba(23,22,20,0.10), inset 0 1px 2px rgba(23,22,20,0.18); }
+.framed img { display: block; width: 100%; height: auto; }
+
+/* Offer — the object on a quiet block, then the spec, the sizes and the price */
+.offer { display: grid; gap: var(--s7); }
+.offer-shot { display: grid; place-items: center; padding: var(--s6) var(--s5); background: var(--paper-2); border-radius: 8px; }
+/* the photographed wall carries its own light: no block, no padding, the picture is the surface */
+.offer-shot.is-wall { padding: 0; min-height: 0; background: none; border-radius: 8px; overflow: hidden; }
+.offer-shot.is-wall img { width: 100%; height: auto; display: block; }
+.offer-shot .framed { width: min(100%, 260px); }
+@media (min-width: 640px) { .offer-shot .framed { width: min(100%, 360px); } }
+.offer-spec { display: grid; gap: var(--s5); }
+.offer-spec .lead { max-width: 24em; color: var(--ink-2); }
+/* on a phone the price, the sizes and the button come before the spec rows; on a desk the rows read first */
+.offer-spec > .o-head { order: 0; }
+.offer-spec > .o-pick { order: 1; }
+.offer-spec > .o-promo { order: 2; }
+.offer-spec > .o-guarantee { order: 3; }
+.offer-spec > .o-cta { order: 4; }
+.offer-spec > .o-rows { order: 5; }
+@media (min-width: 1024px) { .offer-spec > .o-rows { order: 1; } .offer-spec > .o-pick { order: 2; } .offer-spec > .o-promo { order: 3; } .offer-spec > .o-guarantee { order: 4; } .offer-spec > .o-cta { order: 5; } }
+/* the picker: same radios as the order page; the price under it follows the choice */
+.o-pick .cfg:first-child { padding-top: 0; }
+.o-pick .cfg-label { margin-bottom: var(--s1); }
+.pick-price { display: grid; gap: var(--s2); padding-top: var(--s4); box-shadow: inset 0 1px 0 var(--hairline); }
+.pick-price .price-line { padding-top: var(--s2); }
+.frames { display: flex; gap: var(--s4); flex-wrap: wrap; }
+.frames > span { display: inline-flex; align-items: center; gap: var(--s3); font-size: var(--fs-small); }
+.frames .swatch { width: 26px; height: 32px; background: #f7f5f0; }
+.price-line { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; padding-top: var(--s2); }
+.price-line .price { font-family: var(--display); font-weight: 650; font-size: 44px; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums lining-nums; }
+.price-line .caption { max-width: 22em; }
+.offer-cta { display: grid; gap: var(--s3); justify-items: start; }
+.offer-cta .btn { min-width: 260px; }
+@media (min-width: 1024px) {
+  .offer { grid-template-columns: 6fr 5fr; gap: var(--s9); align-items: start; }
+  .offer-shot { position: sticky; top: calc(68px + var(--s6)); min-height: 560px; padding: var(--s8); }
+  .offer-shot .framed { width: min(100%, 420px); }
+  .price-line .price { font-size: 56px; }
+}
+
+/* Contact strip before the questions: a company, an address for questions, an answer within a day */
+.strip { display: grid; gap: var(--s2); padding: var(--s5) 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); font-size: var(--fs-small); color: var(--ink-2); }
+.strip b { color: var(--ink); font-weight: 600; }
+@media (min-width: 768px) { .strip { grid-template-columns: 1fr 1fr 1fr; gap: var(--s6); } }
+
+/* Closing block — the last button on a quiet block, wide */
+.close-block { display: grid; gap: var(--s5); justify-items: start; padding: var(--s7) var(--s5); background: var(--paper-2); border-radius: 8px; }
+@media (min-width: 768px) { .close-block { grid-template-columns: 1fr auto; align-items: center; padding: var(--s7) var(--s7); } }
+
+/* Deadline line, Christmas window only */
+.deadline { font-family: var(--display); font-weight: 600; font-size: var(--fs-lead); color: var(--accent); max-width: 22em; }
+
+/* Gallery label rows (also used on /p) */
+.label { display: grid; margin: 0; }
+.label > div { display: grid; grid-template-columns: 8em 1fr; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--hairline); }
+.label > div:last-child { border-bottom: 1px solid var(--hairline); }
+.label dt { color: var(--ink-2); font-size: var(--fs-small); padding-top: 3px; }
+.label dd { margin: 0; }
+
+/* Announcement bar — the launch offer above the header, the way a shop says it */
+.announce { background: var(--accent); color: var(--accent-ink); text-align: center; padding: var(--s3) var(--gutter); font-size: var(--fs-body); line-height: 1.35; font-weight: 600; }
+.announce span { display: inline-block; max-width: 44em; }
+
+/* Promo box — the offer where the decision is made: beside the button, beside the price */
+.promo { display: grid; gap: var(--s2); justify-items: start; padding: var(--s4) var(--s5); background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 6px; max-width: 32em; }
+.promo-tag { display: inline-block; padding: 4px 10px; background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.promo b { font-family: var(--display); font-weight: 650; font-size: 22px; line-height: 1.15; color: var(--ink); letter-spacing: -0.01em; text-wrap: balance; }
+.promo > span { font-size: var(--fs-body); }
+.promo-until { font-weight: 700; color: var(--accent); }
+.promo .caption { padding-top: 0; }
+.promo.is-compact { gap: var(--s1); padding: var(--s3) var(--s4); }
+.promo.is-compact b { font-size: var(--fs-lead); }
+
+/* Fading pairs on the landing page: the picture changes by itself, one word says which side is showing */
+.hero-proof .cmp { border-radius: 6px; box-shadow: var(--shadow-object); }
+.hero-proof .cmp img { object-position: 50% 28%; }
+.ex-grid .cmp { border-radius: 4px; }
+.cmp-fade .lbl { left: var(--s3); right: auto; bottom: var(--s3); font-size: 15px; padding: 6px 12px; background: var(--ink); color: var(--paper); border-radius: 4px; transition: opacity 320ms ease-out; }
+.cmp-fade .lbl.after { opacity: 1; }
+.cmp-fade .lbl.before { opacity: 0; }
+.cmp-fade.show-before .lbl.before { opacity: 1; }
+.cmp-fade.show-before .lbl.after { opacity: 0; }
+.cmp-fade .lbl.after, .cmp-fade .lbl.before { right: auto; }
+@media (max-width: 479px) { .promo { padding: var(--s3) var(--s4); gap: var(--s1); } .promo > span { font-size: 15px; } .promo .caption { font-size: 13px; } .promo b { font-size: var(--fs-lead); } }
+
+/* Steps: a title a reader can act on, then the sentence */
+.step-text { display: grid; gap: var(--s1); }
+.step-text .n { font-size: var(--fs-lead); }
+.step-text h3 { font-family: var(--display); font-weight: 650; font-size: var(--fs-lead); line-height: 1.25; letter-spacing: -0.01em; }
+.step-text p { font-size: var(--fs-body); color: var(--ink-2); max-width: 24em; }
+/* under the fading pair: what it does, and what a finger can do */
+.hero-proof figcaption { flex-direction: column; align-items: flex-start; gap: var(--s1); }
+.fade-hint { max-width: 30em; }
+
+/* The launch-offer dialog and the pre-checkout upsell dialog were removed 2026-09-12: nothing
+   interrupts the picture or stands between the buy button and the till. The offer lives on as content
+   (.announce, .promo). Their styles went with them. */
+
+/* Size cards on the landing page: the same frame on the same wall, drawn to scale (scripts/size-shots.mts). */
+.o-pick .size { padding-top: 0; overflow: hidden; }
+.o-pick .size .size-shot { display: block; margin: 0 calc(var(--s3) * -1) var(--s2); aspect-ratio: 4 / 3; background: var(--paper-2); }
+.o-pick .size .size-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 359px) { .o-pick .size .size-shot { margin: 0 calc(var(--s3) * -1) var(--s1); } }
+
+/* The way back to a picture started here: a small card above the sticky bar on a phone, bottom-left on a desk. */
+.resume { position: fixed; z-index: 34; left: 12px; right: 12px; bottom: calc(var(--bar-h, 0px) + 12px + var(--safe-bottom, 0px)); display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s3) var(--s3) var(--s4); background: var(--paper); border: 1px solid var(--hairline); border-radius: 8px; box-shadow: var(--shadow-object); }
+.resume-body { display: flex; align-items: center; gap: var(--s3); flex: 1; min-width: 0; flex-wrap: wrap; }
+.resume-body p { margin: 0; font-size: var(--fs-small); line-height: 1.35; flex: 1 1 14em; }
+.resume.ready .resume-body p { font-weight: 600; font-size: var(--fs-body); }
+.resume-dot { flex: none; width: 10px; height: 10px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 0 var(--accent-soft); animation: resume-pulse 1.6s ease-out infinite; }
+@keyframes resume-pulse { 0% { box-shadow: 0 0 0 0 rgba(31, 90, 60, 0.35); } 100% { box-shadow: 0 0 0 10px rgba(31, 90, 60, 0); } }
+.resume-close { flex: none; width: 40px; height: 40px; border: 0; background: none; color: var(--ink-2); font-size: 22px; line-height: 1; cursor: pointer; border-radius: 999px; }
+.resume-close:hover { background: var(--paper-2); }
+@media (min-width: 768px) { .resume { left: 24px; right: auto; bottom: 24px; width: min(440px, calc(100vw - 48px)); } }
+@media (prefers-reduced-motion: reduce) { .resume-dot { animation: none; } }
+/* Second conversion round (2026-09-08): the free look and the paid object in one breath, the product early, the face that proves it. */
+.eyebrow { font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.hero-copy .eyebrow { margin-bottom: calc(var(--s2) * -1); }
+/* under the button: the two objections and the price, so "gratis" never stands alone */
+.hero-trust { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); font-size: var(--fs-small); color: var(--ink-2); max-width: 30em; }
+.hero-trust li { display: inline-flex; align-items: center; gap: var(--s2); }
+.hero-trust li::before { content: ''; width: 0.5em; height: 0.28em; border-left: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: translateY(-0.1em) rotate(-45deg); flex: none; }
+.hero-trust li:last-child { color: var(--ink); font-weight: 600; }
+/* the primary button and the paid object beside it */
+.cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
+.cta-row .btn { min-width: 260px; }
+.value-line { font-family: var(--display); font-weight: 600; font-size: var(--fs-body); color: var(--ink); letter-spacing: -0.005em; }
+
+/* From the drawer to the wall — the same photograph four times: as it is, restored, as a print, framed */
+.chain-section { display: grid; gap: var(--s6); }
+.chain-head { display: grid; gap: var(--s3); }
+.chain-head .lead { max-width: 30em; color: var(--ink-2); }
+.chain { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s5) var(--s3); }
+.chain-step { display: grid; gap: var(--s3); align-content: start; }
+.chain-media { display: grid; place-items: center; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: var(--paper-2); }
+.chain-media > img { width: 100%; height: 100%; object-fit: cover; }
+.chain-media.is-print { padding: 10%; }
+.chain-media.is-print .print { display: block; width: 100%; padding: 4%; background: #fbfaf7; box-shadow: var(--shadow-object); }
+.chain-media.is-print .print img { display: block; width: 100%; height: auto; }
+.chain-media.is-frame { padding: 0; }
+.chain-media.is-frame > img { object-fit: cover; }
+.chain-media.is-frame .framed { width: 78%; }
+.chain-label { display: flex; gap: var(--s2); align-items: baseline; font-family: var(--display); font-weight: 650; font-size: var(--fs-body); line-height: 1.25; letter-spacing: -0.01em; }
+.chain-label .n { flex: none; color: var(--accent); font-size: var(--fs-small); }
+/* what the price buys: five short lines and the button, on the quiet block */
+.value { display: grid; gap: var(--s4); padding: var(--s5); background: var(--paper-2); border-radius: 8px; }
+.value h3 { font-family: var(--display); font-weight: 650; font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: -0.02em; }
+.value-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); max-width: 30em; }
+.value-list li { position: relative; padding-left: 1.6em; font-size: var(--fs-body); }
+.value-list li::before { content: ''; position: absolute; left: 0.15em; top: 0.6em; width: 0.55em; height: 0.3em; border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); }
+@media (min-width: 640px) { .chain { grid-template-columns: repeat(4, 1fr); gap: var(--s5); } }
+@media (min-width: 1024px) {
+  .chain-section { grid-template-columns: 1fr; }
+  .value { grid-template-columns: 1fr 1fr; align-items: start; padding: var(--s6) var(--s7); }
+  .value h3 { grid-column: 1 / -1; }
+  .value .cta-row { align-self: center; }
+}
+
+/* How it works: the note and, beside it, the one thing people are afraid of */
+.how-head { grid-template-columns: 1fr; align-items: start; }
+.callout { display: grid; gap: var(--s1); padding: var(--s4) var(--s5); border-left: 3px solid var(--accent); background: var(--paper); border-radius: 0 6px 6px 0; max-width: 30em; }
+.callout b { font-family: var(--display); font-weight: 650; font-size: var(--fs-lead); line-height: 1.25; letter-spacing: -0.01em; }
+.callout span { font-size: var(--fs-body); color: var(--ink-2); }
+@media (min-width: 1024px) { .how-head { grid-template-columns: 1fr auto; gap: var(--s7); } }
+
+/* It still has to be them — the same face under the finger, and the sentence that says who makes sure */
+.ligne { display: grid; gap: var(--s6); }
+.ligne-pic { margin: 0; display: grid; gap: var(--s2); max-width: 520px; }
+.ligne-pic .ba { border-radius: 6px; box-shadow: var(--shadow-object); }
+.ligne-text { display: grid; gap: var(--s4); align-content: center; }
+.ligne-text .lead { max-width: 26em; color: var(--ink-2); }
+@media (min-width: 1024px) { .ligne { grid-template-columns: 5fr 6fr; gap: var(--s9); align-items: center; } }
+
+/* Photographs of the physical product (components/ProductPhotos.tsx). Plain and large: the whole point
+   is that these are not composited, so nothing about the treatment should look art-directed. */
+.prod-shots { display: grid; gap: var(--s5); }
+.prod-shots-head { display: grid; gap: var(--s3); max-width: 34em; }
+.prod-shots-grid { display: grid; gap: var(--s4); grid-template-columns: repeat(2, 1fr); }
+.prod-shots-grid figure { margin: 0; display: grid; gap: var(--s2); }
+.prod-shot { position: relative; background: var(--paper-2); aspect-ratio: 4 / 3; overflow: hidden; }
+.prod-shot img { width: 100%; height: 100%; object-fit: cover; }
+/* a staged shot says so on its face, never only in a caption somebody may not read */
+.prod-shot-tag { position: absolute; left: var(--s2); bottom: var(--s2); padding: 4px 8px; background: rgba(23, 22, 20, 0.82); color: var(--paper); font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+@media (min-width: 900px) { .prod-shots-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 419px) { .prod-shots-grid { grid-template-columns: 1fr; } }

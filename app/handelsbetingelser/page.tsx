@@ -1,0 +1,71 @@
+import LegalPage from '@/components/LegalPage';
+import { getFounder, missing } from '@/lib/founder';
+import { CONFIG, formatCutoffDate } from '@/lib/config';
+import { PRICING, customerFormat, customerFormats, formatDkk, formatLabel, EXTRA_PRINT_DKK, PRINT_FORMAT, formatLabelFor, productOffers } from '@/lib/pricing';
+
+export const metadata = { title: 'Handelsbetingelser – Billedearv' };
+
+export default function Handelsbetingelser() {
+  const f = getFounder();
+  const offers = productOffers();
+  // e-handelsloven §7 requires name, address and CVR. Each missing field says so out loud, because
+  // a partial identity that *looks* complete is the failure mode: name + e-mail alone renders as if
+  // nothing were missing.
+  const saelger = [
+    f.company ? `${f.company} v/ ${f.name}` : f.name || missing('navn'),
+    f.cvr ? `CVR ${f.cvr}` : missing('CVR'),
+    f.address || missing('adresse'),
+    f.email || missing('e-mail'),
+  ].filter(Boolean).join(', ');
+  return (
+    <LegalPage title="Handelsbetingelser" updated="12. september 2026">
+      <h2>Sælger</h2>
+      <p>{saelger}.</p>
+
+      <h2>Produktet</h2>
+      <p>Restaurering af ét fotografi ud fra det foto, du uploader, leveret som print i ramme med passepartout og glas, samt en digital fil i høj opløsning. Du vælger størrelse og ramme (sort eller eg – samme pris), og du kan lægge ekstra eksemplarer af samme billede til. Alle priser er inkl. moms og fri fragt i Danmark:</p>
+      <ul>
+        {customerFormats().map((f2) => (
+          <li key={f2}>{formatLabel(f2)}: {formatDkk(PRICING[f2].priceDkk)}</li>
+        ))}
+        <li>Ekstra eksemplar af samme billede i samme størrelse og ramme: {formatDkk(EXTRA_PRINT_DKK[customerFormat()])} pr. stk., op til tre.</li>
+        {offers.print.enabled && <li>Løst print uden ramme, {formatLabel(PRINT_FORMAT)} på mat fotopapir: {formatDkk(offers.print.priceDkk)} inkl. fri fragt. Den digitale fil er med. Der følger ingen ramme, glas eller passepartout.</li>}
+        {offers.digital.enabled && <li>Kun den digitale fil, uden print og ramme: {formatDkk(offers.digital.priceDkk)}. Der sendes ingen pakke, og du skal ikke oplyse en leveringsadresse.</li>}
+      </ul>
+      <p>Restaureringen laves af en automatisk billedmodel (AI) og gennemgås manuelt, før den leveres. Resultatet afhænger af det foto, du sender: jo skarpere og jævnere belyst, jo bedre.</p>
+
+      <h2>Sådan foregår det</h2>
+      <ul>
+        <li>Du uploader og ser et preview med vandmærke, i skærmopløsning. Det er gratis, og prisen er den samme, uanset hvor beskadiget billedet er.</li>
+        <li>Du betaler ved bestillingen.</li>
+        <li>Vi fremstiller derefter den færdige fil i trykkvalitet ud fra dit oprindelige foto. Den er ikke en forstørrelse af previewet, men en ny, større udgave af den samme restaurering, og den kan derfor afvige en smule fra previewet. Vi gennemgår den manuelt – især ansigterne – og retter til, hvis restaureringen har ændret et ansigt.</li>
+        <li>Inden 48 timer sender vi det færdige billede til godkendelse på mail.</li>
+        <li>Du godkender – eller beder om en ændring, så mange gange det er rimeligt. Vi printer først, når du har godkendt. Hører vi ikke fra dig inden 21 dage efter godkendelsesmailen, refunderer vi hele beløbet, og bestillingen lukkes.</li>
+        <li>Efter godkendelse printer, indrammer og sender vi. Levering inden {CONFIG.deliveryDaysMax} hverdage. Bestillinger afgivet senest {formatCutoffDate()} og godkendt inden 48 timer efter godkendelsesmailen leveres inden jul.</li>
+        {offers.print.enabled && <li>Har du købt det løse print, printer vi det efter din godkendelse og sender det fladt mellem pap – uden ramme og glas. Den digitale fil henter du på godkendelsessiden.</li>}
+        {offers.digital.enabled && <li>Har du kun købt den digitale fil, kan du hente den fra godkendelsessiden, så snart du har godkendt. Der printes og sendes ikke noget.</li>}
+      </ul>
+
+      <h2>Hvis vi ikke kan lave et resultat</h2>
+      <p>Nogle fotos kan vi ikke arbejde med – for uskarpe, for mørke, eller noget vi vil se på i hånden først. Så får du i stedet en mail fra os inden 24 timer, og du har ikke betalt noget. Det koster aldrig noget at prøve.</p>
+
+      <h2>Fortrydelsesret</h2>
+      <p>Du har som forbruger 14 dages fortrydelsesret fra bestillingen. Fordi den digitale fil leveres, når du godkender, og printet fremstilles specielt til dig, bortfalder fortrydelsesretten, når den digitale fil er leveret, og for printet, når produktionen er sat i gang efter din godkendelse. Det accepterer du udtrykkeligt ved betalingen. Indtil du har godkendt, kan du fortryde uden begrundelse og få hele beløbet retur.</p>
+
+      <h2>Ligner det ikke, får du pengene tilbage</h2>
+      <p>Hvis du efter at have set det færdige billede ikke synes, det ligner, refunderer vi hele beløbet – også efter en eller flere ændringsrunder. Det er dig, der afgør det.</p>
+
+      <h2>Reklamation</h2>
+      <p>Du har 2 års reklamationsret efter købeloven. Er printet eller rammen beskadiget ved levering, sender vi et nyt uden beregning – send os et foto inden for rimelig tid.</p>
+
+      <h2>Betaling</h2>
+      <p>Betaling sker via Stripe med de betalingsmetoder, der vises ved kassen. Beløbet trækkes ved bestilling.</p>
+
+      <h2>Dine billeder</h2>
+      <p>Du bekræfter, at du må lade os behandle det billede, du uploader. Vi bruger det kun til din bestilling. Se <a href="/privatliv">Privatliv</a>.</p>
+
+      <h2>Klager</h2>
+      <p>Skriv først til os. Kan vi ikke løse det, kan du klage til Center for Klageløsning, Nævnenes Hus, Toldboden 2, 8800 Viborg, www.naevneneshus.dk.</p>
+    </LegalPage>
+  );
+}

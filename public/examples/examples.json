@@ -1,0 +1,158 @@
+[
+  {
+    "id": "bryllup-1954",
+    "mode": "wipe",
+    "detail": {
+      "before": "/examples/bryllup-1954-detail-before.jpg",
+      "after": "/examples/bryllup-1954-detail-after.jpg",
+      "label": "Brudens ansigt"
+    },
+    "mockup": "/examples/bryllup-1954-mockup.jpg",
+    "before": "/examples/bryllup-1954-before.jpg",
+    "after": "/examples/bryllup-1954-after.jpg",
+    "width": 933,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Bryllup foran landsbykirken, ca. 1954. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "have-1976",
+    "mode": "hold",
+    "detail": {
+      "before": "/examples/have-1976-detail-before.jpg",
+      "after": "/examples/have-1976-detail-after.jpg",
+      "label": "Kagen og kopperne"
+    },
+    "mockup": "/examples/have-1976-mockup.jpg",
+    "before": "/examples/have-1976-before.jpg",
+    "after": "/examples/have-1976-after.jpg",
+    "width": 933,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Kaffe og jordbærkage i haven, sommeren 1976. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "portraet-1962",
+    "mode": "wipe",
+    "colour": "/examples/portraet-1962-colour.jpg",
+    "detail": {
+      "before": "/examples/portraet-1962-detail-before.jpg",
+      "after": "/examples/portraet-1962-detail-after.jpg",
+      "label": "Øjnene"
+    },
+    "mockup": "/examples/portraet-1962-mockup.jpg",
+    "before": "/examples/portraet-1962-before.jpg",
+    "after": "/examples/portraet-1962-after.jpg",
+    "width": 932,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Portræt fra pungen, ca. 1962. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "familie-1932",
+    "mode": "lens",
+    "colour": "/examples/familie-1932-colour.jpg",
+    "detail": {
+      "before": "/examples/familie-1932-detail-before.jpg",
+      "after": "/examples/familie-1932-detail-after.jpg",
+      "label": "Bedstemors ansigt"
+    },
+    "mockup": "/examples/familie-1932-mockup.jpg",
+    "before": "/examples/familie-1932-before.jpg",
+    "after": "/examples/familie-1932-after.jpg",
+    "width": 932,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Tre generationer hos fotografen, ca. 1932. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "foedselsdag-1985",
+    "mode": "fade",
+    "detail": {
+      "before": "/examples/foedselsdag-1985-detail-before.jpg",
+      "after": "/examples/foedselsdag-1985-detail-after.jpg",
+      "label": "Barnets ansigt"
+    },
+    "mockup": "/examples/foedselsdag-1985-mockup.jpg",
+    "before": "/examples/foedselsdag-1985-before.jpg",
+    "after": "/examples/foedselsdag-1985-after.jpg",
+    "width": 932,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Fem år, lagkage og flag i køkkenet, ca. 1985. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "cykel-1944",
+    "mode": "lens",
+    "detail": {
+      "before": "/examples/cykel-1944-detail-before.jpg",
+      "after": "/examples/cykel-1944-detail-after.jpg",
+      "label": "Ansigtet"
+    },
+    "mockup": "/examples/cykel-1944-mockup.jpg",
+    "before": "/examples/cykel-1944-before.jpg",
+    "after": "/examples/cykel-1944-after.jpg",
+    "width": 932,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Ung mand med cykel foran bindingsværkshuset, ca. 1944. Eksempelbillede.",
+    "consent": true
+  },
+  {
+    "id": "familie-ved-vandet-1948",
+    "mode": "hold",
+    "detail": {
+      "before": "/examples/familie-ved-vandet-1948-detail-before.jpg",
+      "after": "/examples/familie-ved-vandet-1948-detail-after.jpg",
+      "label": "Børnene"
+    },
+    "mockup": "/examples/familie-ved-vandet-1948-mockup.jpg",
+    "before": "/examples/familie-ved-vandet-1948-before.jpg",
+    "after": "/examples/familie-ved-vandet-1948-after.jpg",
+    "width": 932,
+    "height": 1400,
+    "widths": [
+      480,
+      800,
+      1000,
+      1400
+    ],
+    "caption": "Familien ved vandet, ca. 1948. Eksempelbillede.",
+    "consent": true
+  }
+]

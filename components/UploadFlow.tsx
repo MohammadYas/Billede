@@ -1,0 +1,592 @@
+'use client';
+import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { track } from '@/lib/analytics/client';
+import { rememberResume, forgetResume } from './ResumeBanner';
+import type { Copy } from '@/lib/copy';
+
+type Stage = 'uploading' | 'sending' | 'restoring' | 'preparing';
+type State =
+  | { kind: 'closed' }
+  | { kind: 'pick'; file?: File; thumb?: string; error?: string; over?: boolean }
+  | { kind: 'processing'; stage: Stage; percent: number; file: File; thumb: string; orderId?: string; token?: string }
+  | { kind: 'error'; file: File; thumb: string; message: string; title: string; orderId?: string | null; token?: string | null }
+  | { kind: 'fallback'; orderId: string | null; email: string; sending: boolean; sent: boolean; error?: string }
+  | { kind: 'nophoto'; email: string; sending: boolean; sent: boolean; error?: string };
+
+const ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif';
+const MAX = 25 * 1024 * 1024;
+
+/**
+ * Upload sheet → processing → hands off to /p/<orderId> (the preview is a page, not a sheet).
+ * Falls back to the manual-review state on server doubt, and to a retry state on network loss.
+ */
+export default function UploadFlow({ c }: { c: Copy }) {
+  const router = useRouter();
+  const [state, setState] = useState<State>({ kind: 'closed' });
+  const stateRef = useRef<State>(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
+  const [coarse, setCoarse] = useState(true);
+  // the repeat reference lives in a ref as well, because start() reads it inside an async chain
+  const [repeatConfirmed, setRepeatConfirmed] = useState(false);
+  const [igen, setIgenState] = useState<string | null>(null);
+  const igenRef = useRef<string | null>(null);
+  const setIgen = (v: string | null) => { igenRef.current = v; setIgenState(v); };
+  const [slow, setSlow] = useState(false);
+  const [phase, setPhase] = useState(0); // 0–2: the wait sentence rotates at 15 s and 30 s
+
+  const [keepEmail, setKeepEmail] = useState('');
+  const [keepState, setKeepState] = useState<'idle' | 'sending' | 'done' | 'invalid' | 'failed'>('idle');
+  const keepSaved = useRef(false);
+  const keepSending = useRef(false);
+  useEffect(() => {
+    if (keepState === 'invalid' || keepState === 'failed') document.getElementById('keep-error')?.scrollIntoView({ block: 'nearest' });
+  }, [keepState]);
+  const keepLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (keepSending.current) return;
+    const email = keepEmail.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setKeepState('invalid'); return; }
+    const st = stateRef.current;
+    const id = st.kind === 'processing' ? st.orderId : null;
+    const tok = st.kind === 'processing' ? st.token : null;
+    if (!id) { setKeepState('idle'); return; }
+    const myRun = runRef.current;
+    keepSending.current = true;
+    setKeepState('sending');
+    try {
+      const r = await fetch(`/api/preview/${id}/save${tok ? `?t=${encodeURIComponent(tok)}` : ''}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
+      if (myRun !== runRef.current) return;
+      if (!r.ok) throw new Error('save');
+      keepSaved.current = true;
+      setKeepState('done');
+    } catch { if (myRun === runRef.current) setKeepState('failed'); }
+    finally { if (myRun === runRef.current) keepSending.current = false; }
+  };
+
+  // the CTA wording that was live when the sheet opened (lib/copy.ts CTA_VARIANTS), so two deploys can be compared
+  const open = useCallback(() => {
+    keepSaved.current = false; keepSending.current = false; setKeepState('idle'); setKeepEmail('');
+    track('FlowOpened', { cta: process.env.NEXT_PUBLIC_CTA_VARIANT ?? 'C' }, { serverLog: true }); setState({ kind: 'pick' });
+  }, []);
+  const runRef = useRef(0); // bumped on every close: an in-flight start() sees it and stops
+  const pollRef = useRef<number | null>(null);
+  const sendingAt = useRef(0); // when the restoration was accepted: the bar's estimate counts from here
+  const preparingAt = useRef(0); // when the server reached 'preparing': the last stretch counts from here
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    if (state.kind !== 'processing') return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [state.kind]);
+  const stopPolling = () => { if (pollRef.current) window.clearTimeout(pollRef.current); pollRef.current = null; };
+  const closeFlow = useCallback((cancelSaved = false) => {
+    runRef.current += 1;
+    xhrRef.current?.abort(); stopPolling();
+    const st = stateRef.current;
+    // Closing the sheet keeps the picture: the front page shows the way back to it (ResumeBanner). Only the
+    // explicit "Afbryd (billedet slettes)" asks for deletion.
+    if (st.kind === 'processing' && st.orderId && cancelSaved) { forgetResume(); fetch(`/api/preview/${st.orderId}/cancel${st.token ? `?t=${encodeURIComponent(st.token)}` : ''}`, { method: 'POST' }).catch(() => {}); }
+    setState({ kind: 'closed' });
+  }, []);
+  const close = useCallback(() => closeFlow(), [closeFlow]);
+
+  useEffect(() => { setCoarse(window.matchMedia('(pointer: coarse)').matches); }, []);
+  useEffect(() => {
+    const h = (e: Event) => { if ((e as CustomEvent).detail === 'nophoto') setState({ kind: 'nophoto', email: '', sending: false, sent: false }); else open(); };
+    window.addEventListener('gf:open', h); return () => window.removeEventListener('gf:open', h);
+  }, [open]);
+  // ?order=<id> (a resume link) goes straight to the preview; read client-side so the landing page can stay static
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    // ?igen=<orderId>.<token> from a paid order's receipt: records which order sent this one
+    const again = sp.get('igen');
+    if (again && again.includes('.')) {
+      setIgen(again);
+      // the promise waits for the server: a refunded or purged parent order must not advertise a discount
+      fetch(`/api/repeat?ref=${encodeURIComponent(again)}`).then((r) => r.json()).then((j: { ok?: boolean }) => setRepeatConfirmed(Boolean(j.ok))).catch(() => {});
+    }
+    const id = sp.get('order');
+    if (id && /^[0-9a-f-]{36}$/.test(id)) router.replace(`/p/${id}${sp.get('cancelled') === '1' ? '?cancelled=1' : ''}${sp.get('t') ? `${sp.get('cancelled') === '1' ? '&' : '?'}t=${encodeURIComponent(sp.get('t')!)}` : ''}`);
+  }, [router]);
+
+  useEffect(() => () => stopPolling(), []);
+
+  useEffect(() => {
+    const openNow = state.kind !== 'closed';
+    if (openNow) { document.body.setAttribute('data-flow-open', '1'); document.body.style.overflow = 'hidden'; }
+    else { document.body.removeAttribute('data-flow-open'); document.body.style.overflow = ''; }
+    return () => { document.body.removeAttribute('data-flow-open'); document.body.style.overflow = ''; };
+  }, [state.kind]);
+
+  // after 45 s the wait copy admits it is taking longer today (the bar keeps creeping)
+  useEffect(() => {
+    if (state.kind !== 'processing') { setSlow(false); setPhase(0); return; }
+    const t = setTimeout(() => setSlow(true), 110_000); // the page promises about a minute and a half; the apology belongs after that, not before
+    const p1 = setTimeout(() => setPhase(1), 15_000);
+    const p2 = setTimeout(() => setPhase(2), 30_000);
+    return () => { clearTimeout(t); clearTimeout(p1); clearTimeout(p2); };
+  }, [state.kind]);
+
+  useEffect(() => {
+    if (state.kind === 'closed') return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    window.addEventListener('keydown', onKey);
+    sheetRef.current?.focus();
+    return () => window.removeEventListener('keydown', onKey);
+  }, [state.kind, close]);
+
+  const pickFile = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > MAX) { setState({ kind: 'pick', error: c.upload.tooBig }); return; }
+    const okType = /^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type) || /\.(heic|heif)$/i.test(file.name) || file.type === '';
+    if (!okType) { setState({ kind: 'pick', error: c.upload.wrongType }); return; }
+    setState({ kind: 'pick', file, thumb: URL.createObjectURL(file) });
+  };
+
+  /** Downscale in the browser: `edge` px on the long side, JPEG. Returns null when the browser cannot decode the file (HEIC on Android, canvas memory). */
+  const resize = async (file: Blob, edge: number, quality = 0.9): Promise<Blob | null> => {
+    try {
+      const bmp = await createImageBitmap(file);
+      const s = Math.min(1, edge / Math.max(bmp.width, bmp.height));
+      const canvas = document.createElement('canvas'); canvas.width = Math.round(bmp.width * s); canvas.height = Math.round(bmp.height * s);
+      canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', quality));
+      bmp.close?.();
+      return blob;
+    } catch { return null; }
+  };
+
+  /**
+   * A phone photograph of a print is 2.5-6 MB, and on Danish mobile data that is 10-45 seconds of
+   * upload before the restoration has even started. 3200 px on the long side is more than the print
+   * pipeline uses (it re-runs the final at 2400 px), so nothing is lost but the wait.
+   */
+  const forUpload = async (file: File): Promise<Blob> => {
+    if (file.size <= 2_500_000) return file;
+    const small = await resize(file, 3200, 0.87);
+    return small && small.size < file.size ? small : file;
+  };
+
+  /** Fallback transport is capped at 4.5 MB (function body limit): 2200 px JPEG. */
+  const shrink = async (file: Blob): Promise<Blob> => {
+    if (file.size <= 4_500_000) return file;
+    const blob = await resize(file, 2200);
+    if (blob && blob.size <= 4_500_000) return blob;
+    throw new Error('too_large');
+  };
+  /** XHR with progress, a hard timeout and a stall watchdog (no progress for 25 s = dead connection). */
+  const send = (method: string, url: string, body: FormData, headers: Record<string, string>, onProgress: (p: number) => void, firstByteMs = 25_000) => new Promise<number>((resolve, reject) => {
+    const xhr = new XMLHttpRequest(); xhrRef.current = xhr;
+    let watchdog = 0; let started = false;
+    // no first progress event within firstByteMs (a blocked cross-origin PUT hangs, it does not fail) → give up fast; 25 s between events after that
+    const kick = () => { window.clearTimeout(watchdog); watchdog = window.setTimeout(() => { xhr.abort(); reject(new Error('stall')); }, started ? 25_000 : firstByteMs); };
+    xhr.open(method, url); xhr.timeout = 180_000;
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+    xhr.upload.onloadstart = () => onProgress(1);
+    xhr.upload.onprogress = (e) => { started = true; kick(); if (e.lengthComputable) onProgress(Math.max(1, Math.round((e.loaded / e.total) * 100))); };
+    xhr.onload = () => { window.clearTimeout(watchdog); resolve(xhr.status); };
+    xhr.onerror = () => { window.clearTimeout(watchdog); reject(new Error('network')); };
+    xhr.ontimeout = () => { window.clearTimeout(watchdog); reject(new Error('timeout')); };
+    xhr.onabort = () => { window.clearTimeout(watchdog); reject(new Error(xhrRef.current === xhr ? 'stall' : 'abort')); };
+    kick();
+    xhr.send(body);
+  });
+
+  type Status = { status: string; token: string | null; job: { kind: string; state: string; stage?: string; reason?: string } | null; payload: { isMonochrome?: boolean } | null };
+  const fail = (file: File, thumb: string, message: string, title: string, orderId?: string | null, token?: string | null) => setState({ kind: 'error', file, thumb, message, title, orderId, token });
+
+  /** The job runs on the server (background function); the sheet polls the order every 1.5 s. */
+  const poll = (orderId: string, token: string, file: File, thumb: string) => {
+    stopPolling();
+    const myRun = runRef.current;
+    const tick = async () => {
+      if (myRun !== runRef.current) return;
+      try {
+        const r = await fetch(`/api/preview/${orderId}?t=${encodeURIComponent(token)}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error('status');
+        const st = (await r.json()) as Status;
+        if (myRun !== runRef.current) return;
+        if (st.status === 'PREVIEW_READY' && st.payload) {
+          track('UploadCompleted', {}); track('PreviewShown', { monochrome: st.payload.isMonochrome }, { eventId: orderId }); // same event_id as the CAPI copy
+          preparingAt.current = 0; // the last stretch is over: the bar may claim 100 now
+          setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'preparing', percent: 100 } : cur));
+          router.push(`/p/${orderId}?t=${encodeURIComponent(token)}`);
+          return;
+        }
+        if (st.status === 'MANUAL_REVIEW') { track('PreviewFallback', { reason: st.job?.reason ?? 'manual' }); setState({ kind: 'fallback', orderId, email: '', sending: false, sent: false }); return; }
+        if (st.status === 'ABANDONED') return;
+        if (st.job?.state === 'failed') {
+          track('PreviewFallback', { reason: st.job.reason ?? 'failed' });
+          // a slow minute at the provider is not "your photo needs hands": the file is still on the server, retry runs it again
+          fail(file, thumb, c.processing.timeout, c.processing.timeoutTitle, orderId, token);
+          return;
+        }
+        if (st.job?.stage === 'preparing' && !preparingAt.current) preparingAt.current = Date.now();
+        if (st.job?.stage) setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: st.job?.stage === 'preparing' ? 'preparing' : 'sending', percent: 100 } : cur));
+      } catch { /* transient: keep polling */ }
+      if (myRun !== runRef.current) return;
+      if (Date.now() - t0 > 150_000) { fail(file, thumb, c.processing.timeout, c.processing.timeoutTitle, orderId, token); return; }
+      pollRef.current = window.setTimeout(tick, Date.now() - t0 > 60_000 ? 4000 : 2000);
+    };
+    const t0 = Date.now();
+    pollRef.current = window.setTimeout(tick, 6000); // nothing finishes earlier
+  };
+
+  /** Step 3: the file is in the bucket — start (or retry) the job. */
+  const run = async (orderId: string, token: string, file: File, thumb: string) => {
+    const runAtCall = runRef.current; // a close between the fetch and the state update bumps runRef: never re-open the sheet
+    const r = await fetch(`/api/preview/${orderId}/run?t=${encodeURIComponent(token)}`, { method: 'POST' });
+    if (r.status === 409) throw new Error('no_file');
+    if (!r.ok) throw new Error('run');
+    track('ProcessingStarted', {}, { serverLog: true }); // the file is in the bucket and the restoration was accepted
+    if (runAtCall !== runRef.current) return;
+    sendingAt.current = Date.now();
+    preparingAt.current = 0;
+    setState({ kind: 'processing', stage: 'sending', percent: 100, file, thumb, orderId, token });
+    poll(orderId, token, file, thumb);
+  };
+
+  /**
+   * Upload: (1) create the order and get a one-time signed URL, (2) PUT the photo straight into the
+   * private bucket with real progress, (3) start the job, then poll. A retry after a server-side
+   * failure re-runs the job without uploading again.
+   */
+  const start = async (file: File, thumb: string, resume?: { orderId: string; token: string }) => {
+    const myRun = ++runRef.current;
+    const cancelled = () => myRun !== runRef.current;
+    setState({ kind: 'processing', stage: 'uploading', percent: resume ? 100 : 0, file, thumb, orderId: resume?.orderId, token: resume?.token });
+    if (resume) {
+      try { if (cancelled()) return; await run(resume.orderId, resume.token, file, thumb); return; }
+      catch (e) { if (cancelled()) return; if ((e as Error).message !== 'no_file') { fail(file, thumb, c.processing.networkError, c.processing.networkTitle, resume.orderId, resume.token); return; } }
+      // the upload never landed: start over
+    }
+    track('UploadStarted', { bytes: file.size, type: file.type });
+    let started: { orderId: string; token: string; uploadUrl: string };
+    try {
+      const r = await fetch('/api/preview/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ size: file.size, type: file.type, name: file.name, igen: igenRef.current }) });
+      if (cancelled() && !r.ok) return;
+      if (r.status === 413) { setState({ kind: 'pick', file, thumb, error: c.upload.tooBig }); return; }
+      if (r.status === 415) { setState({ kind: 'pick', error: c.upload.wrongType }); return; }
+      if (r.status === 429) { setState({ kind: 'pick', file, thumb, error: c.upload.tooMany }); return; }
+      if (!r.ok) throw new Error('start');
+      started = (await r.json()) as typeof started;
+    } catch { if (!cancelled()) fail(file, thumb, c.processing.networkError, c.processing.networkTitle); return; }
+    if (cancelled()) { fetch(`/api/preview/${started.orderId}/cancel?t=${encodeURIComponent(started.token)}`, { method: 'POST' }).catch(() => {}); return; }
+    setState((cur) => (cur.kind === 'processing' ? { ...cur, orderId: started.orderId, token: started.token } : cur));
+    rememberResume(started.orderId, started.token); // the way back, should the tab be closed during the wait
+    const progress = (p: number) => setState((cur) => (cur.kind === 'processing' ? { ...cur, stage: 'uploading', percent: p } : cur));
+    let aborted = false;
+    try {
+      // 1st transport: straight into the bucket with the signed URL (no size limit, no double transfer)
+      const put = (blob: Blob) => { const fd = new FormData(); fd.append('cacheControl', '3600'); fd.append('', blob, 'photo.jpg'); return send('PUT', started.uploadUrl, fd, { 'x-upsert': 'false' }, progress, 6_000); };
+      const payload = await forUpload(file);
+      let status = await put(payload);
+      // a HEIC from the camera roll: the bucket sniffs bytes, the part just needs a type it accepts
+      if (status === 400 || status === 415) status = await put(new Blob([payload], { type: 'image/jpeg' }));
+      if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
+    } catch (e) {
+      if ((e as Error).message === 'abort' || cancelled()) return;
+      // 2nd transport: through the app (≤ 4.5 MB, downscaled if needed) — for a proxy or an in-app browser that blocks the PUT
+      try {
+        const small = await shrink(await forUpload(file));
+        const fd2 = new FormData(); fd2.append('file', small, 'photo.jpg');
+        const status = await send('POST', `/api/preview/${started.orderId}/upload?t=${encodeURIComponent(started.token)}`, fd2, {}, progress);
+        if (status < 200 || status >= 300) throw new Error(`upload ${status}`);
+      } catch (e2) {
+        const m = (e2 as Error).message;
+        if (m === 'abort' || cancelled()) { aborted = true; }
+        else if (m === 'too_large') fail(file, thumb, c.upload.tooBigNetwork, c.processing.networkTitle, started.orderId, started.token);
+        else fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token);
+        return;
+      }
+    }
+    if (aborted || cancelled()) return;
+    try { await run(started.orderId, started.token, file, thumb); }
+    catch { if (!cancelled()) fail(file, thumb, c.processing.networkError, c.processing.networkTitle, started.orderId, started.token); }
+  };
+
+  const sendLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (state.kind !== 'fallback' && state.kind !== 'nophoto') return;
+    if (state.sending) return;
+    const myRun = runRef.current;
+    const email = state.email.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setState({ ...state, error: 'Skriv en e-mail, vi kan svare på.' }); return; }
+    setState({ ...state, sending: true, error: undefined });
+    try {
+      const r = await fetch('/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: state.kind === 'fallback' ? state.orderId : null, email, kind: state.kind === 'nophoto' ? 'nophoto' : undefined }) });
+      if (!r.ok) throw new Error(String(r.status));
+      if (myRun === runRef.current) setState(cur => cur.kind === state.kind && cur.sending ? { ...cur, sending: false, sent: true } : cur);
+    } catch (e) {
+      // 429 on the no-photo link is the daily send limit, not a glitch: "try again" would be a lie
+      const limited = (e as Error).message === '429' && state.kind === 'nophoto';
+      const error = limited ? 'Vi har allerede sendt linket til den adresse flere gange i dag. Tjek indbakken og spam – eller skriv til os.' : 'Det lykkedes ikke at sende. Prøv igen.';
+      if (myRun === runRef.current) setState(cur => cur.kind === state.kind && cur.sending ? { ...cur, sending: false, error } : cur);
+    }
+  };
+
+  if (state.kind === 'closed') return null;
+  const processing = state.kind === 'processing';
+  // upload 0–30 %, then an estimate that climbs towards 90 % over the model's ~60 s (a curve, so it never stops moving
+  // and never claims done), 94 % once stored, a last curve towards 99 % while the file is prepared, 100 % only when the
+  // preview is ready — 'preparing' can run half a minute, so the bar must keep moving through it
+  const elapsed = processing && state.stage === 'sending' ? Math.max(0, (now || Date.now()) - sendingAt.current) : 0;
+  const preparingFor = processing && state.stage === 'preparing' && preparingAt.current ? Math.max(0, (now || Date.now()) - preparingAt.current) : 0;
+  const pct = processing ? (state.stage === 'uploading' ? state.percent * 0.3 : state.stage === 'sending' ? Math.min(90, 30 + 60 * (1 - Math.exp(-elapsed / 40_000))) : state.stage === 'restoring' ? 94 : state.stage === 'preparing' && preparingAt.current ? Math.min(99, 90 + 9 * (1 - Math.exp(-preparingFor / 15_000))) : 100) : 0;
+  const stepIndex = processing ? (state.stage === 'uploading' ? 0 : state.stage === 'preparing' ? 2 : 1) : 0;
+  const sentence = processing ? (state.stage === 'sending' && phase > 0 ? c.processing.more[phase - 1] : c.processing.sentences[state.stage]) : '';
+
+  return (
+    <>
+      <div className="scrim" onClick={close} aria-hidden />
+      <Sheet ref={sheetRef} onDismiss={close} label={state.kind === 'pick' ? 'Vis os billedet' : state.kind === 'processing' ? 'Vi arbejder på dit billede' : state.kind === 'nophoto' ? c.upload.noPhotoH : 'Det her kræver et par hænder'}>
+        {state.kind === 'pick' && (
+          <div style={{ display: 'grid', gap: 'var(--s4)' }}>
+            <h2>Vis os billedet.</h2>
+            {!state.thumb && <p className="measure">{c.upload.how}</p>}
+            {repeatConfirmed && <p className="small notice" role="status">{c.upload.repeat}</p>}
+            {state.thumb ? (
+              <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <Thumb src={state.thumb} name={state.file?.name} alt="Dit valgte billede" style={{ maxHeight: '38dvh', width: 'auto', maxWidth: '100%', objectFit: 'contain', justifySelf: 'start' }} />
+                <div style={{ display: 'flex', gap: 'var(--s5)' }}>
+                  <label className="link-btn" style={{ display: 'inline-flex', alignItems: 'center' }}>{c.upload.reupload}<input type="file" accept={ACCEPT} className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+                  <button type="button" className="link-btn" onClick={() => setState({ kind: 'pick' })}>{c.upload.remove}</button>
+                </div>
+                <p className="caption">{c.upload.check}</p>
+                <button type="button" className="btn btn-block" onClick={() => start(state.file!, state.thumb!)}>{c.upload.cta}</button>
+                <p className="caption">{c.upload.free}</p>
+              </div>
+            ) : coarse ? (
+              <div style={{ display: 'grid', gap: 'var(--s3)' }}>
+                <p className="caption">{c.upload.free}</p>
+                <label className="btn btn-block" style={{ cursor: 'pointer' }}>{c.upload.camera}<input type="file" accept="image/*" capture="environment" className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+                <label className="btn btn-block btn-quiet" style={{ cursor: 'pointer' }}>{c.upload.library}<input type="file" accept={ACCEPT} className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: 'var(--s3)' }}
+                onDragOver={(e) => { e.preventDefault(); if (!state.over) setState({ ...state, over: true }); }}
+                onDragLeave={() => setState({ ...state, over: false })}
+                onDrop={(e) => { e.preventDefault(); pickFile(e.dataTransfer.files?.[0]); }}>
+                <label className="btn btn-block" style={{ cursor: 'pointer' }}>{c.upload.pick}<input type="file" accept={ACCEPT} className="visually-hidden" onChange={(e) => pickFile(e.target.files?.[0])} /></label>
+                <div className={`drop${state.over ? ' over' : ''}`}>{c.upload.drop}</div>
+              </div>
+            )}
+            {state.error && <p className="small" style={{ color: 'var(--error)' }} role="alert">{state.error}</p>}
+            {/* the touch branch already prints this above the buttons, where it is read before the tap */}
+            {!state.thumb && !coarse && <p className="caption">{c.upload.free}</p>}
+            {!state.thumb && <p className="caption">{c.upload.tips}</p>}
+            <p className="caption">{c.upload.note} <a href="/privatliv">{c.upload.privacy}</a>.</p>
+            {!state.thumb && <p className="small"><button type="button" className="link-btn" onClick={() => setState({ kind: 'nophoto', email: '', sending: false, sent: false })}>{c.upload.noPhoto}</button></p>}
+          </div>
+        )}
+
+        {state.kind === 'processing' && (
+          <div style={{ display: 'grid', gap: 'var(--s4)' }} aria-live="polite" aria-busy="true">
+            <div className="proc">
+              <Thumb src={state.thumb} name={state.file.name} alt="" />
+            </div>
+            <div className="proc-bar">
+              <div className="proc-bar-head"><b>{c.processing.stages[state.stage]}</b><span className="tabular">{Math.round(pct)} %</span></div>
+              <div className="progress progress-big" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={c.processing.stages[state.stage]}>
+                <span style={{ ['--p' as string]: pct / 100 }} />
+              </div>
+              <ol className="proc-steps" aria-hidden>
+                {c.processing.steps.map((s, i) => <li key={s} className={i < stepIndex ? 'done' : i === stepIndex ? 'now' : ''}>{s}</li>)}
+              </ol>
+            </div>
+            <p className="lead" style={{ fontFamily: 'var(--display)' }}>{sentence}</p>
+            <p className="caption">{slow ? c.processing.slow : c.processing.wait}</p>
+            {/* the 90 seconds where a cold visitor leaves: if they do, we still have the address and can send them their own picture */}
+            {state.orderId && (
+              keepState === 'done' ? <p className="small" role="status">{c.processing.keepDone}</p> : (
+                <form onSubmit={keepLink} noValidate style={{ display: 'grid', gap: 'var(--s2)', paddingTop: 'var(--s3)', borderTop: '1px solid var(--hairline)' }}>
+                  <p className="small"><b style={{ fontWeight: 600 }}>{c.processing.keepTitle}</b><br /><span className="muted">{c.processing.keepP}</span></p>
+                  <div className="email-row">
+                    <div className="field"><label htmlFor="keep-email">{c.processing.keepEmail}</label><input id="keep-email" type="email" inputMode="email" autoComplete="email" maxLength={200} disabled={keepState === 'sending'} aria-invalid={keepState === 'invalid'} aria-describedby={keepState === 'invalid' || keepState === 'failed' ? 'keep-error' : undefined} value={keepEmail} onChange={(e) => setKeepEmail(e.target.value)} /></div>
+                    <button type="submit" className="btn btn-quiet" disabled={keepState === 'sending'}>{c.processing.keepCta}</button>
+                  </div>
+                  {(keepState === 'invalid' || keepState === 'failed') && <p id="keep-error" className="small" style={{ color: 'var(--error)' }} role="alert">{keepState === 'invalid' ? c.preview.saveInvalid : c.processing.keepFailed}</p>}
+                </form>
+              )
+            )}
+            <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={() => closeFlow(true)}>{c.processing.cancel}</button>
+          </div>
+        )}
+
+        {state.kind === 'error' && (
+          <div style={{ display: 'grid', gap: 'var(--s4)' }}>
+            <h2 style={{ maxWidth: '12em' }}>{state.title}</h2>
+            <Thumb src={state.thumb} name={state.file.name} alt="" style={{ maxHeight: '30dvh', width: 'auto', maxWidth: '100%', justifySelf: 'start' }} />
+            <p className="measure" role="alert">{state.message}</p>
+            <button type="button" className="btn btn-block" onClick={() => start(state.file, state.thumb, state.orderId && state.token ? { orderId: state.orderId, token: state.token } : undefined)}>{c.processing.retry}</button>
+            <div style={{ display: 'flex', gap: 'var(--s5)', flexWrap: 'wrap' }}>
+              <button type="button" className="link-btn" onClick={() => setState({ kind: 'fallback', orderId: state.orderId ?? null, email: '', sending: false, sent: false })}>{c.processing.sendInstead}</button>
+              <button type="button" className="link-btn" onClick={() => setState({ kind: 'pick' })}>{c.upload.reupload}</button>
+            </div>
+          </div>
+        )}
+
+        {state.kind === 'nophoto' && (
+          <div style={{ display: 'grid', gap: 'var(--s4)' }}>
+            <h2 style={{ maxWidth: '12em' }}>{c.upload.noPhotoH}</h2>
+            {state.sent ? (
+              <p className="lead">{c.upload.noPhotoDone}</p>
+            ) : (
+              <form onSubmit={sendLead} style={{ display: 'grid', gap: 'var(--s4)' }} noValidate>
+                <p className="measure">{c.upload.noPhotoP}</p>
+                <div className="field">
+                  <label htmlFor="nophoto-email">{c.upload.noPhotoEmail}</label>
+                  <input id="nophoto-email" type="email" inputMode="email" autoComplete="email" required value={state.email} onChange={(e) => setState({ ...state, email: e.target.value })} aria-invalid={Boolean(state.error)} aria-describedby={state.error ? 'nophoto-error' : undefined} />
+                  {state.error && <span id="nophoto-error" className="error" role="alert">{state.error}</span>}
+                </div>
+                <button type="submit" className="btn btn-block" disabled={state.sending}>{state.sending ? 'Sender…' : c.upload.noPhotoCta}</button>
+              </form>
+            )}
+            <button type="button" className="link-btn" style={{ justifySelf: 'start' }} onClick={() => setState({ kind: 'pick' })}>{c.upload.back}</button>
+          </div>
+        )}
+
+        {state.kind === 'fallback' && (
+          <div style={{ display: 'grid', gap: 'var(--s4)' }}>
+            <h2>Det her kræver et par hænder.</h2>
+            {state.sent ? (
+              <p className="lead">{c.fallback.sent}</p>
+            ) : (
+              <form onSubmit={sendLead} style={{ display: 'grid', gap: 'var(--s4)' }} noValidate>
+                <p className="measure">{c.fallback.p}</p>
+                <div className="field">
+                  <label htmlFor="lead-email">{c.fallback.email}</label>
+                  <input id="lead-email" type="email" inputMode="email" autoComplete="email" required value={state.email} onChange={(e) => setState({ ...state, email: e.target.value })} aria-invalid={Boolean(state.error)} aria-describedby={state.error ? 'lead-error' : undefined} />
+                  {state.error && <span id="lead-error" className="error" role="alert">{state.error}</span>}
+                </div>
+                <button type="submit" className="btn btn-block" disabled={state.sending}>{state.sending ? 'Sender…' : c.fallback.cta}</button>
+              </form>
+            )}
+          </div>
+        )}
+      </Sheet>
+    </>
+  );
+}
+
+/**
+ * The picked photograph. A HEIC straight from an Android camera roll is a file the browser will upload
+ * but cannot draw, and a broken-image icon at the top of the sheet reads as "it did not work". The
+ * server reads HEIC fine, so the sheet shows the file name in the frame instead and carries on.
+ */
+function Thumb({ src, name, alt, style }: { src: string; name?: string; alt: string; style?: React.CSSProperties }) {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => { setBroken(false); }, [src]);
+  if (broken) return <div className="thumb-fallback" style={style} aria-label={alt || undefined}><span>{name || 'Dit billede'}</span></div>;
+  return <img src={src} alt={alt} style={style} onError={() => setBroken(true)} />;
+}
+
+/**
+ * Bottom sheet (mobile) / centred modal (desktop).
+ * Opens with a critically damped spring; drag-to-dismiss from the grab area or when the content
+ * is scrolled to the top, with a 10 px threshold so a reading swipe never dismisses; rubber-band
+ * upward; velocity-projected release; spring back (apple-design §2, §5, §6, §9, §10).
+ */
+const Sheet = forwardRef<HTMLDivElement, { children: ReactNode; onDismiss?: () => void; label: string }>(function Sheet({ children, onDismiss, label }, ref) {
+  const el = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const dialog = el.current;
+    if (!dialog) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const siblings = [...document.body.children].filter((n): n is HTMLElement => n instanceof HTMLElement && !n.contains(dialog) && !n.classList.contains('scrim') && n.tagName !== 'SCRIPT');
+    const inert = siblings.map(n => n.inert);
+    siblings.forEach(n => { n.inert = true; });
+    // focus the dialog here, after the page behind it is inert: a StrictMode re-run of this effect restores
+    // focus to the trigger in its cleanup, and only the effect that runs last decides where focus ends up
+    dialog.focus({ preventScroll: true });
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const controls = [...dialog.querySelectorAll<HTMLElement>('a[href],button:not(:disabled),input:not(:disabled):not([hidden]),textarea:not(:disabled),select:not(:disabled),[tabindex="0"]')].filter(n => n.getClientRects().length && getComputedStyle(n).visibility !== 'hidden');
+      const first = controls[0], last = controls[controls.length - 1];
+      if (!first) { e.preventDefault(); dialog.focus(); return; }
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog || !dialog.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onTab);
+    return () => {
+      document.removeEventListener('keydown', onTab);
+      siblings.forEach((n, i) => { n.inert = inert[i]; });
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, []);
+  const drag = useRef<{ startY: number; startX: number; y: number; t: number; vy: number; active: boolean; committed: boolean; id: number }>({ startY: 0, startX: 0, y: 0, t: 0, vy: 0, active: false, committed: false, id: -1 });
+  const setRefs = (n: HTMLDivElement | null) => { el.current = n; if (typeof ref === 'function') ref(n); else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = n; };
+  const isMobile = () => window.matchMedia('(max-width: 767px)').matches;
+  const reduce = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const apply = (y: number) => { if (el.current) el.current.style.transform = `translateY(${y}px)`; };
+
+  // Spring toward 0 from `from` with initial velocity v0 (px/s). Critically damped, response ≈ 0.35 s.
+  const spring = (from: number, v0: number, done?: () => void) => {
+    const w = (2 * Math.PI) / 0.35; let y = from, v = v0, last = performance.now();
+    const step = (t: number) => {
+      const dt = Math.min(0.032, (t - last) / 1000); last = t;
+      const a = -w * w * y - 2 * w * v; v += a * dt; y += v * dt;
+      if (Math.abs(y) < 0.5 && Math.abs(v) < 5) { apply(0); done?.(); return; }
+      apply(y); requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
+  // Enter: from below the viewport (mobile) or a short rise + fade (desktop). Interruptible: a drag reads the live transform.
+  useEffect(() => {
+    const n = el.current; if (!n) return;
+    if (reduce()) { n.style.opacity = '1'; return; }
+    if (isMobile()) { const h = n.getBoundingClientRect().height; apply(h); spring(h, -400); }
+    else { n.animate([{ opacity: 0, transform: 'translate(-50%, calc(-50% + 12px))' }, { opacity: 1, transform: 'translate(-50%, -50%)' }], { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'both' }); }
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!onDismiss || !isMobile() || e.pointerType === 'mouse') return;
+    const target = e.target as HTMLElement;
+    if (target.closest('input,textarea,button,a,label,.ba,select')) return;
+    const current = el.current ? new DOMMatrixReadOnly(getComputedStyle(el.current).transform).m42 : 0; // live value (apple-design §3)
+    drag.current = { startY: e.clientY - current, startX: e.clientX, y: current, t: performance.now(), vy: 0, active: true, committed: false, id: e.pointerId };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = drag.current; if (!d.active || e.pointerId !== d.id) return;
+    const dy = e.clientY - d.startY;
+    if (!d.committed) {
+      const moved = Math.hypot(e.clientX - d.startX, dy);
+      if (moved < 10) return; // hysteresis (apple-design §10)
+      const atTop = (el.current?.scrollTop ?? 0) <= 0;
+      if (dy < 0 || !atTop || Math.abs(e.clientX - d.startX) > Math.abs(dy)) { d.active = false; return; } // let the content scroll
+      d.committed = true;
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      if (el.current) el.current.style.transition = 'none';
+    }
+    const now = performance.now(); const dt = Math.max(1, now - d.t);
+    const y = dy >= 0 ? dy : (dy * 120 * 0.55) / (120 + 0.55 * Math.abs(dy));
+    d.vy = ((y - d.y) / dt) * 1000; d.y = y; d.t = now;
+    apply(y);
+  };
+  const onPointerUp = () => {
+    const d = drag.current; if (!d.active || !d.committed) { d.active = false; return; } d.active = false;
+    const projected = d.y + ((d.vy / 1000) * 0.998) / (1 - 0.998);
+    const h = el.current?.getBoundingClientRect().height ?? 400;
+    if (d.vy > 600 || projected > h * 0.5) {
+      if (reduce() || !el.current) { onDismiss?.(); return; }
+      el.current.style.transition = 'transform 200ms cubic-bezier(0.2, 0, 0, 1)';
+      apply(h + 40);
+      setTimeout(() => onDismiss?.(), 190);
+    } else {
+      spring(d.y, d.vy);
+    }
+  };
+
+  return (
+    <div ref={setRefs} className="sheet" role="dialog" aria-modal="true" aria-label={label} tabIndex={-1} style={{ opacity: 1 }}
+      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
+      <div className="grab" aria-hidden />
+      {onDismiss && <button type="button" onClick={onDismiss} className="close" aria-label="Luk">×</button>}
+      {children}
+    </div>
+  );
+});

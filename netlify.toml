@@ -1,0 +1,25 @@
+# Billedearv on Netlify: connect the GitHub repo, set the env vars from .env.example, deploy.
+# The Next.js runtime (OpenNext adapter) is picked up automatically; the two functions in netlify/functions are the
+# only things outside Next: the background job runner and the hourly housekeeping schedule.
+
+[build]
+  # Netlify builds on Ubuntu and runs functions on AWS Lambda (Amazon Linux). If the lockfile was last written on a
+  # Windows or macOS machine and lost the Linux entries for sharp, this line puts the linux-x64 binaries back before the build.
+  command = "npm install --os=linux --cpu=x64 --no-save sharp && npm run build"
+  # The Next.js plugin wants the build output named; without it the site's publish dir defaults to the repo root and the plugin refuses.
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["sharp", "heic-convert"]
+  included_files = ["assets/founder/**", "public/mockup/**", "public/examples/examples.json"]
+
+[functions."job-background"]
+  # background: true is set in the file; this keeps the bundle small
+  included_files = ["assets/founder/**", "public/mockup/**"]

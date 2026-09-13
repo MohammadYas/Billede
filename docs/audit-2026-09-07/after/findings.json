@@ -1,0 +1,399 @@
+[
+  {
+    "width": 390,
+    "route": "/",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Det gamle billede af mor og far. Skarpt igen, i ramme, klar til at give.",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/privatliv",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Sådan behandler vi dine oplysninger",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/handelsbetingelser",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Handelsbetingelser",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/tak",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Vi kunne ikke bekræfte betalingen med det samme.",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/p/invalid",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/godkend/invalid",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/godkend/invalid/aendring",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/audit-missing",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "route": "/audit-preview",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Her er dit billede.",
+    "errors": []
+  },
+  {
+    "width": 390,
+    "test": "keyboard upload",
+    "inputs": [
+      {
+        "hidden": false,
+        "tabIndex": 0
+      },
+      {
+        "hidden": false,
+        "tabIndex": 0
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "test": "Enter opens native file chooser",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "test": "dialog focus remains inside",
+    "inside": true
+  },
+  {
+    "width": 390,
+    "test": "focus restored",
+    "active": "BUTTON"
+  },
+  {
+    "width": 390,
+    "test": "keep email validation",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "test": "keep email failure",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "test": "late response does not reopen dialog",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "test": "price",
+    "bill": "I alt\n1.348 kr."
+  },
+  {
+    "width": 390,
+    "test": "delete failure retains preview",
+    "url": "http://localhost:3000/audit-preview"
+  },
+  {
+    "width": 768,
+    "route": "/",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Det gamle billede af mor og far. Skarpt igen, i ramme, klar til at give.",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/privatliv",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Sådan behandler vi dine oplysninger",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/handelsbetingelser",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Handelsbetingelser",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/tak",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Vi kunne ikke bekræfte betalingen med det samme.",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/p/invalid",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/godkend/invalid",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/godkend/invalid/aendring",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/audit-missing",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "route": "/audit-preview",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Her er dit billede.",
+    "errors": []
+  },
+  {
+    "width": 768,
+    "test": "keyboard upload",
+    "inputs": [
+      {
+        "hidden": false,
+        "tabIndex": 0
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "test": "Enter opens native file chooser",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "test": "dialog focus remains inside",
+    "inside": true
+  },
+  {
+    "width": 768,
+    "test": "focus restored",
+    "active": "BUTTON"
+  },
+  {
+    "width": 768,
+    "test": "keep email validation",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "test": "keep email failure",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "test": "late response does not reopen dialog",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "test": "price",
+    "bill": "I alt\n1.348 kr."
+  },
+  {
+    "width": 768,
+    "test": "delete failure retains preview",
+    "url": "http://localhost:3000/audit-preview"
+  },
+  {
+    "width": 1440,
+    "route": "/",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Det gamle billede af mor og far. Skarpt igen, i ramme, klar til at give.",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/privatliv",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Sådan behandler vi dine oplysninger",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/handelsbetingelser",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Handelsbetingelser",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/tak",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Vi kunne ikke bekræfte betalingen med det samme.",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/p/invalid",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/godkend/invalid",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/godkend/invalid/aendring",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/audit-missing",
+    "status": 404,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Den side findes ikke her.",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "route": "/audit-preview",
+    "status": 200,
+    "overflow": 0,
+    "broken": [],
+    "h1": "Her er dit billede.",
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "test": "keyboard upload",
+    "inputs": [
+      {
+        "hidden": false,
+        "tabIndex": 0
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "test": "Enter opens native file chooser",
+    "passed": true
+  },
+  {
+    "width": 1440,
+    "test": "dialog focus remains inside",
+    "inside": true
+  },
+  {
+    "width": 1440,
+    "test": "focus restored",
+    "active": "BUTTON"
+  },
+  {
+    "width": 1440,
+    "test": "keep email validation",
+    "passed": true
+  },
+  {
+    "width": 1440,
+    "test": "keep email failure",
+    "passed": true
+  },
+  {
+    "width": 1440,
+    "test": "late response does not reopen dialog",
+    "passed": true
+  },
+  {
+    "width": 1440,
+    "test": "price",
+    "bill": "I alt\n1.348 kr."
+  },
+  {
+    "width": 1440,
+    "test": "delete failure retains preview",
+    "url": "http://localhost:3000/audit-preview"
+  }
+]

@@ -1,0 +1,85 @@
+import { existsSync, readFileSync } from 'node:fs';
+import type { NextConfig } from 'next';
+
+const supabaseHost = (() => { try { return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://x.supabase.co').host; } catch { return '*.supabase.co'; } })();
+
+// CSP: only Meta Pixel as third-party script; images from self + private-bucket signed URLs.
+// 'unsafe-inline' for scripts is required by Next's hydration payload; no external script hosts beyond connect.facebook.net.
+const csp = [
+  "default-src 'self'",
+  // 'unsafe-eval' only in development: React dev tooling needs it; production builds never do.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"} https://connect.facebook.net`,
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: https://${supabaseHost} https://www.facebook.com`,
+  "font-src 'self'",
+  `connect-src 'self' https://${supabaseHost} https://www.facebook.com`,
+  "frame-src https://checkout.stripe.com",
+  "form-action 'self' https://checkout.stripe.com",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production' && !process.env.JOB_SECRET) {
+  throw new Error('JOB_SECRET is not set: the background job runner would reject every restoration. Set it in Netlify → Environment variables.');
+}
+
+// /privatliv, /handelsbetingelser and /sitemap.xml are prerendered, so the canonical URL, og:url and
+// the sitemap entries are frozen at BUILD time from CONFIG.siteUrl. The runtime console.error in
+// lib/config.ts fires far too late for those: the wrong host is already inside the HTML. A Meta ad
+// pointing at a page whose og:url says localhost also loses its share card. So fail the build.
+if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? process.env.DEPLOY_PRIME_URL ?? '';
+  if (!siteUrl || siteUrl.includes('localhost')) {
+    throw new Error(
+      `The site URL resolves to "${siteUrl || '(nothing)'}", so every canonical tag, og:url and sitemap entry on the ` +
+      'prerendered pages would point at localhost. Set NEXT_PUBLIC_SITE_URL to https://billedearv.dk in Netlify → Environment variables.',
+    );
+  }
+}
+
+// The seller's identity on /handelsbetingelser and /privatliv comes from assets/founder/founder.md.
+// e-handelsloven §7 requires name, CVR and address on the page, and a customer checking whether we are
+// a real company must never find a gap where they should be — so a production build refuses to run
+// without them. Unconditionally: LEGAL_DRAFT only controls the "Udkast" stamp, it is not a licence to
+// publish without an identity. Nothing here invents a value: it fails, and names the file to fill in.
+if (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') {
+  const md = existsSync('assets/founder/founder.md') ? readFileSync('assets/founder/founder.md', 'utf8') : '';
+  const field = (k: string) => (md.match(new RegExp(`^${k}:\\s*(.+)$`, 'mi'))?.[1] ?? '').trim();
+  // lib/founder.ts reads a leading TODO as "not filled in yet"; so does this.
+  const missing = ['name', 'cvr', 'address', 'email'].filter((k) => !field(k) || /^todo\b/i.test(field(k)));
+  if (missing.length) {
+    throw new Error(
+      `assets/founder/founder.md is missing ${missing.join(', ')}, so /handelsbetingelser and /privatliv would go out without the seller's identity. ` +
+      'Fill the fields in before deploying.',
+    );
+  }
+}
+
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
+  serverExternalPackages: ['sharp', 'heic-convert'],
+  // read with fs at runtime (founder.md, examples.json, mockup wall): trace them into the server function on Netlify
+  outputFileTracingIncludes: { '/*': ['./assets/founder/**', './public/examples/examples.json', './public/mockup/**'] },
+  images: { unoptimized: true },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'Content-Security-Policy', value: csp },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Permissions-Policy', value: 'camera=(self), geolocation=(), microphone=()' },
+        ],
+      },
+      { source: '/fonts/(.*)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+      { source: '/examples/(.*)', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800' }] },
+    ];
+  },
+};
+
+export default nextConfig;

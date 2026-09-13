@@ -1,0 +1,547 @@
+# HANDOFF — what the owner must do before the 1.500 kr. test
+
+## Status 2026-09-13 — fortsættelse: checkout-lagring og preview-måling
+
+The owner's correction matters: the earlier 72-hour sample contained **14 campaign-tagged generating sessions (18 generations)**, not only the two newest previews. The all-time read returned 15 sessions / 19 generations. Campaign UTM identifies attribution, but untagged tests can remain; the 17 recent PageView sessions are not 17 verified paid-ad visitors. Meta's four attributed landing-page views are a different metric. Both active ads were inspected in the logged-in Meta browser and promise free preview plus framing from 599 kr.; no campaign configuration was changed.
+
+The front page now shows a compact price ladder at the first CTA: framed from 599 kr. (the campaign anchor), loose print 250 kr. and digital file 99 kr.; the lead says the visitor chooses after the free preview. This makes the low-price paths visible without making the Meta promise look like a 99 kr. frame.
+
+Continuation fixes: `/api/checkout` now retains the newly agreed product and quote when saving the Stripe session, instead of overwriting them with pre-checkout metadata. `PreviewViewed` waits for the restored image to decode, a half-visible picture for one second, and a visible tab; new events carry `preview_measurement: 2`. `ViewContent` remains unchanged. The checkout regression reads the final saved order for all three products; `tests/preview-viewed.browser.mts` exercises the real component with isolated Chromium and WebKit fixtures, without external writes. See the audit's continuation section for evidence and limitations.
+
+## Status 2026-09-13 — audit af købsflow med Composio og browser
+
+See `docs/conversion-audit-2026-09-13.md` for the current evidence and limitations. The 99/250 kr. alternatives are now visible before upload, the preview's next-step link targets the product selector, a returned loose-print checkout cannot leave the framed size unselected, and the receipt plus browser/server purchase metadata follow the stored product. No prices, ad statuses, budget or optimization target were changed. Verification: 86 unit tests, production build, 12 viewport checks and manual digital/loose-print Checkout inspection without payment. **The ad set is named PreviewShown but its actual optimization event is CONTENT_VIEW.** MobilePay is absent from the inspected sessions; real product photos and the confirmed street address are still missing. The audit explicitly separates the small sample from evidence of a conversion improvement.
+
+Everything below was either impossible for the agent to do (needs your identity, your money, your DNS) or is
+unverified. Items in **bold** block the test.
+
+## 0. Launch checklist — everything that is still yours (in order)
+
+Nothing in this list is code. The code is done and verified; each line below is a login, a form or a decision only you can make.
+
+## Status 2026-09-12, nat — "virker alt?"
+
+Everything was run again against the live site, and two real things came out of it.
+
+- **A loose print was being filed under a framed size.** `ProductSelected`, `CheckoutClicked` and `InitiateCheckout` identified a product by `content_ids`, and for the 250 kr. print they sent whichever framed size the page happened to be sitting on — so the order Meta and our own report saw was a 30×40 parcel. One helper decides it now (`contentId`): the framed parcel by its size, because that is what varies, and the two small ones by themselves. Verified in the live event log: `["digital"]` at 99 and `["print"]` at 250.
+- **Client-side events carried no order id.** Only the server's events did, so a customer's own steps could be joined to what they bought by session alone. `/api/track` now accepts an order id and attaches it **only when that session is the one that made the preview** — an order id is a UUID anybody could post, and an event filed against a stranger's order is worse than one filed against nothing. No token is accepted and none is stored; the deliberate consequence is that a saved link opened on another device carries the session but not the order.
+
+**One test failure turned out to be the test's fault, and it is fixed rather than excused.** The journey walks out to Stripe's hosted checkout and comes back, and an in-flight fetch on *their* page rejects when we navigate away — `api.stripe.com`, not ours, and intermittent. The error listener did not know which origin it was on, so it would have cried wolf on every future run. Errors are attributed now: ours fail the run, theirs are printed as a note so they stay visible.
+
+**The state of it, live, after the deploy:** 80 unit tests, build, and in WebKit at 390×780 — the full customer journey 48/48 (real upload, real restoration, every funnel event read back out of Supabase, a real Stripe session opened and left unpaid), the two small products 60/60, delivery 26/26, shared links 18/18, six viewport widths, and the result page clean at 360×560, 390×780 and 1280×900.
+
+**Still not tested, and cannot be from here:** Safari on a physical phone, any physical device, Facebook's actual in-app browser (only its viewport and user agent), and a completed payment — nobody has ever paid for one of the new products, so the webhook path for them is unit-tested and unexercised in production.
+
+## Status 2026-09-12, nat — leveringssiden af de nye produkter
+
+### **Owner, four photographs is the cheapest thing left on this list**
+
+Everything the site shows of the physical product is drawn by code: `makeMockup` puts the restoration onto `public/mockup/wall.jpg`, a room none of us has stood in. Honest as a visualisation, useless as proof — and the audience is 45–70, buying an object from a Danish company they have never heard of. One photograph of a real parcel does what no render can, and two of the three products now have no photograph at all.
+
+**The slot is built and empty.** `public/produkt/README.md` says exactly what to shoot — a framed 30×40 held *in a hand* (not on a wall: that is what makes it physical), the opened parcel as it looks in the hallway, the loose 20×30 print between its two pieces of card, and the same frame hung up at your place. A phone in daylight is enough; an ordinary Danish daylight picture beats a good advertising photo here. Drop them in `public/produkt/` with a line each in `produkt.json` and the section appears. Until then it renders **nothing** — no placeholder stands there quietly becoming the proof, and a file listed in the manifest but missing from the folder is skipped rather than shown broken. A staged shot gets `"demo": true` and the page writes «Opstillet foto» across it.
+
+
+
+**The two small products were in the shop before they were on the packing bench. Four things were wrong, all fixed.** None of them had reached a customer — the products went live a few hours earlier and nobody has bought one — but every one of them would have, on the first order.
+
+- **The bench checklist told the owner to order a framed print at CEWE for every order.** For a 99 kr. file that is an instruction to buy and post a frame — more than the order is worth — addressed to "(adresse mangler)", because a file collects no address. For the 250 kr. loose print it ordered the wrong product: "Billede i ramme … ramme: SORT … passepartout". Each product now has its own list: the file says check the download and set FULDFØRT, the loose print says LØST PRINT, no frame, no glass, packed flat between card.
+- **The shipping mail told a customer who bought a file that their parcel was "printet, indrammet og pakket".** `shippedNotice` returns `null` for a digital order now — there is no parcel, so there is no mail — and for a loose print it says posted flat between card, and asks about a bent print rather than broken glass.
+- **Changing the size in admin on an unpaid digital order rewrote 99 kr. to 599 kr.**, because the re-quote ran on the framed ladder. It carries the order's own product now.
+- **"Godkendt – bestil print"** went to the owner for an order with nothing to print. It says "filen er hentet frem … sæt ordren til FULDFØRT" for a file.
+
+**Admin no longer shows controls for things a product does not have.** The size picker only appears for the framed parcel, the tracking card only for something that is actually posted, the checklist heading follows what the list asks for, and the order's headline now says `KUN DIGITAL FIL` / `LØST PRINT – INGEN RAMME` / `I RAMME` before anything else.
+
+**The delivery path is verified, not assumed.** `tests/delivery.browser.mjs` drives a fixture order through the approval page and the download for both new products — 26/26 — and puts it back exactly as it found it. It pays for nothing, generates nothing and sends no customer mail: the order is moved through the state machine directly and `final_path` points at the restoration already in storage. The file really downloads: HTTP 200, `image/jpeg`, 216 kB.
+
+**The payment route now has the tests it never had.** `tests/checkout.test.mts`, 8 of them, on the only route where a mistake costs money: the amount is built on the server whatever the browser sends (a body carrying `amount: 1` is charged 999 kr.), a product whose offer is off cannot be bought however it is asked for, only a finished unpaid preview can be paid, somebody else's preview is "not found" rather than "forbidden", and a Checkout tab left open is expired before a new one is made. They were mutation-tested: deliberately letting the browser pick the product turns two of them red.
+
+### **Owner, a date is going to change the site by itself: 1 October**
+
+`CHRISTMAS_START_DATE` is **2026-10-01** in Netlify production, while `lib/config.ts` defaults to **2026-11-14**. Nobody is wrong — they simply disagree, and the deployed one wins. On 1 October, with no deploy and nobody watching, the live site becomes a Christmas shop: the hero eyebrow turns into "Julegaven 2026 · bestil senest 2. december, så er den under træet", the FAQ and the closing line change, and **every delivery promise on the site becomes "inden jul" instead of "inden 10 hverdage"**. The same day, the launch offer (`CAMPAIGN_END_DATE=2026-09-30`) switches off. Two changes of character at once.
+
+Nothing is broken by it — the promise is true with 62 days to spare, and the arithmetic is now pinned by `tests/campaign.test.mts` (the offer ends on its last day and never restarts, a broken date turns it off rather than leaving it on forever, the countdown never promises a day that has passed, and the copy stops saying "gratis" the moment the offer ends). It is a marketing decision that happens on a date nobody chose to be watching. **Pick one:**
+
+```bash
+npx netlify env:set CHRISTMAS_START_DATE 2026-11-14 --context production
+```
+
+— or leave it and know that the site changes on 1 October.
+
+## Status 2026-09-12, sen aften — konverteringsrunden (read this first)
+
+**What this round went at.** The break is after the picture: eleven ad sessions loaded a finished preview over 72 h and not one touched a size. So the result page became the place you buy, the measurement learned to tell "the job finished" from "a person looked at it", and the price ladder got two cheap rungs under it.
+
+**Three products now, and two of them are new.** `framed` (print, ramme, glas, fil, fri fragt — fra 599 kr.), `print` (løst 20×30 på mat fotopapir, ingen ramme, fil med, fri fragt — **250 kr.**) and `digital` (kun filen — **99 kr.**). Prices are the owner's, 12 Sep. Both small ones are two environment variables each, and **both halves are required** — a flag without a price is off, a price without the flag is off — so an unapproved price can never be charged, whatever a browser posts. **They are switched on:** `NEXT_PUBLIC_PRINT_ENABLED=true`, `NEXT_PUBLIC_PRINT_PRICE_DKK=250`, `NEXT_PUBLIC_DIGITAL_ENABLED=true`, `NEXT_PUBLIC_DIGITAL_PRICE_DKK=99` set on Netlify (production context) and in `.env.local`. To withdraw either, set its `_ENABLED` to `false` and redeploy — no code change.
+
+**Owner, the one number nobody here can check: what a 20×30 print and a flat envelope actually cost you.** There is no cost data anywhere in this repo, so 250 kr. and 99 kr. are prices, not margins. The framed 599 kr. covers print + ramme + glas + passepartout + fragt; if 250 kr. does not cover print + envelope + the OpenAI run + Stripe's fee, turn the print off with one variable.
+
+**The landing page still says "fra 599 kr."** That is the framed product's price and what the live ads promise; the cheaper rungs are disclosed in the FAQ and offered where the choice is actually made, on the result page. Changing the hero to "fra 99 kr." would contradict every ad currently running — the owner's call, not a repair.
+
+**What else changed on the result page.** The upsell modal between the buy button and Stripe is gone (the extra copy is an option beside the size now). The launch-offer dialog no longer opens by itself 1,8 s after paint — the offer is the bar at the top, the Promo block and the step beside the size. One "Sådan foregår det herfra" list above the button says when the money is taken, what the review is, when you approve and when the file and the parcel arrive. The product picker shows each product as the object it is (a framed print on a wall, a loose print, the picture on a screen), with the price on its own line and a filled radio dot — it was three grey sentences with the price at the tail.
+
+**Copy that was not true, and now is.** "Det her er AI'ens første forslag" made the picture people had just fallen for sound like a draft; the page now says this *is* the restoration, that ordering makes the print-quality file (a second, larger run — not an upscale of the preview), and that a person checks the faces. The wait screen said "Ansigterne rører vi ikke ved" while the FAQ two screens down explained that a changed face gets corrected; it says "Ansigterne skal stadig ligne dem" now. The examples note claimed the originals were *made* to demonstrate the repair — the owner says they are real damaged photographs, so it says that, and still does not claim they are customers'.
+
+**The legal pages no longer carry a hand-set "Udkast – gennemgås af advokat" stamp** (`LEGAL_DRAFT` is gone). The content was reviewed and completed: the print-quality file, the manual-review case, and the two new products are in the terms. What is still open is a fact, not a judgement, so the page names it and clears itself: **owner, put the street name and house number into `assets/founder/founder.md` (`address:`), and the line "Vi mangler at få vores fulde gadeadresse på siden her" disappears by itself.** e-handelsloven §7 wants it.
+
+**Measurement — this is the part that answers "where do they fall off".** `PreviewShown` still means the job finished (it is the ad set's conversion event; nothing was renamed). New beside it: **`PreviewViewed`** — the restored picture decoded and at least half of it in the viewport for a second. A reload inside half an hour is the same look, not a new customer. Also new: `PreviewReopened`, `PreviewSaved`, `GenerationFailed`, `ColourReady`, `ColourFailed`, `ProductSelected`, `CheckoutClicked`, `CheckoutRedirected`. `/admin` has **"Trin for trin · 30 dage"**: sessions per step, the drop between them, test traffic excluded — plus turnover per person who saw a result (ad spend lives at Meta and is not in this number; it says so).
+
+**Verified, all of it, against the dev server on the production database.** `npm test` 53 green. `npm run build` green. `tests/conversion.browser.mjs` 48/48 in WebKit at 390×780 — real upload, real restoration, the funnel events read back out of Supabase, a real Stripe session opened and left unpaid. `tests/small-products.browser.mjs` 54/54 — both small products end to end, each session read back from Stripe to prove the amount and whether an address is asked for (the file: none; the print: DK). `tests/viewport.browser.mjs` green at six widths, and the result page clean at 360×560 (Facebook's in-app size), 390×780 and 1280×900. **Not tested:** Safari on a real phone, a real device of any kind, and Facebook's actual in-app browser — only its viewport and user agent.
+
+**Two holes in the measurement, written on the admin page itself so nobody misreads the table.** (1) The steps are not strictly nested: some are written by the browser (åbnede upload, valgte billede, valgte produkt, trykkede bestil) and some by the server (billedet blev færdigt, betalingsside oprettet, betalte), and the two sources do not lose the same visitors — a server step can stand higher than the browser step above it, so compare neighbouring lines rather than the top and bottom of the column. (2) `PreviewViewed` only started being written on 12 Sep, so every day before that counts zero on "Så sit billede" however many people actually looked. Judge that line from 13 Sep onwards. A third, smaller one: the "same sitting" marker lives in the browser, so a saved link opened on a second device counts as a first view there too.
+
+**The report over the last 30 days, run just now (test traffic excluded):** 1.333 åbnede siden → 127 åbnede upload → 42 valgte et billede → 27 restaurering startet → 45 billede blev færdigt → 4 så sit billede → 3 valgte produkt → 2 trykkede bestil → 7 betalingsside oprettet → 1 betalte. The four and the three are today's traffic only, for the reason above; the 1.206 lost between the first two lines is the number that has been true all month.
+
+**Four test previews were generated locally (tagged `?utm_source=pwtest`, filtered out of admin):** `ac0c032b`, `8d619d0e`, `941a3729`, `6b889fc2`, plus one against the live site after the deploy (`85de7012`). Nothing was paid. Every Checkout session opened during testing was expired again.
+
+## Status 2026-09-12, evening — organic / social
+
+**The social work has its own handoff: `work/social/STATUS.md`. Read that before touching anything social.** Short version:
+
+- **Facebook page and Instagram both have exactly one post** — the 1962 wedding carousel, damaged first, restored second. Pinned on Facebook. Four shorter posts were published and deleted the same day; the owner rejected them as too short, and rejected `33-telefon-fotograferer` as an image outright.
+- **Instagram `@billedearv` exists** (BUSINESS, id `27530437379962750`), follows 17 relevant Danish accounts, and is **not yet linked to the Facebook page** in Business Suite — until it is, ads cannot use IG placements.
+- **30 Facebook groups joined, all as the Billedearv PAGE, not the personal profile.** The `i_user` cookie pointed at the page id throughout, and a scripted profile switch would not stick. The owner has decided he will only post as the page. That is the weakest possible sender in local-history groups, and it is a deliberate choice.
+- **Two group posts submitted, both awaiting admin approval**: Kjellerup og Omegn (4.900) and Gamle billeder fra Als (9.700). A page's first post in a group is reviewed regardless of how it is sent, so nothing is gained by automating the rest.
+- **Group rules were read word for word.** Gamle København (160k) requires images older than 30 years with source and provenance; Slægtsforskning (45k) bans AI-generated material outright. Neither opens with better copy — they need an agreement with the admin, and that message has not been sent (it needs the owner's ok, being a message to strangers).
+- **Owner decisions that override older text:** no AI labelling anywhere; TikTok dropped (`tiktok/` is now `reels/`); posts must be long enough to be worth reading.
+
+## Status 2026-09-12, middag (read this first)
+
+**Four days in: 398,10 kr. spent of the 1.500 kr. limit, 0 customers.** Still running — 58,20 kr. by 11:38 UTC today against 170,28 kr. yesterday. Exactly one order has ever been paid: `17b47d56`, 8 Sep, 599 kr., the owner's own test, still awaiting refund.
+
+**The break is confirmed, and it is after the picture.** Real Facebook traffic over 48 h: 87 sessions → 20 opened the flow → 10 uploaded → **10 got a finished preview** → **0 chose a size** → 0 reached payment. Direct traffic over the same window: 110 → 7 → 5 → 5 → 1 → 1. Delivery is not the problem — ten uploads produced ten previews. The next click is. At ~35 kr. per delivered preview the traffic price is fine; one buyer in ten at 599 kr. would carry it. `n = 10`, so this is a signal, not a proof — but it is now the same answer two days running.
+
+**Spend is badly distributed.** Cost per link click over the campaign's life: FINAL_COLD_01 1,23 kr. (30 clicks, 37 kr.), FINAL_COLD_03 1,81 (70, 127 kr.), FINAL_COLD_02 2,82 (4, 11 kr.), FINAL_COLD_04 4,43 (27, 120 kr.), FINAL_COLD_05_farvepris **11,49** (9, 103 kr.). COLD_04 and COLD_05 took 56 % of the money for 26 % of the clicks; COLD_01 is nine times cheaper than COLD_05 and has had 37 kr. **Owner: pause FINAL_COLD_05_farvepris, pause or halve FINAL_COLD_04, leave the rest running.**
+
+**How far they actually got — this is the sharpest number we have.** Over 72 h, **11 Facebook sessions loaded the finished preview page**, and in 10 of the 11 the last event ever logged is that page's own PageView. **Not one of the eleven touched the colour toggle or a size.** The eleventh came back to the front page nineteen minutes later and started over with another picture. For contrast, the colour toggle was used in 15 sessions on 11 Sep — none of them from an ad. That rules the price out as the explanation: they never reached it. What is left is the picture itself, or the page it lands on — and on that page the cookie banner sat on the Før|Efter switch, the first thing anyone can touch, in the second the picture arrived. Fixed and live as of 12 Sep 11:50 UTC (verified: `pv-consent-hold .consent{display:none}` is in the deployed CSS bundle).
+
+**Meta still sees about an eighth.** Four days: 4 view_content, 1 landing_page_view. The site logged 128 ViewContent with UTM in 48 h.
+
+**Four bugs found in the data and fixed (commits `90fa0df`, `f273ccd`, pushed to `billedarv-redesign`; `npm run build` and `tsc --noEmit` both green).**
+
+- **Attribution was broken.** `UploadCompleted`, `PreviewShown` and `PreviewFallback` are logged from the background job, which has no request cookie, so they carried no UTM at all — 0 of 32 previews could be traced to an ad, and ROAS per ad could not be measured. They read the UTM off the order now (`orders.utm` is populated: 32 of 38).
+- **The progress bar sat at 100 % for the half minute 'preparing' takes** — that stage fell through to the final `: 100` in the pct expression (`UploadFlow.tsx`). It has its own 90→99 curve now; only PREVIEW_READY claims 100.
+- **Choosing colour then another size dropped the wall mockup to black-and-white** for 40x50 and 50x70, and cached it for a quarter of an hour. Only the starting size gets its colour wall inside the preview job. The image route now borrows the colour wall from another frame in the same size first, and a fallen-back response is sent `no-store`.
+- **The cookie banner landed on the Før|Efter switch** in the second the picture arrives (`body.has-pv-bar:not(.pv-bar-on) .consent { bottom: 0 }`). The preview page holds it until the order bar is up, or ten seconds, whichever comes first.
+
+**CAMPAIGN STOPPED 2026-09-12 14:52 (agent, on the owner's explicit instruction).** `FINAL_COLD_05_farvepris` is `status: PAUSED / effective_status: PAUSED`, verified through the Marketing API, not just the toggle. All five ads are now off — the owner had already paused FINAL_COLD_01–04 on 11 Sep at 14:07–14:08, which is the second half of the plan in the note below (publish farvepris + vaegpris, then pause 01–04); vaegpris was never put up. **So from 11 Sep afternoon the whole campaign was one ad: farvepris.** That is what the collapse in traffic was. Today it took 70,48 kr. for 669 impressions, 33 clicks and **3 link clicks — 23,49 kr. per visitor**, against 2,84 kr. across the four days. Total spend ≈ 410 kr. of the 1.500 kr. limit.
+
+**RESTARTED 2026-09-12 15:01 on the owner's instruction ("skal have meta ads op nu"), on the two cheapest ads.** `FINAL_COLD_01` ACTIVE (14:59:25) and `FINAL_COLD_03` ACTIVE (15:01:39); `FINAL_COLD_02`, `FINAL_COLD_04` and `FINAL_COLD_05_farvepris` stay PAUSED. Verified through `METAADS_LIST_ADS`, not the toggle. Ad set `META_Sales_DK45-70_Broad_PreviewShown` (120249864995960069) is ACTIVE and the account is ACTIVE with no disable reason, so delivery resumes immediately. Campaign budget 150 kr./day, spending limit 1.500 kr., ~410 kr. spent. Chosen because COLD_01 buys a visitor for 1,23 kr. and COLD_03 for 1,81 kr. — against 23,49 kr. on the ad that had been carrying the campaign alone. COLD_03 also has the highest CTR of the five (16,1 %) and the most link clicks (70).
+
+**Watch this:** the ad set optimises for PreviewShown, and previews run at roughly ten in three days. That is far too thin to leave the learning phase, exactly as the 11 Sep note warned. Judge the restart on cost per visitor and on whether anyone finally touches a size — not on Meta's own conversion column.
+
+**Earlier note, now resolved:** nothing is running. Turning FINAL_COLD_01 (1,23 kr./link click) and FINAL_COLD_03 (1,81) back on would restart traffic on the two cheapest ads, but that reverses the deliberate switch to price-qualified creative — the agent did not make that call. The alternative is new creative: 35 images are ready in `work/social/` with per-post copy in `OPSLAG.md`, including `33-telefon-fotograferer`, the only one that shows the actual instruction (lay the print on the table, photograph it) rather than promising something free.
+
+**Tooling correction — the browser route is NOT fully closed.** A plain status toggle in Ads Manager goes through Claude in Chrome without any classifier refusal (done today). What was refused on 11 Sep was the large duplicate-an-ad-and-upload-creatives flow. Verify a row before clicking by pairing the ad-name element's `getBoundingClientRect().top` with each `[role="switch"]`'s — the accessibility tree alone does not tell you which row a switch belongs to. Then confirm with `METAADS_LIST_ADS` (`status`, `effective_status`), because the UI can queue changes as drafts.
+
+**Tooling corrections.** Composio's Meta Ads **reads work** — `METAADS_GET_INSIGHTS` returned per-ad spend and actions without trouble (the older "API access blocked" note is wrong for reads; writes are still unavailable). Supabase SQL through Composio (`supabase_jonas-espial`, `SUPABASE_BETA_RUN_SQL_QUERY`, project `xsdgbjheochbneauhado`) is the fastest way to the funnel — always exclude `utm->>'utm_source' = 'pwtest'`, which was 17 of 38 orders and 10 of 11 checkouts in this window. A push to `main` was refused by the auto-mode classifier; Netlify builds `billedarv-redesign`, so deploys are unaffected and `main` is only cosmetically behind.
+
+Full write-up with the funnel and the ledger: https://claude.ai/code/artifact/053b9214-799c-4791-a1c4-1204dbbfeee0
+
+## Status 2026-09-11, aften
+
+**The question was "8 previews, 0 sales". The break is before the decision, not at the price.** Every ad session that reached a finished picture opened it — ten of them — and not one touched a size, a frame, a colour toggle or a payment. Three went back and uploaded another photograph instead; one did it three times. Stripe has fourteen checkout sessions since 9 Sep and every one traces to an agent test order: no real visitor has ever opened a payment page.
+
+**Why.** The ad headline is "Se dit billede restaureret gratis", and every cold CTA in `scripts/ads/concepts.mjs` led with that word. That is the click it bought — 129 link clicks, about 280 kr, all curiosity. Five of the eight uploads were not old black-and-white photographs at all: a selfie taken the same day, a framed oil painting of a sailing ship, a recent colour snapshot of an elderly woman in an armchair.
+
+**The page itself is not broken.** Measured against a real customer order in WebKit at 390×664 with a Facebook in-app user agent: the sticky order bar with "Bestil mit billede · 599 kr." appears after a 300 px scroll and "Se det i ramme og vælg størrelse ↓" sits directly under the picture. What is wrong there is smaller — the consent banner owns the bottom 113 px until the order bar is up, so it covers the Før | Efter switch in the moment the picture lands, and the page is 3.657 px, about 5,5 screenfuls.
+
+**Meta is flying on about an eighth of the data, and that is the deeper problem.** Both the pixel and the Conversions API are gated on the Meta consent (`lib/analytics/capi.ts`; /privatliv promises exactly that), and only 2 of the 12 real ad orders consented. Today Meta recorded 3 ViewContent against 25 link clicks. So the ad set's conversion event is *already* being optimised on roughly one event in eight. **Switching that event to PreviewShown would make it worse, not better:** Meta would see about one upload every three days and the learning phase would reset for nothing. At 150 kr/day no conversion optimisation can work until the consent rate rises. That is why the approved "new ad set optimised for upload" was deliberately not created — the fact came out of the analysis after the approval, and it inverts the answer.
+
+**What shipped instead.**
+
+- **The framing crop** (`lib/restoration/prompts.ts`, `restore.ts`, `image-utils.ts`). The site tells customers to lay the print on a table and photograph it, so a photo-of-a-photo is the main path rather than an edge case — and the restorer is told to keep the original framing, so a framed print on a wall came back as a framed print on a wall, offered at 599 kr. One cheap vision call (`findPhotograph`, low effort, 1024 px, 3–8 s) now finds the photograph inside the upload and `cropToBox` cuts frame, mount, glass edge, wall and table away. It cuts only on a confident answer, refuses any box keeping under a third of the area, and cuts slightly *inward* on a slanted print because a rectangle drawn around a trapezoid always catches frame on one side. Measured over all eight real customer uploads: both framed ones cropped correctly (the wedding photo on the wall 2400×3200 → 1584×1824; the sailing ship 1200×867 → 1136×792), six left untouched, one angled upload correctly refused. A failure anywhere in the step restores the upload exactly as it came. `npx tsx scripts/framing-check.ts <folder>` re-runs it over any folder and writes the crops out to look at.
+- **`previewTimeoutMs` 90 s → 150 s** (`lib/config.ts`). Colour-first already took a normal run to about 80 s and the framing call adds a few more; 90 s would have turned slow runs into failures the way 45 s once did. The page promises "about a minute and a half". This is the hang guard, not the pace.
+- **Two price-qualified cold ads** (`scripts/ads/concepts.mjs` → `work/ads/final/`): `farvepris` and `vaegpris`. The button now carries the product and the price, "Få det hjem i ramme · fra 599 kr.", and the free preview is demoted to the small line beside it. `vaegpris` shows the framed print on the wall with the faded original on the sideboard and says out loud what the service is: "Vi restaurerer det gamle billede og sender det hjem i ramme."
+
+**Nothing can write to the ads account from here — both routes are closed (checked 2026-09-11).** The browser route is refused by the safety classifier partway through any edit, and the Meta Marketing API route through Composio has its write tools restricted in this environment: `METAADS_CREATE_AD`, `METAADS_CREATE_AD_CREATIVE`, `METAADS_CREATE_AD_SET`, `METAADS_UPDATE_CAMPAIGN` and `METAADS_UPDATE_AD_CREATIVE` are all unavailable. Reads work (`METAADS_GET_INSIGHTS`, `METAADS_READ_ADSETS`, `METAADS_LIST_AD_CREATIVES`), and so does `METAADS_UPLOAD_AD_IMAGE` — but only for a file already in Composio's own S3, not a local path, so it cannot carry a freshly rendered creative up. **Starting, pausing or changing a campaign is the owner's hand, every time.** Do not spend a session rediscovering this.
+
+**A draft is waiting in the campaign: `FINAL_COLD_05_farvepris`** (ad id 120249897883130069), duplicated from FINAL_COLD_04 with Advantage+ declined, so identity, URL and UTM came along. A draft spends nothing. It still needs the images swapped per placement, the copy replaced and then publishing — the exact values are in the list below.
+
+**Owner, still yours.** The two creatives are rendered but **not uploaded**: the agent's automation of the ads account was refused by a safety classifier partway through a duplicate of FINAL_COLD_04. The dialog was cancelled and all four ads are untouched and still active. To put them up — duplicate FINAL_COLD_04, decline Advantage+, replace the images per placement from `work/ads/final/{farvepris,vaegpris}-{4x5,1x1,9x16}.jpg`, set the headline to `Gammelt billede i ramme · fra 599 kr.` and the description to `Se resultatet, før du bestiller. Fri fragt.`, then pause FINAL_COLD_01–04. Still open besides that: phone verification on the ad account (#3858013) and "Verificer domæne".
+
+## Status 2026-09-10 (the campaign went live)
+
+**Where things stand.** The Meta campaign `META_Sales_DK45-70_Lancering_2026-09` has been running since 2026-09-09 ~10:45 (three Facebook-only static ads FINAL_COLD_01/02/03, campaign budget 150 kr./day, spending limit 1.500 kr.; owner's stop rule: 0 purchases after 1.500 kr. → pause). First 24 h: 34 sessions from the ads (utm + fbclid), 9 uploads, 9 previews, 2 went to payment, 0 purchases. Nothing in the chain fails; the owner's decision is to leave it alone for three days.
+
+**Branches and deploys.** `origin/main` = `origin/billedarv-redesign` = Netlify production (site `billedarv`, id `21e453f1-e0d5-4fd1-ba40-9d401c58977c`, builds `billedarv-redesign`). Every push triggers a build and the deploy list shows two builds per push (a webhook on each branch or branch deploys on — owner's Netlify setting to halve it). **Owner's rule 2026-09-09: never push after every file change.** Commit locally, verify locally, push once per task, and say "not pushed yet" when commits are waiting.
+
+**What changed 2026-09-09 → 2026-09-10** (all live, commits `0dc3bd7` … `f7871e6`):
+- Landing: the launch-offer dialog scrolls and its button stays in view in Facebook's in-app browser (~360×560); headlines no longer auto-hyphenate; size/frame cards keep their labels whole under 400 px. Before/after (`Compare`, fade mode) switches in 80 ms on a tap; the 1,4 s dissolve is only for the idle loop.
+- Resume banner on the front page: an order left with a file but no job gets its job started; an order with no file (tab closed during the upload) or a failed job shows "Din upload blev afbrudt … Prøv igen" (opens the sheet) and drops the key.
+- Preview page (`/p/<id>`), for a 45–70-year-old on a phone: opens on the finished picture (no reveal wipe, the original stays invisible until the restoration has loaded, both eager); one full-width **Før | Efter** switch under the picture (in-picture labels hidden, seam and knob hidden at the edges); "Tryk på Før og Efter for at sammenligne."; a full-width "Se det i ramme og vælg størrelse ↓" that scrolls to the framed picture (arrow nods after 5 s); "Tilføj et ekstra eksemplar – gratis" full width with a full-width stepper; the cookie banner sits at the bottom until the order bar is up; the order button works again after Back from Stripe (bfcache → `pageshow`).
+- Wall mockups (`lib/restoration/mockup.ts`): one physical scale for all sizes (set by the largest print), every frame hangs the same height above the sideboard, sideboard visible — 30×40 and 50×70 finally look different. All six mockups are in the page from the start, stacked; a tap only changes which is on top (the off-screen preload swap lagged on a phone and read as "does not change"). The 12 unpaid previews from 2026-09-08–10 were redrawn with `redrawDerived`.
+- Admin: "Besøg · 30 dage" (distinct sessions per utm_source · campaign · utm_content through PageView → FlowOpened → PreviewShown → Purchase; `pwtest` filtered out), "Ordrer pr. kilde" keyed on utm_content too, "Genereringer" grid (original next to preview for every order with a preview, newest 48). The events query is paged — PostgREST returns at most 1000 rows per request and the old single request silently dropped the newest events.
+
+**Paused 2026-09-11, and what the first three days said.** 86 real ad clicks (fbclid), 69 saw the hero, 11 opened the upload, 2 uploaded, 0 bought; median time on site 3 s. The break is not the page design: 9 of the 11 who opened the upload never picked a file, and both who did grabbed an archive picture. The audience is scrolling Facebook while the photograph lies in a drawer at home. Three things shipped the same day: "Jeg har ikke billedet lige nu" is now a real second action under the hero button (it was reachable only from a FAQ answer and from inside the sheet) and sends the link by mail; colour is offered on the preview page for a black-and-white picture, made only when asked and carried all the way to the print; and the header no longer collides with itself while the wordmark font is still loading. Before restarting the ads: rewrite them so the click arrives prepared ("Find det gamle billede frem"), and consider colour as the angle.
+
+**Meta, 2026-09-11 (done in the owner's Chrome).** The pixel itself was proved good from a browser without a blocker: fbevents 2.9.398 loads, Meta's config for 1430023292388175 answers, the /tr beacons go out. Events Manager has PageView, ViewContent, FlowOpened, UploadStarted, ProcessingStarted — and **no PreviewShown**, because that event is written server-side only and can reach Meta only through the Conversions API. So the campaign has been optimising toward an event Meta has never once received.
+
+Progress on the token: the business e-mail was the first gate and is now closed — hej@billedearv.dk is added and confirmed on the portfolio (Meta mailed a code, it arrived in admin → Beskeder, and was entered). The next gate is not closeable by anyone but the owner: generating the token now fails with "Udvikleradgang begrænset for bruger", and developers.facebook.com answers "Account confirmation needed — unusual activity on this developer account". That is a personal identity checkpoint on the owner's own Meta account. **Owner: go to https://developers.facebook.com/apps/, finish Confirm Account, then Events Manager → dataset Billedearv → Indstillinger → Generér adgangstoken (pick only the Billedearv dataset), and paste it straight into Netlify as META_CAPI_TOKEN.** After that, PreviewShown reaches Meta and the custom conversion and the ad set's conversion event can both be switched to it.
+
+**FINAL_COLD_04 is live in the campaign (2026-09-11), the colour creative.** Duplicated from FINAL_COLD_01 so identity, URL and UTM came along (verified: utm_source=facebook, utm_medium=cpc, utm_campaign=lancering-sep26, utm_content={{ad.name}}); Advantage+ declined on the duplicate. Images replaced per placement — 4:5 on the feed, Marketplace, profile feed and search; 9:16 on Reels, Stories, instream and WhatsApp status; 1:1 in the right column; the notifications placement carries no image. Primary text is the colour copy, headline and description unchanged. Published into the paused campaign, status "Behandler", 0 kr spent. Spend so far across the whole test: FINAL_COLD_03 123,46 kr, FINAL_COLD_01 36,10 kr, FINAL_COLD_02 9,87 kr — about 169 kr of the 1.500 kr limit.
+
+**Meta's own warning, worth taking seriously:** on publish it said the campaign will likely get **0 results at 150 kr./day** and offered 582 kr./day for one result a day. That was declined — it breaks the owner's stop rule. Read together with the missing PreviewShown it says the same thing twice: at this budget and with no conversion signal, Meta cannot optimise. Fix the signal first, then judge the budget.
+
+**LIVE AGAIN 2026-09-11, and the measurement finally works.** The campaign is switched on with four ads (FINAL_COLD_01–04, all Aktiv), campaign budget 150 kr./day, spending limit 1.500 kr., 169 kr. spent so far. The Conversions API is connected: the owner cleared the developer-account checkpoint, the token was generated for the Billedearv dataset only, put on Netlify with `netlify env:set` without passing through a chat, and a manual build was triggered so the functions carry it. Proved end to end — a PreviewShown posted straight to `graph.facebook.com/v21.0/<pixel>/events` came back `events_received: 1`. Orders now record `consent: yes`, so every restoration sends its PreviewShown server-side. Events Manager's table lags up to 30 minutes; judge it there, not immediately.
+
+**Full customer journey, verified on the live site with Playwright (WebKit, iPhone 13, 390×700): 27 of 27 checks pass.** Landing from an ad link, UTM stored, offer dialog button inside the screen, consent asked in time, pixel loading, a real upload and restoration in about 45 s, the preview opening on the finished picture, the Før/Efter switch, colour in about 40 s with the framed picture following it, size and frame changing the wall and the price, a real Stripe session opening, no page errors, no failed requests, and the order landing in admin with the ad name and the consent. The script is `fullcheck.mjs` in the session scratchpad; keep that shape for future rounds.
+
+**One thing Meta will not let anyone change:** the ad set's conversion event is stuck on "Visning af indhold" because an ad set that has been published cannot have it changed — Meta says to create a new ad set instead. Moving to FlowOpened or PreviewShown therefore means a new ad set and a reset learning phase. That is the owner's call, not a repair.
+
+**Last round of 2026-09-11, all verified on the live site.** Colour now leads: a monochrome picture is shown in colour the moment the background job finishes, the choice is written to the order, and the first tap anyone makes becomes their choice and nothing moves it again — the line saying the colours are a qualified guess stays under the picture. The preview page scrolls to the top on arrival, because people scroll while they wait and a client-side navigation kept that position, opening the page halfway down the receipt. The colour switch answers in 0.1 s, because the page now watches quietly for the colour version instead of making the first tap sit through the whole job. Admin's Genereringer shows only visits that carried an fbclid or came from facebook — six real ones against twenty-six tests — with a link to show everything. The repeat link is printed only on a paid order: it resolves nowhere else, and only a paid customer ever receives one, so showing it elsewhere looked like a broken feature.
+
+**Known and fine:** one restoration failed today (`reason: error`) during six back-to-back test runs on a Tier 1 OpenAI key. The order went to MANUAL_REVIEW, which is the designed landing: the customer is not stranded and the owner sees it in admin with a 24-hour reply prompt. At a few uploads a day there is no rate pressure; prepay for Tier 2 before the budget is scaled.
+
+**Colour is the first thing the customer sees (2026-09-11, owner's call).** For a black-and-white photograph the colour version is now made *before* the preview goes live, not a few seconds after it, and the order is stored with `chosen_colour: true`. It is the same job either way, so no extra model call and no extra cost — only the order changed. The wait goes from about 45 s to about 75 s, still inside the minute and a half the page has always promised. If the colourisation fails the preview goes live anyway in black and white, and the background job still tries. Both versions are preloaded in the browser, so "Se det i sort-hvid" answers in about 0.2 s. Measured on a real upload: 73 s to the preview, first picture `kind=colour`, receipt "i farver", framed picture in colour, switch back 0.21 s, twelve wall shots in the end (six black-and-white, six colour).
+
+**How to verify before a push** (all green at `f7871e6`): `npm test` (36), `npm run build`, `BASE=http://localhost:3000 node tests/viewport.browser.mjs`. Dev server through the editor's preview (`billede-dev`, `.claude/launch.json`), never a shell. Playwright has Chromium and WebKit (`npx playwright install webkit` was run 2026-09-10) — test phone flows in WebKit with `devices['iPhone 13']`. **The dev server and every test hit the production Supabase** (same `.env.local`): tag test visits `?utm_source=pwtest` (admin filters it), never delete production rows without the owner's yes, and put any test order back as found. A preview page needs the owning session: set cookie `gf_sid` = the order's `preview_meta.session_id` in the test context.
+
+**Tooling facts.** Composio's Meta Ads connection answers "API access blocked" — read Ads Manager through Claude in Chrome instead (two Chromes are connected; the owner picks "Browser 2"; the extension drops every few minutes, wait ~10 s and re-fetch tabs). `netlify api getSite` / `listSiteDeploys` work for deploy state. The `.env.local` password for admin is opened for the owner with Notepad, never read into the chat.
+
+**Still the owner's, none blocking:** phone verification on the ad account (#3858013); a verified business e-mail in Business Manager → then generate the CAPI token and paste it into Netlify `META_CAPI_TOKEN` without it passing through a chat; a pixel test from a phone (the owner's Chrome blocks fbevents.js), then switch the custom conversion and ad set event to PreviewShown; "Verificer domæne" again; Netlify branch-deploy setting; refund the owner's own 599 kr. test purchase (`17b47d56`) from admin.
+
+**Daily check for the owner:** `/admin` → Besøg (clicks per ad), Genereringer (what people upload, and whether the restorations look right), Ordrer. Do not touch budget or ads for three days.
+
+## Status 2026-09-08 (the launch build-up; still true unless the block above says otherwise)
+
+- **Live:** https://billedearv.dk (Netlify site `billedarv`, builds from GitHub on every push to `billedarv-redesign`; `main` is kept identical by fast-forward). Brand and domain are **Billedearv** with an e — the owner bought billedearv.dk; billedarv.dk does not exist.
+- **Done and verified:** landing (offer dialog, fading before/after with tap and hold, scaled size cards, examples as prints), upload sheet (readable progress, order survives a closed tab, resume banner on the front page), order page (brand watermark on preview and mockups, mockups to scale with a sideboard as ruler, one extra-copy question before Checkout, bottom bar after the picture is seen), Stripe Checkout (live key, no greeting field), admin (thumbnails, Kilder/UTM table, redraw derived pictures, inbox with replies), contact form at /kontakt, SEO surfaces, Supabase pg_cron housekeeping, security hardening (RLS, IP caps, HSTS, signed webhooks).
+- **Tests:** `npm test` (36 unit), `npm run build`, `BASE=http://localhost:3000 node tests/viewport.browser.mjs`, and the whole customer path with one real restoration: `BASE=http://localhost:3000 ADMIN_PASSWORD=… node tests/e2e-flow.browser.mjs` (`PREVIEW_URL=…` reruns from an existing preview).
+- **Mail is live (2026-09-08):** billedearv.dk is Verified in Resend (DKIM, SPF on `send`, receiving MX on `@`), the key in the env is Full access, the webhook `email.received` → /api/webhooks/resend has its secret in Netlify. Verified end to end: customer mails delivered, a mail to hej@ received, signed, fetched and filed in admin → Beskeder; the owner can answer there and start conversations ("Ny besked", or "Skriv til kunden" on an order). Every mail is signed Billedearv; the company and CVR only in the legal footer line. Lesson: the domain had first been added to Resend as "biiledearv.dk" — read the API's domain list, not the dashboard's spelling.
+- **Stripe is done:** webhook at https://billedearv.dk/api/webhooks/stripe (checkout.session.*), descriptor BILLEDEARV.DK, prefix BILLEDEARV, website billedearv.dk — read back from the API.
+- **Cron runs:** Supabase job `billedarv-housekeeping` (:30) answered 200 at 11:30 UTC after the domain switch (earlier runs failed on DNS); Netlify `retention` (:00) is deployed. Both do the same housekeeping.
+- **Meta is wired, not switched on:** pixel + Conversions API + consent banner exist and are gated on consent; `NEXT_PUBLIC_META_PIXEL_ID`, `META_CAPI_TOKEN` (and optional `META_TEST_EVENT_CODE`, `META_DOMAIN_VERIFICATION` for the domain meta tag) are empty in Netlify. Set them, redeploy, test with Test Events, then run ads with `?utm_source=facebook&utm_medium=cpc&utm_campaign=…&utm_content=<ad>` on every link (admin → Kilder reads them).
+- **Owner still has to (in this order):**
+  1. Meta: Pixel ID, CAPI access token, domain-verification content → `.env.local` and Netlify → redeploy → Test Events.
+  2. Street address in `assets/founder/founder.md`; lawyer reads /handelsbetingelser and /privatliv → `LEGAL_DRAFT=false` in Netlify.
+  3. ~~Delete the two test orders~~ — done 2026-09-08 (`ecf3aaeb`, `6d8f65fc`: 45 storage objects, events and rows each, removed by a scoped script; 17 orders remain, all QA except `17b47d56`, which is PAID, 599 kr., the owner's own mail, 2026-09-08 11:07 — the test purchase from item 5 appears to be made; refund it from admin).
+  4. Google Search Console: property billedearv.dk (the Google CNAME is already in DNS) → submit https://billedearv.dk/sitemap.xml.
+  5. One real 599 kr. test purchase on the phone, then refund it from admin ("Refunderet" refunds in Stripe and mails the customer).
+- **LIVE 2026-09-09 ~10:45:** the owner published campaign `META_Sales_DK45-70_Lancering_2026-09` (Facebook-only ad set, campaign budget 150 kr./day, spending limit 1.500 kr., three ads FINAL_COLD_01–03 in review "Behandler"). Owner's stop rule: 0 purchases after 1.500 kr. → pause. OpenAI key on Netlify is Tier 1 (chat headers 500 RPM / 500k TPM; gpt-image-2 ≈ 5 images/min at that tier, the preview uses n=2, 429s retry 3× in `lib/restoration/restore.ts`) — enough for this budget, prepay ≥ $50 for Tier 2 before scaling spend.
+- **Meta Ads Manager, built 2026-09-10 by Claude in Chrome, nothing published:** ad account Billedearv `2034135650633821` (DKK, Europe/Copenhagen), pixel `1430023292388175` (shared with the account, no data yet), custom conversion PreviewShown (URL rule until the event has been seen), custom audience "Website-besøgende 30 dage", campaign `META_Sales_DK45-70_Lancering_2026-09` with set A (broad 45–65+, 150 kr./day, event View content until PreviewShown appears in the dropdown) and set B (retargeting, paused, 50 kr./day; the "Købere 180 dage" exclusion could not be made before Purchase has been seen), eight named ads with URL/UTM and Advantage+ off. **Done 2026-09-10 (Claude Code via the owner's Chrome):** all eight drafts now carry their images (4:5 for feeds as "Original", 9:16 for Stories/Reels, 1:1 uploaded to the library), primary text / headline / description / CTA "Læs mere", every Advantage+ enhancement off, multi-advertiser off; the Facebook page Billedearv exists and is the sender. Meta creates its file input only on click, so uploads go through a helper `<input type=file>` injected into the page plus a patched `HTMLInputElement.prototype.click` that hands the files to Meta's own input (see the session notes). **Session 2026-09-10, afternoon (Claude Code in the owner's Chrome):** campaign switched to a campaign budget of 150 kr./day (hard cap across both sets) plus a campaign spending limit of 1.500 kr. (the owner's stop rule); both are drafts. `META_DOMAIN_VERIFICATION` set on Netlify and live in the HTML (server-rendered), "Verificer domæne" clicked once — Meta still shows Not Verified (can take hours; click again). The Facebook page has no Instagram linked; the #1815199 warning in the ads is a stale reference and no longer appears as a blocking error card. **Blocking publish, owner only:** (1) the ad account has no payment method (Meta opens "Tilføj betalingsoplysninger" on review); (2) the CAPI token cannot be generated until Business Manager has a verified business e-mail ("Forudsætning ikke opfyldt" in Events Manager → Settings); (3) pixel test from a browser without an ad blocker — the owner's Chrome blocks fbevents.js (0 bytes), so test from the phone: open billedearv.dk, accept cookies, upload a test picture, then Events Manager → Testhændelser/Oversigt. After PreviewShown has been seen: switch the custom conversion from the URL rule to the event and set ad set A's conversion event to PreviewShown. Start date on the sets is 11 Sep 09:00 — move it to the day after publishing.
+- **Meta ads are written, not launched:** `docs/meta-ads-prompt.md` is the prompt for Claude in Chrome (Fase 0 fundament → kampagne → annoncesæt → fire annoncer, alt pauset, stop før Udgiv), `docs/meta-ads-creatives.md` holds five structured scene prompts for gpt-image-2 / Gemini (the owner runs them by hand; Higgsfield credits are spent) that leave two flat black placeholders, and `node scripts/ads-composite.mjs <scene.png> <par>` finds them and drops the real before/after pair in (upper = after, lower = before), writing 4:5 and 1:1 to `work/ads/creatives/` (git-ignored). `scripts/ads-creatives.mjs` still renders the plain collages as fallback. **The five ads are the photographs themselves (2026-09-08):** `node scripts/ads-hero.mjs` renders, per example pair, `overlay-<par>-1080x1350` (the face large, half damaged / half restored down a seam with the site's slider knob, headline + button + price on the photo) and `hero-<par>-…` (same photo, text on a paper panel) in `work/ads/final/` (git-ignored — back it up). The Chrome prompt names the overlay files for 4:5 and the hero 1:1 files for square placements. The generated-scene pipeline (`ads-composite`, `ads-phone-screen`, `ads-render`) stays as secondary product-at-home creatives; the owner judged scene-first ads as selling nothing.
+- **Landing page, conversion rounds 1+2 done (2026-09-08, owner's briefs):** hero = eyebrow "Se resultatet, før du køber" → H1 "Få det gamle familiebillede tilbage." → body with the free look and "i ramme fra 599 kr. inkl. fragt" → CTA "Se mit billede restaureret gratis" (`CTA_VARIANTS.C`; short form `PRIMARY_CTA_SHORT` in header/sticky) → trust line "Originalen bliver hjemme · Du godkender før print · Fra 599 kr. inkl. fragt". New sections: "Fra skuffen til væggen." (the same photograph as it is → restored → print → framed on the wall, plus "Det får du fra 599 kr.") right after the hero; "Det skal stadig ligne dem." with the real wipe slider on the hero's face close-up; callout "Du sender aldrig originalen." in the process. Offer copy is "2 indrammede eksemplarer fra 599 kr." everywhere (bar, dialog, promo). Refund wording only by the price, in the FAQ and on the order page — never in the hero. FAQ reordered and extended (original, price, when you pay, faces, approval, cracks, sharpness). JSON-LD `merchantReturnDays` 21 → 14 (the statutory window; 21 was the auto-refund). Verified: `npm test` 36/36, `npm run build`, `tests/viewport.browser.mjs` OK at 375–1280, no console errors. The owner's briefs and the verified facts: `docs/landing-brief-2026-09-08.md`.
+- **Ads, creative-strategy reset (2026-09-08, owner's brief):** the brochure statics are gone. `scripts/ads/` = concept data (`concepts.mjs`: six buying motives + two UGC looks, funnel stage, hooks, CTA, price qualifier, visual, video shots), one template (`html.mjs`) for 4:5 / 1:1 / 9:16 / video shots, `static.mjs` → `work/ads/final/`, `reel.mjs` → `work/ads/video/` (9–10 s reels with real motion, one animated page rendered frame by frame: hook word by word → the old print lifts out of the scene → wipe → glides into a frame on the wall → CTA; the first still-based version was rejected as a slideshow). One idea per ad: hook, proof, CTA, "I ramme fra 599 kr.". `docs/meta-ads-prompt.md` Fase 3 = ad set A (cold: memory, gift, original, physical as video + still, ugc-memory, ugc-original as video) and ad set B (retargeting: trust, offer). Launch cut to exactly three cold statics 2026-09-10 (owner's brief): FINAL_COLD_01 = memory, FINAL_COLD_02 = gift (+ "Et billede, de troede var tabt."), FINAL_COLD_03 = reveal; CTA everywhere "Se dit billede restaureret gratis"; `node scripts/ads/static.mjs --launch` → `work/ads/launch/`. Original (friction, not desire), physical, trust, offer, UGC and the reels are dropped from launch but kept as sources. In Ads Manager (2026-09-10, owner's Chrome): the five other drafts and the retargeting ad set were deleted; the remaining three drafts are renamed FINAL_COLD_01/02/03 (`utm_content` follows the ad name), carry the new exports (4:5 as Original for feeds, 9:16 for Stories/Reels, 1:1 in the library), headline "Se dit billede restaureret gratis" (gift keeps "Se resultatet gratis først"), CTA Læs mere, every enhancement off. Campaign budget 150 kr./day, spending limit 1.500 kr. Ad set A now runs Facebook placements only (Instagram, Threads, Messenger, Audience Network, WhatsApp off; limited spend on excluded placements off) because the ads carried a stale Instagram identity (#1815199) the account cannot authorise; start date set to 9 Sep 2026 10:30 (in the past → starts at publish). Publishing still needs the owner's payment method. Instagram can be added back once an Instagram account is linked and authorised. Every Advantage+ and "essential" enhancement (comments, brightness/contrast, spotlights, CTA highlight) is off on all three. New blocker surfaced 2026-09-09: the ad account needs a verified phone number (#3858013) — owner only, Ads Manager → Indstillinger for annoncering. `docs/meta-ads-prompt-paste.md` is the message for Claude in Chrome. Assets still missing for a stronger system: a real wedding print in a hand, a phone actually photographing a print, an unboxing/frame-reveal clip, a person hanging the frame. Old renders kept in `work/ads/final-old-brochure/` (git-ignored).
+- **Never** run `netlify build` / `netlify deploy --build` on Windows (breaks sharp; `npm install` repairs). Always `npm run build` locally before pushing a change to a client component.
+
+**Deployed 2026-09-07.** Netlify site `billedearv` (id 21e453f1-e0d5-4fd1-ba40-9d401c58977c, https://billedarv.netlify.app) builds branch `billedarv-redesign` on Linux. The repo is linked the manual way because the Netlify GitHub App is not installed on the account: a read-only deploy key on the GitHub repo ("Netlify billedearv") plus two GitHub webhooks (Netlify's generic hook and a build hook for the branch), so every push builds. All env vars are set from `.env.local` (`NEXT_PUBLIC_SITE_URL=https://billedearv.dk`, `JOB_RUNNER=netlify`). `netlify.toml` names `publish = ".next"` (the Next plugin refuses the repo root). **Before every push that touches a client component, run `npm run build` locally**: `next dev` tolerates a server-only import (node:fs via lib/copy → lib/founder) inside a client component, the production build does not, and Netlify only tells you afterwards. **Never run `netlify build` or `netlify deploy --build` on Windows**: the build command installs the Linux sharp binaries and breaks the local install (fix: `npm install`). First live restoration went through in 58 s (upload → background function → sharp → Supabase → PREVIEW_READY). Still to do in Netlify: add the domain billedearv.dk (A @ → 75.2.60.5, CNAME www → billedarv.netlify.app), and when the branch is merged, switch the production branch to `main` in Site configuration → Build & deploy and in the build hook.
+
+**A. Before the first Netlify build**
+-1. **Register billedearv.dk.** genfundet.dk was taken; billedearv.dk answered "No entries found" at DK Hostmaster on 2026-09-07 (reserve: skuffefoto.dk). Register it before anything else on this list: every URL, mail address and legal page already says billedearv.dk. Then rename the Stripe business name and statement descriptor (still the old name) and create the mailbox hej@billedearv.dk.
+0. **OpenAI: put money on the account.** Checked 2026-09-04: the key in `.env.local` authenticates, but
+   every call comes back `429 credit_balance_exhausted` — "You have no credits remaining." Nothing on the
+   site works without it: the upload succeeds and then every single preview fails, which is the one failure
+   that costs you the click you paid Meta for. Add credits at
+   platform.openai.com → Settings → Billing, then run `npm run examples:colour` to confirm the pipeline
+   answers. Budget: a preview is roughly 0,15–0,30 USD at `medium`, the print re-run about twice that, so
+   1.000 previews is on the order of 300–500 USD — set a monthly limit above your ad budget, not below it.
+1. Netlify → Import from GitHub → this repo, branch `main`. Build command and functions come from `netlify.toml`.
+2. Netlify → Environment variables (copy names from `.env.example`): `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, `STRIPE_SECRET_KEY`,
+   `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_DOMAIN`, `EMAIL_REPLY_TO`, `OWNER_EMAIL`, `NEXT_PUBLIC_META_PIXEL_ID`,
+   `META_CAPI_TOKEN`, `ADMIN_PASSWORD` (long, random), `JOB_SECRET` (long, random), `CRON_SECRET`, `JOB_RUNNER=netlify`,
+   `NEXT_PUBLIC_SITE_URL=https://billedearv.dk`, `DELIVERY_DAYS_MAX=10`, `LEGAL_DRAFT` (true until the lawyer has read),
+   `NEXT_PUBLIC_CTA_VARIANT` (A, B or C — the wording of the primary button, see `.env.example`).
+   The build refuses to run without `JOB_SECRET`, and without `city`, `cvr`, `address` and `email` in `founder.md` — `LEGAL_DRAFT` does not bypass that.
+3. Netlify → Site configuration → Functions → Region: an EU region (Frankfurt/Ireland). Supabase is in Ireland.
+4. Domain: billedearv.dk on Netlify, HTTPS on.
+
+**B. Accounts and identity**
+5. `assets/founder/founder.md`: `city`, `cvr`, `address`, three `why` lines, `portrait.jpg`. **A mailbox on the domain
+   (hej@billedearv.dk) as `email`, `EMAIL_REPLY_TO` and `OWNER_EMAIL`** — a Gmail address next to 999 kr. is the trust
+   leak this audience notices first, and since there is no phone number anywhere, that address is now the only way a
+   customer can reach you. It is printed on the price block, in the footer, on the 404, on `/tak`, on both approval
+   pages and in every mail. The site promises an answer within 24 hours, so the mailbox must be one you read daily.
+5b. **Juridisk gennemgang af handelsbetingelserne.** ODR-henvisningen er fjernet på din instruks (portalen lukkede
+   20. juli 2025); Center for Klageløsning står. Nyt i teksten: den automatiske refusion efter 21 dage uden
+   godkendelse. Få hele siden læst igennem af en, der kender forbrugeraftaleloven, før den første rigtige kunde
+   betaler. `LEGAL_DRAFT=true` holder udkastmærket på siden indtil da.
+6. Stripe Dashboard: Public details → Terms of service URL `https://billedearv.dk/handelsbetingelser` and Privacy URL
+   (Checkout refuses to open without the Terms URL); webhook on `https://billedearv.dk/api/webhooks/stripe` for
+   `checkout.session.completed` + `checkout.session.async_payment_succeeded` → copy the signing secret to
+   `STRIPE_WEBHOOK_SECRET` → "Send test event" → a 200 in Netlify → Functions log; live keys when you go live.
+   Payment methods are chosen in the Stripe Dashboard, not in the code.
+7. Resend: domain billedearv.dk verified (SPF, DKIM, DMARC `p=none`), `RESEND_API_KEY`.
+8. Meta: domain verified in Business Manager; pixel id; Conversions API token (`META_CAPI_TOKEN`); Aggregated Event
+   Measurement priorities Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent; first campaign
+   optimised for the PreviewShown custom conversion, not Purchase.
+9. Supabase: the HEIC bucket update is already applied; keep the project in Ireland; nothing else.
+10. Print partner that ships **framed 30×40, 40×50 and 50×70, in black and in oak**, within 3–4 business days (the site
+    promises "inden 10 hverdage" from the customer's approval) — or set `DELIVERY_DAYS_MAX` to what the partner can hold.
+    Before the ads run, write down your cost for six combinations (three sizes × two frames) and for a second copy of the
+    same picture, and check it against what the page charges:
+
+    | | 30×40 | 40×50 | 50×70 |
+    |---|---|---|---|
+    | Billedet, i ramme | 599 kr. | 799 kr. | 999 kr. |
+    | Ekstra eksemplar af samme billede | 349 kr. | 349 kr. | 349 kr. |
+
+    Everything above includes frame, glass, mount, gift card, packaging and shipping. The extra copy has no restoration
+    work in it, only the object — that is why it is cheaper, and why it must still carry the print, the frame and the
+    parcel. A second *photograph* ordered from a receipt gets 100 kr. off (`REPEAT_DISCOUNT_DKK`). A size, a frame or a
+    price that does not work is one line in `lib/pricing.ts` (`enabled: false`, or another number) and it changes
+    everywhere: page, mockups, Stripe, mails, admin and the print checklist.
+11. Lawyer reads `/privatliv` and `/handelsbetingelser`, then `LEGAL_DRAFT=false`.
+12. `public/mockup/wall.jpg` (a photo of your own wall, optional) and, over time, consented customer before/afters to
+    replace the archive examples (§1).
+
+**C. After the first deploy, on a real iPhone**
+13. Meta Sharing Debugger → re-scrape `https://billedearv.dk/` (link card with the before/after image).
+14. One upload from "Vælg fra kamerarulle" (a HEIC) and one from "Tag et foto"; both must land on `/p/<id>?t=…`.
+    Netlify → Functions → `job-background` → logs shows the run.
+15. One test purchase in Stripe test mode from the Facebook in-app browser: `/tak`, the ordrebekræftelse, the owner mail,
+    the order under "Til handling", the CAPI event in Meta Events Manager (test event code).
+16. Send yourself a godkendelsesmail from admin and tap Godkend on the phone.
+
+**D. Every day while the test runs**
+17. Read the owner mails; open `/admin` once a day anyway. Reply to manual-review leads within 24 h, send finals within
+    48 h, order prints the day of approval.
+
+## 0b. The week before the ads (Meta live in seven days)
+
+One order per day. Nothing here is code; every line is a login, a form or a decision. If a day slips, the ads slip —
+do not start paid traffic before day 5 is green, because a broken checkout costs more than a week of waiting.
+
+| Day | What must be true when the day ends |
+| --- | --- |
+| 1 | The site is on Netlify at billedearv.dk with HTTPS, every environment variable from §0 A2 set, functions in an EU region. Open the front page on your own phone. |
+| 2 | hej@billedearv.dk exists and is on your phone; `founder.md` filled in (city, CVR, address, three lines, portrait); Resend domain verified; a test mail from `/admin` arrives and is not in spam. |
+| 3 | Print partner confirmed for all three sizes with a price per size, and one test print of your own photo ordered so you have seen the paper, the frame and the packaging before a customer does. |
+| 4 | Stripe live: Terms URL and Privacy URL filled in, webhook created and its secret in Netlify, one 1 kr. live purchase made and refunded by you. The lawyer has read the two legal pages, or you accept `LEGAL_DRAFT=true` while they read. |
+| 5 | On a real iPhone, from the Facebook in-app browser: upload → preview → pick a size → pay → `/tak` → the order mail → the order in `/admin` → the approval mail → Godkend. Meta Events Manager shows ViewContent, InitiateCheckout and Purchase once each, not twice. |
+| 6 | Ad account: domain verified, pixel connected, Aggregated Event Measurement priorities set (Purchase > InitiateCheckout > PreviewShown > ViewContent). Creatives cut from your own examples — the before/after pairs on the page, not stock. |
+| 7 | Campaign live, small daily budget, optimised for the **PreviewShown** custom conversion until there are ~30 purchases a week. Owner mails on your phone with sound on. |
+
+Three things about the copy in the ads:
+
+- The price is **"fra 599 kr."** now. Three sizes are on sale (599 / 799 / 999 kr.), and the customer picks after the
+  preview, so an ad that says "599 kr." flat will be read as the price of the big one by whoever buys the big one.
+- Never write "gratis". The page says "det koster ikke noget at se", and the ad should say the same thing the same way.
+- The Christmas layer only appears from **14 November** (`CHRISTMAS_START_DATE`). Ads before that must not promise
+  delivery before Christmas, because the page they land on does not.
+
+## 1. Replace the placeholder examples (blocks the test)
+
+**`assets/originals/` was empty, so the site currently shows nine public-domain archive photographs
+(Wikimedia Commons / Library of Congress, incl. four 1870s tintypes) restored by the pipeline, with honest provenance
+captions and one line under the examples saying so.** They prove the pipeline and the design, but they are not Danish family photos
+and the ad copy ("Det gamle billede af hendes forældre") deserves real ones.
+
+1. Put at least 5 damaged family photographs you have written permission to use in `assets/originals/`,
+   each with `<name>.md` (`year:`, `context:` one book-style line, `consent: yes|no`, optional `order:`).
+2. `npm run quality:report` → open `QUALITY_REPORT.md`, look at `work/quality/<name>/restored.jpg`, fill in your own
+   ratings. Gate: ≥70 % pass.
+3. `npm run examples:export -- --source assets/originals` → replaces `public/examples/` (only `consent: yes`).
+   The strongest example you can add is one the archives do not have: **a faded colour print from the 1970s–80s**
+   (your parents' wedding, a birthday in the garden). That is the most common real case for Danish families and
+   the site currently has no colour original at all.
+   Sidecar extras per photo: `order:` (1 = hero), `mode: wipe|lens|hold|fade`, `detail: x,y` + `detailLabel:` for the
+   "Tæt på" crop, `colour: yes` to expose the colourised version. Aim for variety: portraits, children, a group,
+   a colour print from the 1970s, one really damaged one.
+4. Commit. The hero is the first example by `order:`; pick the most dramatic pair.
+
+Consent for showing a customer's photo as an example must be a separate, explicit, revocable yes (a mail), never a
+checkout checkbox. The privacy page already says so.
+
+## 2. Founder identity (blocks the test: legally required)
+
+`assets/founder/founder.md` has your name and e-mail from your Stripe account. There is deliberately **no phone
+field**: support runs on e-mail only, and no page can print a number. **Fill in `city`, `cvr`, `address`,
+the three `why` lines and drop `portrait.jpg` in the folder.** Until then the site hides the empty fields and the
+legal pages show "[Udfyld …]". Handelsbetingelser require name, CVR, address and an e-mail address (e-handelsloven §7); a telephone number is not
+required when it is not offered as a contact channel, and we do not offer one.
+The copy uses your first name ("Mohammad finjusterer …") only once `portrait.jpg` and the three `why` lines exist;
+until then it says "vi", because a first name without a face reads as a persona (conversion attack #1, finding 2.2).
+The trust row under the hero becomes "Dansk virksomhed, <by> · CVR <nr>" the moment `city` and `cvr` are filled.
+Your Stripe account is `business_type: individual` — if you have no CVR yet, get one (virk.dk) before selling.
+
+## 3. Stripe go-live (blocks the test)
+
+Read via Composio on 2026-09-03 from account `acct_1UBgmTJNJnc6lpkL` (billedearv.dk): country DK, currency DKK,
+charges and payouts enabled, statement descriptor BILLEDEARV.DK, payout schedule manual (7 days), no products,
+no prices, no webhooks yet.
+
+**Payment methods are Stripe's to choose.** The Checkout session no longer names a method list, so Stripe shows
+whatever is enabled on the account and supported by the customer's browser — cards, and Apple Pay or Google Pay
+where the device offers them. Turn methods on and off in Stripe Dashboard → Settings → Payment methods; nothing
+in the code has to change. The page says "Apple Pay, Google Pay eller kort", which is what Checkout offers on a
+phone.
+
+Then, in order (§13 of the spec):
+1. `STRIPE_SECRET_KEY` (live) and `NEXT_PUBLIC_SITE_URL=https://billedearv.dk` in the hosting env.
+2. Register the webhook: `https://billedearv.dk/api/webhooks/stripe`, event `checkout.session.completed`
+   (and `checkout.session.async_payment_succeeded`). Put the signing secret in `STRIPE_WEBHOOK_SECRET`.
+3. Buy one 599 kr. order with your own card through the real site. Verify: `PAID` in Supabase (`orders`),
+   the `Purchase` event in Meta Events Manager, the confirmation mail in your inbox. Then set the order to
+   `REFUNDED` in `/admin` (refunds through the SDK) and verify `REFUNDED`. Record it in `QA.md` §Go-live.
+4. Apple Pay / Google Pay ride on the card method in hosted Checkout; Apple Pay needs the domain registered under
+   Settings → Payment methods → Apple Pay (Stripe does it automatically for Checkout on your domain).
+
+Until then the code runs against Stripe test keys (`sk_test_…`, card 4242 4242 4242 4242). The agent had no test
+keys, so journey A stops at "Stripe Checkout opens" — see QA.md.
+
+### 3b. Before the first ad: three Stripe Dashboard settings (Checkout will not open without the first)
+- **Public details → Terms of service URL** = `https://billedearv.dk/handelsbetingelser` (and the privacy URL). Checkout requires it because we ask for consent to the terms.
+- **Webhook** on `https://billedearv.dk/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`; then "Send test event" and confirm a 200 in the Netlify function log. The hourly housekeeping job also asks Stripe about every open session from the last 7 days and marks paid orders (so a broken webhook cannot hide a payment), and admin has "Tjek betaling hos Stripe" on an order.
+- **Customer receipts** in Stripe on, until you trust our own ordrebekræftelse.
+
+## 4. E-mail (Resend) — DNS
+
+Resend is not connected in Composio, so domain status could not be checked. Create the domain `billedearv.dk` in
+Resend and add the records it shows (typically):
+
+| Type | Name | Value |
+|---|---|---|
+| TXT | `resend._domainkey.billedearv.dk` | the DKIM key Resend shows |
+| MX | `send.billedearv.dk` | `feedback-smtp.eu-west-1.amazonses.com` (priority 10) — use the **EU region** |
+| TXT | `send.billedearv.dk` | `v=spf1 include:amazonses.com ~all` |
+| TXT | `_dmarc.billedearv.dk` | `v=DMARC1; p=none; rua=mailto:<your mail>` |
+
+Then `RESEND_API_KEY`, `EMAIL_DOMAIN=billedearv.dk`, `EMAIL_FROM_LOCAL=mohammad` (mails come from `mohammad@billedearv.dk`).
+Send yourself a test order confirmation from `/admin` by completing a test purchase.
+
+## 5. Meta Pixel and Conversions API
+
+- `NEXT_PUBLIC_META_PIXEL_ID` loads the pixel after consent, on every page. Events: PageView, ViewContent (hero and preview), UploadStarted, UploadCompleted, PreviewShown, PreviewFallback (custom), InitiateCheckout, Purchase — all with the same product parameters. Events that happen before the visitor answers the banner are kept in the tab and replayed on "Ok".
+- `META_CAPI_TOKEN` (Events Manager → Conversions API → Generate access token) sends **Purchase and InitiateCheckout from the server** too, with the same event ids as the browser (deduplicated) and hashed e-mail/phone/name/postcode + the click id. That is the copy Meta gets when the buyer paid in another browser (a wallet app-switch out of the Facebook browser) or never consented. `META_TEST_EVENT_CODE` shows them in the Test events tab while you check.
+- In Business Manager: verify billedearv.dk, prioritise Purchase > InitiateCheckout > PreviewShown (custom conversion) > ViewContent for iOS, create the custom conversion on `PreviewShown`, and run the first campaign optimised for that (1.500 kr. will not produce enough purchases to leave learning).
+
+Create the pixel in Events Manager, set `NEXT_PUBLIC_META_PIXEL_ID`. Events fired: PageView, ViewContent (hero ≥3 s),
+UploadStarted, UploadCompleted, PreviewShown, PreviewFallback, InitiateCheckout, Purchase (value 599, DKK, once,
+server-verified on `/tak`). Conversions API was **not** built (would have exceeded the 2 h budget); dedup `eventID`
+is already passed on Purchase so CAPI can be added later without double counting.
+Use `utm_content=<ad name>` in every ad link; the funnel view `v_funnel_daily` groups by it.
+
+## 6. Hosting: Netlify from GitHub
+
+Connect the repo to Netlify (Import from GitHub). Build command `npm run build`, no publish directory (the Next.js runtime
+sets it). Nothing else to install: `netlify.toml` is in the repo and the two extra functions deploy with it.
+
+**Why the app is shaped the way it is on Netlify.** A synchronous function may run 10 s (26 s on request), a streamed
+one 60 s, and a request body may be at most 6 MB. The restoration takes 30–45 s and a phone photo is 3–12 MB, so:
+
+- the browser uploads the photo **straight into the private Supabase bucket** with a one-time signed URL
+  (`POST /api/preview/start` → PUT → `POST /api/preview/<id>/run`); no photo ever passes through a function;
+- restoration, colour version and the print final run as **jobs in a Netlify Background Function**
+  (`netlify/functions/job-background.ts`, 15 min limit); the sheet polls `GET /api/preview/<id>` every 1.5 s;
+- housekeeping runs **hourly** as a scheduled function (`netlify/functions/retention.ts`) that hands the work to the background
+  function: Stripe reconciliation of open Checkout sessions, deletion past retention, approval reminders (48 h, 7 d),
+  owner nudge at 10 d, shipped → completed after 14 d. The same housekeeping is also triggered from the database:
+  Supabase **pg_cron** job `billedarv-housekeeping` (project xsdgbjheochbneauhado) calls
+  `GET https://billedearv.dk/api/cron/retention` at :30 every hour with `Authorization: Bearer <Vault secret
+  billedarv_cron_secret>`; the app's `CRON_SECRET` must equal that Vault value (it does in `.env.local` — copy it to
+  Netlify). Two triggers an hour, both idempotent; if you ever drop Netlify's scheduled function the database one
+  keeps the shop tidy. Set up 2026-09-07 via SQL (`create extension pg_cron`, `pg_net`, `vault.create_secret`,
+  `cron.schedule`); inspect with `select * from cron.job` and `select * from cron.job_run_details order by start_time desc limit 20`;
+- job state is on the order (`preview_meta.job`) and visible in admin.
+- the customer can leave during the wait: the sheet keeps the order on dismiss (only "Afbryd" deletes) and stores {id, token} in localStorage; `components/ResumeBanner.tsx` on the front page shows "vi arbejder stadig" / "Dit billede er klar" for 48 h. The order page asks once about an extra copy before Checkout (`upsell` in PreviewPanel).
+- wall mockups are drawn to scale on `public/mockup/wall.jpg` (sideboard = 120 cm); after changing the wall or `lib/restoration/mockup.ts`, run `npx tsx scripts/remockup-examples.mts` to redraw the example mockups.
+- end-to-end check of the whole customer path (one real restoration, stops on the Stripe page): `BASE=http://localhost:3000 ADMIN_PASSWORD=… node tests/e2e-flow.browser.mjs`; add `PREVIEW_URL=<an existing /p/<id>?t=…>` to rerun without restoring again.
+- the inbox (admin → Beskeder): mail to hej@ comes in through Resend receiving (MX on the root domain → Resend; webhook `email.received` → `/api/webhooks/resend`, signature checked, mail fetched with a full-access `RESEND_API_KEY` and filed in `messages`); the contact form (`/kontakt` → `/api/contact`) files there too; answers go out from hej@ with In-Reply-To. The owner still gets one mail per incoming message. Migration `supabase/migrations/0004_messages.sql`.
+- abuse caps: one network (salted IP hash in `preview_meta.client`) may start 10 restorations and 5 leads per hour (`lib/api/client.ts`); raise `ORDERS_PER_HOUR` if a school or office ever hits it. Paid orders cannot be re-configured through the API.
+
+**Linux, Windows and sharp.** Netlify builds on Ubuntu and runs functions on Amazon Linux — it is Linux, even if you
+develop on Windows. The one thing that bites Windows-developed repos is the image library `sharp`: if `npm install` on
+Windows rewrites `package-lock.json` without the Linux binaries, the Netlify build has no `sharp` for Linux and every
+restoration fails. `netlify.toml` therefore runs `npm install --os=linux --cpu=x64 --no-save sharp` before the build,
+and `NODE_VERSION=22` is pinned. Commit `package-lock.json` as it is in the repo; do not delete it.
+
+**Env vars to set in Netlify** — set `JOB_RUNNER=netlify` explicitly, and the build fails on purpose if `JOB_SECRET` is missing in production; set the **functions region to an EU region** (Site configuration → Functions), otherwise every request hops Ohio → Ireland for the database (Site configuration → Environment variables), from `.env.example`: the OpenAI, Supabase,
+Stripe, Resend and Meta keys, `NEXT_PUBLIC_SITE_URL=https://billedearv.dk` (the job runner calls itself on this URL),
+`JOB_SECRET` (any long random string), `CRON_SECRET`, `ADMIN_PASSWORD`, `LEGAL_DRAFT`, `META_CAPI_TOKEN`, `OWNER_EMAIL` (where the "ny betaling / ændring ønsket / godkendt" mails go; defaults to founder.md's e-mail), `EMAIL_REPLY_TO` (hej@billedearv.dk once it exists). `JOB_RUNNER` may stay empty
+(Netlify sets `NETLIFY=true`; on any other Node host set `JOB_RUNNER=inline`).
+
+**HEIC:** the bucket accepts image/heic and image/heif (migration 0003, applied). Test one upload from an iPhone camera roll before spending.
+
+**After the first deploy, check three things in the Netlify UI:** the deploy log lists `job-background` and `retention`
+under Functions; the Stripe webhook URL (`/api/webhooks/stripe`) is the Netlify one; one real upload from a phone lands
+on `/p/<id>?t=…` (Functions → job-background → logs shows the run).
+
+`sharp` and `heic-convert` are marked external in `netlify.toml` and are installed by the build; `assets/founder`,
+`public/mockup` and `public/examples/examples.json` are traced into the server function (`next.config.ts`) because
+they are read with `fs` at runtime.
+
+## 7. Configuration to confirm
+
+- `CHRISTMAS_START_DATE` / `CHRISTMAS_CUTOFF_DATE` (defaults **1 Oct** / 10 Dec) — inside this window the site sells the
+  Christmas gift: eyebrow with the deadline, a day countdown, "under juletræet", the gift section's "til tiden" row and the
+  FAQ answer. Outside it the gift angle stays but without dates. Start the window earlier by setting the env var
+  (e.g. `2026-09-15`) if the campaign runs earlier; the cutoff must be a date your print partner can actually hold.
+- **Gavehilsen.** Checkout has an optional 200-character field; the text lands on the order (`preview_meta.gift_note`),
+  in the owner mail, the ordrebekræftelse, the admin page and the print checklist — you write it on a card and put it in
+  the parcel. It is promised on the page, so do it.
+- `CAMPAIGN_END_DATE` (default **2026-09-30**) — the launch offer: the first extra copy of the same photograph is in the parcel at 0 kr. for orders placed up to and including that date. It is printed in the hero, on the price block, on the order page and in the FAQ, and it is a line on the receipt, so **you print and pack the extra copy** (admin shows "1 ekstra eksemplar"). Move the date with the env var; an empty value switches the offer off everywhere at once. Never replace it with a struck-through "før-pris": a reference price that was never charged is illegal under markedsføringsloven.
+- `LEGAL_DRAFT=false` once the lawyer has reviewed `/privatliv` and `/handelsbetingelser` (removes the "Udkast" line).
+- `DELIVERY_DAYS_MAX` (default **5**, your decision) — the promise "inden 5 hverdage" counts from the customer's approval.
+  CEWE's own promise is 6–11 business days, so 5 needs a print partner that ships a framed 30×40 within 3–4 days
+  (or a local lab / your own framing). The number is on the page, in the mails and in Handelsbetingelser; if the
+  partner cannot hold it, set the env var to what they can — a missed promise is the one thing this audience punishes.
+- `ADMIN_PASSWORD` — long and random.
+
+## 8. Legal review
+
+`/privatliv` and `/handelsbetingelser` are marked "Udkast – skal gennemgås af advokat". Points to check with a lawyer:
+the fortrydelsesret wording (digital content + bespoke goods), the 5-year bookkeeping retention, the OpenAI
+transfer basis (SCCs / DPF — verify OpenAI's current DPA), naming CEWE as processor.
+Claims deliberately **not** made anywhere: "aldrig til AI-træning", "forlader aldrig EU", "100 % sikkert",
+"krypteret", "GDPR-certificeret".
+
+## 9. OpenAI account
+
+- The org is rate-limited to **5 input images per minute** on gpt-image-2 (observed 429). Each preview uses 2,
+  each colour version 1 → ≈2 previews/min. Ask for a higher tier before sending traffic, or set
+  `PREVIEW_IMAGE_QUALITY=medium` (already) and accept queueing.
+- Cost per preview at medium ≈ 10k image tokens + 2.3k vision tokens (see QUALITY_REPORT.md for the estimate);
+  the print final at high is roughly 3–4× that.
+- Rotate the API key that was pasted in chat once the 24 h window the owner mentioned is over.
+
+## 10. Print partner
+
+Create a CEWE account (or pick a Danish lab that frames in 30×40) before the first paid order; the admin checklist
+assumes it. Buy one framed print of a test image first so you know the mount colour and packaging.
+
+## 11. Mockup wall
+
+`public/mockup/wall.jpg` is missing. The mockup renders a neutral wall by code until you drop in a real photo of a
+plain wall (daylight, no objects, ≥1600 px wide). The frame and shadow are composed on top.
+
+## 12. Things the fourth pass added that you should know
+
+- **Preview links are shareable by design.** The URL the app opens after an upload is `/p/<id>?t=<token>`; the same
+  token is on every image URL. Anyone with that exact URL can see the preview (not the original file, not the order).
+  Without the token a preview only opens on the phone with the session cookie; everything else gets the Danish 404.
+- **"Jeg har ikke billedet lige nu"** in the sheet mails a link to the site and creates a `MANUAL_REVIEW` order with the
+  note "link requested, no photo yet". In admin, treat those as leads, not as work: nothing to restore until they upload.
+- **The wait.** The bar creeps to 85 % while the model runs (~30–45 s); after 45 s the caption says it is taking longer
+  today. If OpenAI is slow for a whole day, that line is what people see — no action needed, but expect calls.
+- **Founder's first name** is used in copy only once the portrait and the three "why" lines exist (see §2).
+- **hej@billedearv.dk must exist before the first ad.** It is now the only address on the site and in every
+  mail (`founder.md`), the Resend sender and the default reply-to and owner-notification address. Create
+  the mailbox (or a forward to one you read daily), verify the domain in Resend, and set `OWNER_EMAIL`
+  if notifications should go elsewhere.
+- **`DELIVERY_DAYS_MAX=10` and `CHRISTMAS_CUTOFF_DATE=2026-12-02` are deliberately cautious.** Shorten them only
+  when the print partner has confirmed a shorter lead time in writing; they are the only place the promise lives.
+- **Orders that are never approved close themselves.** Reminders at day 2 and 7, an owner nudge at 10, a final
+  notice at 14 ("refund in 7 days unless you approve") and an automatic Stripe refund at 21 with the refund mail.
+  Every step is written into the order's internal notes. A new approval version restarts the clock.
+- **Colour is offered after purchase.** The approval mail and page carry "Vil du se det i farver?" for black-and-white
+  photographs; it lands as a change request. In admin, press *Skift til farver*, generate the final again and send a
+  new approval mail. Nothing is charged for it.
+- **The price anchor under 599 kr. is your claim, not ours.** *"Til sammenligning: hos en fotograf koster
+  restaureringen alene typisk 300–600 kr. – uden ramme og levering."* is a comparative price statement
+  under markedsføringsloven: keep two or three photographers' price lists (screenshots with dates) so you
+  can document it if asked. To remove the line, set `PRICE_ANCHOR` in `lib/copy.ts` to an empty string.
+- **The test is decided by one number.** `/admin` opens with *Preview → betaling*: of the people who saw
+  their own preview in the last 30 days, the share that went on to payment. Judge the first campaign on
+  that, not on purchases — purchases at 599 kr. from cold traffic come later and in small numbers.
+- **The digital file is delivered on the approval page.** Once the customer taps Godkend, `/godkend/<token>` shows
+  "Hent din fil i høj opløsning" (a short signed download of the print final), and the "Dit billede er på vej"
+  mail carries the same link. Nothing to do on your side — but the file only exists once you have generated or
+  uploaded the final, which you must do before the approval mail anyway. After the 90-day retention the link says
+  the file is gone.
+
+## 13. Unverified
+
+- Playwright checkpoints were rendered in headless Chromium; test on a real iPhone (Safari toolbar + safe-area), in particular the sheet's drag-to-dismiss and the fixed price bar on `/p/<id>`.
+- Lighthouse (production build, mobile emulation): performance 89–93, a11y/best-practices/SEO 100, CLS 0; desktop 100. Re-run after replacing the example photographs — the damaged "before" images decide LCP.
+- Stripe Checkout, webhook, confirmation mail and approval mail were exercised only at code level (no keys).

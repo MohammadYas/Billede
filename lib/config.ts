@@ -1,0 +1,75 @@
+// Delivery promises are configuration, never copy.
+// Owner edits these two values (or the matching env vars) before the test.
+
+export const CONFIG = {
+  /** Max business days from approval to delivery, shown as "inden X hverdage". */
+  // 10 until the print partner confirms a shorter lead time in writing; every promise on the site reads this
+  deliveryDaysMax: Number(process.env.DELIVERY_DAYS_MAX ?? 10),
+  /** Christmas copy runs from this date … It is a layer on the page (eyebrow, deadline, countdown),
+   * never a different page: the headline, the product and the promise are the same all year. */
+  christmasStartDate: process.env.CHRISTMAS_START_DATE ?? '2026-11-14',
+  /** … until this last order date that is still delivered before Christmas (ISO dates). */
+  christmasCutoffDate: process.env.CHRISTMAS_CUTOFF_DATE ?? '2026-12-02',
+  /** Launch offer: the first extra copy of the same photograph is in the parcel at no charge, for orders placed
+   *  up to and including this date (Europe/Copenhagen). A real, dated offer — never a struck-through price that was
+   *  never charged (markedsføringsloven). Set the env var to move it; an empty string turns it off. */
+  campaignEndDate: process.env.CAMPAIGN_END_DATE ?? '2026-09-30',
+  /** Retention in days. */
+  retentionUnpaidDays: 30,
+  retentionCompletedDays: 90,
+  /** Signed URL lifetime, seconds (≤ 15 min per security rules). */
+  signedUrlSeconds: 15 * 60,
+  /** Upload limits. */
+  maxUploadBytes: 25 * 1024 * 1024,
+  /** Preview pipeline hard limit. */
+  // A normal run is now ~80 s: framing check, restoration, and for a black-and-white print the colourisation
+  // in front of the preview. 45 s once turned every slow minute at OpenAI into a lead form (attack #2, H1),
+  // and 90 s would do the same again now that two more passes sit inside it. This is the hang guard, not the
+  // pace — the page says "about a minute and a half", and a run that lands at 100 s beats one that dies at 90.
+  previewTimeoutMs: 150_000,
+  /** Every customer-facing link is built from this: mails, the repeat link, Stripe's success and cancel
+   *  URLs. Netlify sets URL and DEPLOY_PRIME_URL itself, so a forgotten variable still cannot put
+   *  localhost into somebody's inbox. */
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? process.env.DEPLOY_PRIME_URL ?? 'http://localhost:3000',
+  siteName: 'Billedearv',
+} as const;
+
+if (process.env.NODE_ENV === 'production' && CONFIG.siteUrl.includes('localhost')) {
+  console.error('NEXT_PUBLIC_SITE_URL is not set: customer links would point at localhost.');
+}
+
+export type Season = 'jul' | 'default';
+
+/** Season is `jul` between the start and cutoff dates (Europe/Copenhagen), otherwise `default`. */
+export function currentSeason(now: Date = new Date()): Season {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now);
+  return today >= CONFIG.christmasStartDate && today <= CONFIG.christmasCutoffDate ? 'jul' : 'default';
+}
+
+/** "10. december" — Danish long date without year. */
+export function formatCutoffDate(iso: string = CONFIG.christmasCutoffDate): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
+    new Date(Date.UTC(y, m - 1, d)),
+  );
+}
+
+/** Whole days left until the last order date that still ships before Christmas (0 on the day, negative after). */
+export function daysToCutoff(now: Date = new Date()): number {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now);
+  const [y, m, d] = CONFIG.christmasCutoffDate.split('-').map(Number);
+  const [ty, tm, td] = today.split('-').map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 864e5);
+}
+
+/** Is the launch offer (one extra copy in the parcel) on today? */
+export function campaignActive(now: Date = new Date()): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(CONFIG.campaignEndDate)) return false;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now);
+  return today <= CONFIG.campaignEndDate;
+}
+
+/** "inden jul" or "inden N hverdage" (N = deliveryDaysMax), depending on season. */
+export function deliveryPromise(season: Season = currentSeason()): string {
+  return season === 'jul' ? 'inden jul' : `inden ${CONFIG.deliveryDaysMax} hverdage`;
+}

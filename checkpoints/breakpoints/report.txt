@@ -1,0 +1,6 @@
+375px: horizontal overflow 0px; tap targets <44px: none
+390px: horizontal overflow 0px; tap targets <44px: none
+430px: horizontal overflow 0px; tap targets <44px: none
+768px: horizontal overflow 0px; tap targets <44px: none
+1024px: horizontal overflow 0px; tap targets <44px: none
+1440px: horizontal overflow 0px; tap targets <44px: none
