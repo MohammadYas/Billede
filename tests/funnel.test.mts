@@ -115,6 +115,14 @@ test('the product survives into the event log, so the funnel can tell the three 
   assert.equal(clientMetadata({ content_name: 'ekstra_eksemplar' })?.content_name, 'ekstra_eksemplar');
 });
 
+test('the stricter preview measurement version survives filtering without opening a free-text field', async () => {
+  const { clientMetadata } = await import('../lib/analytics/client-metadata');
+  assert.deepEqual(clientMetadata({ preview_measurement: 2 }), { preview_measurement: 2 });
+  for (const bad of ['2', 'private-data', 1, 3, null, {}]) {
+    assert.equal(clientMetadata({ preview_measurement: bad }), undefined);
+  }
+});
+
 test('nothing else a browser can send is ever stored', async () => {
   const { clientMetadata } = await import('../lib/analytics/client-metadata');
   const junk = {

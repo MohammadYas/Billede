@@ -102,6 +102,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   const [colourOn, setColourOn] = useState(Boolean(data.colour) && (data.chosenColour || data.isMonochrome));
   const [colourBusy, setColourBusy] = useState(false);
   const [colourErr, setColourErr] = useState(false);
+  const resultUrl = colourOn && colourUrl ? colourUrl : data.preview;
   const colourTimer = useRef<number | null>(null);
   useEffect(() => () => { if (colourTimer.current) window.clearTimeout(colourTimer.current); }, []);
 
@@ -169,26 +170,43 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
    */
   const [pictureReady, setPictureReady] = useState(false);
   const [inView, setInView] = useState(false);
+  const [pageVisible, setPageVisible] = useState(false);
   const viewLogged = useRef(false);
   useEffect(() => {
-    const el = picRef.current;
-    if (!el) return;
-    const imgs = Array.from(el.querySelectorAll('img'));
-    const decoded = () => imgs.some((i) => i.complete && i.naturalWidth > 0);
-    if (decoded()) { setPictureReady(true); return; }
-    const on = () => { if (decoded()) setPictureReady(true); };
-    for (const i of imgs) i.addEventListener('load', on);
-    return () => { for (const i of imgs) i.removeEventListener('load', on); };
+    setPictureReady(false);
+    // The original loading is not evidence that the restoration loaded. Watch the displayed result,
+    // including a colour/monochrome switch, and wait for its decode rather than a thumbnail's load.
+    const img = picRef.current?.querySelector<HTMLImageElement>('img.after');
+    if (!img) return;
+    let cancelled = false;
+    const ready = async () => {
+      if (!img.complete || img.naturalWidth === 0) return;
+      try {
+        await img.decode();
+        if (!cancelled) setPictureReady(true);
+      } catch { /* a failed result must not count as seen */ }
+    };
+    const failed = () => setPictureReady(false);
+    void ready();
+    img.addEventListener('load', ready);
+    img.addEventListener('error', failed);
+    return () => { cancelled = true; img.removeEventListener('load', ready); img.removeEventListener('error', failed); };
+  }, [resultUrl]);
+  useEffect(() => {
+    const update = () => setPageVisible(document.visibilityState === 'visible');
+    update();
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
   }, []);
   useEffect(() => {
-    const el = picRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') { setInView(true); return; }
-    const io = new IntersectionObserver((entries) => { for (const e of entries) setInView(e.isIntersecting); }, { threshold: 0.5 });
+    const el = picRef.current?.querySelector('.ba');
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver((entries) => { for (const e of entries) setInView(e.isIntersecting && e.intersectionRatio >= 0.5); }, { threshold: 0.5 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
   useEffect(() => {
-    if (!pictureReady || !inView || viewLogged.current) return;
+    if (!pictureReady || !inView || !pageVisible || viewLogged.current) return;
     const t = window.setTimeout(() => {
       if (viewLogged.current) return;
       viewLogged.current = true;
@@ -196,11 +214,11 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
       try { store = window.localStorage; } catch { /* private mode: every visit is a first view */ }
       const kind = viewKind(store, `gf_viewed:${data.orderId}`);
       if (kind === 'same') return;
-      track(kind === 'first' ? 'PreviewViewed' : 'PreviewReopened', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], colour: colourOn }, { serverLog: true, orderId: data.orderId });
+      track(kind === 'first' ? 'PreviewViewed' : 'PreviewReopened', { ...PRODUCT, content_name: 'preview', content_ids: [data.format], colour: colourOn, preview_measurement: 2 }, { serverLog: true, orderId: data.orderId });
     }, 1000);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pictureReady, inView]);
+  }, [pictureReady, inView, pageVisible, resultUrl]);
 
   /** The order row follows what the customer is looking at, so admin — and a recovered checkout — sees it. */
   const persist = (patch: { product?: Product; format?: Format; frame?: Frame; extraPrints?: number; colour?: boolean }) => {
@@ -398,7 +416,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
    * the picture on a screen answers "what am I actually getting" before any words do, and the price
    * gets its own line under the name instead of hiding in grey body text.
    */
-  const pic = colourOn && colourUrl ? colourUrl : data.preview;
+  const pic = resultUrl;
   const productChoices = ([
     { key: 'framed' as Product, name: c.preview.productFramed, price: c.preview.productFramedPrice, hint: c.preview.productFramedHint, thumb: <img src={mockup} alt="" /> },
     ...(offers.print.enabled ? [{ key: 'print' as Product, name: c.preview.productPrint, price: c.preview.productPrintPrice, hint: c.preview.productPrintHint, thumb: <span className="thumb-paper"><img src={pic} alt="" /></span> }] : []),

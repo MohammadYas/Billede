@@ -148,9 +148,43 @@ test('a Checkout tab left open is expired before a new one is made', async () =>
 
 test('the lines Stripe is given are stored on the order as they were agreed', async () => {
   await post({ orderId: order().id, format: '40x50', extraPrints: 1 });
-  const snapshot = calls.updates.map((u) => (u.preview_meta as { quote?: { totalOere?: number } } | undefined)?.quote).find(Boolean);
+  const saved = (globalThis as Record<string, any>).__order;
+  const snapshot = saved.preview_meta?.quote;
   assert.ok(snapshot, 'the receipt renders this snapshot, so a later price change cannot rewrite an old order');
   assert.equal(snapshot!.totalOere, (calls.created[0] as { totalOere: number }).totalOere);
+});
+
+test('saving the Stripe session preserves the purchased product and receipt, even without a prior choose request', async () => {
+  process.env.NEXT_PUBLIC_DIGITAL_ENABLED = 'true';
+  process.env.NEXT_PUBLIC_DIGITAL_PRICE_DKK = '99';
+  process.env.NEXT_PUBLIC_PRINT_ENABLED = 'true';
+  process.env.NEXT_PUBLIC_PRINT_PRICE_DKK = '250';
+  try {
+    for (const [product, amount] of [['digital', 9900], ['print', 25000], ['framed', 59900]] as const) {
+      const before = order({ preview_meta: {
+        session_id: 'sid-1', share_token: 'keep-this-token', product: product === 'framed' ? 'digital' : 'framed',
+        sessions: ['cs_previous'], output: { width: 900, height: 1200 },
+        quote: { totalOere: 12300, lines: [] },
+      } });
+      const response = await post({ orderId: before.id, product, format: '30x40' }, { order: before });
+      assert.equal(response.status, 200);
+      const saved = (globalThis as Record<string, any>).__order;
+      assert.equal(saved.preview_meta.product, product, 'fulfilment must read the product sent to Stripe');
+      assert.equal(saved.amount, amount);
+      assert.equal(saved.preview_meta.quote.totalOere, amount, 'the old quote must not overwrite the receipt');
+      assert.deepEqual(saved.preview_meta.quote.lines, (calls.created[0] as any).lines);
+      assert.deepEqual(saved.preview_meta.sessions, ['cs_previous', 'cs_test_1']);
+      assert.equal(saved.payment_session_id, 'cs_test_1');
+      assert.equal(saved.preview_meta.share_token, 'keep-this-token');
+      assert.equal(saved.preview_meta.consent, 'yes');
+      assert.deepEqual(saved.preview_meta.output, { width: 900, height: 1200 });
+    }
+  } finally {
+    delete process.env.NEXT_PUBLIC_DIGITAL_ENABLED;
+    delete process.env.NEXT_PUBLIC_DIGITAL_PRICE_DKK;
+    delete process.env.NEXT_PUBLIC_PRINT_ENABLED;
+    delete process.env.NEXT_PUBLIC_PRINT_PRICE_DKK;
+  }
 });
 
 /* ---------------------------------------------------------------------------

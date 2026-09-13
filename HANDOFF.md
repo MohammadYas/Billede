@@ -1,5 +1,11 @@
 # HANDOFF — what the owner must do before the 1.500 kr. test
 
+## Status 2026-09-13 — fortsættelse: checkout-lagring og preview-måling
+
+The owner's correction matters: the earlier 72-hour sample contained **14 campaign-tagged generating sessions (18 generations)**, not only the two newest previews. The all-time read returned 15 sessions / 19 generations. Campaign UTM identifies attribution, but untagged tests can remain; the 17 recent PageView sessions are not 17 verified paid-ad visitors. Meta's four attributed landing-page views are a different metric. Both active ads were inspected in the logged-in Meta browser and promise free preview plus framing from 599 kr.; no campaign configuration was changed.
+
+Continuation fixes: `/api/checkout` now retains the newly agreed product and quote when saving the Stripe session, instead of overwriting them with pre-checkout metadata. `PreviewViewed` waits for the restored image to decode, a half-visible picture for one second, and a visible tab; new events carry `preview_measurement: 2`. `ViewContent` remains unchanged. The checkout regression reads the final saved order for all three products; `tests/preview-viewed.browser.mts` exercises the real component with isolated Chromium and WebKit fixtures, without external writes. See the audit's continuation section for evidence and limitations.
+
 ## Status 2026-09-13 — audit af købsflow med Composio og browser
 
 See `docs/conversion-audit-2026-09-13.md` for the current evidence and limitations. The 99/250 kr. alternatives are now visible before upload, the preview's next-step link targets the product selector, a returned loose-print checkout cannot leave the framed size unselected, and the receipt plus browser/server purchase metadata follow the stored product. No prices, ad statuses, budget or optimization target were changed. Verification: 86 unit tests, production build, 12 viewport checks and manual digital/loose-print Checkout inspection without payment. **The ad set is named PreviewShown but its actual optimization event is CONTENT_VIEW.** MobilePay is absent from the inspected sessions; real product photos and the confirmed street address are still missing. The audit explicitly separates the small sample from evidence of a conversion improvement.

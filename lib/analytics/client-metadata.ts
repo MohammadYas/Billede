@@ -3,6 +3,8 @@ export function clientMetadata(input: unknown): Record<string, unknown> | undefi
   if (!input || typeof input !== 'object' || Array.isArray(input)) return undefined;
   const m = input as Record<string, unknown>;
   const out: Record<string, unknown> = {};
+  // Distinguish decoded-result / 50%-visible measurements from the older, looser signal.
+  if (m.preview_measurement === 2) out.preview_measurement = 2;
   const enums: Record<string, readonly string[]> = {
     cta: ['A', 'B', 'C'], currency: ['DKK'], content_type: ['product'],
     // The three products were added 2026-09-12: without them `ProductSelected` lands in the table

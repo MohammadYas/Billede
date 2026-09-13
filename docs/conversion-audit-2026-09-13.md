@@ -1,6 +1,6 @@
 # Billedearv: købsflow og konvertering, 13. september 2026
 
-Gennemgået med Composio (Meta Ads, Stripe og Supabase), den levende butik i browseren og en lokal produktionsbuild. Baseline er commit `67e7426`, publiceret 12. september kl. 19:37 UTC. Rapportens rettelser er ændringerne i dette commit; publiceringsstatus skal kontrolleres hos Netlify.
+Gennemgået med Composio (Meta Ads, Stripe og Supabase), den levende butik i browseren og en lokal produktionsbuild. Baseline er commit `67e7426`, publiceret 12. september kl. 19:37 UTC. Første runde blev publiceret som `b2fe41c` den 13. september kl. 09:42 UTC. Fortsættelsen nedenfor retter checkout-lagring og preview-måling; dens publiceringsstatus kontrolleres hos Netlify.
 
 ## Hvad tallene faktisk viser
 
@@ -19,7 +19,9 @@ Supabase blev aflæst omkring 09:30 UTC den 13. september. I en 72-timers observ
 | InitiateCheckout registreret | 0 | 0 |
 | Purchase registreret | 0 | 0 |
 
-Det største observerede frafald ligger før upload, og de to nyeste preview-sessioner gik ikke videre til produktvalg. To previews er ikke tilstrækkeligt til at afgøre, om priserne 99/250 kr. virker. De nye hændelser blev først indført 12. september; tidligere `PreviewViewed` og `CheckoutClicked` kan derfor ikke sammenlignes direkte med ældre besøg. Tallene er unikke sessioner pr. hændelse inden for samme kohorte, ikke bevis for, at hver enkelt hændelse skete i den viste rækkefølge. Direkte trafik kan indeholde ejerens egne besøg.
+De to kolonner indeholder tilsammen **14 kampagnemarkerede sessioner med et genereret billede** (18 genereringer). En efterfølgende kontrol af hele historikken gav 15 sådanne sessioner og 19 genereringer. Kampagnens UTM er grundlaget for tilknytningen; det er ikke Metas tal for landingssidevisninger. Ejeren har oplyst, at mange besøg er tests. De 17 nye PageView-sessioner må derfor ikke omtales som 17 verificerede annoncebesøgende eller bruges til et sikkert estimat af frafald før upload. Markeringen `pwtest` fjerner kendte tests, men identificerer ikke alle umærkede tests.
+
+Der er dokumenterede genereringer at undersøge videre fra, men de nye hændelser blev først indført 12. september; tidligere `PreviewViewed` og `CheckoutClicked` kan derfor ikke sammenlignes direkte med ældre besøg. To nyere previews er ikke tilstrækkeligt til at afgøre, om priserne 99/250 kr. virker. Tallene er unikke sessioner pr. hændelse inden for samme kohorte, ikke bevis for, at hver enkelt hændelse skete i den viste rækkefølge.
 
 Stripe returnerede 54 Checkout-sessioner oprettet siden 9. september ved første aflæsning: alle udløbet og ubetalt, og ingen yderligere sider. De omfatter mange automatiske tests og er **ikke 54 tabte kunder**. De indlæste sessioner havde 99-, 250- og rammeprodukter. Butikken bruger inline `price_data`; en tom liste over faste Stripe-priser er derfor ikke en fejl. Der blev ikke fundet betalte nye ordrer i den seneste 72-timersperiode. Det siger ikke, at butikken aldrig har haft en betalt ordre.
 
@@ -44,9 +46,19 @@ De aktive annoncer var `FINAL_COLD_01` og `FINAL_COLD_03`; de øvrige tre var pa
 
 **Omsætning er ikke dækningsbidrag.** Der er ikke verificerede kostpriser for print, emballage, fragt, billedgenerering og manuelt arbejde i materialet. Prisniveauerne er bevaret. En prisnedsættelse eller større annoncebudget bør ikke bedømmes alene på antal køb.
 
-**PreviewViewed har fortsat en målebegrænsning.** Koden godkender billedindlæsning, når et af før/efter-billederne er indlæst, og bruger `isIntersecting` frem for at kræve den angivne 50-procents andel i callbacken. Den er derfor et registreret preview-signal, ikke sikkert bevis for, at kunden så mindst halvdelen af det færdige resultat. Den måling bør strammes i en særskilt diagnosticering; den aktive ViewContent-hændelse er ikke omlagt her.
+## Fortsat gennemgang efter ejerens præcisering af testtrafikken
+
+**Begge aktive annoncer er læst i den indloggede Meta-browser.** `FINAL_COLD_01` starter med “Har du også sådan et billede?”, og `FINAL_COLD_03` med “Så tydeligt har du ikke set hende i 60 år.” Begge lover gratis restaureringspreview og indrammet levering fra 599 kr. inkl. fragt. De nye købsmuligheder supplerer derfor det eksisterende annonceløfte; ingen annoncetekster, statusser, budgetter eller optimeringsmål er ændret. Den viste browserrapport sluttede 12. september. Composio-kontrollen for 6.–13. september viste 543,96 kr. og 182 linkklik; dagsdelen for den 13. viste 70,66 kr. og 18 linkklik. De 4 tilskrevne landingssidevisninger er et særskilt Meta-mål og erstatter ikke de dokumenterede genereringer.
+
+**Checkout overskrev produkt og prisgrundlag ved anden lagring.** Før Stripe-oprettelsen blev det valgte produkt og den beregnede pris gemt korrekt. Efter oprettelsen blev `payment_session_id` gemt sammen med en ældre kopi af `preview_meta`, hvilket fjernede den nye prissnapshot og kunne genetablere et tidligere produkt. En isoleret test reproducerede digitalt køb gemt som rammeprodukt og en manglende prissnapshot. Anden lagring bygger nu på den netop opdaterede ordre. Testen læser den endelige ordre efter begge lagringer for alle tre produkter, også uden et forudgående `/choose`-kald. Den tidligere test kontrollerede kun, at en snapshot var skrevet på et tidspunkt, og kunne derfor overse overskrivningen. En læsning af ordrer med checkout oprettet siden 9. september fandt 18 ordrer uden snapshot, alle `PREVIEW_READY`; mange er markerede tests. Ingen historiske kundedata er ændret.
+
+**PreviewViewed kræver nu det indlæste resultat og en aktiv fane.** Originalbilledets indlæsning kunne før udløse hændelsen, selv om resultatet stadig ventede eller fejlede. Målingen venter nu på dekodning af `img.after`, mindst 50 % synlighed af billedfeltet i ét sekund og en synlig fane. Den følger også skift mellem farve og sort-hvid. Nye hændelser får `preview_measurement: 2`, som den begrænsede metadatafiltrering bevarer. Et billede under 50 %, et fejlet resultat eller en skjult fane tæller ikke. Den eksisterende `ViewContent` og halvtimes-deduplikering bevares. Hændelsen måler billedfeltets tilgængelighed, ikke menneskelig opmærksomhed eller hvor meget restaurering slideren aktuelt viser. Den beviser ikke alene købsinteresse.
 
 ## Verifikation og begrænsninger
+
+Fortsættelsen er kontrolleret med 88 beståede unit-tests, en bestået produktionsbuild, 10 isolerede browserscenarier fordelt på Chromium og WebKit samt alle 12 viewport-kontroller på forside og preview. Mobilens produktgenvej blev desuden kontrolleret visuelt ved 390×780; alle tre priser var synlige, og browseren viste ingen konsolfejl. Den uafhængige kodegennemgang fandt ingen handlingskrævende problemer. Checkout-testene sender ingen rigtige betalinger, og de isolerede preview-tests foretager ingen eksterne writes.
+
+Verifikationen af første runde:
 
 - `npm test`: 86 tests bestået. Nye regressionstests fejlede først på de reproducerede fejl og bestod efter rettelserne; en separat Purchase-test kontrollerer produkttype, beløb og deduplikerings-id.
 - `npm run build`: bestået. Buildens advarsel om localhost gælder den lokale opsætning. Netlify publicerer selv med produktionens miljøvariabler.

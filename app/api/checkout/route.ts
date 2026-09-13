@@ -45,10 +45,12 @@ export async function POST(req: NextRequest) {
       cancelUrl: `${base}/p/${order.id}?cancelled=1${shareToken ? `&t=${encodeURIComponent(shareToken)}` : ''}`,
       previewImageUrl: process.env.STRIPE_PRODUCT_IMAGE === 'false' ? undefined : previewImageUrl,
     });
-      const sessions = [...new Set([...(((meta.sessions as string[] | undefined) ?? [])), sessionId])].slice(-10);
+    const checkoutMeta = updated.preview_meta ?? {};
+    const sessions = [...new Set([...(((checkoutMeta.sessions as string[] | undefined) ?? [])), sessionId])].slice(-10);
     // every session id is kept: a customer who pays an older tab must still be found by the hourly
     // reconciliation, which otherwise only ever asks Stripe about the newest one
-    const withSession = await updateOrder(order.id, { payment_session_id: sessionId, preview_meta: { ...meta, addons: q.addons, sessions } });
+    // Keep the product and quote just agreed with Stripe, not the pre-checkout metadata.
+    const withSession = await updateOrder(order.id, { payment_session_id: sessionId, preview_meta: { ...checkoutMeta, sessions } });
     await logEvent('InitiateCheckout', { sessionId: sid, orderId: order.id, utm });
     await sendServerEvent('InitiateCheckout', { eventId: sessionId, order: withSession, sourceUrl: eventSourceUrl(`/p/${order.id}`), ip: (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null, ua: req.headers.get('user-agent') });
     return NextResponse.json({ url, sessionId });
