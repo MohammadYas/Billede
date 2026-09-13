@@ -3,7 +3,7 @@ import { paymentProvider } from '@/lib/payments/stripe';
 import { claimPurchaseTracking, getOrderByField, latestOrderForSession, type Order } from '@/lib/db/orders';
 import { markPaid } from '@/lib/payments/fulfil-paid';
 import { imageUrl } from '@/lib/preview-service';
-import { orderDescription, orderLines, repeatLink } from '@/lib/order-summary';
+import { orderDescription, orderLines, orderProduct, repeatLink } from '@/lib/order-summary';
 import { readAddOns, formatOere } from '@/lib/pricing';
 import { readSessionId } from '@/lib/session';
 import Footer from '@/components/Footer';
@@ -50,6 +50,9 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
     }
   }
   const value = (order?.amount ?? 0) / 100;
+  const product = order ? orderProduct(order) : 'framed';
+  const digital = product === 'digital';
+  const timeline = c.tak.timeline.map(([k, v], i) => [k, i === 2 && product !== 'framed' ? (digital ? c.tak.afterDigital : c.tak.afterPrint) : v]);
   return (
     <>
       <SiteHeader note={c.preview.headNote} />
@@ -59,12 +62,14 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
             <div className="ed" style={{ rowGap: 'var(--s6)' }}>
               <div style={{ display: 'grid', gap: 'var(--s4)', alignContent: 'start' }}>
                 <h1 style={{ maxWidth: '12em' }}>{c.tak.h1}</h1>
-                <p className="lead" style={{ maxWidth: '24em' }}>{c.tak.p}</p>
+                <p className="lead" style={{ maxWidth: '24em' }}>{digital ? c.tak.pDigital : c.tak.p}</p>
                 <p className="caption tabular">Ordre {order.id.slice(0, 8)}</p>
-                {firePurchase && <PurchaseEvent value={value} eventId={order.id} email={order.customer_email} phone={order.customer_phone} format={order.format} />}
+                {firePurchase && <PurchaseEvent value={value} eventId={order.id} email={order.customer_email} phone={order.customer_phone} format={order.format} product={product} />}
               </div>
               <div style={{ display: 'grid', gap: 'var(--s5)' }}>
-                {order.mockup_path && <img src={imageUrl(order, 'mockup', order.format, readAddOns((order.preview_meta as { addons?: unknown } | null)?.addons).frame)} alt={`Dit billede indrammet: ${orderDescription(order)}`} width={1200} height={960} style={{ maxWidth: 520 }} />}
+                {product === 'framed' && order.mockup_path
+                  ? <img src={imageUrl(order, 'mockup', order.format, readAddOns((order.preview_meta as { addons?: unknown } | null)?.addons).frame)} alt={`Dit billede indrammet: ${orderDescription(order)}`} width={1200} height={960} style={{ maxWidth: 520 }} />
+                  : order.preview_path && <img src={imageUrl(order, order.chosen_colour ? 'colour' : 'preview')} alt={`Dit restaurerede billede: ${orderDescription(order)}`} style={{ width: '100%', maxWidth: 520, height: 'auto' }} />}
                 <div className="bill">
                   <p className="cfg-label">{c.preview.summaryTitle}</p>
                   <dl className="bill-lines">
@@ -72,18 +77,20 @@ export default async function Tak({ searchParams }: { searchParams: Promise<Reco
                       const i = l.lastIndexOf(' — ');
                       return <div key={l}><dt>{l.slice(0, i)}</dt><dd className="tabular">{l.slice(i + 3)}</dd></div>;
                     })}
-                    <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>
+                    {digital
+                      ? <div><dt>{c.preview.deliveryDigital}</dt><dd>{c.preview.deliveryDigitalValue}</dd></div>
+                      : <div><dt>{c.preview.shipping}</dt><dd>{c.preview.shippingFree}</dd></div>}
                   </dl>
                   <p className="bill-total"><span>{c.preview.total}</span> <b className="tabular">{formatOere(order.amount ?? 0)}</b></p>
                   <p className="caption">{orderDescription(order)} · {c.preview.vat}</p>
                 </div>
                 <dl className="timeline">
-                  {c.tak.timeline.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+                  {timeline.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
                 </dl>
                 {repeatLink(order) && (
                   <section className="again">
                     <h2>{c.tak.againH2}</h2>
-                    <p className="measure">{c.tak.againP}</p>
+                    <p className="measure">{digital ? c.tak.againPDigital : c.tak.againP}</p>
                     <p><a className="btn btn-quiet" href={repeatLink(order)!}>{c.tak.againCta}</a></p>
                   </section>
                 )}

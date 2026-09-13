@@ -92,6 +92,7 @@ export function copy(season: Season = currentSeason()) {
   const digitalPrice = formatDkk(offers.digital.priceDkk);
   const printPrice = formatDkk(offers.print.priceDkk);
   const printLabel = formatLabel(PRINT_FORMAT);
+  const alternatives = [offers.print.enabled ? `Print uden ramme ${printPrice} inkl. fragt` : '', offers.digital.enabled ? `Digital fil ${digitalPrice}` : ''].filter(Boolean).join(' · ');
 
   return {
     season,
@@ -99,6 +100,7 @@ export function copy(season: Season = currentSeason()) {
     format,
     formatLabel: formatLabel(format),
     priceFrom,
+    alternatives,
     email,
     emailHref,
     /** every size, and every price-bearing line for it, portrait and landscape */
@@ -352,7 +354,7 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
       drop: '…eller træk det herind.',
       tips: 'Læg billedet fladt i dagslys, uden blitz. Fyld skærmen med det.',
       check: 'Er det skarpt og uden genskin? Ellers vælg et andet.',
-      free: `Det koster ikke noget at se resultatet. Vil du have det hjem i ramme, koster det ${priceFrom} inkl. fragt – og du godkender, før vi printer.`,
+      free: `Det koster ikke noget at se resultatet. I ramme ${priceFrom} inkl. fragt.${alternatives ? ` ${alternatives.replace(/\.$/, '')}.` : ''} Du vælger først, når du har set dit billede.`,
       note: `Billedet bruges kun til din bestilling. Det gemmes i EU og behandles af vores AI-leverandør, og det slettes efter ${CONFIG.retentionUnpaidDays} dage, hvis du ikke bestiller – eller med det samme, hvis du beder om det.`,
       privacy: 'Læs mere under Privatliv',
       cta: 'Vis mig resultatet',
@@ -403,7 +405,7 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
     preview: {
       h2: 'Her er dit billede.',
       howTo: 'Tryk på Før og Efter for at sammenligne.',
-      nextStep: 'Se det i ramme og vælg størrelse',
+      nextStep: alternatives ? 'Vælg, hvordan du vil have billedet' : 'Se det i ramme og vælg størrelse',
       nextStepDigital: 'Videre til bestilling',
       watermarkNote: 'Skriften hen over billedet er et vandmærke. Det er kun på skærmen – printet og din fil er uden.',
       hang: 'Sådan ser det ud i ramme.',
@@ -516,7 +518,7 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
       deliveryDigitalValue: 'Download efter din godkendelse',
       total: 'I alt',
       vat: 'inkl. moms',
-      steps: ['Dit billede', 'Størrelse og ramme', 'Betaling'] as string[],
+      steps: ['Dit billede', alternatives ? 'Vælg produkt' : 'Størrelse og ramme', 'Betaling'] as string[],
       zoomIn: 'Se tæt på',
       zoomOut: 'Se hele billedet',
       colourCta: 'Se det i farver',
@@ -559,6 +561,9 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
     tak: {
       h1: `Tak. ${cap(navn)} kigger på dit billede inden 24 timer.`,
       p: 'Du får det færdige billede til godkendelse på mail inden 48 timer. Vi printer først, når du siger ja. Tjek også spam – og hører vi ikke fra dig, ringer eller skriver vi til det nummer, du gav ved betalingen.',
+      pDigital: 'Du får det færdige billede til godkendelse på mail inden 48 timer. Når du siger ja, kan du hente filen i høj opløsning uden vandmærke. Tjek også spam – og hører vi ikke fra dig, ringer eller skriver vi til det nummer, du gav ved betalingen.',
+      afterDigital: 'Din fil i høj opløsning er klar til download. Der bliver ikke sendt en pakke.',
+      afterPrint: `Vi printer dit billede uden ramme og sender det fladt mellem pap med fri fragt. Leveret ${levering}. Din fil i høj opløsning er også klar til download.`,
       timeline: [
         ['Inden 24 timer', `${cap(navn)} gennemgår billedet og tjekker ansigterne.`],
         ['Inden 48 timer', 'Du får en mail med det færdige billede. Godkend, eller bed om en ændring.'],
@@ -567,6 +572,7 @@ syntheticNote: 'Eksemplerne er ægte gamle fotografier med ægte skader – fold
       more: 'Vis et billede mere',
       againH2: 'Har I flere billeder?',
       againP: 'De ligger sjældent alene i skuffen. Har du et mere, kan du sende det ind herfra – samme arbejde, samme godkendelse, fri fragt.',
+      againPDigital: 'Har du et billede mere, kan du sende det ind herfra – samme restaurering og gennemgang, og du godkender, før du henter filen.',
       againCta: 'Se billede nummer to',
       unverifiedH1: 'Vi kunne ikke bekræfte betalingen med det samme.',
       unverifiedP: 'Er pengene trukket, er din bestilling hos os, og du får en mail inden for få minutter. Ellers kan du gå tilbage til dit billede og prøve igen.',

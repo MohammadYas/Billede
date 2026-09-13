@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Order } from '@/lib/db/orders';
 import { CONFIG } from '@/lib/config';
+import { orderProduct } from '@/lib/order-summary';
 
 /**
  * Meta Conversions API: the server-side copy of Purchase, InitiateCheckout and PreviewShown, deduplicated with the
@@ -40,6 +41,7 @@ export async function sendServerEvent(name: ServerEventName, opts: { eventId: st
   };
   for (const k of Object.keys(user_data)) if (user_data[k] === undefined) delete user_data[k];
   const value = (o.amount ?? 0) / 100; // an order without an amount reports 0 rather than a made-up 599
+  const product = orderProduct(o);
   const body = {
     data: [{
       event_name: name,
@@ -48,7 +50,7 @@ export async function sendServerEvent(name: ServerEventName, opts: { eventId: st
       action_source: 'website',
       event_source_url: opts.sourceUrl,
       user_data,
-      custom_data: { value, currency: 'DKK', content_ids: [o.format], content_type: 'product', content_name: 'Restaureret og indrammet familiebillede', num_items: 1 },
+      custom_data: { value, currency: 'DKK', content_ids: [product === 'framed' ? o.format : product], content_type: 'product', content_name: product === 'framed' ? 'Restaureret og indrammet familiebillede' : product, num_items: 1 },
     }],
     ...(process.env.META_TEST_EVENT_CODE ? { test_event_code: process.env.META_TEST_EVENT_CODE } : {}),
   };

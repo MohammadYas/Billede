@@ -5,7 +5,7 @@ import { PRODUCT, track } from '@/lib/analytics/client';
 import MailLine from './MailLine';
 import type { Copy } from '@/lib/copy';
 import type { PreviewPayload } from '@/lib/preview-service';
-import { quote, formatOere, oereParts, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, sellableProduct, PRINT_FORMAT, formatLabelFor, type Offers, type Format, type Frame, type Product } from '@/lib/pricing';
+import { quote, formatOere, oereParts, MAX_EXTRA_PRINTS, customerFormat, isFormat, isFrame, sellableFormat, sellableProduct, PRINT_FORMAT, formatLabelFor, type Offers, type Format, type Frame, type Product } from '@/lib/pricing';
 import { viewKind } from '@/lib/analytics/funnel';
 import { PICK_KEY } from './SizePicker';
 import Promo from './Promo';
@@ -71,7 +71,9 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   // The configuration. `quote()` is the same pure function the server runs before Stripe sees anything,
   // so the total under the finger and the amount on the card are one piece of arithmetic, not two guesses.
   const [product, setProduct] = useState<Product>(sellableProduct(data.product, offers));
-  const [format, setFormat] = useState<Format>(data.format);
+  // A resumed loose-print checkout stores 20x30. Keep the framed selector on a sellable size;
+  // quote() still supplies the loose print's own 20x30 format when that product is selected.
+  const [format, setFormat] = useState<Format>(sellableFormat(data.format));
   const [frame, setFrame] = useState<Frame>(data.addons.frame);
   const [extraPrints, setExtraPrints] = useState(data.addons.extraPrints);
   const bill = quote({ product, offers, format, frame, extraPrints, campaign: c.campaign.active });
@@ -409,7 +411,7 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
   const n = () => <span className="n">{++step}</span>;
 
   const config = (
-    <div className="config">
+    <div className="config" id="produktvalg">
       {anySmall && (
         <fieldset className="cfg">
           <legend className="cfg-label">{n()}{c.preview.productTitle}</legend>
@@ -560,7 +562,8 @@ export default function PreviewPanel({ c, data: initial, cancelled, paid, token,
         {colourBusy && <p className="caption measure pv-wait" role="status"><span className="pv-wait-dot" aria-hidden />{c.preview.colourWait}</p>}
         {colourErr && <p className="caption measure error" role="alert">{c.preview.colourFailed}</p>}
         {colourOn && <p className="caption measure">{c.preview.colourNote}</p>}
-        <a href="#videre" className="btn btn-quiet btn-block pv-next" onClick={(e) => { const el = document.getElementById('videre'); if (!el) return; e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{isDigital ? c.preview.nextStepDigital : c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
+        <a href={anySmall ? '#produktvalg' : '#videre'} className="btn btn-quiet btn-block pv-next" onClick={(e) => { const el = document.getElementById(anySmall ? 'produktvalg' : 'videre'); if (!el) return; e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{isDigital ? c.preview.nextStepDigital : c.preview.nextStep} <span className="arrow" aria-hidden>↓</span></a>
+        {anySmall && <p className="caption measure">{c.alternatives}</p>}
         {!paid && <p className="caption measure">{c.preview.watermarkNote}</p>}
         <p className="caption measure">{isDigital ? c.preview.nextDigital : c.preview.next}</p>
         {/* the money answer, in the content on a phone (the fixed bar stays two rows) and again under the desktop button */}

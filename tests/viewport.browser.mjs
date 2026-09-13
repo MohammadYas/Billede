@@ -8,6 +8,7 @@
 import { chromium, devices } from 'playwright';
 const BASE = process.env.BASE ?? 'http://localhost:3111';
 const PURL = process.env.PURL;
+const testUrl = (value) => { const url = new URL(value); url.searchParams.set('utm_source', 'pwtest'); return url.href; };
 const WIDTHS = [375, 390, 430, 768, 1024, 1280];
 const b = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM, args: ['--no-sandbox'] });
 let bad = 0;
@@ -16,7 +17,7 @@ for (const w of WIDTHS) {
   const ctx = await b.newContext({ ...(mobile ? devices['iPhone 14'] : {}), viewport: { width: w, height: mobile ? 844 : 900 }, locale: 'da-DK' });
   for (const [name, url] of [['forside', BASE + '/'], ...(PURL ? [['bestilling', PURL]] : [])]) {
     const p = await ctx.newPage();
-    await p.goto(url, { waitUntil: 'networkidle' });
+    await p.goto(testUrl(url), { waitUntil: 'networkidle' });
     await p.waitForTimeout(1600);
     await p.evaluate(async () => { const h = document.documentElement.scrollHeight; for (let y = 0; y < h; y += 600) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 90)); } window.scrollTo(0, 0); });
     await p.waitForTimeout(500);

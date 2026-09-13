@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { load } from './_bundle.mts';
 
 // /privatliv: the server-side Meta event goes out only with the Meta consent. The order carries that answer.
-const capi = await load('lib/analytics/capi.ts', { '@/lib/config': `export const CONFIG={siteUrl:'http://localhost:3000'};` });
+const capi = await load('lib/analytics/capi.ts', { '@/lib/config': `export const CONFIG={siteUrl:'http://localhost:3000'}; export const campaignActive=()=>false;` });
 const calls: { url: string; body: string }[] = [];
 const order = (meta: Record<string, unknown>) => ({
   id: '00000000-0000-4000-8000-000000000001', created_at: '2026-09-07T00:00:00Z', format: '30x40', amount: 59900,
@@ -39,4 +39,14 @@ test('with consent the event is sent once, hashed, without the share token or a 
   assert.equal(data.event_id, 'evt');
   assert.equal(data.event_source_url, 'http://localhost:3000/tak');
   assert.equal(data.custom_data.value, 599);
+});
+
+test('server purchase identifies the stored small product, even after the offer is switched off', async () => {
+  for (const product of ['digital', 'print']) {
+    calls.length = 0;
+    await send({ consent: 'yes', product });
+    const data = JSON.parse(calls[0].body).data[0];
+    assert.deepEqual(data.custom_data.content_ids, [product]);
+    assert.equal(data.custom_data.content_name, product);
+  }
 });
